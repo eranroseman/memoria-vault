@@ -26,6 +26,7 @@ from memoria_vault.runtime.content_security import (
 )
 from memoria_vault.runtime.operations import (
     build_disposition_event,
+    emit_disposition_event,
     load_operation_policy,
     required_promotion_checks,
     resolve_operation_runner,
@@ -120,8 +121,14 @@ def frame_project_paper(
     *,
     context: OperationContext,
     paper_plan: dict[str, Any],
+    proposal_ref: str = "",
 ) -> dict[str, Any]:
-    """Record PI-supplied paper framing fields on a project and leave it unchecked."""
+    """Record PI-supplied paper framing fields on a project and leave it unchecked.
+
+    ``proposal_ref`` is I1 contract 4's provenance gate: present (a card path or
+    proposing request id) means this framing adopts a machine-proposed frame and
+    is recorded as one `disposition.v1`; absent means PI-original, no event.
+    """
     validate_operation_context(vault, context)
     vault = Path(vault)
     project_rel = _project_rel(vault, project_path)
@@ -147,6 +154,17 @@ def frame_project_paper(
         context=context,
     )
     materialized = materialize_unchecked(vault, project_rel, context=context)
+    # The gate strips; `item_id` does not, because `validate_disposition_event`
+    # already does (`empirical_events._string_field`). A second strip here would
+    # be a no-op, and a no-op survives every mutation while reading as coverage.
+    if proposal_ref.strip():
+        emit_disposition_event(
+            vault,
+            decision="accept",
+            item_type="frame-proposal",
+            item_id=proposal_ref,
+            context=context,
+        )
     commit = commit_writer_changes(
         vault, f"frame paper {Path(project_rel).stem}", [project_rel], context=context
     )
@@ -341,6 +359,16 @@ def curate_note_candidate(
         },
         context=context,
     )
+    # I1 spec §2: a candidate note is machine-proposed content, so every
+    # curation of one is PI judgment over a proposal — unconditionally recorded,
+    # inside this operation's transaction, ahead of its commit.
+    emit_disposition_event(
+        vault,
+        decision={"accepted": "accept", "rejected": "reject"}[status],
+        item_type="note-candidate",
+        item_id=note_rel,
+        context=context,
+    )
     commit = commit_writer_changes(
         vault, f"{status} note candidate {Path(note_rel).stem}", [note_rel], context=context
     )
@@ -356,6 +384,7 @@ def curate_note_link(
     context: OperationContext,
     reason: str = "",
     warrant: str = "",
+    proposal_ref: str = "",
 ) -> dict[str, Any]:
     """Record one PI-authored typed link on a checked note.
 
@@ -364,6 +393,10 @@ def curate_note_link(
     license note. Non-blank text hangs on the identity-keyed edge as
     ``attributes_json.warrant``; blank text writes no edge at all, so the
     frontmatter link stays the whole write.
+
+    ``proposal_ref`` is I1 contract 4's provenance gate: present (a card path or
+    proposing request id) means this link adopts a machine-proposed edge and is
+    recorded as one `disposition.v1`; absent means PI-original, no event.
     """
     validate_operation_context(vault, context)
     vault = Path(vault)
@@ -438,6 +471,14 @@ def curate_note_link(
             vault, relation_type=link_type, write_path="curate-note-link", context=context
         )
 
+    if proposal_ref.strip():
+        emit_disposition_event(
+            vault,
+            decision="accept",
+            item_type="edge-proposal",
+            item_id=proposal_ref,
+            context=context,
+        )
     commit = commit_writer_changes(
         vault, f"link note {Path(source_rel).stem}", [source_rel], context=context
     )

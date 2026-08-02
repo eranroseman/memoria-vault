@@ -26,7 +26,7 @@ from memoria_vault.runtime.trusted_writer import (
     promote_checked,
     stage_concept,
 )
-from memoria_vault.runtime.vaultio import split_frontmatter
+from memoria_vault.runtime.vaultio import read_frontmatter, split_frontmatter
 
 INTEGRITY_SWEEP_OPERATIONS = (
     "trace-integrity-scan",
@@ -313,6 +313,7 @@ def _run_operation_job(
     payload = job.get("payload") if isinstance(job.get("payload"), dict) else {}
     _require_operation_actor(context)
     from memoria_vault.runtime.operations import (
+        emit_disposition_event,
         load_operation_policy,
         required_promotion_checks,
         resolve_operation_runner,
@@ -509,6 +510,7 @@ def _run_operation_job(
             context=context,
             reason=str(payload.get("reason") or ""),
             warrant=str(payload.get("warrant") or ""),
+            proposal_ref=str(payload.get("proposal_ref") or ""),
         )
         return {
             "commit": result["commit"],
@@ -601,6 +603,7 @@ def _run_operation_job(
             project_path,
             context=context,
             paper_plan=payload,
+            proposal_ref=str(payload.get("proposal_ref") or ""),
         )
         return {
             "commit": result["commit"],
@@ -952,6 +955,17 @@ def _run_operation_job(
         if payload_check and payload_check not in checks:
             raise ValueError(f"mark-checked check must be declared by policy: {payload_check}")
         event = mark_checked(vault, target_path, checks=checks, context=context)
+        # I1 spec §2: promoting staged content to checked is PI judgment over a
+        # machine proposal, so it always records one. `item_id` is the canonical
+        # path `mark_checked` itself writes under, never the raw payload string.
+        target_rel = normalize_path(target_path)
+        emit_disposition_event(
+            vault,
+            decision="accept",
+            item_type=str(read_frontmatter(vault / target_rel).get("type") or "concept"),
+            item_id=target_rel,
+            context=context,
+        )
         commit = commit_writer_changes(
             vault,
             f"mark checked {Path(target_path).stem}",
@@ -997,6 +1011,8 @@ def _run_operation_job(
 
         identifiers = dict(source["identifiers"])
         csl_json = dict(source["csl_json"])
+        before_identifiers = dict(identifiers)
+        before_csl = dict(csl_json)
         if doi := str(payload.get("doi") or "").strip():
             identifiers["doi"] = doi
             csl_json["DOI"] = doi
@@ -1080,6 +1096,17 @@ def _run_operation_job(
             },
             context=context,
         )
+        # I1 spec §2: only a *correction* of machine-enriched metadata is PI
+        # judgment over machine output. Overwriting a previously non-empty
+        # identifiers/csl_json value is a correction; filling a previously empty
+        # one is completion, and records nothing. `csl_json.memoria` is excluded
+        # because this branch is its only writer — a standing/research_area/
+        # methodology change is PI judgment over PI-authored fields, so counting
+        # it would report a machine correction that never happened.
+        if _corrects_enriched_metadata((before_identifiers, identifiers), (before_csl, csl_json)):
+            emit_disposition_event(
+                vault, decision="edit", item_type="work", item_id=work_id, context=context
+            )
         commit = commit_writer_changes(
             vault,
             f"update work {source['work_id']}",
@@ -1184,6 +1211,26 @@ def _run_operation_job(
             "outputs": result["paths"],
         }
     raise ValueError(f"unsupported operation: {operation_id!r}")
+
+
+_UNENRICHED_CSL_KEYS = ("memoria",)
+
+
+def _corrects_enriched_metadata(*pairs: tuple[dict[str, Any], dict[str, Any]]) -> bool:
+    """True when an update overwrote a value some machine enricher had already set.
+
+    Only fields with a machine writer count (enrich-source / import), which is
+    why `_UNENRICHED_CSL_KEYS` is dropped: `csl_json.memoria` is written here and
+    nowhere else, so a change to it corrects no machine.
+    """
+    for before, after in pairs:
+        for key, value in after.items():
+            if key in _UNENRICHED_CSL_KEYS:
+                continue
+            prior = before.get(key)
+            if str(prior or "").strip() and str(value) != str(prior):
+                return True
+    return False
 
 
 def _require_operation_actor(context: OperationContext) -> None:

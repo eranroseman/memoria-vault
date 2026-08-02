@@ -733,6 +733,132 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 
 Shipped anchors at `a4da8aa3`: worker dispatch `worker.py:450` (curate-note-candidate), `:471` (curate-note-link), `:549` (frame-paper), `:682` (promote-draft-passage), `:882` (mark-checked), `:928` (update-work); engine `knowledge.py:304` (`curate_note_candidate`), `:346` (`curate_note_link`), `:2300` (`promote_draft_passage`). **Order-tolerance:** the graph plan's ERP-C.5/ERP-D.5 also edit `curate_note_link` and the `update-work` branch — locate by symbol, land in any order, merge insertion points by hand.
 
+## D.1–D.4 landing amendment — the six call-sites as shipped (2026-08-02, BINDING)
+
+All four D tasks landed. Six snippet-level deviations, each named with the thing
+it prevents. The retained snippets below are drafting history where they
+disagree with this.
+
+1. **`update-work`'s correction test excludes `csl_json.memoria`.** D.3's drafted
+   `overwrote` expression compared every key of `csl_json`, and `memoria`
+   (`standing`, `research_area`, `methodology`) is one of them. `worker.py` is
+   that block's **only** writer — no enricher, importer or provider ever sets it
+   — so a PI moving a work from `current` to `archived` would have recorded an
+   `edit` disposition claiming they corrected a machine that never wrote
+   anything. The already-shipped
+   `test_update_work_preserves_unrecognized_topics_from_catalog_row` is exactly
+   that case and would have started emitting. Shipped as
+   `worker._corrects_enriched_metadata(*pairs)` with `_UNENRICHED_CSL_KEYS =
+   ("memoria",)`, so only fields with a real machine writer (enrich-source /
+   import) can register a correction. **If a later task gives `memoria` a machine
+   writer, remove that key from the tuple rather than adding a second test.**
+
+2. **`mark-checked` keys its `item_id` off the normalized path.** The snippet
+   used the raw `target_path` payload string for both the `item_id` and the
+   `read_frontmatter` lookup. `mark_checked` itself normalizes
+   (`trusted_writer._target_path` → `normalize_path`), so `"./notes/x.md"` and
+   `"notes/x.md"` write one document and would have filed two disposition ids
+   for it. Shipped as `target_rel = normalize_path(target_path)`, used for both.
+
+3. **`item_type` on `mark-checked` is the target's own frontmatter `type`,
+   proved on two types.** A one-type fixture cannot distinguish that from a
+   hardcoded `"note"`, so the test marks a `note` and a `hub` checked in one
+   vault and asserts the pair.
+
+4. **The two conditional gates strip; the `item_id` argument does not.**
+   `if proposal_ref.strip():` is load-bearing — a whitespace-only ref is absent —
+   and both forms of "absent" (omitted, and supplied blank) are in the negative
+   tests, because `if proposal_ref:` passes the first and fails the second. The
+   snippet's second strip on `item_id=proposal_ref.strip()` was dropped:
+   `validate_disposition_event` already normalizes through
+   `empirical_events._string_field`, so it was a no-op — and it *survived
+   mutation in both call-sites*, which is the same tell T.2's landing record
+   named for its `sorted(fields)`. A no-op reads as coverage that is not there.
+   The tests still feed a padded ref and assert the canonical `item_id`, which
+   now pins the validator seam the code actually depends on.
+
+5. **Emission is a module-level import, not a per-call-site lazy one.**
+   `knowledge.py` already imports `build_disposition_event` from
+   `runtime.operations` at module scope and `worker._run_operation_job` already
+   opens with a function-scope `from ...operations import (...)` block; the
+   drafted per-branch `from ... import emit_disposition_event` lines would have
+   been a third convention in two files. Added to the existing imports instead.
+
+6. **One existing assertion was re-pointed, not deleted.**
+   `test_knowledge.py::test_curate_note_candidate_accepts_checked_candidate_with_journal`
+   read its `resolved` event as `iter_jsonl(...)[-1]`. The disposition now lands
+   behind it, so `[-1]` would have silently started testing the companion.
+   Selected by kind through a new `_last_event(vault, machine, kind)` helper.
+
+**Goldens did not move.** All six D operations are `PROTECTED_OPERATION_ACTORS`
+`"pi"` entries and `test_floor_sweep_operations.py` enqueues as `actor="agent"`,
+so every one of them is `expect: "refused"` in `floor_lib.OPERATION_REGISTRY` —
+and `assert_golden` only runs on the `done` branch. A D-section journal event
+is structurally invisible to the floor goldens; the contract-10 regeneration
+note does not apply to this section as the sweep stands.
+
+**Reference docs moved with the runtime** (same reason as T.2's doc edit — no
+gate catches a reference page that contradicts the code):
+`docs/reference/control-and-policy/empirical-events.md` gained a
+`### Disposition call-sites` table (its `disposition.v1` row had named
+`resolve-attention` as the only site, and had already been wrong about
+`resolve-evidence-review`, whose `item_id` is an `ev-` id and not a path), and
+`docs/reference/commands-and-transports/system-actions-operations.md`'s two
+curate rows now name the companion and the new `proposal_ref` payload field.
+
+**Public surface D produces:**
+
+- `knowledge.curate_note_link(..., proposal_ref: str = "")` and
+  `knowledge.frame_project_paper(..., proposal_ref: str = "")` — contract 4's
+  provenance gate, threaded from the payload by the `curate-note-link` and
+  `frame-paper` dispatch branches.
+- `worker._corrects_enriched_metadata(*pairs) -> bool` and
+  `worker._UNENRICHED_CSL_KEYS` — the machine-correction test for `update-work`.
+- Five new journal `disposition` streams beside the two already shipped
+  (`attention`, `evidence-set`): `note-candidate`, `edge-proposal`,
+  `frame-proposal`, `work`, and — from `mark-checked` — **the marked document's
+  own frontmatter `type`**, so `item_type` is an open set the concept-type
+  schema owns, not a roster this plan closes. H.1's `_dispositions_panel`
+  already builds `by_item_type` from whatever it finds, so it needs no change;
+  anything later that switches on `item_type` does need to know this.
+
+**SPEC GAPs left open (unchanged from the task bodies):** `edit` has no
+substrate at `curate-note-candidate` (no modified-content parameter) or at
+`curate-note-link` (a bare ref carries no original relation/target to diff).
+Both stay reserved until a structured proposal payload exists.
+
+**Known surface gap (not a D task):** `proposal_ref` is reachable only through
+an operation payload. `memoria project frame-paper --frame-file` splats its JSON
+into the payload, so the frame side already carries it; `memoria note link`
+builds a fixed payload with no such field, so the CLI cannot mark a link as
+adopting a proposal — only `operation run curate-note-link --payload-json` and
+the HTTP/MCP operation-run door can. Whichever surface first proposes edges
+should add the flag.
+
+**Mutation record.** 32 mutants over the six call-sites, 32 killed, no
+survivors. Three rounds; the first two found real gaps and both were fixed
+rather than justified:
+
+- Round 1 (31 mutants, 3 survivors). Two were the redundant `item_id` strips of
+  deviation 4 — deleted, not argued. The third, `before_csl = {}`, survived
+  because every correction fixture moved a DOI, which writes `identifiers` *and*
+  `csl_json` in the same step, so the identifiers pair alone kept the assertion
+  green: **lossy coverage through a co-moving field.** Fixed with a URL-only
+  correction (`resource` touches `csl_json["URL"]` and nothing else).
+- Round 2 (32 mutants, 1 survivor) found the exact mirror on the other side —
+  `before_identifiers = {}` survived for the same reason. Fixed with a fixture
+  where capture left a DOI in `identifiers` while the provider payload behind
+  `csl_json` carried none, so only the identifiers pair sees a prior value.
+- Kill classes covered: inverted and constant `decision` maps, every wrong
+  `item_type`, wrong-source and un-normalized `item_id`, both conditional gates
+  forced open and forced closed, the dropped `.strip()` on each gate, both
+  worker threading lines deleted, each emission deleted outright, and all four
+  branches of the machine-correction test (never fires / always fires / no
+  empty-guard / no change-test / no `memoria` exclusion).
+- D.4's negative pin was proved by bite: a one-line
+  `emit_disposition_event` inserted into `promote_draft_passage` fails the test;
+  reverting passes it.
+
 ### Task D.1: `curate-note-candidate` — always emits
 
 **Files:**
@@ -745,7 +871,7 @@ Shipped anchors at `a4da8aa3`: worker dispatch `worker.py:450` (curate-note-cand
 
 **SPEC GAP (resolved here):** the spec's `edit` row ("adopted modified") has no substrate — the shipped signature (`knowledge.py:304-311`) carries no modified-content parameter. `edit` stays reserved until a modify affordance exists; this task emits `accept`/`reject` only and records that in the test names.
 
-- [ ] **Step 1: Write the failing test** — append to `tests/test_knowledge.py` (reuse the file's existing checked-note + candidate fixtures; `grep -n "curate_note_candidate" tests/test_knowledge.py` and mirror the nearest test's arrange block):
+- [x] **Step 1: Write the failing test** — append to `tests/test_knowledge.py` (reuse the file's existing checked-note + candidate fixtures; `grep -n "curate_note_candidate" tests/test_knowledge.py` and mirror the nearest test's arrange block):
 
 ```python
 def test_curate_note_candidate_emits_disposition_accept_and_reject(tmp_path: Path) -> None:
@@ -764,12 +890,12 @@ def test_curate_note_candidate_emits_disposition_accept_and_reject(tmp_path: Pat
 
 (If `state.read_event_log` filters differently, assert via `state.connect` + `SELECT payload_json FROM event_log WHERE event_type = 'disposition'` — same assertions.)
 
-- [ ] **Step 2: Run to verify failure**
+- [x] **Step 2: Run to verify failure**
 
 Run: `python -m pytest tests/test_knowledge.py::test_curate_note_candidate_emits_disposition_accept_and_reject -v`
 Expected: FAIL — zero disposition rows.
 
-- [ ] **Step 3: Implement.** In `curate_note_candidate`, after the `append_journal_event` call (`knowledge.py:329-339`) and before `commit_writer_changes` (`:340`), insert:
+- [x] **Step 3: Implement.** In `curate_note_candidate`, after the `append_journal_event` call (`knowledge.py:329-339`) and before `commit_writer_changes` (`:340`), insert:
 
 ```python
     from memoria_vault.runtime.operations import emit_disposition_event
@@ -783,7 +909,7 @@ Expected: FAIL — zero disposition rows.
     )
 ```
 
-- [ ] **Step 4: Run to verify pass**
+- [x] **Step 4: Run to verify pass**
 
 Run: `python -m pytest tests/test_knowledge.py -v`
 Expected: PASS.
@@ -810,7 +936,7 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 
 **SPEC GAP (resolved here):** the spec's `edit` variant for curate-note-link ("relation or target changed") requires the proposal's original relation/target to compare against; a bare `proposal_ref` string carries neither. Resolution: emit `accept` always when `proposal_ref` is present; `edit` activates when a structured proposal payload exists to diff against. Recorded in the test names.
 
-- [ ] **Step 1: Write the failing tests** — append to `tests/test_knowledge.py`:
+- [x] **Step 1: Write the failing tests** — append to `tests/test_knowledge.py`:
 
 ```python
 def test_curate_note_link_with_proposal_ref_emits_one_accept(tmp_path: Path) -> None:
@@ -840,12 +966,12 @@ def test_curate_note_link_without_proposal_ref_emits_nothing(tmp_path: Path) -> 
 
 And to `tests/test_worker_product_jobs.py`, mirroring its `enqueue_operation` + `run_next_job` idiom, a frame-paper pair: with `payload["proposal_ref"] = "inbox/candidate-frame-y.md"` → exactly one disposition (`accept` / `frame-proposal` / that id); without → zero.
 
-- [ ] **Step 2: Run to verify failure**
+- [x] **Step 2: Run to verify failure**
 
 Run: `python -m pytest tests/test_knowledge.py -k proposal_ref tests/test_worker_product_jobs.py -k frame -v`
 Expected: FAIL — `TypeError: unexpected keyword argument 'proposal_ref'`.
 
-- [ ] **Step 3: Implement.** Add `proposal_ref: str = ""` to both engine signatures. In each, after its own journal event and before its `commit_writer_changes`, insert:
+- [x] **Step 3: Implement.** Add `proposal_ref: str = ""` to both engine signatures. In each, after its own journal event and before its `commit_writer_changes`, insert:
 
 ```python
     if proposal_ref.strip():
@@ -862,7 +988,7 @@ Expected: FAIL — `TypeError: unexpected keyword argument 'proposal_ref'`.
 
 In `worker.py`, thread the payload field into both calls: `proposal_ref=str(payload.get("proposal_ref") or "")`.
 
-- [ ] **Step 4: Run to verify pass**
+- [x] **Step 4: Run to verify pass**
 
 Run: `python -m pytest tests/test_knowledge.py tests/test_worker_product_jobs.py -v`
 Expected: PASS.
@@ -889,7 +1015,7 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 
 **SPEC GAP (resolved here):** "machine-enriched fields" = the `identifiers` and `csl_json` entries, whose machine writer is enrich-source/import. Overwriting a previously **non-empty** value is a correction (`edit`); filling a previously empty one is completion — no event. This is the precision signal the spec wants without a per-field provenance ledger.
 
-- [ ] **Step 1: Write the failing tests.** Mark-checked (in its existing test file, mirroring the nearest promotion fixture):
+- [x] **Step 1: Write the failing tests.** Mark-checked (in its existing test file, mirroring the nearest promotion fixture):
 
 ```python
 def test_mark_checked_emits_accept_disposition_with_doc_type(tmp_path, ...):
@@ -904,8 +1030,8 @@ def test_mark_checked_emits_accept_disposition_with_doc_type(tmp_path, ...):
 
 Update-work (in `tests/test_worker_product_jobs.py`): three cases — overwrite non-empty DOI → one `edit`/`work` event; fill empty DOI → zero events; update with no identifier/csl change → zero events.
 
-- [ ] **Step 2: Run to verify failure** — the named tests FAIL with zero disposition rows.
-- [ ] **Step 3: Implement.** Mark-checked branch — after `event = mark_checked(...)` (`worker.py:892`), before `commit_writer_changes`:
+- [x] **Step 2: Run to verify failure** — the named tests FAIL with zero disposition rows.
+- [x] **Step 3: Implement.** Mark-checked branch — after `event = mark_checked(...)` (`worker.py:892`), before `commit_writer_changes`:
 
 ```python
         from memoria_vault.runtime.operations import emit_disposition_event
@@ -934,7 +1060,7 @@ Update-work branch — capture `before_identifiers = dict(source["identifiers"])
             )
 ```
 
-- [ ] **Step 4: Run to verify pass** — `python -m pytest tests/test_worker_product_jobs.py <mark-checked file> -v` → PASS.
+- [x] **Step 4: Run to verify pass** — `python -m pytest tests/test_worker_product_jobs.py <mark-checked file> -v` → PASS.
 - [ ] **Step 5: Commit** (goldens per contract 10 if drifted)
 
 ```bash
@@ -953,7 +1079,7 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 - Consumes: the shipped `promote_draft_passage` (`knowledge.py:2300`) — untouched.
 - Produces: a pinned invariant — PI-original acts emit no dispositions.
 
-- [ ] **Step 1: Write the pin test** (passes immediately — this is a bite-proof: temporarily add an `emit_disposition_event(...)` call to `promote_draft_passage`, watch it fail, revert):
+- [x] **Step 1: Write the pin test** (passes immediately — this is a bite-proof: temporarily add an `emit_disposition_event(...)` call to `promote_draft_passage`, watch it fail, revert):
 
 ```python
 def test_promote_draft_passage_emits_no_disposition(tmp_path, ...):
@@ -961,8 +1087,8 @@ def test_promote_draft_passage_emits_no_disposition(tmp_path, ...):
     assert state.read_event_log(vault, event_types=["disposition"]) == []
 ```
 
-- [ ] **Step 2: Bite-proof** — insert a one-line emission into `promote_draft_passage`, run the test (FAIL), revert the line, run again (PASS).
-- [ ] **Step 3: Section gate** — `python scripts/verify` → PASS (regenerate goldens per contract 10 if any D task drifted them, in that task's commit).
+- [x] **Step 2: Bite-proof** — insert a one-line emission into `promote_draft_passage`, run the test (FAIL), revert the line, run again (PASS).
+- [x] **Step 3: Section gate** — `python scripts/verify` → PASS (regenerate goldens per contract 10 if any D task drifted them, in that task's commit).
 - [ ] **Step 4: Commit**
 
 ```bash

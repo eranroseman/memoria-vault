@@ -76,8 +76,32 @@ telemetry row carries no request join, only its own timestamp.
 
 | Schema | Required fields | Source |
 | --- | --- | --- |
-| `disposition.v1` | `decision`, `item_type`, `item_id` | Appended to the journal as an `event: disposition` row when `resolve-attention` resolves a PI attention disposition. `decision` uses the same enum as `empirical_event.v1`; `item_id` here is the vault-relative path of the resolved target, so the opaque-id rule below does not apply to it. |
+| `disposition.v1` | `decision`, `item_type`, `item_id` | Appended to the journal as an `event: disposition` row at the call-sites listed below. `decision` uses the same enum as `empirical_event.v1`; `item_id` is a vault-relative path or an opaque record id depending on the site, so the opaque-id rule below does not apply to it. |
 | `read-observed.v1` | `workflow`, `staleness_hit` | One `telemetry_events` row per attention detail read (`read_attention_card`, the door shared by CLI, HTTP and MCP), with `workflow: attention`. `staleness_hit` is `true` when the served card carries a `stale:` mark. Telemetry is not journaled, which is what lets a read record at all without rewriting the tracked `.memoria/journal-head` anchor. |
+
+### Disposition call-sites
+
+A `disposition.v1` records PI judgment over machine-proposed content and
+nothing else, so a PI-original act records none. Each site appends inside its
+operation's own transaction, before that operation's commit.
+
+| Operation | `item_type` | `item_id` | Emits |
+| --- | --- | --- | --- |
+| `resolve-attention` | `attention` | resolved target path | on every resolution |
+| `resolve-evidence-review` | `evidence-set` | evidence id (`ev-xxxxxxxx`) | on every decision |
+| `curate-note-candidate` | `note-candidate` | curated note path | always (`accepted`→`accept`, `rejected`→`reject`) |
+| `mark-checked` | the target's frontmatter `type` | target path | always |
+| `curate-note-link` | `edge-proposal` | the `proposal_ref` | only when the payload carries a non-blank `proposal_ref` |
+| `frame-paper` | `frame-proposal` | the `proposal_ref` | only when the payload carries a non-blank `proposal_ref` |
+| `update-work` | `work` | work id | only when the update overwrites a previously non-empty machine-enriched `identifiers`/`csl_json` value (`edit`) |
+| `promote-draft-passage` | — | — | never — the PI selects and titles their own passage |
+
+`proposal_ref` is the provenance gate on the two conditional sites: a card path
+or the id of the request that proposed the edge or frame. Absent, the act is
+PI-original and records nothing. `update-work` excludes `csl_json.memoria`
+(`standing`, `research_area`, `methodology`) from the correction test — that
+block has no machine writer, so changing it corrects no machine. Filling a
+previously empty enriched value is completion, not correction, and is silent.
 
 ## Privacy Boundary
 
