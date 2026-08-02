@@ -670,6 +670,71 @@ def test_curate_note_link_warrant_is_stripped_and_a_blank_one_writes_nothing(
     assert event["warrant"] == "bounded to adults"
 
 
+def _edge_write_payloads(vault: Path) -> list[dict]:
+    """Every `edge-write.v1` telemetry payload, in insertion order."""
+    with state.connect(vault) as conn:
+        rows = conn.execute(
+            "SELECT payload_json FROM telemetry_events"
+            " WHERE event_type = 'edge-write.v1' ORDER BY rowid"
+        ).fetchall()
+    return [json.loads(str(row["payload_json"])) for row in rows]
+
+
+def test_curate_note_link_counts_edge_writes_per_relation_type(tmp_path: Path) -> None:
+    """The touch-budget counter is keyed by relation type, and only a real write counts."""
+    from memoria_vault.runtime.operations import edge_write_counts
+    from memoria_vault.runtime.telemetry import record_telemetry_event
+
+    vault = workspace(tmp_path)
+    checked_note(vault, "source", "Source", "01KBN6V6KX0000000000000001")
+    checked_note(vault, "target", "Target", "01KBN6V6KX0000000000000002")
+    checked_note(vault, "other", "Other", "01KBN6V6KX0000000000000003")
+    arguments = {"actor": "pi", "machine": "curator"}
+
+    curate_note_link(vault, "source", "supports", "target", **arguments)
+    curate_note_link(vault, "source", "supports", "other", **arguments)
+    curate_note_link(vault, "source", "extends", "target", **arguments)
+    # Idempotent repeat: an unchanged link with no warrant writes no second counter.
+    curate_note_link(vault, "source", "supports", "target", **arguments)
+    # A same-table row of another event type must not leak into the edge-write counts.
+    record_telemetry_event(
+        vault,
+        "attention-admitted",
+        {"card_path": "inbox/a.md", "kind": "flag", "loudness": "alert", "raised_by": "sweep"},
+    )
+
+    # Two relation types with different counts: a counter that ignored its GROUP BY,
+    # or reported one row per relation, reads the same as the right one at N=1.
+    assert edge_write_counts(vault) == {"supports": 2, "extends": 1}
+    # `edge_write_counts` projects `write_path` away, so assert it where it is written.
+    assert _edge_write_payloads(vault) == [
+        {"relation_type": "supports", "write_path": "curate-note-link"},
+        {"relation_type": "supports", "write_path": "curate-note-link"},
+        {"relation_type": "extends", "write_path": "curate-note-link"},
+    ]
+
+
+def test_curate_note_link_counts_a_warrant_rewrite_of_an_already_linked_target(
+    tmp_path: Path,
+) -> None:
+    """`changed` is not the whole trigger: new warrant text on a settled link is a write."""
+    from memoria_vault.runtime.operations import edge_write_counts
+
+    vault = workspace(tmp_path)
+    checked_note(vault, "source", "Source", "01KBN6V6KX0000000000000001")
+    checked_note(vault, "target", "Target", "01KBN6V6KX0000000000000002")
+    arguments = {"actor": "pi", "machine": "curator"}
+
+    curate_note_link(vault, "source", "supports", "target", warrant="first license", **arguments)
+    rewrite = curate_note_link(
+        vault, "source", "supports", "target", warrant="second license", **arguments
+    )
+
+    # The frontmatter link was already there; the edge row still took an upsert.
+    assert rewrite["changed"] is False
+    assert edge_write_counts(vault) == {"supports": 2}
+
+
 def test_curate_note_link_rejects_invalid_source_without_mutation(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
     source = checked_note(vault, "source", "Source", "01KBN6V6KX0000000000000001")

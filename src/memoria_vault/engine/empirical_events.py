@@ -12,6 +12,7 @@ JOURNAL_EVENT_REF_SCHEMA = "journal_event_ref.v1"
 EMPIRICAL_EVENT_RECORD_OPERATION = "empirical-event-record"
 DISPOSITION_EVENT_SCHEMA = "disposition.v1"
 READ_EVENT_SCHEMA = "read-observed.v1"
+EDGE_WRITE_EVENT_SCHEMA = "edge-write.v1"
 
 SURFACES = frozenset({"cli", "rest", "mcp", "obsidian", "vscode", "manual"})
 WORKFLOWS = frozenset(
@@ -100,6 +101,10 @@ ENUM_FIELDS = {
 OPAQUE_ID_FIELDS = frozenset({"session_id", "project_id", "item_id"})
 DISPOSITION_REQUIRED_FIELDS = frozenset({"decision", "item_type", "item_id"})
 READ_REQUIRED_FIELDS = frozenset({"workflow", "staleness_hit"})
+EDGE_WRITE_REQUIRED_FIELDS = frozenset({"relation_type", "write_path"})
+# The two seams that mint a concept edge: the PI's typed link and the single-row
+# upsert behind `confirm-tension`. A third write path is a schema change here.
+EDGE_WRITE_PATHS = frozenset({"curate-note-link", "insert-concept-edge"})
 
 
 def validate_empirical_event(payload: dict[str, Any]) -> dict[str, Any]:
@@ -183,6 +188,32 @@ def validate_read_event(payload: dict[str, Any]) -> dict[str, Any]:
         "workflow": workflow,
         "staleness_hit": _bool_field("staleness_hit", payload["staleness_hit"]),
     }
+
+
+def validate_edge_write_event(payload: dict[str, Any]) -> dict[str, Any]:
+    """Return a normalized per-relation-type edge-write counter or raise ``ValueError``.
+
+    Counts only: two closed enums and nothing else. No endpoint, no warrant text,
+    no note path — this row is the I1 touch-budget denominator, so it must stay
+    aggregable without carrying vault content into the analytics table.
+    """
+    from memoria_vault.runtime.subsystems.lib.edges import EDGE_RELATIONS
+
+    if not isinstance(payload, dict):
+        raise ValueError("edge-write event payload must be an object")
+    unknown = sorted(set(payload) - EDGE_WRITE_REQUIRED_FIELDS)
+    if unknown:
+        raise ValueError(f"edge-write event contains unsupported fields: {', '.join(unknown)}")
+    missing = sorted(field for field in EDGE_WRITE_REQUIRED_FIELDS if _missing(payload.get(field)))
+    if missing:
+        raise ValueError(f"edge-write event missing required fields: {', '.join(missing)}")
+    relation_type = _string_field("relation_type", payload["relation_type"])
+    if relation_type not in EDGE_RELATIONS:
+        raise ValueError(f"relation_type must be one of: {', '.join(sorted(EDGE_RELATIONS))}")
+    write_path = _string_field("write_path", payload["write_path"])
+    if write_path not in EDGE_WRITE_PATHS:
+        raise ValueError(f"write_path must be one of: {', '.join(sorted(EDGE_WRITE_PATHS))}")
+    return {"relation_type": relation_type, "write_path": write_path}
 
 
 def _missing(value: Any) -> bool:

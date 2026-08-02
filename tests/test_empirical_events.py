@@ -319,3 +319,79 @@ def test_workflows_roster_includes_attention() -> None:
     assert "attention" in WORKFLOWS
     event = validate_read_event({"workflow": "attention", "staleness_hit": True})
     assert event == {"workflow": "attention", "staleness_hit": True}
+
+
+@pytest.mark.parametrize("write_path", ["curate-note-link", "insert-concept-edge"])
+def test_edge_write_event_accepts_every_roster_relation_on_both_write_paths(
+    write_path: str,
+) -> None:
+    """The `relation_type` enum IS `EDGE_RELATIONS` -- not a second hand-kept roster."""
+    from memoria_vault.engine.empirical_events import validate_edge_write_event
+    from memoria_vault.runtime.subsystems.lib.edges import EDGE_RELATIONS
+
+    roster = sorted(EDGE_RELATIONS)
+
+    # `tension` is the discriminator: it is in EDGE_RELATIONS and out of
+    # LINK_RELATIONS, so a validator keyed to the narrower roster fails here.
+    assert "tension" in roster
+    assert [
+        validate_edge_write_event({"relation_type": relation, "write_path": write_path})
+        for relation in roster
+    ] == [{"relation_type": relation, "write_path": write_path} for relation in roster]
+
+
+def test_edge_write_event_normalizes_surrounding_whitespace_before_the_enum_check() -> None:
+    """Strip then check: a padded roster verb is the same write, not an off-roster one."""
+    from memoria_vault.engine.empirical_events import validate_edge_write_event
+
+    assert validate_edge_write_event(
+        {"relation_type": "  tension\n", "write_path": " insert-concept-edge "}
+    ) == {"relation_type": "tension", "write_path": "insert-concept-edge"}
+
+
+def test_edge_write_event_rejects_an_off_roster_relation() -> None:
+    from memoria_vault.engine.empirical_events import validate_edge_write_event
+
+    # `backing` is a Toulmin term the seven-relation roster deliberately omits.
+    with pytest.raises(ValueError, match="relation_type must be one of"):
+        validate_edge_write_event({"relation_type": "backing", "write_path": "curate-note-link"})
+
+
+def test_edge_write_event_rejects_an_unknown_write_path() -> None:
+    from memoria_vault.engine.empirical_events import validate_edge_write_event
+
+    with pytest.raises(ValueError, match="write_path must be one of"):
+        validate_edge_write_event({"relation_type": "supports", "write_path": "vim"})
+
+
+@pytest.mark.parametrize(
+    ("payload", "missing"),
+    [
+        ({"relation_type": "supports"}, "write_path"),
+        ({"write_path": "curate-note-link"}, "relation_type"),
+        ({"relation_type": "  ", "write_path": "curate-note-link"}, "relation_type"),
+    ],
+)
+def test_edge_write_event_rejects_a_missing_field(payload: dict, missing: str) -> None:
+    """Both fields are required, so each one's absence must be named on its own."""
+    from memoria_vault.engine.empirical_events import validate_edge_write_event
+
+    with pytest.raises(ValueError, match=f"missing required fields: {missing}$"):
+        validate_edge_write_event(payload)
+
+
+def test_edge_write_event_rejects_extra_fields_and_non_objects() -> None:
+    """The field set is closed: a counter row carries no endpoint and no free text."""
+    from memoria_vault.engine.empirical_events import validate_edge_write_event
+
+    with pytest.raises(ValueError, match="unsupported fields: source_path, warrant"):
+        validate_edge_write_event(
+            {
+                "relation_type": "supports",
+                "write_path": "curate-note-link",
+                "source_path": "notes/a.md",
+                "warrant": "licensing text",
+            }
+        )
+    with pytest.raises(ValueError, match="must be an object"):
+        validate_edge_write_event([("relation_type", "supports")])  # type: ignore[arg-type]

@@ -49,7 +49,7 @@ def _validated(event_type: str, payload: dict[str, Any]) -> dict[str, Any]:
         return schemas.validate_empirical_event(payload)
     if event_type == schemas.READ_EVENT_SCHEMA:
         return schemas.validate_read_event(payload)
-    if event_type == "edge-write.v1" and hasattr(schemas, "validate_edge_write_event"):
+    if event_type == schemas.EDGE_WRITE_EVENT_SCHEMA:
         return schemas.validate_edge_write_event(payload)
     fields = NATIVE_EVENT_FIELDS.get(event_type)
     if fields is None:

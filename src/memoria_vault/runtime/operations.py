@@ -190,6 +190,51 @@ def emit_disposition_event(
     )
 
 
+def emit_edge_write_event(
+    vault: Path,
+    *,
+    relation_type: str,
+    write_path: str,
+    context: OperationContext,
+) -> dict[str, Any]:
+    """Record one per-relation-type edge-write counter (EDGES section 4 instrumentation).
+
+    Analytics-only, like `record_empirical_event`: the row lands in
+    `telemetry_events`, never the hash-chained journal, so a counter can never
+    move `.memoria/journal-head`. `write_path` names the *seam the PI used*, not
+    the storage call underneath it — `curate_note_link` reaches
+    `insert_concept_edge` when it hangs a warrant, and counting that once as
+    `curate-note-link` is what keeps one edge write worth one counter.
+    """
+    validate_operation_context(vault, context)
+    from memoria_vault.engine.empirical_events import (
+        EDGE_WRITE_EVENT_SCHEMA,
+        validate_edge_write_event,
+    )
+    from memoria_vault.runtime.telemetry import record_telemetry_event
+
+    event = validate_edge_write_event({"relation_type": relation_type, "write_path": write_path})
+    return {"event_id": record_telemetry_event(vault, EDGE_WRITE_EVENT_SCHEMA, event), **event}
+
+
+def edge_write_counts(vault: Path) -> dict[str, int]:
+    """Return telemetry edge-write counts per relation type (beta.2 touch-budget input).
+
+    Relation-type space — the `EDGE_RELATIONS` roster — and nothing else. This
+    reads the counter stream, never `concept_edges`, so no path, alias or
+    Concept identity passes through it.
+    """
+    from memoria_vault.engine.empirical_events import EDGE_WRITE_EVENT_SCHEMA
+
+    with state.connect(vault) as conn:
+        rows = conn.execute(
+            "SELECT json_extract(payload_json, '$.relation_type') AS relation_type,"
+            " COUNT(*) AS n FROM telemetry_events WHERE event_type = ? GROUP BY relation_type",
+            (EDGE_WRITE_EVENT_SCHEMA,),
+        ).fetchall()
+    return {str(row["relation_type"]): int(row["n"]) for row in rows}
+
+
 def emit_explicit_disposition_event(
     vault: Path,
     *,
