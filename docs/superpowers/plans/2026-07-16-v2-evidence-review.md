@@ -736,6 +736,208 @@ followed as written. §8's open contract question is answered in item 4.
 9. **No golden movement.** No journal event was added or reshaped and the floor
    seed is untouched, so `tests/fixtures/floor/goldens/` is byte-identical.
 
+## Execution amendment — V2R-C.1 as built, and where V2R-C stops (2026-08-01)
+
+Recorded by the executor of V2R-C.1, against `origin/main` @ `b5040047`. It
+governs C.1 only. The 2026-07-29 amendment stack and the 2026-08-01
+`row kind / disposition` amendment above are unchanged and were followed as
+written; every C.1 body snippet that contradicts them is drafting history.
+
+1. **V2R-C stops after C.1: V2R-C.2 is blocked on I1 T.3.** The nested-collector
+   amendment §6 makes `I1 T.1/T.2/T.3` a hard precondition for *all* C telemetry
+   implementation and tests, and requires every client-event assertion to query
+   `telemetry_events`. T.1 and T.2 have landed (`runtime/schema.sql`'s
+   `telemetry_events` at the current rung; `runtime/telemetry.py`'s
+   `record_telemetry_event`), but **T.3 has not**: `operations.record_empirical_event`
+   still calls `append_journal_event` and returns `journal_event_id`/`commit`,
+   and `tests/test_empirical_events.py` still pins
+   `event_log WHERE event_type = 'empirical-event'`. C.2's `view.opened` would
+   therefore land in the journal, which §6 forbids asserting against, and
+   routing the CLI around the `empirical-event-record` operation to reach
+   `record_telemetry_event` directly would invent a seam C.2/C.3's failure
+   contract (raw-queue amendment §5) does not have. C.2–C.5 resume once T.3
+   lands; no part of them was stubbed.
+
+2. **Consumed name.** C.1 calls `engine_api.evidence_review_queue(...)` — the
+   one façade B.4 landed. The C.1 body's `read_evidence_review_queue` was never
+   built (B.4/.5 execution amendment §1) and its DTO field names
+   (`routing`, `latest_decision`, preview-shaped raw `items`, nested `analysis`)
+   belong to the superseded layer.
+
+3. **The summary keeps `kind`, because `total` counts the union.** The raw-queue
+   amendment §3 enumerates the *evidence* projection; §4 additionally requires an
+   unfiltered `srd-gap` variant in the same list, and B.4's `total` is
+   `len(selected) + len(srd_rows)`. A `rows` list without a discriminator could
+   not carry both arms and still agree with its own `total`, so `kind` rides both
+   arms verbatim — the same field the cockpit's `_review_panel` switches on. The
+   §3 prohibitions are honored exactly: no `items`, no `item_previews`, no
+   analysis field, and no `routing`/`latest_decision`/`project_path` spelling
+   reaches a row (asserted disjoint per row).
+
+4. **SRD summary shape, decided here.** `{"kind": "srd-gap", "title", "ref"}`
+   from the normalized U3 card, and nothing else: no evidence column to
+   misread, no action, no `reviewable` key claiming a decision that cannot be
+   made. The human render is `<ref>  srd-gap  <title>  — read-only`.
+
+5. **Two display rules the plan left open.** A row with no routing type (the
+   permanently blocked one) renders `-` in the routing column rather than a run
+   of spaces; and when a row is *both* non-reviewable and disposed, the
+   read-only cure outranks the disposition, because the cure is the only thing
+   the PI can act on. Both have a fixture producer and a killed mutant.
+
+6. **`--type` binds `EVIDENCE_REVIEW_ROUTING_TYPES`,** not a literal tuple: one
+   routing vocabulary, shared with `filter_queue`'s own refusal.
+
+7. **Parity: parked, not registered (U1 M.4).** `memoria review list` joins
+   `CLI_ONLY_COMMANDS` in `tests/test_surface_contract.py`. It is deliberately
+   *not* bound to `views.evidence_review`: that row's engine returns nested
+   cards while the CLI is engine-direct over raw rows (spec §8 keep-test), so one
+   row claiming both would describe a projection neither side performs. Follow
+   the `memoria cockpit` precedent — an exemption a later registration removes,
+   not a permanent one — if V2 ever registers a queue read of its own.
+
+8. **A fixture fact worth keeping.** An accept whose `items_sha256` matches the
+   row's current items clears the row *out* of the queue, so the only queued row
+   that can carry a `warrant` is one that came back — a permanently blocked row,
+   or one whose items changed after the accept. C.1's fixture accepts a
+   source-backed row with a warrant and then drifts its draft text, which is the
+   cheaper of the two and also exercises `cure` and `warrant` on one row.
+
+9. **No golden movement.** No journal event, no operation id, no floor-seed
+   change; `tests/fixtures/floor/goldens/` is byte-identical and the floor
+   sweep is untouched (`memoria review list` has no registry row, so it needs no
+   `ARG_TABLE` entry).
+
+## Execution amendment — V2R-C.2–.5 as built; V2R-C complete (2026-08-02)
+
+Recorded by the executor of C.2 through C.5, on top of C.1 (PR #1675, still
+open) rebased over `origin/main` @ `ccba5a2d`. The 2026-07-29 amendment stack,
+the 2026-08-01 `row kind / disposition` amendment, and the B.4/.5 and C.1
+execution amendments are unchanged and were followed as written; every C body
+snippet that contradicts them is drafting history.
+
+1. **The C.1 blocker is cleared, by content.** I1 T.3 landed as #1674:
+   `operations.record_empirical_event` calls `record_telemetry_event` and
+   returns `{event_id, telemetry_id, event, outputs}`, and the resume grep
+   (`grep -n "telemetry_id" src/memoria_vault/runtime/operations.py`) hits at
+   `:147` and `:150`. C.1's BLOCKED banner on C.2 is removed. C.1's refusal to
+   route the CLI around `empirical-event-record` still stands: every client
+   event here goes through that one operation.
+
+2. **Every client-event query is `telemetry_events`** (nested-collector
+   amendment §6). This replaces the drafted `event_log WHERE event_type =
+   'empirical-event'` in C.3's `review_dwell_seconds`, in C.4's
+   `_review_show_rows`/`_review_dwell_samples`, and in every C test helper.
+   `_review_disposition_rows` still reads `event_log`, because the seam's
+   `resolved` events are server truth and stayed journal-side.
+
+3. **`ORDER BY rowid`, never `event_id`.** The drafts order telemetry reads by
+   `event_id`, which is the journal's autoincrement integer but a random uuid
+   hex in `telemetry_events`. Two events inside one second have identical `ts`,
+   so `event_id` ordered them arbitrarily — this actually failed a
+   two-shows-in-one-second test before `rowid` replaced it. `rowid` is
+   insertion order, which is what "the latest open" means.
+
+4. **A telemetry claim is proved at the writer, both halves.**
+   `test_review_show_records_one_client_event_in_telemetry_and_none_in_the_journal`
+   pins the one `empirical_event.v1` row *and* snapshots the whole journal
+   plane — `event_log` rows, the per-machine JSONL bytes, and the
+   `journal-head` anchor — before and after the show, asserting identity. The
+   seeded vault already carries a journal (V2R-A's `resolved` events), so an
+   empty-journal proof is unavailable here and identity across the call is the
+   claim.
+
+5. **Both telemetry failures are produced, not mocked** (raw-queue amendment §5
+   asked for a mock; a produced failure is strictly stronger). A `BEFORE
+   INSERT` trigger on `telemetry_events` refuses the write for real, survives
+   `state._init`'s re-run of `schema.sql`, and leaves the rest of the vault
+   working — so the CLI reports the sink's own words (`telemetry sink offline`)
+   rather than a shape the test invented. A second, mocked test covers the
+   operation that fails *without* an error, which is the only producer of the
+   `_VIEW_OPENED_UNRECORDED` / `_DISPOSITION_UNRECORDED` fallbacks.
+
+6. **`analysis` is present-only, never `None`** (raw-queue amendment §3: "adds
+   an output-only `analysis` … when that shared helper is nonempty; otherwise
+   that key is absent"). The C.2 body's "key present; None until analysis
+   exists" is the superseded layer. A permanently blocked row therefore carries
+   no `analysis` key even under `--show-analysis`, and its human render says
+   `Machine analysis: none recorded for this row.`
+
+7. **`telemetry` on the payload is present-only too.** The helpers return
+   `{ok, event_id}` (plus `duration_s` on C.3 when a dwell rides), and add
+   `result` — the failed operation's own account — only on failure. Retaining
+   the whole successful job envelope in every `--json` payload would be noise;
+   retaining it on failure is what amendment §5's "retain the failed
+   operation's error/result" asks for, since `error` lives inside `result`.
+
+8. **Three human fronts the plan left to `_emit`.** `_emit`'s generic success
+   line is `completed; details available with --json`, which is a poor cockpit
+   for `review accept|reject|edit|defer` and useless for `review stats`, whose
+   entire product is numbers. Both got a minimal front: the action prints
+   `<decision> <ev-id>` plus a present-only `  — <reason>`; `stats` prints one
+   `key: value` line per metric, derived from the summary mapping itself, so
+   C.5's `reopens`/`reopen_rate` reached the front without a second list to
+   keep in step. `review show` keeps its planned structural render, with the
+   claim printed **verbatim across its own lines** — the fixture's claim is a
+   soft-wrapped two-line block, and the list's one-line collapse is the lossy
+   projection, not the detail's.
+
+9. **Four deviations from the drafted snippets, each removing a dishonest or
+   unproducible branch.**
+
+   - `_review_detail_row` reuses `_review_summary_row` rather than re-selecting
+     fields, so the summary projection keeps exactly one producer and the
+     detail is provably "the summary plus `items`".
+   - `_print_review_detail` prints `Disposition: <value>` unconditionally
+     (`disposition` is `open` or `rejected`, never empty), instead of the C.1
+     list's present-only marker: a detail that omits the field reads as "no
+     disposition", which is a claim the row cannot make.
+   - `_cmd_review_action`'s `duration_s` gate keeps the drafted `>= 1.0`, and a
+     test now produces the sub-second case (a `view.opened` recorded this
+     second): the schema *would* accept `0.4`, so without the gate a keystroke
+     enters the dwell distribution as a real look.
+   - `review_dwell_seconds` keeps its unplaceable-timestamp guard, and the test
+     produces one by direct insert. `telemetry_events` is a plain table, the
+     door is not its only writer, and a naive timestamp would otherwise raise
+     `TypeError` in the middle of recording a decision.
+
+10. **`_wide_project` exists for one property.** `batch=0` is only
+    distinguishable from the default `batch=10` past ten evidence rows, so
+    `test_review_show_reaches_a_row_beyond_the_default_batch` composes eleven
+    and shows the eleventh. Without it, the unbounded-lookup contract has no
+    failing witness.
+
+11. **Surface parity, per nested-collector amendment §7.** All five new verbs
+    (`show`, `accept`, `reject`, `edit`, `defer`, `stats`) join both
+    `tests/test_cli.py`'s exact set and `CLI_ONLY_COMMANDS`, under C.1's
+    existing exemption comment — the CLI front is engine-direct, so none of
+    them has a registry row.
+
+12. **No golden movement.** No new operation id (all telemetry rides
+    `empirical-event-record`), no journal event added or reshaped, no floor-seed
+    change; `tests/fixtures/floor/goldens/` is byte-identical.
+
+13. **Mutation: 65 mutants, 60 killed, 5 survivors** — each a predicate with no
+    producer reachable through product code, and each kept deliberately. The
+    kind guard on C.2's lookup, the `event_type = 'empirical_event.v1'` column
+    predicate, the `operation = 'resolve-evidence-review'` predicate, the
+    `if decision in actions` guard, and the `and digest` guard on
+    accept-voiding. The full list with judgements is in the handoff. Sharpening
+    matters: the kind guard survives only when the mutant *also* softens
+    `row["evidence_id"]` to `.get`; indexing without it raises `KeyError` on an
+    SRD row, which the SRD-refusal test kills — so the guard is load-bearing
+    and only that rewrite is equivalent.
+
+14. **One test defect the harness exposed, worth naming.**
+    `test_review_show_reaches_a_row_beyond_the_default_batch` first assumed the
+    eleventh *outline* row is the one batching withholds. Evidence ids are
+    minted per block and the queue orders by them, so compose order is not queue
+    order: the test passed under some orderings and failed under others, and a
+    flaky baseline makes every mutant after it look killed. The test now asks
+    the list which row it withheld. Every mutation figure above is from a run
+    over a baseline verified green eight times, with and without
+    `-p no:randomly`.
+
 ---
 
 # V2R-A — The disposition seam: reject flip, defer/edit, warrant, disposition.v1
@@ -4132,14 +4334,14 @@ or HTTP contract.
 
 **Steps:**
 
-- [ ] Register the test file. In `tests/conftest.py`, below the line
+- [x] Register the test file. In `tests/conftest.py`, below the line
   `    "test_cli_workspace_requests.py": "contract",` (line 29) insert:
 
   ```python
       "test_cli_review.py": "contract",
   ```
 
-- [ ] Write the failing tests. Create `tests/test_cli_review.py`:
+- [x] Write the failing tests. Create `tests/test_cli_review.py`:
 
   ```python
   from __future__ import annotations
@@ -4259,7 +4461,7 @@ or HTTP contract.
       assert "argument" not in out.lower()  # no machine analysis in list mode
   ```
 
-- [ ] Run to verify failure:
+- [x] Run to verify failure:
 
   ```
   python -m pytest tests/test_cli_review.py -v
@@ -4267,7 +4469,7 @@ or HTTP contract.
 
   Expected: all 4 tests error with `SystemExit: 2` (argparse: `invalid choice: 'review'`).
 
-- [ ] Minimal implementation in `src/memoria_vault/cli.py`.
+- [x] Minimal implementation in `src/memoria_vault/cli.py`.
 
   (a) In `_build_parser`, after `    _operation_commands(sub)` (line 138) insert:
 
@@ -4354,14 +4556,14 @@ or HTTP contract.
       return 0
   ```
 
-- [ ] In `tests/test_cli.py` `test_cli_command_surface_is_exact` (line 73), add to the set
+- [x] In `tests/test_cli.py` `test_cli_command_surface_is_exact` (line 73), add to the set
   (after `"memoria attention worklist",` line 122):
 
   ```python
           "memoria review list",
   ```
 
-- [ ] Run to verify pass:
+- [x] Run to verify pass:
 
   ```
   python -m pytest tests/test_cli_review.py tests/test_cli.py -v
@@ -4381,6 +4583,11 @@ or HTTP contract.
 ---
 
 ### Task V2R-C.2: `memoria review show <ev-id>` — evidence-first detail, `--show-analysis` fold, `view.opened` emission
+
+> **UNBLOCKED (2026-08-02).** I1 T.3 landed as #1674 and the resume grep
+> (`grep -n "telemetry_id" src/memoria_vault/runtime/operations.py`) hits.
+> C.2–C.5 executed; see the C.2–.5 execution amendment at the top of this file
+> for what was built and where the drafted snippets below were superseded.
 
 **Files:**
 - Modify: `src/memoria_vault/cli.py` (`_review_commands` from V2R-C.1; handlers block
@@ -4408,7 +4615,7 @@ or HTTP contract.
 
 **Steps:**
 
-- [ ] Write the failing tests. Append to `tests/test_cli_review.py`:
+- [x] Write the failing tests. Append to `tests/test_cli_review.py`:
 
   ```python
   def test_review_show_is_evidence_first_with_analysis_folded(
@@ -4501,7 +4708,7 @@ or HTTP contract.
       assert state.read_event_log(vault, event_types=["empirical-event"]) == []
   ```
 
-- [ ] Run to verify failure:
+- [x] Run to verify failure:
 
   ```
   python -m pytest tests/test_cli_review.py -v -k review_show
@@ -4509,7 +4716,7 @@ or HTTP contract.
 
   Expected: 4 errors with `SystemExit: 2` (argparse: `invalid choice: 'show'`).
 
-- [ ] Minimal implementation in `src/memoria_vault/cli.py`.
+- [x] Minimal implementation in `src/memoria_vault/cli.py`.
 
   (a) In `_review_commands`, after the `list_cmd.set_defaults(...)` line add:
 
@@ -4597,10 +4804,10 @@ or HTTP contract.
 
   (`uuid` is already imported at `cli.py:14`; `engine_api` at `cli.py:24`.)
 
-- [ ] In `tests/test_cli.py`, add `"memoria review show",` to the exact set beside
+- [x] In `tests/test_cli.py`, add `"memoria review show",` to the exact set beside
   `"memoria review list",`.
 
-- [ ] Run to verify pass:
+- [x] Run to verify pass:
 
   ```
   python -m pytest tests/test_cli_review.py tests/test_cli.py -v
@@ -4608,7 +4815,7 @@ or HTTP contract.
 
   Expected: all pass.
 
-- [ ] Commit:
+- [ ] Commit (not done — this session had no commit authority):
 
   ```
   git add src/memoria_vault/cli.py tests/test_cli_review.py tests/test_cli.py
@@ -4652,7 +4859,7 @@ or HTTP contract.
 
 **Steps:**
 
-- [ ] Write the failing tests. Append to `tests/test_cli_review.py` (extend the
+- [x] Write the failing tests. Append to `tests/test_cli_review.py` (extend the
   imports at top of file with `import uuid`, `from datetime import UTC, datetime,
   timedelta`, `from memoria_vault.engine import api as engine_api`, and
   `from memoria_vault.runtime.time import utc_z`):
@@ -4791,7 +4998,7 @@ or HTTP contract.
       assert _seam_events(vault) == []
   ```
 
-- [ ] Run to verify failure:
+- [x] Run to verify failure:
 
   ```
   python -m pytest tests/test_cli_review.py -v -k "review_action or records_warrant"
@@ -4799,7 +5006,7 @@ or HTTP contract.
 
   Expected: 7 errors with `SystemExit: 2` (argparse: `invalid choice: 'accept'` etc.).
 
-- [ ] Minimal implementation, part 1 — `src/memoria_vault/runtime/knowledge.py`.
+- [x] Minimal implementation, part 1 — `src/memoria_vault/runtime/knowledge.py`.
 
   (a) Change the datetime import (line 14 area, currently `from datetime import date`) to:
 
@@ -4845,7 +5052,7 @@ or HTTP contract.
       return dwell if dwell > 0 else None
   ```
 
-- [ ] Minimal implementation, part 2 — `src/memoria_vault/cli.py`.
+- [x] Minimal implementation, part 2 — `src/memoria_vault/cli.py`.
 
   (a) In `_review_commands`, after the `show.set_defaults(...)` line add:
 
@@ -4931,7 +5138,7 @@ or HTTP contract.
       )
   ```
 
-- [ ] In `tests/test_cli.py`, add to the exact set beside `"memoria review show",`:
+- [x] In `tests/test_cli.py`, add to the exact set beside `"memoria review show",`:
 
   ```python
           "memoria review accept",
@@ -4940,7 +5147,7 @@ or HTTP contract.
           "memoria review defer",
   ```
 
-- [ ] Run to verify pass:
+- [x] Run to verify pass:
 
   ```
   python -m pytest tests/test_cli_review.py tests/test_cli.py tests/test_draft_verification.py -v
@@ -4948,7 +5155,7 @@ or HTTP contract.
 
   Expected: all pass (`test_draft_verification.py` proves the seam contract is untouched).
 
-- [ ] Commit:
+- [ ] Commit (not done — this session had no commit authority):
 
   ```
   git add src/memoria_vault/cli.py src/memoria_vault/runtime/knowledge.py tests/test_cli_review.py tests/test_cli.py
@@ -4983,14 +5190,14 @@ or HTTP contract.
 
 **Steps:**
 
-- [ ] Register the test file. In `tests/conftest.py`, below the line
+- [x] Register the test file. In `tests/conftest.py`, below the line
   `    "test_empirical_events.py": "contract",` (line 42) insert:
 
   ```python
       "test_review_telemetry.py": "contract",
   ```
 
-- [ ] Write the failing tests. Create `tests/test_review_telemetry.py`:
+- [x] Write the failing tests. Create `tests/test_review_telemetry.py`:
 
   ```python
   from __future__ import annotations
@@ -5182,7 +5389,7 @@ or HTTP contract.
       assert payload["telemetry"]["skip_rate"] == 0.0
   ```
 
-- [ ] Run to verify failure:
+- [x] Run to verify failure:
 
   ```
   python -m pytest tests/test_review_telemetry.py -v
@@ -5190,7 +5397,7 @@ or HTTP contract.
 
   Expected: collection error — `ImportError: cannot import name 'review_telemetry_summary'`.
 
-- [ ] Minimal implementation, part 1 — `src/memoria_vault/runtime/knowledge.py`.
+- [x] Minimal implementation, part 1 — `src/memoria_vault/runtime/knowledge.py`.
 
   (a) Add to the stdlib imports (after `import subprocess`, line 11):
 
@@ -5294,7 +5501,7 @@ or HTTP contract.
       }
   ```
 
-- [ ] Minimal implementation, part 2 — `src/memoria_vault/cli.py`.
+- [x] Minimal implementation, part 2 — `src/memoria_vault/cli.py`.
 
   (a) In `_review_commands`, after the action-subcommand loop add:
 
@@ -5315,10 +5522,10 @@ or HTTP contract.
       )
   ```
 
-- [ ] In `tests/test_cli.py`, add `"memoria review stats",` to the exact set beside the
+- [x] In `tests/test_cli.py`, add `"memoria review stats",` to the exact set beside the
   other review verbs.
 
-- [ ] Run to verify pass:
+- [x] Run to verify pass:
 
   ```
   python -m pytest tests/test_review_telemetry.py tests/test_cli_review.py tests/test_cli.py -v
@@ -5326,7 +5533,7 @@ or HTTP contract.
 
   Expected: all pass.
 
-- [ ] Commit:
+- [ ] Commit (not done — this session had no commit authority):
 
   ```
   git add src/memoria_vault/runtime/knowledge.py src/memoria_vault/cli.py tests/test_review_telemetry.py tests/conftest.py tests/test_cli.py
@@ -5362,7 +5569,7 @@ or HTTP contract.
 
 **Steps:**
 
-- [ ] **Grep gate — both repo states (reject-flip coordination).** Run:
+- [x] **Grep gate — both repo states (reject-flip coordination).** Run:
 
   ```
   grep -n "_disposed_evidence_digests\|_disposed_evidence_ids\|_evidence_items_sha256" src/memoria_vault/runtime/knowledge.py
@@ -5375,7 +5582,7 @@ or HTTP contract.
   `items_sha256` on disposition events, accept-voiding does not exist as a detectable
   state, and `accept_voided` would be silently zero — a dishonest metric.
 
-- [ ] Write the failing tests. Append to `tests/test_review_telemetry.py` (add
+- [x] Write the failing tests. Append to `tests/test_review_telemetry.py` (add
   `from memoria_vault.runtime import state` to its imports):
 
   ```python
@@ -5426,7 +5633,7 @@ or HTTP contract.
   (The `"items=%%"` replace target is the tail of the composed implicit marker — the
   same stable anchor S35.4's void test uses, plan 22 lines 2570–2600.)
 
-- [ ] Run to verify failure:
+- [x] Run to verify failure:
 
   ```
   python -m pytest tests/test_review_telemetry.py -v -k reopen
@@ -5434,7 +5641,7 @@ or HTTP contract.
 
   Expected: 3 failures with `KeyError: 'reopens'`.
 
-- [ ] Minimal implementation in `src/memoria_vault/runtime/knowledge.py`, inside
+- [x] Minimal implementation in `src/memoria_vault/runtime/knowledge.py`, inside
   `review_telemetry_summary`. After the `per_session` loop insert:
 
   ```python
@@ -5474,7 +5681,7 @@ or HTTP contract.
           "reopen_rate": (reopens / len(disposed_items)) if disposed_items else 0.0,
   ```
 
-- [ ] Run to verify pass, then the full gate:
+- [x] Run to verify pass, then the full gate:
 
   ```
   python -m pytest tests/test_review_telemetry.py tests/test_cli_review.py tests/test_draft_verification.py -v
@@ -5483,7 +5690,7 @@ or HTTP contract.
 
   Expected: all pass; verify green.
 
-- [ ] Commit:
+- [ ] Commit (not done — this session had no commit authority):
 
   ```
   git add src/memoria_vault/runtime/knowledge.py tests/test_review_telemetry.py

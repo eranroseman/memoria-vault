@@ -247,6 +247,17 @@ CLI_ONLY_COMMANDS: set[str] = {
     "memoria request retry",
     "memoria request resume",
     "memoria attention resolve",
+    # The V2 review CLI is engine-direct by contract (spec §8 keep-test): it
+    # reads the raw queue, while `views.evidence_review` serves nested cards.
+    # Binding one row to both would claim a projection neither side performs,
+    # so `memoria review` carries no registry row and is exempt here.
+    "memoria review list",
+    "memoria review show",
+    "memoria review accept",
+    "memoria review reject",
+    "memoria review edit",
+    "memoria review defer",
+    "memoria review stats",
     "memoria steering show",
     "memoria steering edit",
     "memoria vocab list",
