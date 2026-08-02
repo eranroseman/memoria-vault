@@ -2823,6 +2823,18 @@ Shipped seams consumed (verified): `checked_search_documents` `search_index.py:1
 
 ### Task E.3 — honest-empty explore + §9 acceptance wiring (section-final)
 
+> **Plan reconciliation 2026-08-02: the runtime half already ships; what is
+> open is the test surface this task is named for.** `payload["honest_empty"]`
+> is set in `runtime/explore.py` off `retrieval_pipeline`, and the CLI text
+> front short-circuits on it — but in `_emit_explore_result`, which
+> `_cmd_explore` delegates to, not in `_cmd_explore` itself as the snippet
+> below says. Two consequences for whoever executes this: the printed red run
+> (`KeyError: 'honest_empty'`) can no longer happen, and **the §9 acceptance
+> pin's counts are stale** — live values are universe 8 / displayable-kind 6 /
+> ranked 3 / seed 3 / neighborhood 5 / returned 5 (see `tests/test_explore.py`),
+> not the 5/4/4/5/6 printed here. Re-derive the numbers from the fixture; do
+> not paste the block.
+
 **Files:** `src/memoria_vault/runtime/explore.py`, `src/memoria_vault/cli.py`, `tests/test_explore.py`.
 **Interfaces:** `payload["honest_empty"]: str` on any explore side with `returned == 0` — the §4 sentence `"0 of <candidates> candidates matched; <n> unchecked documents were not searched"` (candidates = the last filter-stage count before `ranked`, i.e. the denominator the candidate set defines); the CLI text front prints that sentence instead of a bare summary. The slice-4 (honest-empty/ride-through enforcement) section consumes this field for its cross-front tests.
 
