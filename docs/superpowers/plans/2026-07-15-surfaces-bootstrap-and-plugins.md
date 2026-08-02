@@ -5823,6 +5823,10 @@ EOF
 > **Removed by the 2026-07-30 clean-slate amendment. Do not execute any file,
 > test, parser, handler, gitignore, or commit instruction in this historical
 > block.**
+>
+> *(2026-08-02, plan reconciliation: every unticked box below is **dead**. They
+> stay unticked permanently, are never tickable, and must never be re-dispatched
+> or counted as outstanding work.)*
 
 **Files:**
 - Modify: `src/memoria_vault/runtime/bundles.py` (append `upgrade_bundles`)
@@ -6011,6 +6015,10 @@ EOF
 
 > **Removed by the 2026-07-30 clean-slate amendment. Do not execute any
 > version, warning, CLI, test, or commit instruction in this historical block.**
+>
+> *(2026-08-02, plan reconciliation: every unticked box below is **dead**. They
+> stay unticked permanently, are never tickable, and must never be re-dispatched
+> or counted as outstanding work.)*
 
 **Files:**
 - Modify: `src/memoria_vault/runtime/bundles.py` (append version-skew helpers)
@@ -6218,6 +6226,10 @@ EOF
 > **Removed by the 2026-07-30 clean-slate amendment. Do not execute any
 > doctor payload, integrity enforcement, version, test, or commit instruction
 > in this historical block.**
+>
+> *(2026-08-02, plan reconciliation: every unticked box below is **dead**. They
+> stay unticked permanently, are never tickable, and must never be re-dispatched
+> or counted as outstanding work.)*
 
 **Files:**
 - Modify: `src/memoria_vault/runtime/bundles.py` (append `verify_bundles`)
@@ -14395,6 +14407,11 @@ the written steps, this section governs.
     branch, and it cannot honestly be called green while the handoff is open.
     Every other gate member — the six product checks, the rest of the suite,
     the offline e2e smoke, and the syntax checks — passes.
+    *(2026-08-02, plan reconciliation: **this handoff is closed.** The sweep
+    landed inside the same PR (#1709); all 38 checked-in goldens now carry the
+    live seed hash `b8b1db561a2c…`, which is the sha256 of the current
+    `packages/memoria-obsidian/main.js` and of its byte-identical seed copy. The
+    four "Run the gate — green" boxes are therefore ticked.)*
 
 11. **Task .3 *does* move one existing golden, and that one was regenerated.**
     A new operation manifest changes `.memoria/index/capability-index.json`,
@@ -14457,7 +14474,9 @@ the written steps, this section governs.
     anchor.
 
 15. **Not committed.** Every task's commit step is left unticked; the work is
-    staged in the worktree for the owner to land.
+    staged in the worktree for the owner to land. *(2026-08-02, plan
+    reconciliation: it landed — squash-merged as #1709. The `Commit:` boxes
+    stay unticked by this plan's convention, not because work is outstanding.)*
 
 ---
 
@@ -14746,7 +14765,10 @@ Steps:
   ```
 
 - [x] Generate the new golden and verify coverage: `MEMORIA_FLOOR_UPDATE_GOLDENS=1 python -m pytest "tests/test_floor_sweep_operations.py::test_operation[fork-project-canvas]" -q`, review `git diff --stat tests/fixtures/floor/goldens` (exactly one new file `fork-project-canvas.json`), then `python -m pytest tests/test_floor_sweep_operations.py tests/test_floor_coverage.py -q` without the env var — green.
-- [ ] Run the gate: `python scripts/verify` — green.
+- [x] Run the gate: `python scripts/verify` — green. *(2026-08-02: ticked on
+      reconciliation — the branch landed as #1709 with the required `verify`
+      check green; `tests/fixtures/floor/goldens/fork-project-canvas.json` is
+      on `main`.)*
 - [ ] Commit:
   ```
   git add src/memoria_vault/product/capabilities/operations/fork-project-canvas.md src/memoria_vault/runtime/knowledge.py src/memoria_vault/runtime/worker.py tests/floor_lib.py tests/test_project_knowledge.py tests/test_worker_product_jobs.py tests/fixtures/floor/goldens/fork-project-canvas.json
@@ -14991,7 +15013,10 @@ Steps:
   ```
 
 - [x] Run floor coverage + read sweep: `python -m pytest tests/test_floor_coverage.py tests/test_floor_sweep_reads.py -q` — green (seed's package-gate project renders; zero forks → empty list; no golden involved in the read sweep).
-- [ ] Run the gate: `python scripts/verify` — green.
+- [x] Run the gate: `python scripts/verify` — green. *(2026-08-02: ticked on
+      reconciliation — landed in #1709 with `verify` green; `GET
+      /project/canvas/forks` is live in `surface_contract.py` and
+      `http_transport.py`.)*
 - [ ] Commit:
   ```
   git add src/memoria_vault/runtime/knowledge.py src/memoria_vault/engine/api.py src/memoria_vault/engine/surface_contract.py src/memoria_vault/runtime/http_transport.py tests/floor_lib.py tests/test_engine_api.py tests/test_http_transport.py
@@ -15196,14 +15221,23 @@ Steps:
 
 - [x] Mirror to the seed: `cp packages/memoria-obsidian/main.js src/memoria_vault/product/workspace_seed/.obsidian/plugins/memoria-obsidian/main.js`
 - [x] Run tests to verify they pass: `python -m pytest tests/test_memoria_obsidian_package.py -v` — includes the seed-parity test and the Node schema harness (`node scripts/test.mjs`, untouched).
-- [ ] Regenerate floor goldens (seeded plugin hash changed in every golden): `MEMORIA_FLOOR_UPDATE_GOLDENS=1 python -m pytest tests/test_floor_seed.py tests/test_floor_sweep_operations.py tests/test_floor_sweep_reads.py tests/test_floor_transports.py tests/test_floor_invariants.py tests/test_floor_coverage.py -q`; review `git diff tests/fixtures/floor/goldens` — only the `.obsidian/plugins/memoria-obsidian/main.js` hash line changes per golden; re-run without the env var — green.
+- [x] Regenerate floor goldens (seeded plugin hash changed in every golden): `MEMORIA_FLOOR_UPDATE_GOLDENS=1 python -m pytest tests/test_floor_seed.py tests/test_floor_sweep_operations.py tests/test_floor_sweep_reads.py tests/test_floor_transports.py tests/test_floor_invariants.py tests/test_floor_coverage.py -q`; review `git diff tests/fixtures/floor/goldens` — only the `.obsidian/plugins/memoria-obsidian/main.js` hash line changes per golden; re-run without the env var — green. *(2026-08-02: ticked on reconciliation — the handoff in amendment item 10 completed inside #1709; every checked-in golden now carries the live seed hash, and `packages/…/main.js` and the seed copy are byte-identical.)*
 - [ ] MANUAL CHECK (honest, no automation claimed — record outcomes in the PR description, not in test files): in a **disposable** vault under `test-vault/` (never a personal vault) with `memoria` available through the plugin's Engine command. Handshake discovers any running server and keeps its per-boot token in memory; no plugin token is configured:
   1. Open `projects/<p>/argument.canvas` — the banner text node renders top-left, reads "read-only, regenerated", and names the fork command.
   2. Run "Memoria: Fork canvas to scratch" → after the worker runs the queued request, `scratch-<name>.canvas` appears, opens editable, no banner node.
   3. Hand-draw one labeled `supports` edge in the scratch canvas; refocus the scratch file → status bar shows `Memoria fork: 1 edge(s) diverged`.
   4. Run "Memoria: Graduate scratch canvas edges" → Notice reports 1 queued / 0 skipped; through the already-landed SEAM.1 HTTP door, the worker accepts the PI-authorized request and the relation appears after it runs.
   5. Confirm the plugin wrote no vault file at any step (`git status` in the vault shows only worker commits).
-- [ ] Run the gate: `python scripts/verify` — green.
+
+  > *(2026-08-02, plan reconciliation: still open and correctly so — **a human
+  > at an interactive desktop Obsidian session is required**; see amendment
+  > item 12. Filed for a human pass alongside U3-PLUG.11 (#1690). Nothing an
+  > agent can do closes this box.)*
+
+- [x] Run the gate: `python scripts/verify` — green. *(2026-08-02: ticked on
+      reconciliation — landed in #1709 with `verify` green; the fork command,
+      the fork badge and `graduate-scratch-edges` are live in
+      `packages/memoria-obsidian/main.js` and its byte-identical seed copy.)*
 - [ ] Commit:
   ```
   git add packages/memoria-obsidian/main.js src/memoria_vault/product/workspace_seed/.obsidian/plugins/memoria-obsidian/main.js tests/test_memoria_obsidian_package.py tests/fixtures/floor/goldens
@@ -15396,7 +15430,9 @@ Steps:
   (`re` is imported at line 9; `safe_filename` stays imported — it has other call sites at knowledge.py:1070, 1375, 1631-1633).
 - [x] Run to verify it passes: `python -m pytest tests/test_draft_writeback.py tests/test_knowledge.py tests/test_project_knowledge.py -v`.
 - [x] Confirm no floor golden drift from `write-note-candidates` fixture titles: `python -m pytest tests/test_floor_sweep_operations.py -q` without the update env var. If (and only if) it reports golden drift for note-creating operations, the fixture titles contained punctuation: regenerate those specific goldens with `MEMORIA_FLOOR_UPDATE_GOLDENS=1 python -m pytest tests/test_floor_sweep_operations.py -q`, review that the diff touches only renamed `notes/*.md` hash keys, and include `tests/fixtures/floor/goldens` in the commit below.
-- [ ] Run the gate: `python scripts/verify` — green.
+- [x] Run the gate: `python scripts/verify` — green. *(2026-08-02: ticked on
+      reconciliation — landed in #1709 with `verify` green; the kebab-slug rule
+      is live at `knowledge.py:4474` (and the fork-name slug at :2254).)*
 - [ ] Commit:
   ```
   git add src/memoria_vault/runtime/knowledge.py tests/test_draft_writeback.py
@@ -16164,9 +16200,12 @@ def copi_bundle_files() -> tuple[tuple[str, Callable[[], str]], ...]:
 - [x] Run tests to verify they pass:
       `python -m pytest tests/test_copi_bundle.py -v` — expected: 11 passed.
 
-- [ ] Run the full gate: `python scripts/verify` — expected: pass (the new
+- [x] Run the full gate: `python scripts/verify` — expected: pass (the new
       hook module is ruff-linted as first-class source; S603/S607 are ignored
-      repo-wide per `pyproject.toml:120-121`).
+      repo-wide per `pyproject.toml:120-121`). *(2026-08-02: ticked on
+      reconciliation — landed in #1713 with `verify` green;
+      `src/memoria_vault/product/copi_skill/session_status.py` and
+      `copi_bundle_files()` are on `main`, covered by `tests/test_copi_bundle.py`.)*
 
 - [ ] Commit:
 
@@ -17654,8 +17693,13 @@ required.
 > `HONEST_EMPTY_PREFIX` has no subject: the anchoring literal is gone and
 > `retrieval_pipeline.honest_empty(...)` is already the single source under
 > `src/`. The unchecked steps below are the superseded original body — do not
-> execute them. (Plan reconciliation 2026-08-02: only the `tests/conftest.py`
-> registration named here landed, and it landed as part of U4-C.2.)
+> execute them; they are **dead boxes**, never tickable, and must never be
+> re-dispatched or counted as outstanding work. (Plan reconciliation 2026-08-02:
+> only the test-file registration named here landed, and it landed as part of
+> U4-C.2. Note the registration mechanism has since moved: `tests/conftest.py`'s
+> `TEST_LEVELS` dict was deleted in `cc55c40f` (#1671), so
+> `tests/test_copi_conversational_ask.py` declares its level with a module-level
+> `pytestmark = pytest.mark.contract` instead — which it carries on `main`.)
 
 **Files:**
 - Modify: `src/memoria_vault/runtime/search_index.py` (constants at lines 29-30; wording literal at line 243)
@@ -18053,7 +18097,11 @@ required.
 > read `telemetry_events`, and drop the "emission is deferred" rationale.
 >
 > **This is the only U4 task still open.** A.1–A.3, B.1–B.6 and C.2–C.4 have
-> landed; C.1 was removed as satisfied. Also note the rebase amendment in the
+> landed; C.1 was removed as satisfied. *(2026-08-02, later the same day: this
+> one landed too — see the re-specification immediately below, every step of it
+> ticked and verified on `main`
+> (`tests/test_mcp_transport.py::test_mcp_answer_query_records_no_read_observed_row_and_leaves_the_journal_intact`).
+> **No U4 task is outstanding.**)* Also note the rebase amendment in the
 > U4-B section: `tests/conftest.py`'s `TEST_LEVELS` registry no longer exists
 > (#1671), so any new test module needs a `pytestmark` level and an
 > `import pytest` to go with it — this task modifies an existing, already-marked
@@ -18141,7 +18189,10 @@ measured over work done rather than over an early return.
 
 ---
 
-**Superseded original body (2026-08-02) — do not execute.**
+**Superseded original body (2026-08-02) — do not execute.** *(Plan
+reconciliation 2026-08-02: the unticked boxes below are **dead** — never
+tickable, never re-dispatched, and not outstanding work. The task's product
+shipped under the re-specification above.)*
 
 **Files:**
 - Modify: `tests/test_mcp_transport.py` (insert after the U4-C.4 test, before

@@ -1619,6 +1619,13 @@ Tier policy encoded (spec §4 table): `article` may use any synthesized fetch; `
 > **Historical A.2 blocks — do not execute.** The remaining Step 0–5 prose and
 > code fences were retained only to preserve the pre-amendment design record.
 > The replacement Steps 1–5 above are the sole executable instructions.
+>
+> **Their checkboxes can never be ticked and must never be re-dispatched
+> (2026-08-02).** A.2's product is live on `main` at `8c1d0d41` and re-verified
+> today: `entry_fetch` (`runtime/bulk_import.py:184`), `entry_capture_request`
+> (`:220`), the PI-only `capture-remote-pdf-source` operation manifest, and
+> `tests/test_bulk_import.py::test_entry_fetch_synthesizes_only_resolver_supported_methods`.
+> The unticked boxes below are dead drafting history, not remaining work.
 
 - [ ] **Step 0: O1 dependency check (grep-first)** — `grep -n "def resolve_fetch" src/memoria_vault/runtime/seed_install.py 2>/dev/null`. **If the file or symbol is absent** (O1 plan merged but unexecuted — true at `51395f15`), land O1 plan Task M.2 first (`docs/superpowers/plans/2026-07-16-o1-onboarding-seed.md` — it creates `resolve_fetch` plus `tests/test_seed_install.py`), then return here.
 

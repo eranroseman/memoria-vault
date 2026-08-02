@@ -29,7 +29,25 @@
   thin override and adds effective-steering provenance to the CLI surface and
   focused tests.
 
-## Cross-section contracts (BINDING — the manifests' seam resolutions)
+## Plan status — 2026-08-02 reconciliation against `main` @ `973a0676`
+
+**All eleven tasks are executed and on `main`: M.1–M.3, S.1–S.3, T.1–T.3,
+D.1–D.4. This plan is at zero open work.** Re-verified today:
+`runtime/seed_install.py` (`resolve_fetch`, `_cmd_seed_install`),
+`runtime/onboarding_steps.py` with all five emit points, `runtime/steering.py`,
+and D.4 branch B on disk (`workspace_seed/Start here.md:28` carries the
+`issues/902` pointer; `tests/test_cli.py:1074-1075` asserts the dangling
+`SKILL.md` path is gone).
+
+The boxes still showing open are none of them work:
+
+- five `Commit:` steps — orchestrator-owned by convention;
+- D.1's struck-through `~~Edit project-words.txt~~` — deliberately not needed;
+- D.4's **Branch A** — a dead branch that can never be ticked (selection resolved
+  to B, and B is landed);
+- one `- [ ]` that is not a checkbox at all: it is literal text inside a fenced
+  markdown block in T.2's Branch-B body, showing the bullet to append to another
+  plan. Naive checkbox scans miscount it.
 
 1. **Manifest** (M.1 produces): `src/memoria_vault/product/seed_corpus/manifest.yaml`, rows `{id, title, identifier, license, license_evidence, fetch{method,url}, role, repo?}`; `load_seed_manifest() -> list[dict]` / `parse_seed_manifest(text) -> list[dict]` in `memoria_vault.product.seed_corpus`; the eight pinned work_ids: `chen-2018-undesirable-difficulty, moreira-2019-retrieval-practice, settles-2016-spaced-repetition, morrison-2020-offloading, ose-askvik-2020-handwriting, schmidt-2018-luhmann-card-index, mirzababaei-2021-toulmin-agent, asai-2024-openscholar`.
 2. **Seed install** (M.3 produces): engine `seed_install(vault, rows=None, *, opener=None, authorize_url, context) -> {admitted, skipped, failed, notices, telemetry}` (ValueError iff admitted+skipped both empty); worker operation id `seed-install` (PI-only) supplies the mandatory policy authorizer; CLI `memoria seed install --workspace <path>` — the exact backticked path the D-section docs cite (doc-claims gate: M.3 merges before D).
@@ -4104,7 +4122,12 @@ Spec §3, last bullet: the bootstrap-seeded `Start here.md` link to "the co-PI v
 
   At 07bedc74 this prints `BRANCH-A` (verified: `grep -rni "start here" src/` returns nothing).
 
-- [ ] **Branch A** — red state: `grep -n "O1 §3 amendment" docs/superpowers/plans/2026-07-15-surfaces-bootstrap-and-plugins.md` → no match, exit 1. Then insert immediately after the heading line `### Task BOOT-D.6: seed \`Start here.md\` at the vault root from \`init\`` (:5278) and its blank line:
+- [ ] **Branch A** — *dead branch; this box can never be ticked and must never be
+  re-dispatched (2026-08-02). Branch selection above resolved to **B**, and branch B
+  is executed and on `main` (`Start here.md:28` carries the `issues/902` pointer;
+  `tests/test_cli.py:1074-1075` asserts the dangling SKILL.md path is gone). An
+  amendment telling a future executor how to seed the bullet is worthless once the
+  bullet is seeded.* — red state: `grep -n "O1 §3 amendment" docs/superpowers/plans/2026-07-15-surfaces-bootstrap-and-plugins.md` → no match, exit 1. Then insert immediately after the heading line `### Task BOOT-D.6: seed \`Start here.md\` at the vault root from \`init\`` (:5278) and its blank line:
 
   ```markdown
   > **O1 §3 amendment (2026-07-16):** ADR-113 is re-deferred (see the note on
@@ -4153,7 +4176,7 @@ Spec §3, last bullet: the bootstrap-seeded `Start here.md` link to "the co-PI v
 
   Expected: all pass; `test_workspace_seed_links` accepts the issue URL (external link, exempt from link-text rules).
 
-- [x] Section gate — run the one correctness command from the repo root:  *(2026-08-02: run at the end of D.1; `verify: OK`. Covers D.1-D.3; branch B is unexecuted, see the amendment above.)*
+- [x] Section gate — run the one correctness command from the repo root:  *(2026-08-02: run at the end of D.1; `verify: OK`. Covered D.1-D.3 at that point. Superseded the same day: branch B was then executed in the gold4 golden-token session and gated again — see the "Branch B EXECUTED" amendment above. D.4 is complete.)*
 
   ```bash
   python scripts/verify
