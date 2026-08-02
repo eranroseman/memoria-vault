@@ -42,6 +42,15 @@ nonnegative integer; when unset or set to `0`, it is disabled. Actual model
 token usage accumulates for the process, and a later model call is refused once
 the ceiling has been reached.
 
+Each completed call is charged the total the provider reported, including a
+reported zero. The call's `max_tokens` setting is charged instead only when the
+provider reported no usable total. A call that never completed is not charged; a
+call that completed but returned unusable output is. `memoria doctor --check
+runner --live` spends the same process budget, and once the ceiling is reached
+it reports `runner_live_dispatch: false` with a `model token ceiling reached`
+diagnostic. Doctor's live probe records no `model_call` journal event either
+way — it is a resource consumer, not durable model-call provenance.
+
 ## Never commit
 
 - Model provider keys, local adapter secrets, or API tokens.

@@ -37,6 +37,28 @@ def _reset_ledger(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setitem(operations._TOKEN_LEDGER, "total_tokens", 0)
 
 
+def _patch_usage_agent(
+    monkeypatch: pytest.MonkeyPatch, result: SimpleNamespace | Callable[[], SimpleNamespace]
+) -> None:
+    """Install a minimal fake whose run_sync returns (or raises through) `result`."""
+
+    class UsageAgent:
+        def __init__(self, model: object) -> None:
+            self.model = model
+
+        def run_sync(self, prompt: str, *, model_settings: dict) -> SimpleNamespace:
+            return result() if callable(result) else result
+
+    class Passthrough:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+    monkeypatch.setattr(
+        "memoria_vault.runtime.operations._load_pydantic_ai_openai",
+        lambda: (UsageAgent, lambda model, provider: model, Passthrough),
+    )
+
+
 def test_ceiling_trips_after_budget_is_spent(monkeypatch: pytest.MonkeyPatch) -> None:
     _reset_ledger(monkeypatch)
     # 2 calls x 25 tokens/call = 50, strictly over the 40-token ceiling (unlike
@@ -201,28 +223,55 @@ def test_reported_usage_is_preferred_over_max_tokens_fallback(
 ) -> None:
     _reset_ledger(monkeypatch)
     monkeypatch.delenv(operations.TOKEN_CEILING_ENV, raising=False)
-
-    class UsageAgent:
-        def __init__(self, model: object) -> None:
-            self.model = model
-
-        def run_sync(self, prompt: str, *, model_settings: dict) -> SimpleNamespace:
-            return SimpleNamespace(
-                output="usage reply",
-                usage=lambda: SimpleNamespace(total_tokens=7),
-            )
-
-    class Passthrough:
-        def __init__(self, *args: object, **kwargs: object) -> None:
-            pass
-
-    monkeypatch.setattr(
-        "memoria_vault.runtime.operations._load_pydantic_ai_openai",
-        lambda: (UsageAgent, lambda model, provider: model, Passthrough),
+    _patch_usage_agent(
+        monkeypatch,
+        SimpleNamespace(output="usage reply", usage=lambda: SimpleNamespace(total_tokens=7)),
     )
 
     assert operations._pydantic_ai_chat(POLICY, RUNNER, "prompt")["text"] == "usage reply"
     assert operations._TOKEN_LEDGER["total_tokens"] == 7
+
+
+def test_reported_zero_total_is_charged_as_zero_not_the_max_tokens_fallback(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # A validly reported zero is authoritative: it is the one case where the
+    # sanitized usage dict and a malformed harvest both read 0, so charging the
+    # max_tokens fallback here would silently overcharge every zero-token call.
+    _reset_ledger(monkeypatch)
+    monkeypatch.delenv(operations.TOKEN_CEILING_ENV, raising=False)
+    _patch_usage_agent(
+        monkeypatch,
+        SimpleNamespace(
+            output="usage reply",
+            usage=lambda: SimpleNamespace(
+                input_tokens=0,
+                output_tokens=0,
+                cache_read_tokens=0,
+                cache_write_tokens=0,
+                total_tokens=0,
+            ),
+        ),
+    )
+
+    result = operations._pydantic_ai_chat(POLICY, RUNNER, "prompt")
+
+    assert result["text"] == "usage reply"
+    assert result["usage"]["total_tokens"] == 0
+    assert operations._TOKEN_LEDGER["total_tokens"] == 0
+
+
+def test_absent_usage_accessor_falls_back_to_max_tokens(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _reset_ledger(monkeypatch)
+    monkeypatch.delenv(operations.TOKEN_CEILING_ENV, raising=False)
+    _patch_usage_agent(monkeypatch, SimpleNamespace(output="usage reply"))
+
+    result = operations._pydantic_ai_chat(POLICY, RUNNER, "prompt")
+
+    assert result["usage"] == dict.fromkeys(operations._USAGE_FIELDS, 0)
+    assert operations._TOKEN_LEDGER["total_tokens"] == 64
 
 
 class _RaisingTotalTokensUsage:
@@ -249,25 +298,71 @@ def test_invalid_reported_usage_falls_back_to_max_tokens(
 ) -> None:
     _reset_ledger(monkeypatch)
     monkeypatch.delenv(operations.TOKEN_CEILING_ENV, raising=False)
-
-    class UsageAgent:
-        def __init__(self, model: object) -> None:
-            self.model = model
-
-        def run_sync(self, prompt: str, *, model_settings: dict) -> SimpleNamespace:
-            return SimpleNamespace(output="usage reply", usage=usage)
-
-    class Passthrough:
-        def __init__(self, *args: object, **kwargs: object) -> None:
-            pass
-
-    monkeypatch.setattr(
-        "memoria_vault.runtime.operations._load_pydantic_ai_openai",
-        lambda: (UsageAgent, lambda model, provider: model, Passthrough),
-    )
+    _patch_usage_agent(monkeypatch, SimpleNamespace(output="usage reply", usage=usage))
 
     assert operations._pydantic_ai_chat(POLICY, RUNNER, "prompt")["text"] == "usage reply"
     assert operations._TOKEN_LEDGER["total_tokens"] == 64
+
+
+def test_empty_response_is_charged_once_before_it_is_rejected(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # A completed-but-unusable response still consumed provider tokens, so the
+    # charge lands before the output check -- and exactly one usage() harvest
+    # backs both the ledger charge and the canonical telemetry.
+    _reset_ledger(monkeypatch)
+    monkeypatch.delenv(operations.TOKEN_CEILING_ENV, raising=False)
+    seen = patch_pydantic_ai(monkeypatch, output="   ")
+
+    with pytest.raises(RuntimeError, match="returned no message content"):
+        operations._pydantic_ai_chat(POLICY, RUNNER, "prompt")
+
+    assert operations._TOKEN_LEDGER["total_tokens"] == 25
+    assert seen["usage_calls"] == 1
+
+
+def test_dispatch_failure_leaves_the_ledger_unspent_and_harvests_no_usage(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # The breaker charges completed calls only: a run_sync that never returned
+    # produced no usage to harvest, so charging it would spend a budget the
+    # provider never consumed.
+    _reset_ledger(monkeypatch)
+    monkeypatch.delenv(operations.TOKEN_CEILING_ENV, raising=False)
+    harvests: list[None] = []
+
+    def refuse() -> SimpleNamespace:
+        harvests.append(None)
+        raise RuntimeError("upstream refused")
+
+    _patch_usage_agent(monkeypatch, refuse)
+
+    with pytest.raises(RuntimeError, match="pydantic-ai model request failed"):
+        operations._pydantic_ai_chat(POLICY, RUNNER, "prompt")
+
+    assert operations._TOKEN_LEDGER["total_tokens"] == 0
+    assert harvests == [None]  # run_sync ran; nothing past it did.
+
+
+def test_deterministic_fixture_runs_never_enter_the_live_breaker(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _reset_ledger(monkeypatch)
+    monkeypatch.setitem(operations._TOKEN_LEDGER, "total_tokens", 999)
+    monkeypatch.setenv(operations.TOKEN_CEILING_ENV, "1")
+    seen = patch_pydantic_ai(monkeypatch, output="fixture reply")
+    policy = {**POLICY, "title": "Compile source digest", "description": "fixture policy"}
+    fixture_runner = {**RUNNER, "model": "deterministic-fixture"}
+
+    result = operations._run_prompt_model(policy, fixture_runner, "prompt", "input text")
+
+    assert result["usage"] is None
+    assert "Compile source digest" in result["text"]
+    assert operations._TOKEN_LEDGER["total_tokens"] == 999
+    assert seen == {}
+    # The ceiling really was armed: the same call with a live model refuses.
+    with pytest.raises(RuntimeError, match="model token ceiling reached"):
+        operations._run_prompt_model(policy, RUNNER, "prompt", "input text")
 
 
 def test_non_integer_ceiling_is_rejected(monkeypatch: pytest.MonkeyPatch) -> None:

@@ -2139,6 +2139,63 @@ environment-variable identifier, not a credential.
   total. A malformed or absent *canonical* usage dict exercises the fallback
   without calling the SDK.
 
+**Execution amendment — LOOP.3 rode the spine merge (2026-08-01):** Alpha22's
+COST.1–.3 tranche landed the breaker's *mechanism* while replacing the same
+function, so most of this task arrived with the spine rather than as a separate
+change. What was already true on `main` @ `88787954`, verified by reading
+`src/memoria_vault/runtime/operations.py`:
+
+- `_require_token_budget(...)` is the first statement of `_pydantic_ai_chat`;
+  the ledger charge lands immediately after the one `usage()` harvest and
+  before `text` is read, so an empty/invalid completed response is charged and
+  a `run_sync` exception is not (binding requirement 1, satisfied).
+- COST merged the harvest and the charge into a single
+  `_record_token_usage(result, settings) -> dict[str, int]` rather than the
+  requirement-2 sketch's `(usage: dict | None, settings)`. That is a stricter
+  reading of the same rule — one function is the tranche's only point of
+  contact with `result.usage()`, so a second harvest is structurally
+  impossible — and it is what shipped. The sketch signature is superseded.
+- Ceiling/boundary/disabled/malformed-usage coverage, `noqa: S105`, and the
+  autouse env isolation in `tests/conftest.py` all landed with the spine.
+
+Three requirements were **not** satisfied by the spine and are this task's own
+work:
+
+1. **Valid zero was not honored.** The landed helper charged
+   `if total <= 0: total = max_tokens`, so a provider reporting a true zero was
+   charged the `max_tokens` fallback — the one case where a sanitized-to-0
+   malformed harvest and a valid 0 are indistinguishable downstream.
+   `_record_token_usage` now tracks whether `total_tokens` was itself a
+   non-negative plain `int` and charges the fallback only when it was not. The
+   `type(...) is int` bool rejection is unchanged, so `total_tokens=True` still
+   falls back.
+2. **The doctor breaker diagnostic was swallowed.** `_runner_status`
+   (`cli.py`) collapses every exception into `"pydantic-ai model request
+   failed"`, which would have hidden the ceiling refusal behind an adapter-
+   failure message. Requirement 4 asks for the explicit diagnostic, so
+   `_require_token_budget` now raises `operations.TokenCeilingReached`, a
+   `RuntimeError` subclass — the documented "`RuntimeError` whose message
+   contains `model token ceiling reached`" contract is unchanged, and the
+   subclass gives the CLI a seam to surface that one message. It is raised
+   before `require_allowed_network` and before key resolution, and is built
+   only from our own constants and integers, so surfacing it verbatim reflects
+   no credential, endpoint, or SDK state.
+3. **The remaining focused tests.** Valid zero, absent-accessor fallback, an
+   empty response charged exactly once before its `RuntimeError`, a `run_sync`
+   exception leaving the ledger unspent with no harvest, and a
+   deterministic-fixture run that never enters the breaker (armed-ceiling
+   control included, so the assertion cannot pass vacuously). Plus the
+   doctor regression: first `--live` dispatch spends the budget, second
+   reports `runner_live_dispatch: false` with the explicit diagnostic while
+   `runner_agent_constructed` stays `true` (the refusal is the breaker's, not
+   an earlier failure's), and `read_event_log(..., event_types=("model_call",))`
+   is empty after both.
+
+`docs/reference/system/configuration.md` now states the reported-zero rule and
+the doctor behavior. The `Files:` list above stands except that
+`src/memoria_vault/cli.py` and that reference page join it, and
+`tests/conftest.py` needed no further change.
+
 **Steps:**
 
 > **Executable replacement (2026-07-29):** The canonical requirements above
@@ -2146,30 +2203,7 @@ environment-variable identifier, not a credential.
 > not copy or execute that draft. In particular, LOOP.3 must never call
 > `result.usage()` or pass a raw SDK result to `_record_token_usage`.
 
-> **Plan reconciliation 2026-08-02: partially applied — four named gaps
-> remain, one of them a live behavioral defect.** The breaker itself shipped
-> (`TOKEN_CEILING_ENV`, `_TOKEN_LEDGER`, `_token_ceiling`,
-> `_require_token_budget` called first in `_pydantic_ai_chat`, one `usage()`
-> harvest, charge before `text` is read — all in `runtime/operations.py`), and
-> `tests/test_token_ceiling.py` is registered `unit` in `tests/conftest.py`.
-> Still outstanding, and why every step below stays unticked:
->
-> 1. `_record_token_usage` still takes the **raw result**, not the canonical
->    data the override requires.
-> 2. **Live defect:** a legitimate `total_tokens=0` is charged the `max_tokens`
->    fallback (`if total <= 0: total = int(settings.get("max_tokens") or 0)`),
->    violating "a valid zero is charged as zero".
-> 3. The test file hardcodes 25 instead of importing `LIVE_USAGE`, and is
->    missing four named cases: valid-zero-charges-zero, empty-output
->    (ledger already charged, `usage_calls == 1`), deterministic-fixture-under-
->    a-ceiling, and a `run_sync`-raises case asserting zero ledger change with
->    no `usage()` harvest.
-> 4. The doctor regression was never written: `tests/test_cli_doctor_eval.py`
->    contains no `TOKEN_CEILING` / `_TOKEN_LEDGER` / `model_call` reference, so
->    the two-dispatch ceiling path, the `model token ceiling reached` message,
->    and the absent-journal-row assertion are all unproved.
-
-- [ ] **Write the canonical failing tests.** Create
+- [x] **Write the canonical failing tests.** Create
   `tests/test_token_ceiling.py` with the existing `POLICY`/keyless `RUNNER`, a
   ledger reset helper, and `LIVE_USAGE, patch_pydantic_ai` imported from
   `tests.helpers`. Assert `result["text"]`, and use
@@ -2185,7 +2219,7 @@ environment-variable identifier, not a credential.
   wrapped `pydantic-ai model request failed` error, zero ledger change, and no
   `usage()` harvest.
 
-- [ ] **Add the runner and doctor regressions.** Register
+- [x] **Add the runner and doctor regressions.** Register
   `test_token_ceiling.py` as `unit`. In `tests/test_cli_doctor_eval.py`, reset
   the ledger and set the ceiling to 25; the first `doctor --check runner
   --live` dispatch succeeds and spends 25, while the second reports
@@ -2193,7 +2227,7 @@ environment-variable identifier, not a credential.
   neither diagnostic creates a `model_call` JSONL row in the disposable
   workspace.
 
-- [ ] **Implement at the canonical seam.** Add the constant, ledger,
+- [x] **Implement at the canonical seam.** Add the constant, ledger,
   `_token_ceiling`, and `_require_token_budget` helpers as scoped below.
   Preserve COST.1's one `run_usage` harvest. Put
   `_require_token_budget(...)` immediately before dispatch; immediately after
@@ -2205,6 +2239,11 @@ environment-variable identifier, not a credential.
   `python -m pytest tests/test_token_ceiling.py -v` red, then green; run the
   combined contract command in the binding requirements, `python scripts/verify`,
   and commit exactly the four files listed there.
+  *(2026-08-01: verification done — the combined contract command and
+  `python scripts/verify` are green; the box stays open only because the
+  session that did the work does not commit. The one remaining unticked box
+  inside the superseded `<details>` draft below is deliberately never ticked:
+  that draft is marked do-not-execute.)*
 
 <details>
 <summary>Superseded legacy draft — retained only as review history; do not execute or copy these steps</summary>
@@ -2942,6 +2981,40 @@ authors the method, user's agent voices it**), `mcp-server-wiring`,
 
 - [x] Run `Skill(skill="superpowers:writing-plans", args="docs/superpowers/specs/$(date +%F)-u4-copi-agent-plugin-design.md — produce docs/superpowers/plans/$(date +%F)-u4-copi-skill.md")`
   and commit the plan.
+  **Amendment (2026-08-01) — satisfied as a composite-plan section, not a
+  standalone file.** The writing-plans pass over
+  `docs/superpowers/specs/2026-07-15-u4-copi-agent-plugin-design.md` ran and
+  its output was merged into
+  `docs/superpowers/plans/2026-07-15-surfaces-bootstrap-and-plugins.md` as
+  three U4 sections rather than a separate `<date>-u4-copi-skill.md`:
+  **U4-A** (the co-PI method bundle, line 15175: A.1 `copi_skill` SKILL.md
+  content, A.2 `session_status.py` SessionStart hook, A.3 the Codex condensed
+  method in the generated `AGENTS.md`), **U4-B** (`generate-questions`, line
+  16012: B.1–B.6 through manifest, fixture, implementation, worker dispatch,
+  floor golden), and **U4-C** (conversational-ask grounding, line 17062:
+  C.1–C.5). That plan's section preamble names itself "Section of the
+  composite implementation plan for U4" and cites the spec by path
+  (line 15177). The composite route was the right one: U4's deliverables sit
+  *inside* the agent bundle that BOOT-C seeds and the perimeter that
+  bootstrap owns, so the two had to share one execution order and one set of
+  cross-section contracts (see "Cross-section contracts (BINDING)", line 75).
+  No standalone U4 plan should now be written — parts of U4-C have already
+  shipped against the composite one (`src/memoria_vault/product/copi_conversational_ask.py`,
+  U4-C.2/.3/.4), and a second plan would fork a live execution.
+
+  **Spec divergences the composite plan already resolved** (recorded here so
+  the LOOP.12 acceptance line is read against the plan, not the spec):
+  - The spec's "`SKILL.md` regenerates on `memoria upgrade` and its version is
+    stamped in `vault.json`" acceptance criterion is **withdrawn**. There is no
+    `memoria upgrade` command (this plan's honesty note H8), and the surfaces
+    plan's 2026-07-30 clean-slate override (line 5212, BINDING) forbids
+    `COPI_BUNDLE_VERSION`, upgrade markers, version/skew comparison, and
+    bundle-version stamping. The active path is fresh `memoria init` seeding
+    only; `.memoria/vault.json` records current content hashes, not versions.
+  - The spec's `memoria doctor --json --quick` hook input does not exist
+    (`doctor` takes `--check {search,runner}`, `--provider`, `--live`,
+    `--repair`). The composite plan already makes the SessionStart hook
+    defensive about that (line 15190).
 - [x] Acceptance: spec exists; the write path is exclusively `operation_run`;
   the engine-authored vs agent-voiced boundary is explicit per artifact.
 
@@ -2996,6 +3069,57 @@ its numbers feed the Phase 3 decision review. **1000-scale is out of scope
   latencies, attention items per 100 works,
   triage minutes; disposition-event count > 0; a stop-reason for any stage
   that broke the session ("that observation IS the finding").
+
+**Blocked — precondition audit 2026-08-01 (verified against `main` @ `88787954`,
+not against plan checkboxes, several of which lag what shipped):**
+
+| Precondition | State | Evidence |
+| --- | --- | --- |
+| O1 M.3 — `memoria seed install` | **shipped** | `cli.py` `seed` subparser, `_cmd_seed_install`, `src/memoria_vault/runtime/seed_install.py`; emits `onboarding-step` `seed-installed` |
+| O1 T.2 — the five `onboarding-step` emit points | **shipped** | `runtime/onboarding_steps.py`; `init-done`, `project-framed`, `seed-installed`, `onboard-done`, `first-answer` all have call-sites |
+| `telemetry_events` plane (I1 T.1–T.3) | **shipped** | `runtime/schema.sql:434-443` at rung 19; `runtime/telemetry.py` |
+| O2 W.1 — import worklist | **shipped** | `runtime/subsystems/lib/worklists.py:146` `emit_import_worklist` |
+| **O2 W.2 — `import-run.v1`** | **missing** | no `import-run` anywhere in `runtime/telemetry.py` |
+| **O2 W.3 — `staged-import` decision rule** | **missing** | no `staged-import` in `workspace_seed/.memoria/config/decision-rules.yaml` |
+| **O2 W.4 — the Phase 1 protocol block** | **open** | it *produces* the stage-1/stage-2 shell block that supersedes the `csplit` loop below; without it there is no bulk-import protocol to run |
+| **O2 A.2 — fetch synthesis + admission-tier routing** | **open** | `docs/superpowers/plans/2026-07-17-o2-staged-import.md` |
+| **R2 F.3 — frozen retrieval fixtures** | **open** | every row in `tests/fixtures/retrieval/cases.yaml` is `frozen: false` with no `frozen_on`; the 2026-07-29 retrieval amendment above makes this binding, and Shape-1's query and Shape-2's topic/depth/metric are read from those rows |
+| **R2 E.3 — honest-empty explore + §9 acceptance wiring** | **open** | `docs/superpowers/plans/2026-07-17-r2-retrieval-modes.md` |
+| **I1 D.1–D.4 — the disposition call-sites** | **open** | the step below requires ≥ 1 disposition event; only the alpha.21 skeleton's `resolve-attention` site emits today |
+
+Shortest unblocking path, in dependency order: **O2 W.2 → O2 W.3**, and
+**R2 E.3 → R2 F.3**, then **O2 W.4** (which needs both W.3 and F.3), then
+LOOP.13. I1 D.1–D.4 must also land before the disposition-count check below can
+pass. This matches the 2026-07-29 executable partial order
+(`{O1 M.3, O2 W.4, R2 F.3} → LOOP.13`); only O1 M.3 is satisfied.
+
+Beyond the code preconditions, LOOP.13 is by construction **PI-executed**: it
+needs a fresh real vault (explicitly never `test-vault/`), a licensed 10-work
+and 100-work Zotero export, live model dispatch for a grounded first answer,
+and human wall-clock triage timing. "This is not a pytest task: it is a
+measured protocol run on a real vault." No agent session can stand in for it.
+
+**Defect found in this task's own body while auditing (fix before the run):**
+the instrumentation-verification step below greps
+`"$VAULT"/.memoria/journal/*.jsonl`. **No such file exists** — the authoritative
+journal is the SQLite `event_log` table (`runtime/state.py` `_insert_journal_row`
+/ `read_event_log`), and nothing in `src/` writes a JSONL journal. As written the
+glob matches nothing, `wc -l` prints `0`, and the step's own rule ("Zero is a
+hard failure of LOOP.4's implementation — stop and file the bug") fires a false
+alarm on a perfectly instrumented run. The working command is:
+
+```
+sqlite3 "$VAULT/.memoria/memoria.sqlite" \
+  "SELECT COUNT(*) FROM event_log WHERE event_type='disposition';"   # must be >= 1
+```
+
+Note the two planes are different on purpose: `onboarding-step` (the
+time-to-first-answer measurement) lives in `telemetry_events`, which is
+analytics-only and unchained; `disposition` is an authoritative journal event in
+`event_log`. The step below must read each from its own plane, and a
+count alone is still a terminus check — pair it with at least one row whose
+`item_id` matches an attention path resolved in the previous step, so the count
+cannot be satisfied by unrelated events.
 
 **Steps:**
 
