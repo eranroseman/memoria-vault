@@ -15,5 +15,29 @@ Fully-folded working records retire once their content has a durable home
 git-recoverable. The beta.1 scope of record is
 `specs/2026-07-12-beta.1-consolidation.md`.
 
+## Status headers are snapshots, not live fields
+
+A spec's `Status:` line records what was true **as of that record's date** —
+the `Date:` line beside it, or the date in its filename or title. It is a
+dated snapshot and is not maintained as work lands, so a spec still reading
+`pre-plan` or `draft for owner approval` after its plan executed is correct as
+written, not stale.
+
+Two consequences worth stating, because both have caught people out:
+
+- **Do not edit a `Status:` line to track implementation progress.** Current
+  state lives in the plans, the GitHub issues and milestones, and the shipped
+  code — never here. Editing these headers to follow the work would make every
+  landing a documentation chore and would still drift.
+- **A status that names a standing role keeps it.** `governing`, `superseded`,
+  and `research record` describe what the document *is*, not where the work
+  had reached, so they hold until another record supersedes them. Only the
+  progress-shaped values (`draft`, `pre-plan`, `nothing built yet`) are
+  snapshots that history moves past.
+
+When a record's substance is genuinely overtaken, supersede or retire it —
+do not quietly rewrite its header. Historical design content is never
+retroactively edited to match what shipped.
+
 Product documentation lives in the published `docs/` sections; the frozen record
 of how the current system came to be lives in `design-history/`.
