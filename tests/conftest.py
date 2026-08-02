@@ -45,6 +45,7 @@ TEST_LEVELS = {
     "test_concept_types.py": "contract",
     "test_content_security.py": "runtime",
     "test_context_read.py": "contract",
+    "test_copi_conversational_ask.py": "contract",
     "test_cspell_scope.py": "static",
     "test_detectors.py": "static",
     "test_diagnostics.py": "unit",
