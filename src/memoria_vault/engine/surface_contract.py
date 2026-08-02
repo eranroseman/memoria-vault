@@ -154,9 +154,10 @@ SURFACE_ACTIONS: tuple[dict[str, Any], ...] = (
         "http": {"method": "GET", "path": "/v1/views/evidence-review"},
         "response_version": ENGINE_READ_API_VERSION,
     },
-    # No cli/mcp binding: the engine-direct `memoria dashboard` front is a
-    # separate CLI-only command (I1 H.2), and U2 T.3 owns the `dashboard.read`
-    # row that gives it a registry entry. This row is the HTTP view only.
+    # No cli/mcp binding: this row is the HTTP view only. The engine-direct
+    # `memoria dashboard` front is a separate command reading through U2 T.3's
+    # `dashboard.read` row below — two rows over one assembler, each declaring
+    # the transport it actually serves.
     # Workspace scope with no params: the panels are vault-wide raw counts, so
     # there is nothing for a read_scope to narrow and no filter to accept.
     {
@@ -346,6 +347,26 @@ SURFACE_ACTIONS: tuple[dict[str, Any], ...] = (
         "scope": "optional-read-scope",
         "params": {"event_id": {"type": "integer", "required": True}},
         "cli": {"commands": ["memoria journal revert-preview"]},
+        "response_version": ENGINE_READ_API_VERSION,
+    },
+    {
+        # U2 spec §1 (triage note): I1 H.2 ships the assembler and the HTTP
+        # view above; this is the registry entry for its engine-direct CLI
+        # front, so `memoria dashboard` reads *through* a row rather than
+        # reaching past it into `engine.dashboard`. Two rows over one
+        # assembler — U2 owns only this one and changes neither
+        # `views.dashboard` nor `read_dashboard_view`.
+        # Workspace scope with no params, inherited from the assembler: the
+        # panels are vault-wide raw counts, so there is nothing a read_scope
+        # could narrow and no filter to accept.
+        "id": "dashboard.read",
+        "job": "review",
+        "summary": "Read the honest dashboard panels (raw counts, no score).",
+        "engine": "read_dashboard",
+        "kind": "read",
+        "scope": "workspace",
+        "params": {},
+        "cli": {"commands": ["memoria dashboard"]},
         "response_version": ENGINE_READ_API_VERSION,
     },
     {

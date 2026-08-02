@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import datetime
 import json
 import os
 import subprocess
@@ -14,11 +15,15 @@ import pytest
 from memoria_vault.cli import main
 from memoria_vault.engine import api as engine_api
 from memoria_vault.engine import cockpit
+from memoria_vault.engine import dashboard as dashboard_module
+from memoria_vault.engine.dashboard import AGE_BUCKETS, DASHBOARD_PANELS
 from memoria_vault.engine.surface_contract import actions_by_id
 from memoria_vault.runtime import state
 from memoria_vault.runtime.knowledge import compose_project_draft as _compose_project_draft
 from memoria_vault.runtime.knowledge import resolve_evidence_review as _resolve_evidence_review
+from memoria_vault.runtime.operations import emit_explicit_disposition_event
 from memoria_vault.runtime.subsystems.lib import inbox
+from memoria_vault.runtime.telemetry import record_telemetry_event
 from tests.helpers import (
     ROOT,
     call_with_context,
@@ -2680,3 +2685,121 @@ def test_post_seam_review_counts_the_raw_rows_not_the_view_cards(
             continue
         assert "disposition" in row
         assert {"latest_decision", "routing", "project"}.isdisjoint(row)
+
+
+def _int_flow_vault(vault: Path) -> None:
+    """Four flow signals, each with a distinct producer, none of them a default.
+
+    An all-zero dashboard is the shape a fresh vault really has, so a flow panel
+    that hard-coded zeros would pass against it. Every number the panel reports
+    is therefore given a producer here: a second open card aged past the widest
+    bucket (so `oldest` must *choose*, not take the first bucket it finds), two
+    `attention-admitted` telemetry rows on one day and two disposition events on
+    one day (so a `sum` weakened to a `len` reports 1 instead of 2).
+    """
+    aged = (datetime.date.today() - datetime.timedelta(days=45)).isoformat()
+    (vault / "inbox/int-aged-gap.md").write_text(
+        "---\nprojection: attention\ntitle: Aged gap\nattention_kind: gap\n"
+        f"attention_status: open\nrouting_class: ask\nloudness: quiet\ncreated: {aged}\n"
+        "target: projects/int-review/draft.md\n---\nGap body.\n",
+        encoding="utf-8",
+    )
+    for name in ("inbox/int-admitted-a.md", "inbox/int-admitted-b.md"):
+        record_telemetry_event(
+            vault,
+            "attention-admitted",
+            {"card_path": name, "kind": "gap", "loudness": "quiet", "raised_by": "analyze-gaps"},
+        )
+    for item_id in ("inbox/int-drained-a.md", "inbox/int-drained-b.md"):
+        emit_explicit_disposition_event(
+            vault,
+            decision="accept",
+            item_type="attention",
+            item_id=item_id,
+            actor="pi",
+            machine="int",
+        )
+
+
+def test_post_seam_triage_flow_uses_the_registered_dashboard_engine(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """U2 INT.1 (flow half): with T.3's `dashboard.read` row landed, triage panel
+    3 reads through the registry engine and the named-pending form is gone.
+
+    **Why the spy perturbs instead of merely counting.** A spy that recorded only
+    *that* the engine was called cannot tell the reroute from a direct
+    `assemble_dashboard` call or from a stub — every number would match either
+    way, because they all end at the same assembler. This one wraps the row's own
+    declared engine (name read out of the registry, never hard-coded), records
+    what it returned, and shifts `open_total` by a constant no vault state can
+    produce. The panel then has to carry the shifted value, which only the
+    registry route can supply. The recorded payload is asserted to be the real
+    seven-panel envelope, so the pass-through is proven to be I1's assembler and
+    not the spy's own invention.
+
+    **Why the two poisons.** `assemble_dashboard` under every name the composer
+    could import it by, and `read_dashboard_view` beside it: the panel must not
+    reach past the row to the assembler, and must not re-host I1's view
+    projection either — the same rule the review half's poisoned view enforces.
+    """
+    vault = init_cli_workspace(tmp_path, capsys)
+    _int_review_vault(vault)
+    _int_flow_vault(vault)
+
+    row = actions_by_id()["dashboard.read"]
+    assert row["engine"] == "read_dashboard"
+    real_dashboard = getattr(engine_api, str(row["engine"]))
+    unrouted = real_dashboard(vault)["dashboard"]["attention_flow"]["open_total"]
+    seen: list[dict[str, Any]] = []
+    shift = 100
+
+    def observed_dashboard(workspace: Path) -> dict[str, Any]:
+        payload = real_dashboard(workspace)
+        payload["dashboard"]["attention_flow"]["open_total"] += shift
+        seen.append({"workspace": Path(workspace), "payload": payload})
+        return payload
+
+    monkeypatch.setattr(engine_api, str(row["engine"]), observed_dashboard)
+    for module in (cockpit, dashboard_module):
+        monkeypatch.setattr(
+            module,
+            "assemble_dashboard",
+            lambda *_args, **_kwargs: pytest.fail(
+                "the flow panel must read through the dashboard.read engine binding"
+            ),
+            raising=False,
+        )
+    monkeypatch.setattr(
+        engine_api,
+        "read_dashboard_view",
+        lambda *_args, **_kwargs: pytest.fail("the cockpit must not re-host the dashboard view"),
+    )
+
+    panels = cockpit.assemble_triage(vault, read_scope=INT_SCOPE)
+
+    assert [call["workspace"] for call in seen] == [Path(vault)]
+    envelope = seen[0]["payload"]
+    assert set(envelope) == {"ok", "api_version", "dashboard"}
+    assert tuple(envelope["dashboard"]) == DASHBOARD_PANELS
+    source = envelope["dashboard"]["attention_flow"]
+
+    flow = panels["flow"]
+    assert flow["source_action"] == "dashboard.read"
+    assert "pending" not in flow
+    # Provenance: the panel carries the shifted count, which no other route to
+    # the assembler could have produced.
+    assert flow["open_total"] == source["open_total"] == unrouted + shift
+
+    # Non-degeneracy, one producer per number.
+    assert len(source["inflow_by_day"]) == 1
+    assert flow["inflow"] == sum(source["inflow_by_day"].values()) == 2
+    assert len(source["drain_by_day"]) == 1
+    assert flow["drain"] == sum(source["drain_by_day"].values()) > 1
+    assert set(source["age_distribution"]) == {AGE_BUCKETS[0], AGE_BUCKETS[2]}
+    assert flow["oldest"] == AGE_BUCKETS[2]
+
+    # Both named-pending forms are gone from the screen, not just from the flow
+    # panel: this is the assertion INT.1 exists to make.
+    assert "pending" not in panels["review"]
+    assert "pending:" not in cockpit.render_triage({"screen": "triage", "panels": panels})

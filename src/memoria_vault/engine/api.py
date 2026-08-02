@@ -338,6 +338,22 @@ def read_dashboard_view(workspace: Path) -> dict[str, Any]:
     return _read_payload(view=_view("dashboard", blocks))
 
 
+def read_dashboard(workspace: Path) -> dict[str, Any]:
+    """The `dashboard.read` payload: I1's seven panels, whole, in the envelope.
+
+    U2 T.3's row for the engine-direct CLI front. It is deliberately the
+    assembler's payload rather than `read_dashboard_view`'s projection: the two
+    fronts must read the same counts, and a CLI that consumed the view would be
+    parsing text blocks back into panels. Workspace scope and no params for the
+    same reason the row declares them -- the panels are vault-wide aggregates.
+
+    Nothing is reshaped here. The whole value of the row is that
+    `memoria dashboard` has one route to the panels instead of its own import
+    of `assemble_dashboard`, so this adds the read envelope and nothing else.
+    """
+    return _read_payload(dashboard=assemble_dashboard(Path(workspace)))
+
+
 def read_concept(
     workspace: Path, target: str, *, read_scope: list[str] | None = None
 ) -> dict[str, Any]:

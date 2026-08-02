@@ -1,10 +1,15 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import pytest
 
+from memoria_vault import cli as cli_module
+from memoria_vault.cli import main
 from memoria_vault.engine import api as engine_api
+from memoria_vault.engine import dashboard as dashboard_module
+from memoria_vault.engine.dashboard import DASHBOARD_PANELS, assemble_dashboard
 from memoria_vault.engine.surface_contract import (
     SURFACE_ACTIONS,
     SURFACE_CONTRACT_VERSION,
@@ -14,6 +19,7 @@ from memoria_vault.engine.surface_contract import (
     http_routes,
     mcp_tools,
 )
+from memoria_vault.runtime.subsystems.lib.inbox import write_finding
 from tests.cli_test_helpers import _cli_command_surface
 from tests.helpers import init_cli_workspace
 
@@ -43,6 +49,7 @@ def test_surface_contract_registry_is_minimal_and_unique() -> None:
         "context.read",
         "cockpit.read",
         "trace.revert_preview",
+        "dashboard.read",
         "operation.run",
     }
 
@@ -277,10 +284,6 @@ CLI_ONLY_COMMANDS: set[str] = {
     "memoria eval run",
     "memoria eval seeded-error-verdict",
     "memoria eval select-models",
-    # I1 H.2: the engine-direct dashboard front. U2 T.3 registers
-    # `dashboard.read` and moves this out; `views.dashboard` is the HTTP view
-    # and deliberately declares no CLI binding of its own.
-    "memoria dashboard",
 }
 
 
@@ -328,6 +331,7 @@ def test_surface_contract_job_mapping_is_pinned() -> None:
         "context.read": "read",
         "cockpit.read": "project",
         "trace.revert_preview": "project",
+        "dashboard.read": "review",
         "operation.run": "upkeep",
     }
 
@@ -396,6 +400,121 @@ def test_surface_contract_cockpit_rows_follow_the_registry_grammar() -> None:
     assert preview["params"] == {"event_id": {"type": "integer", "required": True}}
     assert preview["cli"] == {"commands": ["memoria journal revert-preview"]}
     assert "http" not in preview and "mcp" not in preview
+
+
+def test_surface_contract_dashboard_read_is_the_cli_front_beside_i1s_http_view() -> None:
+    """U2 spec §1 (triage note): I1 H.2 owns the assembler and the HTTP view;
+    U2 registers the CLI read row so `memoria dashboard` has an entry to read
+    *through* rather than an engine to reach past.
+
+    The whole row, for the reason `views.attention` pins its own: `engine`,
+    `scope`, `params` and `response_version` have no second pin, and dropping
+    `response_version` would remove the floor sweep's envelope check instead of
+    failing it. Workspace scope with empty params is inherited from the
+    assembler — the panels are vault-wide raw counts, so there is nothing a
+    read_scope could narrow and no filter to accept.
+
+    `views.dashboard` is asserted unchanged in the same breath: two rows over
+    one assembler is the shape U2 owns, and a relocation of I1's route into
+    this row would otherwise look like a pass.
+    """
+    actions = actions_by_id()
+
+    assert actions["dashboard.read"] == {
+        "id": "dashboard.read",
+        "job": "review",
+        "summary": "Read the honest dashboard panels (raw counts, no score).",
+        "engine": "read_dashboard",
+        "kind": "read",
+        "scope": "workspace",
+        "params": {},
+        "cli": {"commands": ["memoria dashboard"]},
+        "response_version": engine_api.READ_API_VERSION,
+    }
+    assert "http" not in actions["dashboard.read"]
+    assert "mcp" not in actions["dashboard.read"]
+
+    view = actions["views.dashboard"]
+    assert view["engine"] == "read_dashboard_view"
+    assert view["http"] == {"method": "GET", "path": "/v1/views/dashboard"}
+    assert "cli" not in view
+
+
+def test_read_dashboard_wraps_the_assembler_in_the_read_envelope(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """The row's engine is I1's assembler behind `_read_payload`, not a second
+    dashboard.
+
+    Seeded with one open card before reading: a fresh vault assembles seven
+    all-zero panels, so a stub returning that empty payload satisfies every
+    unfixtured assertion. `open_total == 1` is the producer state that tells a
+    real read from a plausible constant.
+
+    The panel sequence is pinned as an ordered tuple, not a set: the HTTP view
+    renders one block per `DASHBOARD_PANELS` entry, so a payload assembled in
+    another order would put Memoria's two dashboard fronts on two different
+    panel sequences while every count still matched.
+    """
+    workspace = init_cli_workspace(tmp_path, capsys)
+    write_finding(workspace, "flag", "f1", "x", "sweep", target="notes/a.md")
+
+    payload = engine_api.read_dashboard(workspace)
+
+    assert payload["ok"] is True
+    assert payload["api_version"] == engine_api.READ_API_VERSION
+    assert tuple(payload["dashboard"]) == DASHBOARD_PANELS
+    assert payload["dashboard"] == assemble_dashboard(workspace)
+    assert payload["dashboard"]["attention_flow"]["open_total"] == 1
+
+
+def test_cli_dashboard_reads_through_the_row_and_never_past_it(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The whole point of the row: `memoria dashboard` stops reaching past it.
+
+    Counts cannot prove this. A handler that imported `assemble_dashboard` and
+    built its own `{"ok": True, "dashboard": ...}` emits a payload identical in
+    every panel, so any assertion over the numbers passes on both routes. Two
+    halves instead. The spy stands in for the row's *own* declared engine — its
+    name read out of the registry, not hard-coded — and returns a payload this
+    vault cannot produce, so the emitted JSON says which route ran. And
+    `assemble_dashboard` is poisoned under every name a bypass could reach it
+    by, so the route the row replaced is gone rather than merely unused.
+    """
+    workspace = init_cli_workspace(tmp_path, capsys)
+    write_finding(workspace, "flag", "f1", "x", "sweep", target="notes/a.md")
+    row = actions_by_id()["dashboard.read"]
+    assert row["cli"] == {"commands": ["memoria dashboard"]}
+
+    calls: list[Path] = []
+    routed = {
+        "ok": True,
+        "api_version": row["response_version"],
+        # Not a number this vault can reach: one open card, no telemetry.
+        "dashboard": {"attention_flow": {"open_total": 4242}},
+    }
+
+    def observed(target: Path) -> dict[str, object]:
+        calls.append(Path(target))
+        return routed
+
+    monkeypatch.setattr(engine_api, str(row["engine"]), observed)
+    for module in (cli_module, engine_api, dashboard_module):
+        monkeypatch.setattr(
+            module,
+            "assemble_dashboard",
+            lambda *_args, **_kwargs: pytest.fail(
+                "memoria dashboard must read through the dashboard.read engine binding"
+            ),
+            raising=False,
+        )
+
+    assert main(["dashboard", "--workspace", str(workspace), "--json"]) == 0
+    payload = json.loads(capsys.readouterr().out)
+
+    assert calls == [Path(workspace).resolve()]
+    assert payload == routed
 
 
 def test_surface_contract_wired_context_read_serves_cli_only() -> None:
