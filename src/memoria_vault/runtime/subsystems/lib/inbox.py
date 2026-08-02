@@ -49,8 +49,14 @@ def write_proposal(
     loudness: str = "notice",
     citekey: str = "",
     url: str = "",
+    extra_frontmatter: dict[str, str] | None = None,
 ) -> Path | None:
     """Write a candidate/gap card with the honesty body.
+
+    `extra_frontmatter` carries caller-owned machine-readable keys (a raiser's
+    own metadata). Reserved keys always win: the honesty fields are seeded
+    before the extras are merged and the provenance trio is written after, so a
+    caller cannot dress its card up as a different kind, certainty, or raiser.
 
     Returns None when the PI has paused this producer (I1 spec §6.4).
     """
@@ -80,6 +86,8 @@ def write_proposal(
         frontmatter["citekey"] = citekey
     if url:
         frontmatter["url"] = url
+    for key, value in sorted((extra_frontmatter or {}).items()):
+        frontmatter.setdefault(key, value)
     frontmatter.update({"raised_by": raised_by, "loudness": loudness, "created": today})
     body = (
         f"# Action\n\n{action}\n\n# For\n\n{argument_for}\n\n"

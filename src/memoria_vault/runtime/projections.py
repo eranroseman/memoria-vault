@@ -426,6 +426,8 @@ def _workspace_index() -> str:
 
 
 def _vault_agents_md() -> str:
+    from memoria_vault.product.copi_skill import render_codex_condensed_method
+
     return _generated(
         "Memoria vault read contract",
         "Engine-generated projection (the bibliography.bib pattern): `memoria init` "
@@ -443,7 +445,8 @@ def _vault_agents_md() -> str:
         "  `projects/*/argument.canvas`) are regenerated always; edit source\n"
         "  records, never these files.\n"
         "- Write only through `memoria` operations; the journal and trusted writer\n"
-        "  are the only write path.",
+        "  are the only write path.\n"
+        "\n" + render_codex_condensed_method(),
     )
 
 

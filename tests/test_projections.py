@@ -144,6 +144,26 @@ def test_vault_agents_md_is_a_regenerated_read_contract(tmp_path: Path) -> None:
     assert (vault / "AGENTS.md").read_text(encoding="utf-8") == generated
 
 
+def test_vault_agents_md_carries_the_condensed_copi_method(tmp_path: Path) -> None:
+    """Codex reads the co-PI method as ungated AGENTS.md prose, not a Claude-only bundle."""
+    from memoria_vault.product.copi_skill import (
+        GROUNDING_MAXIM,
+        render_codex_condensed_method,
+    )
+
+    vault = workspace(tmp_path)
+
+    write_tracked_projections(vault, machine="test-machine")
+
+    generated = (vault / "AGENTS.md").read_text(encoding="utf-8")
+    assert "## Co-PI method (condensed)" in generated
+    assert GROUNDING_MAXIM in generated
+    assert render_codex_condensed_method() in generated
+    assert generated.index("How to read this vault safely") < generated.index(
+        "## Co-PI method (condensed)"
+    )
+
+
 def test_vault_agents_md_symlink_is_a_redirected_projection(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
     write_tracked_projections(vault, machine="test-machine")

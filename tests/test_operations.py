@@ -402,7 +402,7 @@ def test_run_operation_model_text_records_telemetry_without_content(
     policy = compile_policy()
     monkeypatch.setattr(
         "memoria_vault.runtime.operations._run_prompt_model",
-        lambda _policy, _runner, _prompt, _input: {
+        lambda _policy, _runner, _prompt, _input, _fixture=None: {
             "text": "tier-two verdict text",
             "usage": {
                 "input_tokens": 17,

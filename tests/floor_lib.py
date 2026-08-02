@@ -460,6 +460,15 @@ OPERATION_REGISTRY: dict[str, dict] = {
     },
     # worker.py:516-527 pops project_path.
     "analyze-gaps": {"payload": {"project_path": "{project}"}, "expect": "done"},
+    # generate-questions ships production_enabled: false (U4 §3 shadow-first),
+    # so this seeded run records run/model_call journal events and returns
+    # question/rejection counts but writes no inbox cards — nothing in
+    # "creates". notes/package-thesis.md is the seed's checked note
+    # (scripts/test_vault/e2e_smoke.py:assert_typed_graph).
+    "generate-questions": {
+        "payload": {"scope": "notes/package-thesis.md"},
+        "expect": "done",
+    },
     # worker.py:587-593 pops project_path.
     "analyze-project-argument": {
         "payload": {"project_path": "{project}"},

@@ -541,6 +541,26 @@ def _run_operation_job(
             "new_path": result["new_path"],
             "rewritten": result["rewritten"],
         }
+    if operation_id == "generate-questions":
+        from memoria_vault.runtime.operations import generate_questions
+
+        scope = str(payload.get("scope") or "").strip()
+        if not scope:
+            raise ValueError("generate-questions requires scope")
+        result = generate_questions(
+            vault,
+            scope,
+            context=context,
+            mode=str(payload.get("mode") or "test"),
+        )
+        return {
+            "commit": result["commit"],
+            "scope": result["scope"],
+            "proposal_paths": result["proposal_paths"],
+            "question_count": result["question_count"],
+            "rejected_count": result["rejected_count"],
+            "production_enabled": result["production_enabled"],
+        }
     if operation_id == "analyze-gaps":
         from memoria_vault.runtime.knowledge import analyze_gaps
 

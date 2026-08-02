@@ -15437,6 +15437,15 @@ new vaults and writing their current hashes to `.memoria/vault.json`.
    (`tests/floor_lib.py:375` only asserts `check_tracked_projections` stays
    ok, which regenerated deterministic content satisfies).
 
+   > **WRONG — amended 2026-08-02 (BINDING).** "No journal-event changes"
+   > holds; "no floor-golden regeneration is expected" does not follow from it.
+   > `vault_digest` hashes **every file in the vault**, not only journal shape
+   > (`tests/floor_lib.py:275-289`), and `AGENTS.md` is a seeded tracked
+   > projection whose content hash sits in the `files` map of **every** golden.
+   > U4-A.3 therefore moved all 37 goldens by one line each. The rule this
+   > assumption should have stated: *any change to seeded or generated vault
+   > content is a golden-token task, whether or not journal events change.*
+
 ### Clean-slate U4-A override (2026-07-30, BINDING)
 
 The active U4-A path is fresh `memoria init` only. It seeds the two current
@@ -15465,6 +15474,69 @@ and the five grounds types from
 §2 and §4; engine-missing and credential wordings adapted from the bootstrap
 spec §2, §4b, §6; the perimeter-redirect rationale from bootstrap §5's hook
 message.
+
+### Execution amendment — U4-A as built (2026-08-02, BINDING)
+
+U4-A.1 and U4-A.2 landed. **U4-A.3 landed on 2026-08-02** in the golden-token
+session that followed (see its section note for the accounting); the section is
+complete. One mutation run covers U4-A.1/A.2 and U4-B together: 52 mutants, 52
+killed, 0 survivors (three pass-1 survivors were fixed, not waived — see the
+U4-B amendment, item 7; two more were harness anchor misses, re-anchored and
+killed). U4-A.3 adds 6 more mutants, 6 killed, 0 survivors.
+Deviations from the printed bodies, each with its reason:
+
+1. **The 2026-08-01 strikes are applied, not re-litigated.** `HONEST_EMPTY_WORDING`,
+   its pinned-literal test, the "substituting the actual query" instruction, and
+   `PRIORS_REFUSAL_WORDING` are gone. `render_copi_skill()` embeds
+   `copi_conversational_ask.conversational_ask_section()` **verbatim**, and that
+   section is the only place the refusal appears — so the landed contract-7 scan
+   (`tests/test_copi_conversational_ask.py`) covers the new module for free.
+   `tests/test_copi_bundle.py::test_bundle_text_carries_no_fillable_honest_empty_template`
+   is the standing guard against a fillable template coming back: it *produces* a
+   real honest-empty sentence from `retrieval_pipeline.honest_empty` and asserts
+   none of its count-free fragments appear in either rendered method text.
+2. **`SKILL_SECTION_TITLES` is six entries, not five.** The embedded
+   conversational-ask section is a real H2 of the document
+   (`Conversational ask — grounding contract`, placed after Grounding discipline),
+   so the roster names it. Grounding discipline no longer scripts the refusal
+   itself; it points at the section that does.
+3. **`DIRECT_WRITE_REFUSAL_WORDING` → `DIRECT_WRITE_REFUSAL`**, matching the
+   landed sibling `PRIORS_REFUSAL`. It has no consumer outside this module yet.
+4. **Contract 7's "zero-arg section providers" is realized only across the module
+   boundary.** `conversational_ask_section` is the one `Callable[[], str]` the
+   renderer composes; the engine-local sections stay inline in the renderer,
+   because nothing consumes them individually. Add the registry when a second
+   consumer exists, not before.
+5. **The operation vocabulary names `generate-questions`.** U4-B ships it in the
+   same wave, and a method that omitted it would be stale on arrival.
+   `test_skill_text_names_only_operations_the_engine_actually_ships` pins every
+   named id against `iter_capability_manifests()`, so the method text
+   can never teach an unrunnable move.
+6. **The hook runs `memoria doctor --json`, not `--json --quick`.** `--quick` does
+   not exist: the doctor parser (`src/memoria_vault/cli.py`, `doctor` subparser)
+   takes `--check/--provider/--live/--repair` plus the `_common` flags. The planned
+   invocation would have argparse-errored on every real vault, printed nothing to
+   stdout, and degraded to `DOCTOR_UNAVAILABLE_LINE` permanently. `doctor --json`
+   already emits the `credentials` array and returns in ~0.03 s. If BOOT-C adds
+   `--quick`, adopting it is a one-word change plus a re-run of the hook goldens.
+7. **Section-top assumption 2's credential key name is wrong; the printed hook code
+   was right.** `secrets.credential_report` emits
+   `{name, class, status, source, effect_when_unset}` — there is no `effect` key.
+   `tests/test_copi_bundle.py::test_hook_renders_the_engines_real_credential_rows`
+   now produces those rows from the engine and feeds them to the hook's
+   `_credential_lines`, so a renamed row key fails loudly instead of silently
+   emptying the hook (escape class 2: the stub-PATH goldens alone only prove
+   rendering against a hand-written report).
+8. **Extra hook fixtures for the unfixtured branches**: JSON that parses to a
+   non-object, a report with no `credentials` key, a non-dict row, a blank-named
+   row, and an enhancing row with no `effect_when_unset` (which is what pins
+   `DEFAULT_ENHANCING_EFFECT`). The stub `memoria` is a Python script, not
+   `/bin/sh` + `cat`: the hook's PATH holds only the stub directory, so a shell
+   stub cannot resolve `cat` and every stubbed case collapses into the
+   doctor-unavailable branch — that defect was live in the printed test body.
+   The stub also answers **only** `doctor --json`; mutation showed that a stub
+   replying to any argv lets the hook drop `--json` (and get human-readable text
+   on a real machine) with every test still green.
 
 ---
 
@@ -15496,7 +15568,7 @@ message.
 
 **Steps:**
 
-- [ ] Write the failing test — create `tests/test_copi_bundle.py`:
+- [x] Write the failing test — create `tests/test_copi_bundle.py`:
 
 ```python
 from __future__ import annotations
@@ -15586,19 +15658,19 @@ def test_condensed_method_carries_the_load_bearing_wordings() -> None:
         assert f"`{operation_id}`" in text
 ```
 
-- [ ] Register the test file — in `tests/conftest.py`, after the line
+- [x] Register the test file — in `tests/conftest.py`, after the line
       `    "test_content_security.py": "runtime",` (line 32) insert:
 
 ```python
     "test_copi_bundle.py": "contract",
 ```
 
-- [ ] Run test to verify it fails:
+- [x] Run test to verify it fails:
       `python -m pytest tests/test_copi_bundle.py -v`
       — expected: collection error `ModuleNotFoundError: No module named
       'memoria_vault.product.copi_skill'`.
 
-- [ ] Write minimal implementation — create
+- [x] Write minimal implementation — create
       `src/memoria_vault/product/copi_skill/__init__.py`:
 
 ```python
@@ -15785,10 +15857,10 @@ bundle; the full method lives at `{SKILL_RELPATH}`.
   `implicit` and `multi-hop` always route to PI review."""
 ```
 
-- [ ] Run test to verify it passes:
+- [x] Run test to verify it passes:
       `python -m pytest tests/test_copi_bundle.py -v` — expected: 6 passed.
 
-- [ ] Run the module-adjacent suites to confirm no collateral:
+- [x] Run the module-adjacent suites to confirm no collateral:
       `python -m pytest tests/test_package_spine.py tests/test_testing_levels.py -v`
 
 - [ ] Commit:
@@ -15845,7 +15917,7 @@ EOF
 
 **Steps:**
 
-- [ ] Write the failing tests — append to `tests/test_copi_bundle.py` (extend
+- [x] Write the failing tests — append to `tests/test_copi_bundle.py` (extend
       the existing import block with `SESSION_STATUS_HOOK_RELPATH`,
       `SKILL_RELPATH`, `copi_bundle_files`, `render_session_status_hook`, and
       add `import subprocess`, `import sys`, `from pathlib import Path` at the
@@ -15955,12 +16027,12 @@ def test_hook_degrades_on_unusable_doctor_output(tmp_path: Path) -> None:
     assert _run_seeded_hook(tmp_path, bin_dir) == DOCTOR_UNAVAILABLE_GOLDEN
 ```
 
-- [ ] Run tests to verify they fail:
+- [x] Run tests to verify they fail:
       `python -m pytest tests/test_copi_bundle.py -v`
       — expected: `ImportError: cannot import name 'copi_bundle_files' from
       'memoria_vault.product.copi_skill'` at collection.
 
-- [ ] Write minimal implementation, part 1 — create
+- [x] Write minimal implementation, part 1 — create
       `src/memoria_vault/product/copi_skill/session_status.py`:
 
 ```python
@@ -16047,7 +16119,7 @@ if __name__ == "__main__":
     raise SystemExit(main())
 ```
 
-- [ ] Write minimal implementation, part 2 — in
+- [x] Write minimal implementation, part 2 — in
       `src/memoria_vault/product/copi_skill/__init__.py`, extend the import
       block after `from __future__ import annotations`:
 
@@ -16076,7 +16148,7 @@ def copi_bundle_files() -> tuple[tuple[str, Callable[[], str]], ...]:
     )
 ```
 
-- [ ] Run tests to verify they pass:
+- [x] Run tests to verify they pass:
       `python -m pytest tests/test_copi_bundle.py -v` — expected: 11 passed.
 
 - [ ] Run the full gate: `python scripts/verify` — expected: pass (the new
@@ -16104,6 +16176,43 @@ EOF
 ---
 
 ### Task U4-A.3: Codex condensed method in the generated AGENTS.md projection
+
+> **LANDED 2026-08-02 by the golden-token holder** (was: BLOCKED, not
+> attempted — the blocker was the token, not the code; R1NG.4 had already
+> landed `_vault_agents_md`). Deviations from the printed body:
+>
+> - **The printed implementation snippet is not used.** It reprints R1NG.4's
+>   body from R1NG.4's *plan*, and the landed body differs (its note reads
+>   "`memoria init` writes this file and upgrades regenerate it", not the
+>   planned wording). The section's own parenthetical fallback is what was
+>   followed: keep the landed "How to read this vault safely" body verbatim and
+>   append `"\n" + render_codex_condensed_method()` after its final line, plus
+>   the local `from memoria_vault.product.copi_skill import
+>   render_codex_condensed_method`. That is the whole change — two lines.
+> - **The printed test asserts `HONEST_EMPTY_WORDING`**, struck by the
+>   2026-08-01 amendment. The landed test
+>   (`test_vault_agents_md_carries_the_condensed_copi_method`) asserts the H2
+>   heading, `GROUNDING_MAXIM`, `render_codex_condensed_method() in generated`,
+>   and that the read contract precedes the method section.
+> - **Section-top assumption 5 is wrong and is amended above.** This task moved
+>   every floor golden. Accounting: **37 goldens modified, one line each**,
+>   `"AGENTS.md": "1c9b0bdfe5c1"` → `"d04f09f9b6b6"`, zero unreconciled diff
+>   lines. The new hash was **predicted before regenerating** as
+>   `sha256(_redact(_vault_agents_md()))[:12]`, and the same recipe applied to
+>   the rendered text with the appended section removed reproduces the prior
+>   `1c9b0bdfe5c1` exactly — so the delta is provably the append and nothing
+>   else. Controls: `.obsidian/plugins/memoria-obsidian/main.js`,
+>   `.claude/settings.json` and `index.md` each still hold exactly one hash
+>   across all goldens, unchanged; and the one golden that also carries
+>   `.memoria/index/capability-index.json` took the *same* `AGENTS.md` hash as
+>   the 36 that carry no capability index — the two moving values are
+>   independent.
+> - **Mutation:** 6 mutants over the two changed lines, 6 killed, 0 survivors.
+>   Worth recording: the two whitespace-only mutants (drop the blank-line
+>   separator; double it) are killed **only** by the floor goldens — no
+>   assertion in `tests/test_projections.py` observes the separator. That is the
+>   goldens earning their keep, not a coverage gap to paper over with a
+>   byte-equality assertion.
 
 Requires Plan 23 R1NG.4 merged (see assumption 4). R1NG.4's Produces consumed
 here: `_vault_agents_md() -> str` (private renderer, projections.py, added
@@ -16137,7 +16246,7 @@ next to `_workspace_index` at projections.py:391-404),
 
 **Steps:**
 
-- [ ] Write the failing test — append to `tests/test_projections.py`:
+- [x] Write the failing test — append to `tests/test_projections.py`:
 
 ```python
 def test_vault_agents_md_carries_the_condensed_copi_method(tmp_path: Path) -> None:
@@ -16161,13 +16270,13 @@ def test_vault_agents_md_carries_the_condensed_copi_method(tmp_path: Path) -> No
     )
 ```
 
-- [ ] Run test to verify it fails:
+- [x] Run test to verify it fails:
       `python -m pytest tests/test_projections.py::test_vault_agents_md_carries_the_condensed_copi_method -v`
       — expected: `AssertionError` on
       `assert "## Co-PI method (condensed)" in generated`
       (R1NG.4's AGENTS.md exists but has no method section).
 
-- [ ] Write minimal implementation — in
+- [x] Write minimal implementation — in
       `src/memoria_vault/runtime/projections.py`, replace R1NG.4's
       `_vault_agents_md` (its exact landed body, quoted from Plan 23
       R1NG.4's implementation step) with the version that appends the
@@ -16206,17 +16315,17 @@ def _vault_agents_md() -> str:
       append `"\n" + render_codex_condensed_method()` after its final line —
       the append is this task's whole change.)
 
-- [ ] Run tests to verify they pass:
+- [x] Run tests to verify they pass:
       `python -m pytest tests/test_projections.py -v`
       — expected: all pass, including R1NG.4's
       `test_vault_agents_md_is_a_regenerated_read_contract` (its drift check
       regenerates from the same renderer, so the appended section is
       drift-neutral).
 
-- [ ] Run the projection-consuming surfaces:
+- [x] Run the projection-consuming surfaces:
       `python -m pytest tests/test_installer_skeleton.py tests/test_cli.py tests/test_seed_lifecycle.py tests/test_cli_doctor_eval.py tests/test_copi_bundle.py -v`
 
-- [ ] Run the full gate: `python scripts/verify` — expected: pass (floor
+- [x] Run the full gate: `python scripts/verify` — expected: pass (floor
       suites regenerate projections in-run; no golden regeneration — see
       section-top assumption 5).
 
@@ -16300,6 +16409,119 @@ seed never runs `generate-questions`, and the shadow-first flag means the
 floor run writes no inbox files (dates would be redacted anyway,
 floor_lib.py:258-279).
 
+### Execution amendment — U4-B as built (2026-08-02, BINDING)
+
+Tasks U4-B.1 through U4-B.5 landed complete. U4-B.6's registry entry landed;
+**its golden was not generated** (see the task section). Deviations:
+
+1. **The deterministic fixture routes through `run_operation_model_text`, not a
+   second hand-written `model_call` event.** `run_operation_model_text` and
+   `_run_prompt_model` grew one optional `fixture: Callable[[], str] | None`
+   parameter, and `generate_questions` passes
+   `fixture=lambda: _generate_questions_fixture(scope_rel)`. The printed body
+   duplicated ~25 lines of event construction into the fixture branch and, in
+   doing so, dropped `usage`, `cost_usd`, and `elapsed_s` — every other
+   `model_call` in the repo carries them, so the same operation would have
+   emitted two differently-shaped events depending on run mode (escape class 10:
+   a replica exempt from the producer's invariants). One recorder, one shape.
+   `tests/test_operations.py`'s `_run_prompt_model` stub lambda gained the
+   parameter to match.
+2. **`json.dumps(items, sort_keys=True)` → `json.dumps(items)`.** The items are
+   dict literals, so byte-determinism already holds; the kwarg was an unkillable
+   mutant with no assertion behind it.
+3. **Placement:** the whole `generate-questions` group (call-site id, roles,
+   operation, fixture, validators) sits together at the end of
+   `operations.py` rather than being split around `compile_source_digest`.
+   `inbox` is imported at module top as planned. All plan line numbers had
+   drifted (e.g. `run_operation_model_text` is at :520, not :439).
+4. **The manifest's `created:` is 2026-08-02**, the day it was authored.
+5. **Test strengthening against the named escape classes** (the printed tests
+   passed on mutants of code they claimed to cover):
+   - *Class 3, misattributed coverage.* The four-reject fixture asserted only a
+     total. Rejection is now parametrized **one bad item at a time** — non-question,
+     off-taxonomy role, unresolvable target, traversing target, empty target,
+     non-object — each with a known-good item alongside, so every reason is
+     proved alone. The four-reject mixed-payload test stays as the counting pin.
+   - *Class 1, degenerate fixture.* Every printed target was `notes/alpha.md`,
+     an existing file — which the `is_file()` arm of `_resolvable_question_target`
+     accepts on its own, leaving the `state.catalog_source` arm dead weight that
+     no test could kill. `test_validated_questions_resolve_targets_through_the_catalog`
+     seeds a catalog record whose work id is *not* a file and asserts it resolves.
+   - *Class 2, unfixtured defaults.* `normalize_path` on the target (a
+     `notes/./alpha.md` case), `neutralize_untrusted_markdown_fragment` on the
+     question, and the whitespace collapse each now have a producing case;
+     without them all three calls could be deleted silently.
+   - The shadow-first test is renamed `test_shipped_manifest_runs_shadow_first`
+     and states in its docstring that it monkeypatches nothing — the flag under
+     test is the one the package ships.
+   - `test_scope_must_sit_inside_an_allowed_path` pins the allowed-paths gate.
+     Note `require_policy_path` raises **`PermissionError`**, not `ValueError`.
+6. **U4-B.1 test additions:** the reserved-key probe now covers the whole
+   provenance trio (`raised_by`, `loudness`, `created`) plus `attention_status`,
+   and one test pins that extras order does not change the card bytes — otherwise
+   the `sorted()` in the merge loop is decoration.
+7. **Mutation-driven changes** (52 mutants over the new code, all killed):
+   - `_resolvable_question_target`'s `if not target: return False` guard is
+     **deleted, not covered**. `""` normalizes to `""`, which no catalog work id
+     matches (`state._work_id("")` raises) and which resolves to the vault
+     directory rather than a file — both arms already reject it, so the guard was
+     dead code. The empty-target case stays in the parametrized rejection test.
+   - `test_fixture_run_writes_proposal_cards_with_taxonomy_tags` now asserts
+     `finished[0]["outputs"] == result["proposal_paths"]`; without it the
+     `run`-done event's `outputs` could be hardcoded `[]` and only the shadow
+     test — which expects `[]` — would have looked at it.
+   - The worker dispatch's `mode` had no observable effect anywhere: both runner
+     branches ship model `deterministic-fixture`, so the mode never changes the
+     output. Two tests fix that — the default is read back off the `model_call`
+     journal event (`mode == "test"`), and a payload of `mode: "sideways"` must
+     fail the job with `unsupported run mode: sideways`.
+8. **The "Floor goldens" note above is wrong: this section moves an EXISTING
+   golden.** Shipping any new operation manifest changes
+   `.memoria/index/capability-index.json`, whose hash is pinned in
+   `tests/fixtures/floor/goldens/regenerate-capability-index.json` (line 24,
+   `"b924b90e8aae"`). The U4-B.2 commit therefore drifts that golden by exactly
+   one line, and `tests/test_floor_sweep_operations.py::test_operation[regenerate-capability-index]`
+   goes red the moment the manifest lands. That makes **all of U4-B**, not just
+   U4-B.6, a golden-token task under cross-section contract 10 — the sequencing
+   note that only names U4-B.6 understates it. Nothing about this depends on the
+   operation's behaviour: it is the capability index reacting to a new manifest.
+
+### Rebase amendment — U4-A/U4-B forward-ported to main (2026-08-02, BINDING)
+
+U4-A.1/A.2 and U4-B.1–B.5 were built on `a1d815c9` and rebased 23 commits onto
+`cc55c40f` before U4-A.3 and U4-B.6 were attempted. Four landed changes needed
+adaptation; all four are the kind of drift a stale branch hides until it lands:
+
+1. **`inbox.write_proposal` now returns `Path | None`** (I1 §6.4 producer
+   throttle). The U4-B.1 `extra_frontmatter` parameter and the throttle merge
+   cleanly, but `generate_questions` was appending `card.relative_to(vault)`
+   unconditionally and would have crashed on a paused producer. It now follows
+   the `propagation.write_finding` precedent — skip the `None`, keep the run's
+   `question_count` honest — and
+   `test_a_paused_producer_writes_no_cards_and_still_reports_its_counts`
+   pins it (4 mutants over the guard, 4 killed).
+2. **`read_capability_manifest(capability_id)` lost its `"operation"` first
+   argument**, and `iter_capability_manifests()` lost it too. Both were called
+   with it here.
+3. **`_sha256_text` now delegates to `policy.audit.sha256_bytes`**; the U4-B
+   branch had reprinted the old `hashlib` body, which no longer has an import to
+   stand on.
+4. **`tests/conftest.py`'s `TEST_LEVELS` registry is gone** (#1671): each module
+   declares its own level with a module-level `pytestmark`. The branch's two
+   `TEST_LEVELS` rows are dropped in favour of `pytestmark = pytest.mark.contract`
+   in `tests/test_copi_bundle.py` and `pytestmark = pytest.mark.runtime` in
+   `tests/test_generate_questions.py`. **`test_copi_bundle.py` had no `import
+   pytest`** — a `pytestmark` line without it raises `NameError` at collection and
+   the module's tests then vanish from every selection *silently*, with
+   `test_each_pytest_file_declares_exactly_one_testing_level` still green (the
+   file does declare a level). Only a collected-node-ID check catches it, so one
+   was run: under the gate's own `-m "static or unit or contract or runtime or
+   package or floor"` expression the three touched files contribute 16 / 23 / 25
+   node ids, matching their standalone collection counts.
+
+Nothing about U4's contracts changed; the deltas are three call sites, one
+guard, and two test-level declarations.
+
 ---
 
 ### Task U4-B.1: `inbox.write_proposal` grows `extra_frontmatter`
@@ -16314,7 +16536,7 @@ floor_lib.py:258-279).
 
 **Steps:**
 
-- [ ] Write the failing tests. Append to `tests/test_inbox_cards.py`:
+- [x] Write the failing tests. Append to `tests/test_inbox_cards.py`:
 
   ```python
   def test_proposal_card_carries_extra_frontmatter(tmp_path):
@@ -16360,11 +16582,11 @@ floor_lib.py:258-279).
       assert fm["raised_by"] == "probe"
   ```
 
-- [ ] Run to verify failure:
+- [x] Run to verify failure:
   `python -m pytest tests/test_inbox_cards.py::test_proposal_card_carries_extra_frontmatter tests/test_inbox_cards.py::test_proposal_extra_frontmatter_cannot_override_reserved_keys -v`
   — expected: `TypeError: write_proposal() got an unexpected keyword argument 'extra_frontmatter'`.
 
-- [ ] Write the minimal implementation. In `src/memoria_vault/runtime/subsystems/lib/inbox.py`, edit the `write_proposal` signature (lines 40-43):
+- [x] Write the minimal implementation. In `src/memoria_vault/runtime/subsystems/lib/inbox.py`, edit the `write_proposal` signature (lines 40-43):
 
   ```python
       loudness: str = "notice",
@@ -16396,7 +16618,7 @@ floor_lib.py:258-279).
       frontmatter.update({"raised_by": raised_by, "loudness": loudness, "created": today})
   ```
 
-- [ ] Run to verify pass (same command as above), then run the whole file:
+- [x] Run to verify pass (same command as above), then run the whole file:
   `python -m pytest tests/test_inbox_cards.py -v` — all green.
 
 - [ ] Commit:
@@ -16422,7 +16644,7 @@ floor_lib.py:258-279).
 
 **Steps:**
 
-- [ ] Register the test level. In `tests/conftest.py` replace
+- [x] Register the test level. In `tests/conftest.py` replace
 
   ```python
       "test_gate_calibration.py": "unit",
@@ -16435,7 +16657,7 @@ floor_lib.py:258-279).
       "test_generate_questions.py": "runtime",
   ```
 
-- [ ] Write the failing test. Create `tests/test_generate_questions.py`:
+- [x] Write the failing test. Create `tests/test_generate_questions.py`:
 
   ```python
   """generate-questions: Toulmin-taxonomy question proposals over one checked scope."""
@@ -16463,11 +16685,11 @@ floor_lib.py:258-279).
       assert policy["runner"]["live"]["provider"] == "gateway"
   ```
 
-- [ ] Run to verify failure:
+- [x] Run to verify failure:
   `python -m pytest tests/test_generate_questions.py::test_manifest_declares_shadow_first_call_site -v`
   — expected: `FileNotFoundError: product/capabilities/operations/generate-questions.md`.
 
-- [ ] Write the manifest. Create `src/memoria_vault/product/capabilities/operations/generate-questions.md` (format mirrors `analyze-claims.md`; `production_enabled` is a new field — `validate_operation_policy` (operations.py:167-188) only rejects the retired `check_status`/`standing` fields, so unknown extras pass):
+- [x] Write the manifest. Create `src/memoria_vault/product/capabilities/operations/generate-questions.md` (format mirrors `analyze-claims.md`; `production_enabled` is a new field — `validate_operation_policy` (operations.py:167-188) only rejects the retired `check_status`/`standing` fields, so unknown extras pass):
 
   ```markdown
   ---
@@ -16518,10 +16740,10 @@ floor_lib.py:258-279).
   role, and omit a role when the scope gives it no opening.
   ```
 
-- [ ] Run to verify pass:
+- [x] Run to verify pass:
   `python -m pytest tests/test_generate_questions.py::test_manifest_declares_shadow_first_call_site -v`
 
-- [ ] Note (do not "fix"): from this commit until Task U4-B.6,
+- [x] Note (do not "fix"): from this commit until Task U4-B.6,
   `tests/test_floor_coverage.py::test_every_operation_has_a_floor_entry` is red
   (`operations without floor entries: ['generate-questions']`). That gate is
   satisfied in U4-B.6.
@@ -16554,7 +16776,7 @@ floor_lib.py:258-279).
 
 **Steps:**
 
-- [ ] Write the failing tests. In `tests/test_generate_questions.py`, extend the import block and append:
+- [x] Write the failing tests. In `tests/test_generate_questions.py`, extend the import block and append:
 
   ```python
   import json
@@ -16618,11 +16840,11 @@ floor_lib.py:258-279).
 
   (Move `import pytest` to the module import block alongside `import json`; shown inline here only to keep the diff self-describing.)
 
-- [ ] Run to verify failure:
+- [x] Run to verify failure:
   `python -m pytest tests/test_generate_questions.py -v`
   — expected: `ImportError: cannot import name 'QUESTION_TAXONOMY_ROLES' from 'memoria_vault.runtime.operations'`.
 
-- [ ] Write the minimal implementation. Append to the end of `src/memoria_vault/runtime/operations.py` (after `_empirical_journal_event_id`, line 1085):
+- [x] Write the minimal implementation. Append to the end of `src/memoria_vault/runtime/operations.py` (after `_empirical_journal_event_id`, line 1085):
 
   ```python
   GENERATE_QUESTIONS_CALL_ID = "generate-questions.v1"
@@ -16712,7 +16934,7 @@ floor_lib.py:258-279).
       return (Path(vault) / rel).is_file()
   ```
 
-- [ ] Run to verify pass: `python -m pytest tests/test_generate_questions.py -v`
+- [x] Run to verify pass: `python -m pytest tests/test_generate_questions.py -v`
 
 - [ ] Commit:
   ```
@@ -16751,7 +16973,7 @@ floor_lib.py:258-279).
 
 **Steps:**
 
-- [ ] Write the failing tests. In `tests/test_generate_questions.py`, extend imports:
+- [x] Write the failing tests. In `tests/test_generate_questions.py`, extend imports:
 
   ```python
   from copy import deepcopy
@@ -16958,11 +17180,11 @@ floor_lib.py:258-279).
           generate_questions(vault, "notes/alpha.md", machine="garbage-machine")
   ```
 
-- [ ] Run to verify failure:
+- [x] Run to verify failure:
   `python -m pytest tests/test_generate_questions.py -v`
   — expected: `ImportError: cannot import name 'generate_questions' from 'memoria_vault.runtime.operations'`.
 
-- [ ] Write the minimal implementation. In `src/memoria_vault/runtime/operations.py`:
+- [x] Write the minimal implementation. In `src/memoria_vault/runtime/operations.py`:
 
   1. Add to the top import block (after line 34's `trusted_writer` import group):
 
@@ -17098,7 +17320,7 @@ floor_lib.py:258-279).
          }
      ```
 
-- [ ] Run to verify pass: `python -m pytest tests/test_generate_questions.py -v`
+- [x] Run to verify pass: `python -m pytest tests/test_generate_questions.py -v`
 
 - [ ] Commit:
   ```
@@ -17122,7 +17344,7 @@ floor_lib.py:258-279).
 
 **Steps:**
 
-- [ ] Write the failing tests. Append to `tests/test_generate_questions.py` (extend the helpers import line with `worker_workspace`):
+- [x] Write the failing tests. Append to `tests/test_generate_questions.py` (extend the helpers import line with `worker_workspace`):
 
   ```python
   def test_worker_dispatch_runs_generate_questions(
@@ -17170,11 +17392,11 @@ floor_lib.py:258-279).
       assert "generate-questions requires scope" in done["error"]
   ```
 
-- [ ] Run to verify failure:
+- [x] Run to verify failure:
   `python -m pytest tests/test_generate_questions.py::test_worker_dispatch_runs_generate_questions tests/test_generate_questions.py::test_worker_dispatch_requires_scope -v`
   — expected: first test fails with `done["status"] == "failed"` and error `unsupported operation: 'generate-questions'` (the fallthrough raise at worker.py:1090); second fails on the error-message assertion for the same reason.
 
-- [ ] Write the minimal implementation. In `src/memoria_vault/runtime/worker.py`, insert immediately before the line `    if operation_id == "analyze-gaps":` (line 498):
+- [x] Write the minimal implementation. In `src/memoria_vault/runtime/worker.py`, insert immediately before the line `    if operation_id == "analyze-gaps":` (line 498):
 
   ```python
       if operation_id == "generate-questions":
@@ -17199,7 +17421,7 @@ floor_lib.py:258-279).
           }
   ```
 
-- [ ] Run to verify pass: `python -m pytest tests/test_generate_questions.py -v`
+- [x] Run to verify pass: `python -m pytest tests/test_generate_questions.py -v`
 
 - [ ] Commit:
   ```
@@ -17213,6 +17435,65 @@ floor_lib.py:258-279).
 
 ### Task U4-B.6: floor registry entry, new golden, full gate
 
+> **COMPLETE 2026-08-02.** The golden-token holder generated
+> `tests/fixtures/floor/goldens/generate-questions.json` and moved the one
+> `regenerate-capability-index.json` line. Accounting for this task's half of
+> the wave: **1 new golden, 1 changed line in 1 existing golden**,
+> `".memoria/index/capability-index.json": "ea84e13bf465"` → `"46a8924e1f16"`,
+> zero unreconciled diff lines. The new hash was predicted before regenerating
+> as `sha256(_redact(render_capability_index()))[:12]`; deleting the single new
+> `generate-questions` catalog row from the rendered index and re-rendering
+> reproduces the prior `ea84e13bf465` exactly, so the delta is provably the one
+> new manifest row. Control: `.memoria/index/capability-index.json` appears in
+> exactly **1** of the 38 goldens (the other 37 never write it), and that
+> golden's `AGENTS.md` hash moved to the same value as the 36 goldens with no
+> capability index at all — the two moving values are independent.
+>
+> **The step below is over-strict on one point.** "`files` must contain no
+> `inbox/` entries" is wrong: the floor **seed** ships one attention card,
+> `inbox/flag-gap-full-text-floor-gap-work.md`, and it is present in all 38
+> goldens including this one. The shadow-run claim is proved by the *absence of
+> any additional* inbox entry — verified by comparing the new golden's file set
+> against `answer-query.json`'s: the only difference is
+> `.memoria/journal/floor.jsonl` (this operation journals; `answer-query` does
+> not), with every shared file at an identical hash.
+>
+> Historical note — **Half-landed (2026-08-02).** The `OPERATION_REGISTRY["generate-questions"]`
+> entry is in `tests/floor_lib.py` and
+> `tests/test_floor_coverage.py::test_every_operation_has_a_floor_entry` is
+> green. The sweep case runs the operation to `done` — it reaches the golden
+> comparison, which is the last thing standing.
+>
+> **The golden was not generated.** This wave froze
+> `tests/fixtures/floor/goldens/` to a single token-holding session, and
+> `MEMORIA_FLOOR_UPDATE_GOLDENS=1` is refused to sessions without it. So
+> `tests/test_floor_sweep_operations.py::test_operation[generate-questions]`
+> is the one red test on this branch, failing with
+> `missing golden generate-questions.json`.
+>
+> A second golden also has to move, and it is **not** this task's — see the
+> section amendment, item 7: U4-B.2's manifest drifts
+> `tests/fixtures/floor/goldens/regenerate-capability-index.json` by the one
+> `.memoria/index/capability-index.json` hash line, because a new operation
+> manifest joins the capability index.
+>
+> To close both, the golden-token holder runs exactly:
+>
+> ```
+> MEMORIA_FLOOR_UPDATE_GOLDENS=1 python -m pytest \
+>   "tests/test_floor_sweep_operations.py::test_operation[generate-questions]" \
+>   "tests/test_floor_sweep_operations.py::test_operation[regenerate-capability-index]" -q
+> git status --short tests/fixtures/floor/goldens/
+> ```
+>
+> and confirms **one added file, exactly one modified**, with the modification a
+> single changed line (`.memoria/index/capability-index.json`). This branch
+> changed no seeded content otherwise, so a run against it must produce exactly
+> that; the 36 existing golden files were verified byte-unchanged before and
+> after every command run here. Inspect the new file: `files` must carry no
+> `inbox/` entry (shadow run) and `journal_kinds` must include the
+> `run`/`model_call` events.
+
 **Files:**
 - Modify: `tests/floor_lib.py` (add one `OPERATION_REGISTRY` entry after the `analyze-gaps` entry, currently at the line `    "analyze-gaps": {"payload": {"project_path": "{project}"}, "expect": "done"},` inside the dict that starts at line 450)
 - Create: `tests/fixtures/floor/goldens/generate-questions.json` (generated, then reviewed and committed — the ONE new golden this section adds; no existing golden changes)
@@ -17223,11 +17504,11 @@ floor_lib.py:258-279).
 
 **Steps:**
 
-- [ ] Write the failing check first — the completeness gate is the test:
+- [x] Write the failing check first — the completeness gate is the test:
   `python -m pytest tests/test_floor_coverage.py::test_every_operation_has_a_floor_entry -v`
   — expected (red since U4-B.2): `operations without floor entries: ['generate-questions']`.
 
-- [ ] Add the registry entry. In `tests/floor_lib.py`, replace
+- [x] Add the registry entry. In `tests/floor_lib.py`, replace
 
   ```python
       "analyze-gaps": {"payload": {"project_path": "{project}"}, "expect": "done"},
@@ -17248,24 +17529,24 @@ floor_lib.py:258-279).
       },
   ```
 
-- [ ] Run the coverage gate to verify it passes:
+- [x] Run the coverage gate to verify it passes:
   `python -m pytest tests/test_floor_coverage.py::test_every_operation_has_a_floor_entry -v`
 
-- [ ] Run the sweep case once to verify the operation runs `done` and only the golden is missing:
+- [x] Run the sweep case once to verify the operation runs `done` and only the golden is missing:
   `python -m pytest "tests/test_floor_sweep_operations.py::test_operation[generate-questions]" -v`
   — expected failure: `missing golden generate-questions.json; run once with MEMORIA_FLOOR_UPDATE_GOLDENS=1 and review the diff`.
 
-- [ ] Generate the golden, then review it:
+- [x] Generate the golden, then review it:
   ```
   MEMORIA_FLOOR_UPDATE_GOLDENS=1 python -m pytest "tests/test_floor_sweep_operations.py::test_operation[generate-questions]" -v
   git status --short tests/fixtures/floor/goldens/
   ```
   Confirm exactly ONE new file (`generate-questions.json`) and zero modified goldens; inspect it — `files` must contain no `inbox/` entries (shadow run) and `journal_kinds` must include the run/model_call events.
 
-- [ ] Run the sweep case again WITHOUT the env var to verify it passes against the committed golden:
+- [x] Run the sweep case again WITHOUT the env var to verify it passes against the committed golden:
   `python -m pytest "tests/test_floor_sweep_operations.py::test_operation[generate-questions]" tests/test_floor_coverage.py -v`
 
-- [ ] Run the full gate: `python scripts/verify` — must pass end to end (this also proves the U4-B.2→U4-B.6 mid-branch red is resolved).
+- [x] Run the full gate: `python scripts/verify` — must pass end to end (this also proves the U4-B.2→U4-B.6 mid-branch red is resolved).
 
 - [ ] Commit:
   ```
@@ -17757,6 +18038,13 @@ required.
 > `SELECT payload_json FROM event_log` queries the wrong table and would assert
 > nothing. Narrow the pin to "the answer-query path emits no `read-observed.v1`",
 > read `telemetry_events`, and drop the "emission is deferred" rationale.
+>
+> **This is the only U4 task still open.** A.1–A.3, B.1–B.6 and C.2–C.4 have
+> landed; C.1 was removed as satisfied. Also note the rebase amendment in the
+> U4-B section: `tests/conftest.py`'s `TEST_LEVELS` registry no longer exists
+> (#1671), so any new test module needs a `pytestmark` level and an
+> `import pytest` to go with it — this task modifies an existing, already-marked
+> file, so it needs neither.
 
 **Re-specification 2026-08-02 (BINDING) — done; the printed body below is
 superseded and must not be executed.**
