@@ -1265,6 +1265,27 @@ ARG_TABLE: dict[str, dict] = {
         "http": ("GET", "/project/slice?project_path={project}"),
         "mcp": ("project_slice", {"project_path": "{project}"}),
     },
+    # U2 rows, all cli-only (spec §5). The composer gets an explicit --project:
+    # the seed has one active project, but bare-invocation resolution is the
+    # composer's own pinned contract, not this sweep's.
+    "cockpit.read": {
+        "cli": ["cockpit", "--project", "{project}"],
+        "http": None,
+        "mcp": None,
+    },
+    "trace.revert_preview": {
+        # The same event id journal.get sweeps: event 3 is {note_claim}'s
+        # create-concept derivation, so its output record exists and the
+        # preview is computable rather than an honest miss.
+        "cli": ["journal", "revert-preview", "3"],
+        "http": None,
+        "mcp": None,
+    },
+    "context.read": {
+        "cli": ["context"],
+        "http": None,
+        "mcp": None,
+    },
     "requests.get": {
         "cli": ["request", "show", "{request_id}"],
         # http param remap: the action's own params use "request_id", but the

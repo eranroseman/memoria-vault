@@ -19,6 +19,7 @@ from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.paths import normalize_path, within_scope
 from memoria_vault.runtime.read_barrier import is_consumable_checked_file
 from memoria_vault.runtime.secrets import credential_report
+from memoria_vault.runtime.steering import effective_steering_tokens
 from memoria_vault.runtime.subsystems.lib import loudness
 from memoria_vault.runtime.subsystems.lib.edges import LINK_RELATIONS
 from memoria_vault.runtime.time import now_iso
@@ -551,6 +552,93 @@ def read_journal_event(
     if not _journal_in_scope(event, read_scope):
         raise FileNotFoundError(f"journal event not found: {event_id}")
     return _read_payload(event=event)
+
+
+def read_revert_preview(
+    workspace: Path, event_id: int, *, read_scope: list[str] | None = None
+) -> dict[str, Any]:
+    """trace.revert_preview (U2 spec §3): read-only cascade-rollback preview.
+
+    Scope refuses on the previewed output's own path, so out of scope is
+    indistinguishable from absent — and a non-computable preview carries no
+    path at all, which refuses under any scope rather than letting a bounded
+    reader probe which event ids exist.
+
+    The three descendant lists are deliberately *not* narrowed to `read_scope`:
+    they are the blast radius of a destructive operation, and a scoped one
+    would understate what the rollback is about to do.
+
+    The runtime import is call-time-local, matching the shipped precedent
+    above; `integrity` imports this package's writers.
+    """
+    from memoria_vault.runtime.integrity import revert_preview
+
+    preview = revert_preview(Path(workspace), event_id)
+    # Every return path of `revert_preview` sets `target`, and a non-computable
+    # one sets it to "" — which no scope admits, so an id a bounded reader may
+    # not see and one that does not exist refuse identically.
+    _require_scope(str(preview["target"]), read_scope, f"derived record not found: {event_id}")
+    return _read_payload(preview=preview)
+
+
+CONTEXT_STEERING_TOP_N = 20
+CONTEXT_STEERING_WITHHELD = (
+    "steering tokens are a whole-vault read; a bounded read_scope cannot include them"
+)
+
+
+def read_context(workspace: Path, *, read_scope: list[str] | None = None) -> dict[str, Any]:
+    """context.read (U2 spec §1 panel 6): the situated-context bundle.
+
+    A minimal honest bundle from shipped reads only — the active projects, the
+    slice counts when exactly one project is active, the open attention count,
+    and the effective steering tokens with their honest total. No model
+    judgment anywhere in assembly.
+
+    The active predicate is not restated here. `engine.cockpit.active_projects`
+    names it once (`type: project` whose frontmatter `archived` is not True;
+    `lifecycle` is schema-retired and is deliberately not consulted), and this
+    calls it through the same call-time-local import `read_cockpit` uses to
+    keep engine.api free of a module-load cycle.
+
+    Two scope rules (U2 scoped-trace amendment §1). The slice goes through
+    public `read_slice(..., read_scope=...)`, never a private unscoped helper,
+    and a slice the scope hides is named unavailable rather than silently
+    zeroed. Steering tokens are a whole-vault derivation with no scoped form,
+    so a bounded read is told they are withheld — an empty list would read as
+    "this vault has no steering".
+    """
+    from memoria_vault.engine.cockpit import active_projects
+
+    workspace = Path(workspace)
+    active = active_projects(workspace, read_scope=read_scope)
+    slice_counts: dict[str, Any] | None = None
+    if len(active) == 1:
+        try:
+            project_slice = read_slice(workspace, active[0]["path"], read_scope=read_scope)["slice"]
+        except FileNotFoundError as exc:
+            slice_counts = {"unavailable": str(exc)}
+        else:
+            slice_counts = {
+                "project_path": project_slice["project_path"],
+                "members": len(project_slice["members"]),
+                "edges": len(project_slice["edges"]),
+                "missing": len(project_slice["missing"]),
+            }
+    context: dict[str, Any] = {
+        "active_projects": active,
+        "slice_counts": slice_counts,
+        "attention_open": len(
+            read_attention(workspace, status="open", read_scope=read_scope)["attention"]
+        ),
+    }
+    if read_scope is None:
+        tokens = sorted(effective_steering_tokens(workspace))
+        context["steering_tokens"] = tokens[:CONTEXT_STEERING_TOP_N]
+        context["steering_token_count"] = len(tokens)
+    else:
+        context["steering_unavailable"] = CONTEXT_STEERING_WITHHELD
+    return _read_payload(context=context)
 
 
 def read_cockpit(

@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Any
 
 from memoria_vault.runtime import capture, state
+from memoria_vault.runtime.backup import local_backup_status
 from memoria_vault.runtime.policy.audit import EMPTY_SHA256, sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path
 from memoria_vault.runtime.read_barrier import is_consumable_checked_file
@@ -1149,6 +1150,124 @@ def cascade_rollback(
         "needs_human": needs_human,
         "skipped": skipped,
         "commit": commit,
+    }
+
+
+def revert_preview(vault: Path, event_id: int) -> dict[str, Any]:
+    """Read-only preview of what ``cascade_rollback`` would touch (U2 spec §3).
+
+    The datum is a journal event id — the ref `cockpit.trace_panel` puts on
+    every trace line (U2 scoped-trace amendment §2). Resolution is in that
+    order: the journal event first, then the derived output record it wrote.
+    The two absences are different facts and are named differently — an id the
+    journal does not carry, an event that derived no output (`check-fired`
+    names a `target_id` only), and an event whose output has no `outputs` row
+    (a PI observation, which journals `observed-external-edit` and records no
+    output) each say which record is missing.
+
+    What it reports is exactly what the shipped records support: the event's
+    own derivation facts, the descendant split the ``cascade_rollback`` loop
+    above would decide — mirrored read-only in the same order (actor `pi` ->
+    would_flag, absent file -> would_skip, else would_quarantine), never
+    re-decided — the output's materialized commit, the owning explicit
+    operation, and whether a whole-workspace backup exists.
+
+    Mutates nothing: it opens no database that is not already there, writes no
+    file, appends no journal row, and runs no git command.
+    """
+    vault = Path(vault)
+    row = _journal_row_by_id(vault, event_id)
+    if row is None:
+        return {
+            "computable": False,
+            "event_id": event_id,
+            "target": "",
+            "missing": f"journal event {event_id}",
+        }
+    event = row["payload"]
+    target = normalize_path(str(event.get("output_id") or ""))
+    if not target:
+        return {
+            "computable": False,
+            "event_id": event_id,
+            "target": "",
+            "missing": f"derived output on journal event {event_id}",
+        }
+    record = state.output_record(vault, target)
+    if record is None:
+        return {
+            "computable": False,
+            "event_id": event_id,
+            "target": target,
+            "missing": f"derived output record for {target}",
+        }
+
+    would_quarantine: list[str] = []
+    would_flag: list[str] = []
+    would_skip: list[str] = []
+    # Neither of the loop-above's two guards is carried over, because neither
+    # has a producer state on this side. `_latest_derived` keys the map it
+    # walks by `isinstance(output_id, str)`, so every event `trace_downstream`
+    # returns names a string; and `_downstream_events` already keeps one event
+    # per output id, which only `cascade_rollback` can defeat — by prepending
+    # the target's own event under `include_target`, which a preview never does.
+    for descendant in trace_downstream(vault, target):
+        output_id = normalize_path(str(descendant["output_id"]))
+        if descendant.get("actor") == "pi":
+            would_flag.append(output_id)
+        elif not (vault / output_id).is_file():
+            would_skip.append(output_id)
+        else:
+            would_quarantine.append(output_id)
+
+    backup = local_backup_status(vault)
+    return {
+        "computable": True,
+        "event_id": event_id,
+        "target": target,
+        "event": {
+            "event_type": row["event_type"],
+            "timestamp": row["timestamp"],
+            "output_id": str(event.get("output_id") or ""),
+            "output_sha256": str(event.get("output_sha256") or ""),
+            "staging_id": str(event.get("staging_id") or ""),
+            "inputs": event.get("inputs") or [],
+        },
+        "would_quarantine": would_quarantine,
+        "would_flag": would_flag,
+        "would_skip": would_skip,
+        "outputs": {"materialized_commit": str(record.get("materialized_commit") or "")},
+        "owning_operation": {
+            "operation": "cascade-rollback",
+            "signature": "cascade_rollback(vault, target_id, *, context, reason, include_target)",
+        },
+        "backup": {
+            "workspace_backup_exists": bool(backup.get("valid")),
+            "note": "restore is whole-workspace: restoring the backup reverts everything since it",
+        },
+    }
+
+
+def _journal_row_by_id(vault: Path, event_id: int) -> dict[str, Any] | None:
+    """One journal row by id, or None — without creating the database.
+
+    `state.connect` initializes the schema, so guarding on the file is what
+    keeps a preview over a vault that has no journal from being the write that
+    gives it one.
+    """
+    if not state.db_path(vault).is_file():
+        return None
+    with state.connect(vault) as conn:
+        row = conn.execute(
+            "SELECT event_type, timestamp, payload_json FROM event_log WHERE event_id = ?",
+            (event_id,),
+        ).fetchone()
+    if row is None:
+        return None
+    return {
+        "event_type": str(row["event_type"]),
+        "timestamp": str(row["timestamp"]),
+        "payload": json.loads(str(row["payload_json"])),
     }
 
 

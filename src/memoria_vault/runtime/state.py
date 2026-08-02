@@ -1143,7 +1143,7 @@ def output_record(vault: Path, output_id: str) -> dict[str, Any] | None:
         row = conn.execute(
             """
             SELECT output_id, concept_type, store, target_path, check_status,
-                   materialization_status, output_sha256
+                   materialization_status, materialized_commit, output_sha256
             FROM outputs
             WHERE output_id = ?
             """,

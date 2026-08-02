@@ -111,7 +111,7 @@ def test_cli_help_groups_carry_correct_membership(capsys: pytest.CaptureFixture[
     assert has("review", "memoria attention list")
     assert has("review", "memoria attention worklist")
     assert has("review", "memoria attention show")
-    assert has("read", "context.read (reserved)")
+    assert has("read", "memoria context")
     assert has("upkeep", "memoria operation run")
 
 
@@ -134,6 +134,7 @@ def test_cli_command_surface_is_exact() -> None:
         "memoria init",
         "memoria onboard",
         "memoria status",
+        "memoria context",
         "memoria surface schema",
         "memoria doctor",
         "memoria doctor bundle",
@@ -197,6 +198,7 @@ def test_cli_command_surface_is_exact() -> None:
         "memoria journal tail",
         "memoria journal show",
         "memoria journal verify",
+        "memoria journal revert-preview",
         "memoria workspace scan",
         "memoria workspace run",
         "memoria workspace recover",

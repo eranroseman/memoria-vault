@@ -294,23 +294,20 @@ def _journal_depth(vault: Path) -> int:
 
 
 def _context_panel(vault: Path, *, read_scope: list[str] | None = None) -> dict[str, Any]:
-    """Panel 6 both-branch (U2 spec §1 panel 6): wrap a live context.read
-    transport when the row carries a bound engine; otherwise render the honest
-    reserved placeholder naming the row. Section T owns the wiring and
-    registration."""
-    row = actions_by_id().get("context.read")
-    if row is None:
-        return {
-            "source_action": "context.read",
-            "reserved": "context.read is not in the surface-contract registry",
-        }
-    engine_name = str(row.get("engine") or "")
-    if not engine_name or not hasattr(engine_api, engine_name):
-        return {
-            "source_action": "context.read",
-            "reserved": str(row.get("reserved") or "reserved (no engine binding)"),
-        }
-    payload = getattr(engine_api, engine_name)(Path(vault), read_scope=read_scope)
+    """Panel 6 (U2 spec §1 panel 6): wrap the live `context.read` transport.
+
+    C.3 wrote this both-branch while `context.read` was U1's reserved row. T.3
+    wired it, and the row's live shape is now pinned by
+    test_surface_contract.py::test_surface_contract_context_read_row_is_wired
+    (`"reserved" not in action`, engine `read_context`) and by the registry's
+    own engine-binding sweep, so no producer state can put the panel back on
+    a reserved branch without failing those first — the honest-absence branch
+    was deleted rather than left as a line no fixture can reach. `_flow_panel`
+    below keeps its both-branch form because `dashboard.read` really is still
+    absent.
+    """
+    row = actions_by_id()["context.read"]
+    payload = getattr(engine_api, str(row["engine"]))(Path(vault), read_scope=read_scope)
     bundle = {key: value for key, value in payload.items() if key not in {"ok", "api_version"}}
     return {
         "source_action": "context.read",
@@ -530,8 +527,9 @@ def _trace_lines(trace: dict[str, Any]) -> list[str]:
 
 
 def _context_lines(context: dict[str, Any]) -> list[str]:
-    if "reserved" in context:
-        return _fit("  reserved: ", str(context["reserved"]))
+    # No `reserved` arm: `_context_panel` is the only producer of this panel
+    # and stopped emitting one when T.3 wired the row. A renderer branch whose
+    # producer is gone is the same unfixturable line, one layer down.
     lines: list[str] = []
     for key in sorted(context.get("bundle") or {}):
         lines.extend(_fit(f"  {key}: ", _scalar(context["bundle"][key])))
