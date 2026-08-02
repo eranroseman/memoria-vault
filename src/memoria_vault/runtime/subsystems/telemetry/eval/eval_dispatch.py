@@ -26,7 +26,6 @@ import datetime
 import sys
 from pathlib import Path
 
-from memoria_vault.engine import api as engine_api
 from memoria_vault.runtime.trusted_writer import OperationContext, validate_operation_context
 from memoria_vault.runtime.vaultio import parse_frontmatter, strip_frontmatter, write_text_durable
 
@@ -204,6 +203,11 @@ def dispatch(
 
 
 def main() -> None:
+    # Deferred: the engine is a surface layer; only this CLI entry uses it, and
+    # a module-level import made every importer of this module (worker.py) a
+    # transitive engine dependent (audit §2.3).
+    from memoria_vault.engine import api as engine_api
+
     ap = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
