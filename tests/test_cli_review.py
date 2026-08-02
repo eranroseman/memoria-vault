@@ -1085,18 +1085,28 @@ def test_review_action_reason_code_is_the_closed_enum(review_vault) -> None:
 
 
 def test_review_action_dwell_rides_the_client_event(
-    review_vault, capsys: pytest.CaptureFixture[str]
+    review_vault, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Dwell is the gap from the latest detail-open to the decision (spec §4)."""
+    """Dwell is the gap from the latest detail-open to the decision (spec §4).
+
+    The clock is pinned against the timestamp the door stored, so the gap is a
+    function of the fixture rather than of how long the run took. The live-clock
+    form asserted a 91-second window (`89 <= x <= 180`) and still went red under
+    a loaded gate -- and a range that wide could not have caught an off-by-one
+    basis error anyway.
+    """
     vault, ids = review_vault
     _record_client_event(vault, seconds_ago=90, item_id=ids["thesis"])
+    (opened,) = _client_events(vault, "view.opened")
+    opened_at = datetime.fromisoformat(str(opened["timestamp"]).replace("Z", "+00:00"))
+    monkeypatch.setattr(knowledge, "datetime", _clock_pinned_at(opened_at + timedelta(seconds=90)))
 
     rc = main(["review", "defer", ids["thesis"], "--workspace", str(vault), "--json"])
     payload = _payload(capsys)
 
     assert rc == 0
     (client,) = _client_events(vault, "disposition.recorded")
-    assert 89 <= client["duration_s"] <= 180
+    assert client["duration_s"] == 90.0
     assert client["duration_s"] == round(client["duration_s"], 1)  # tenths, not float noise
     assert payload["telemetry"]["duration_s"] == client["duration_s"]
 
@@ -1143,17 +1153,27 @@ def test_review_action_reports_a_dwell_only_from_one_whole_second(
     assert ("duration_s" in payload["telemetry"]) is reported
 
 
-def test_review_dwell_measures_the_latest_open_not_the_first(review_vault) -> None:
+def test_review_dwell_measures_the_latest_open_not_the_first(
+    review_vault, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """A row reopened after a long first look measures the *second* look: an
-    absorbing first timestamp would report the whole trajectory as one dwell."""
+    absorbing first timestamp would report the whole trajectory as one dwell.
+
+    Pinned against the *latest* stored open, so the assertion is exact. The
+    live-clock form (`20 <= dwell < 100`) went red under a loaded gate, and its
+    80-second slack was also wide enough to pass on a wrong basis.
+    """
     vault, ids = review_vault
     _record_client_event(vault, seconds_ago=600, item_id=ids["thesis"])
     _record_client_event(vault, seconds_ago=20, item_id=ids["thesis"])
+    latest = _client_events(vault, "view.opened")[-1]
+    opened_at = datetime.fromisoformat(str(latest["timestamp"]).replace("Z", "+00:00"))
+    monkeypatch.setattr(knowledge, "datetime", _clock_pinned_at(opened_at + timedelta(seconds=25)))
 
     dwell = review_dwell_seconds(vault, ids["thesis"])
 
-    assert dwell is not None
-    assert 20 <= dwell < 100
+    # Exactly the second look. Reading the *first* open would report ~605.
+    assert dwell == 25.0
 
 
 @pytest.mark.parametrize(
