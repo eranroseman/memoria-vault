@@ -351,6 +351,19 @@ def test_promote_checked_writes_bundle_file_and_records_check(tmp_path: Path) ->
     assert quarantine_untraced(vault, ["notes/alpha.md"], machine="test-machine") == []
 
 
+def test_promote_checked_stamps_verified_event(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    stage_concept(vault, "notes/alpha.md", note_text(), machine="test-machine")
+
+    promote_checked(vault, "notes/alpha.md", machine="test-machine")
+
+    fm = read_frontmatter(vault / "notes/alpha.md")
+    assert len(fm["verified"]) == 1
+    assert fm["verified"][0]["by"].startswith(("human:", "process:"))
+    assert fm["verified"][0]["at"].endswith("Z")
+    assert "check_status" not in fm
+
+
 def test_promote_checked_records_payload_before_bundle_file_write(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,

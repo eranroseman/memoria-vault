@@ -33,6 +33,7 @@ from memoria_vault.runtime.vaultio import (
     is_ulid,
     iter_markdown,
     okf_actor,
+    okf_verified_actor,
     read_frontmatter,
     retired_frontmatter_field_errors,
     split_frontmatter,
@@ -1312,6 +1313,14 @@ def _write_checked(
     contract: dict[str, Any],
 ) -> dict[str, Any]:
     promotion_checks = normalize_promotion_checks(checks)
+    events_list = list(frontmatter.get("verified") or [])
+    events_list.append(
+        {
+            "by": okf_verified_actor(context.actor, operation_id=context.operation_id),
+            "at": now_iso(),
+        }
+    )
+    frontmatter["verified"] = events_list
     _validate_concept(contract, target, frontmatter)
     payload_text = frontmatter_doc(frontmatter, body)
     output_sha256 = sha256_bytes(payload_text.encode("utf-8"))
