@@ -1249,9 +1249,9 @@ ARG_TABLE: dict[str, dict] = {
         "http": ("GET", "/v1/views/evidence-review"),
         "mcp": None,
     },
-    # No cli/mcp binding: the engine-direct `memoria dashboard` front is CLI-only
-    # (I1 H.2) and carries no registry row until U2 T.3 adds `dashboard.read`, so
-    # this row declares http only.
+    # No cli/mcp binding: this row is I1 H.2's HTTP view. The `memoria dashboard`
+    # front reads through U2 T.3's separate `dashboard.read` row (swept below),
+    # so the CLI leg belongs to that id and not to this one.
     "views.dashboard": {
         "cli": None,
         "http": ("GET", "/v1/views/dashboard"),
@@ -1316,6 +1316,15 @@ ARG_TABLE: dict[str, dict] = {
     },
     "context.read": {
         "cli": ["context"],
+        "http": None,
+        "mcp": None,
+    },
+    # cli only: `dashboard.read` is the registry entry for I1's engine-direct
+    # front. Workspace scope and no params, so the sweep needs no argument —
+    # what it buys is the envelope check, which is the whole reason the CLI now
+    # reads through the row instead of calling the assembler itself.
+    "dashboard.read": {
+        "cli": ["dashboard"],
         "http": None,
         "mcp": None,
     },

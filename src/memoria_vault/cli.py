@@ -235,15 +235,10 @@ def _build_parser() -> argparse.ArgumentParser:
     cockpit_cmd.add_argument("--triage", action="store_true")
     cockpit_cmd.set_defaults(handler=_cmd_cockpit)
 
-    # A literal help string, not `_surface_help`: the registered `views.dashboard`
-    # row is the HTTP view, and U2 T.3 owns the `dashboard.read` row this command
-    # will hang off. Until then it is parked in `CLI_ONLY_COMMANDS` like the
-    # cockpit command above was before its row landed.
-    dashboard_cmd = sub.add_parser(
-        "dashboard",
-        description="Raw-count instrumentation panels",
-        help="Raw-count instrumentation panels",
-    )
+    # U2 T.3 registered `dashboard.read` for this command, so the help comes
+    # from that row rather than the literal I1 H.2 parked here while the command
+    # had none. `views.dashboard` remains the separate HTTP view row.
+    dashboard_cmd = sub.add_parser("dashboard", **_surface_help("dashboard.read"))
     _common(dashboard_cmd)
     dashboard_cmd.set_defaults(handler=_cmd_dashboard)
 
@@ -934,14 +929,16 @@ def _cmd_cockpit(args: argparse.Namespace) -> int:
 
 
 def _cmd_dashboard(args: argparse.Namespace) -> int:
-    """I1 spec §4's engine-direct front: the seven panels, no server, no view.
+    """I1 spec §4's engine-direct front, now through U2 T.3's `dashboard.read`.
 
-    Emits the assembler's payload whole rather than the view projection, so the
-    CLI reads the same counts the HTTP view renders into text blocks.
+    Still the assembler's payload whole rather than the view projection, so the
+    CLI reads the same counts the HTTP view renders into text blocks — but via
+    the row's engine binding, which is what lets the row promise a
+    `response_version` and the floor sweep assert the envelope. Reaching for
+    `assemble_dashboard` here again would put a second, unregistered route to
+    the panels back in the CLI.
     """
-    from memoria_vault.engine.dashboard import assemble_dashboard
-
-    return _emit({"ok": True, "dashboard": assemble_dashboard(_workspace(args))}, args)
+    return _emit(engine_api.read_dashboard(_workspace(args)), args)
 
 
 def _cmd_surface_schema(args: argparse.Namespace) -> int:

@@ -303,8 +303,9 @@ def _context_panel(vault: Path, *, read_scope: list[str] | None = None) -> dict[
     own engine-binding sweep, so no producer state can put the panel back on
     a reserved branch without failing those first — the honest-absence branch
     was deleted rather than left as a line no fixture can reach. `_flow_panel`
-    below keeps its both-branch form because `dashboard.read` really is still
-    absent.
+    below keeps its both-branch form on INT.1's own instruction, even though
+    `dashboard.read` has since landed: its fallback is the arm the *review*
+    panel beside it still genuinely needs, and the two share one renderer.
     """
     row = actions_by_id()["context.read"]
     payload = getattr(engine_api, str(row["engine"]))(Path(vault), read_scope=read_scope)
