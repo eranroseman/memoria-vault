@@ -2604,6 +2604,46 @@ def insert_concept_edge(
     return {"edge_id": edge_id, "created": stored is None, "attributes": merged}
 
 
+def delete_concept_edge(
+    vault: Path, *, source: str, relation_type: str, target: str
+) -> dict[str, int]:
+    """Retract one PI-confirmed concept edge; row absence is the entire record.
+
+    A ``tension`` row carries no status column and no frontmatter mirror
+    (existence IS confirmation), so deleting the row is the whole retraction and
+    no reindex regenerates it. Idempotent by construction: a triple that matches
+    nothing reports ``{"deleted": 0}``.
+
+    Both endpoints are keyed by the exact functions ``insert_concept_edge``
+    writes them with — ``resolve_concept_id`` for the source, and
+    ``_concept_edge_target_path`` (never a bare ``normalize_path``) for the
+    durable ``target_path``. This deletes by the triple that function inserts by,
+    so it inherits the catalog fold ``insert_concept_edge``'s docstring makes
+    binding: a delete keyed one spelling narrower resolves to a triple no row
+    holds, and silently leaves the row it was asked to retract.
+
+    Authority stays at the operation seams, as it does for the far more
+    destructive ``replace_concept_edges``: this takes no ``OperationContext``.
+    """
+    relation = _concept_edge_relation(str(relation_type))
+    with connect(vault) as conn:
+        catalog_ids = {
+            str(row["work_id"]) for row in conn.execute("SELECT work_id FROM catalog_sources")
+        }
+        deleted = conn.execute(
+            """
+            DELETE FROM concept_edges
+            WHERE source_concept_id = ? AND relation_type = ? AND target_path = ?
+            """,
+            (
+                resolve_concept_id(conn, str(source)),
+                relation,
+                _concept_edge_target_path(str(target), catalog_ids),
+            ),
+        ).rowcount
+    return {"deleted": int(deleted)}
+
+
 def concept_edges(vault: Path, *, checked_only: bool = True) -> list[dict[str, Any]]:
     if not db_path(vault).is_file():
         return []
