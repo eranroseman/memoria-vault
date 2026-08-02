@@ -10,6 +10,8 @@ import pytest
 from memoria_vault.runtime import operations
 from tests.helpers import patch_pydantic_ai
 
+pytestmark = pytest.mark.unit
+
 POLICY = {
     "operation_id": "compile-source-digest",
     "allowed_network": ["http://127.0.0.1:11434"],

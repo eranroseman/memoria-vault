@@ -15,6 +15,8 @@ from memoria_vault import cli as cli_module
 from memoria_vault.cli import main
 from tests.cli_test_helpers import write_runner_provider_config
 
+pytestmark = pytest.mark.contract
+
 REGISTRY_NAMES = (
     "KILOCODE_API_KEY",
     "OPENALEX_API_KEY",

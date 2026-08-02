@@ -1,6 +1,10 @@
 """Graded-loudness routing helpers."""
 
+import pytest
+
 from memoria_vault.runtime.subsystems.lib import inbox, loudness
+
+pytestmark = pytest.mark.unit
 
 
 def test_alert_card_writes_no_push_log(tmp_path):

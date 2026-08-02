@@ -15,6 +15,8 @@ from memoria_vault.runtime import backup, operations, state
 from tests.cli_test_helpers import write_runner_provider_config
 from tests.helpers import LIVE_USAGE, WORKSPACE_SEED, git, patch_pydantic_ai
 
+pytestmark = pytest.mark.contract
+
 
 def test_cli_doctor_reports_backup_contract(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]

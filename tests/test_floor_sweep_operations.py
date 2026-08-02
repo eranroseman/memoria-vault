@@ -19,6 +19,8 @@ from tests.floor_lib import (
     vault_digest,
 )
 
+pytestmark = pytest.mark.floor
+
 OPERATION_IDS = sorted(m["frontmatter"]["operation_id"] for m in iter_capability_manifests())
 
 # Known bugs the floor sweep uncovered: the operation is expected (by
@@ -60,7 +62,7 @@ def test_operation(tmp_path: Path, operation_id: str) -> None:
     entry = OPERATION_REGISTRY.get(operation_id)
     if entry is None:
         # Not yet registered — completeness is enforced by
-        # test_floor_coverage.py (Task 7), not by an erroring sweep case.
+        # test_floor_coverage.py, not by an erroring sweep case.
         pytest.skip(f"{operation_id} not yet in OPERATION_REGISTRY")
     payload = _fill(entry["payload"], manifest)
     idempotency_key = (

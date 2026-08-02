@@ -7,7 +7,11 @@ adapter-style prefixes — and pins the `process` regression (a terminal-toolset
 tool that the denylist missed, so the gate allowed it).
 """
 
+import pytest
+
 from memoria_vault.runtime.policy import hook as _m
+
+pytestmark = pytest.mark.contract
 
 evaluate_pre = _m.evaluate_pre
 Path = _m.Path

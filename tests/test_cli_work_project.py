@@ -11,6 +11,8 @@ from memoria_vault.runtime.subsystems.lib.edges import LINK_RELATIONS
 from memoria_vault.runtime.vaultio import read_frontmatter, split_frontmatter
 from tests.helpers import _assert_request_columns, mark_file_status
 
+pytestmark = pytest.mark.contract
+
 
 def test_cli_work_import_bibtex_seeds_unchecked_db_work_without_markdown(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]

@@ -49,6 +49,8 @@ from tests.helpers import (
     worker_workspace as workspace,
 )
 
+pytestmark = pytest.mark.runtime
+
 
 def capture_source(vault: Path, *args, **kwargs):
     return call_with_context(_capture_source, vault, *args, **kwargs)

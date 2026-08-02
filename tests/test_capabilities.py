@@ -22,6 +22,8 @@ from memoria_vault.runtime.operations import load_operation_policy
 from memoria_vault.runtime.worker import enqueue_operation, run_next_job
 from tests.helpers import ROOT, call_with_context, git, init_git
 
+pytestmark = pytest.mark.contract
+
 
 def write_capability_index(vault: Path, *args, **kwargs):
     return call_with_context(_write_capability_index, vault, *args, **kwargs)

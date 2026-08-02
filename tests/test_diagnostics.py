@@ -9,6 +9,8 @@ import pytest
 
 from memoria_vault.runtime import diagnostics
 
+pytestmark = pytest.mark.unit
+
 
 def test_record_event_writes_content_light_outside_vault(tmp_path, monkeypatch):
     vault = tmp_path / "vault"

@@ -7,6 +7,8 @@ import yaml
 
 from memoria_vault.runtime.subsystems.lib import worklists
 
+pytestmark = pytest.mark.contract
+
 
 def _frontmatter(path: Path) -> dict:
     text = path.read_text(encoding="utf-8")

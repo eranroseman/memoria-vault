@@ -189,7 +189,7 @@ journal-head anchor; read-path staleness emission is beta.1 scope.)
 - **Config:** `feedback_production_enabled` returns `false` for absent /
   malformed / disabled / key-missing files and `true` only for explicit boolean
   `true`; the seeded template ships the file with `production_enabled: false`.
-- All new test files registered in `tests/conftest.py` `TEST_LEVELS`.
+- All new test files declare their level with a module-level `pytestmark`.
 
 ## Out of scope (→ beta.1, per consolidation §2)
 

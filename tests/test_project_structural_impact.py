@@ -18,6 +18,8 @@ from memoria_vault.runtime.subsystems.processing.project import (
 from memoria_vault.runtime.vaultio import iter_markdown, parse_frontmatter, safe_read
 from tests.helpers import copy_memoria_dirs, init_git, operation_context
 
+pytestmark = pytest.mark.contract
+
 
 def write(path: Path, text: str):
     path.parent.mkdir(parents=True, exist_ok=True)

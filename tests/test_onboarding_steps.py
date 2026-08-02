@@ -20,6 +20,8 @@ from memoria_vault.runtime.onboarding_steps import (
     seed_manifest_work_ids,
 )
 
+pytestmark = pytest.mark.contract
+
 
 def test_onboarding_step_is_a_registered_all_string_native_type() -> None:
     from memoria_vault.runtime.telemetry import NATIVE_EVENT_FIELDS

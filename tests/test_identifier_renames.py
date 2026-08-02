@@ -3,8 +3,12 @@ from __future__ import annotations
 import ast
 from pathlib import Path
 
+import pytest
+
 from memoria_vault.runtime import state
 from tests.helpers import ROOT
+
+pytestmark = pytest.mark.contract
 
 
 def test_sqlite_schema_uses_work_id_and_event_log(tmp_path: Path) -> None:

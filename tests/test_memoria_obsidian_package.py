@@ -5,7 +5,11 @@ import re
 import subprocess
 from pathlib import Path
 
+import pytest
+
 from memoria_vault.runtime.bundles import seed_bundles
+
+pytestmark = pytest.mark.contract
 
 ROOT = Path(__file__).resolve().parent.parent
 PLUGIN = ROOT / "packages" / "memoria-obsidian"

@@ -1,9 +1,13 @@
 from __future__ import annotations
 
+import pytest
+
 from memoria_vault.runtime.seeded_errors import (
     SEEDED_PROBE_SENTINEL,
     seeded_probe_review_batch,
 )
+
+pytestmark = pytest.mark.unit
 
 
 def test_seeded_probe_batch_is_contained_and_load_capped() -> None:

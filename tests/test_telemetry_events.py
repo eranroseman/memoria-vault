@@ -12,6 +12,8 @@ import pytest
 from memoria_vault.runtime import state
 from memoria_vault.runtime.time import now_iso
 
+pytestmark = pytest.mark.contract
+
 TELEMETRY_COLUMNS = ("event_id", "ts", "event_type", "session_id", "surface", "payload_json")
 
 

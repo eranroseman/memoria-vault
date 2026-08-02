@@ -88,7 +88,7 @@ def _write_note(
     return done
 
 
-def build_floor_seed(workspace: Path) -> dict:
+def _build_floor_seed(workspace: Path) -> dict:
     """Build the rich seed vault. Deterministic; used once per session."""
     workspace.mkdir(parents=True, exist_ok=True)
     code, _ = _run_cli(["init", "--workspace", str(workspace), "--yes", "--quiet"])
@@ -223,7 +223,7 @@ def seed_vault(tmp_path: Path) -> tuple[Path, dict]:
     global _SEED_CACHE
     if _SEED_CACHE is None or not (_SEED_CACHE / "vault").exists():
         cache = Path(tempfile.mkdtemp(prefix="memoria-floor-seed-"))
-        manifest = build_floor_seed(cache / "vault")
+        manifest = _build_floor_seed(cache / "vault")
         (cache / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
         _SEED_CACHE = cache
     target = tmp_path / "vault"
@@ -395,7 +395,7 @@ def run_mcp(vault: Path, tool: str, arguments: dict) -> dict:
 def _fill(template, manifest: dict):
     """Recursively substitute `{manifest_key}` placeholders (str.format) into
     a CLI argv list, an HTTP (method, path) pair, or an MCP (tool, arguments)
-    pair — shared by the read and write action sweeps (Task 5, Task 6)."""
+    pair — shared by the read and write action sweeps."""
     if isinstance(template, str):
         return template.format(**manifest)
     if isinstance(template, (list, tuple)):
@@ -415,14 +415,10 @@ def _fill(template, manifest: dict):
 # filled in by `_fill` (for both "payload" and "idempotency_key"). Payload
 # keys are read off the worker's dispatch branch for the operation_id
 # (src/memoria_vault/runtime/worker.py), not guessed from the manifest's
-# io_schema — see task-6-report.md for the worker-branch evidence behind
-# each entry, including two corrections vs the original brief
-# (curate-note-link, enrich-source).
+# io_schema.
 #
-# Every cataloged operation id has a floor entry; cross-worktree rendezvous may
-# add independently owned operations before this branch merges.
-# (7 seeded in Task 6, 22 in Task 7b-1, the final 23 in Task 7b-2) — see
-# test_floor_coverage.py's test_every_operation_has_a_floor_entry.
+# Every cataloged operation id has a floor entry — see test_floor_coverage.py's
+# test_every_operation_has_a_floor_entry.
 OPERATION_REGISTRY: dict[str, dict] = {
     "create-concept": {
         "payload": {
@@ -446,11 +442,10 @@ OPERATION_REGISTRY: dict[str, dict] = {
         "expect": "done",
         "creates": ["notes/floor-op-create.md"],
     },
-    # Correction vs the brief: worker.py:489-514 (`operation_id ==
-    # "curate-note-link"`) pops source_note_path/link_type/target_path, not
-    # source/relation/target. It also requires the source note to already
-    # be checked (runtime/knowledge.py:curate_note_link) and is a
-    # PROTECTED_OPERATION_ACTORS "pi"-only op (worker.py:58); the sweep
+    # worker.py:489-514 (`operation_id == "curate-note-link"`) pops
+    # source_note_path/link_type/target_path. It also requires the source
+    # note to already be checked (runtime/knowledge.py:curate_note_link) and
+    # is a PROTECTED_OPERATION_ACTORS "pi"-only op (worker.py:58); the sweep
     # always enqueues as actor="agent", so — with a real checked
     # source/target pair — the run is deterministically refused on the
     # actor-authority check before curate_note_link's own body ever runs.
@@ -463,19 +458,16 @@ OPERATION_REGISTRY: dict[str, dict] = {
         "expect": "refused",
         "reason": "requires PI actor authority",
     },
-    # Correction vs the brief: worker.py:516-527 pops project_path, not
-    # project.
+    # worker.py:516-527 pops project_path.
     "analyze-gaps": {"payload": {"project_path": "{project}"}, "expect": "done"},
-    # Correction vs the brief: worker.py:587-593 pops project_path, not
-    # project.
+    # worker.py:587-593 pops project_path.
     "analyze-project-argument": {
         "payload": {"project_path": "{project}"},
         "expect": "done",
     },
-    # Correction vs the brief: worker.py:612-618 pops project_path, not
-    # project. "package-gate" is the fixed project slug assert_typed_graph
-    # always builds (scripts/test_vault/e2e_smoke.py), so the canvas path is
-    # deterministic.
+    # worker.py:612-618 pops project_path. "package-gate" is the fixed
+    # project slug assert_typed_graph always builds
+    # (scripts/test_vault/e2e_smoke.py), so the canvas path is deterministic.
     "render-project-argument-canvas": {
         "payload": {"project_path": "{project}"},
         "expect": "done",
@@ -489,42 +481,33 @@ OPERATION_REGISTRY: dict[str, dict] = {
         "expect": "done",
         "creates": ["projects/package-gate/scratch-review.canvas"],
     },
-    # Correction vs the brief: worker.py:936-952 routes check-falsifiability
-    # through runtime/operations.py:run_prompt_operation, whose payload key
-    # is input_text (or input_refs/input_ref pointing at an already-checked
-    # note) — not "input". input_text is used here (not input_ref) because
-    # none of the seed's own notes are "checked" except the package-*
-    # fixtures, and _checked_prompt_input requires check_status=="checked".
-    # Runs "done" offline via the packaged deterministic-fixture runner —
-    # see task-6-report.md for a known bug this uncovers (xfail in the test).
+    # worker.py:936-952 routes check-falsifiability through
+    # runtime/operations.py:run_prompt_operation, whose payload key is
+    # input_text (or input_refs/input_ref pointing at an already-checked
+    # note). input_text is used here (not input_ref) because none of the
+    # seed's own notes are "checked" except the package-* fixtures, and
+    # _checked_prompt_input requires check_status=="checked". Runs "done"
+    # offline via the packaged deterministic-fixture runner.
     "check-falsifiability": {
         "payload": {"input_text": "Claim: coffee consumption causally reduces default risk."},
         "expect": "done",
     },
-    # Correction vs the brief: reason corrected from a guessed "network" to
-    # the real, deterministic refusal. worker.py:1060-1061 pops work_id
-    # (matches the brief) and dispatches to runtime/enrichment.py:
-    # enrich_source, which raises before any network call because demo-work
-    # (the BibTeX capture from scripts/test_vault/e2e_smoke.py:
-    # assert_offline_ingest) carries no DOI identifier.
+    # worker.py:1060-1061 pops work_id and dispatches to
+    # runtime/enrichment.py:enrich_source, which raises before any network
+    # call because demo-work (the BibTeX capture from
+    # scripts/test_vault/e2e_smoke.py:assert_offline_ingest) carries no DOI
+    # identifier — a deterministic refusal, not a network failure.
     "enrich-source": {
         "payload": {"work_id": "{work_id}"},
         "expect": "refused",
         "reason": "requires a DOI catalog identifier",
     },
-    # Task 7b-1 (22 ids, alphabetical acknowledge-attention..
-    # integrity-evidence-check). Every payload key below is read off the
-    # worker dispatch branch (grep '"<id>"' src/memoria_vault/runtime/
-    # worker.py), then run once against a real seeded vault via a scratch
-    # probe before being written here — see task-7b1-report.md for the
-    # per-op evidence trail.
-    #
     # worker.py:831-849 (`operation_id in {"acknowledge-attention",
     # "resolve-attention"}`) pops target_id, dispatched to
     # runtime/integrity.py:resolve_attention. acknowledge-attention is a
     # PROTECTED_OPERATION_ACTORS "pi"-only op (worker.py:54), and
     # _require_operation_actor (worker.py:308) runs before every operation's
-    # own branch — same shape as curate-note-link in Task 6: with a real
+    # own branch — same shape as curate-note-link above: with a real
     # attention-card target, the sweep's fixed actor="agent" is
     # deterministically refused before resolve_attention's body ever runs.
     "acknowledge-attention": {
@@ -533,16 +516,12 @@ OPERATION_REGISTRY: dict[str, dict] = {
         "reason": "requires PI actor authority",
     },
     # worker.py:936-952 routes analyze-claims through the same
-    # runtime/operations.py:run_prompt_operation path as check-falsifiability
-    # (Task 6) — payload key is input_text, for the same reason
-    # check-falsifiability uses it (none of the seed's own notes are
+    # runtime/operations.py:run_prompt_operation path as
+    # check-falsifiability above — payload key is input_text, for the same
+    # reason check-falsifiability uses it (none of the seed's own notes are
     # "checked", so an input_ref would additionally fail
-    # _checked_prompt_input). Design intent is "done" via the offline
-    # deterministic-fixture runner; the actual run crashes on the identical
-    # #1391 gitignored-staging bug Task 6 found (confirmed live: same `git
-    # add ... ignored by one of your .gitignore files` error, just a
-    # different staging filename) — xfail(strict=True) in
-    # test_floor_sweep_operations.py, not a forced assertion.
+    # _checked_prompt_input). Runs "done" offline via the packaged
+    # deterministic-fixture runner.
     "analyze-claims": {
         "payload": {"input_text": "Claim: coffee consumption causally reduces default risk."},
         "expect": "done",
@@ -561,8 +540,8 @@ OPERATION_REGISTRY: dict[str, dict] = {
     # (capture.py:_bibtex_default_work_id). Braces inside the built BibTeX
     # string are doubled ("{{"/"}}"): this payload value passes through the
     # sweep's own `_fill(entry["payload"], manifest)` call, which runs
-    # `.format(**manifest)` over every payload string — the same literal-
-    # brace lesson Task 6 recorded for create-concept's content template.
+    # `.format(**manifest)` over every payload string — the same
+    # literal-brace constraint as create-concept's content template above.
     # No DOI field, so (like enrich-source) no enrichment job is queued.
     # Confirmed live: "done", new checked-free row at work_id "floorsweep2025".
     "capture-bibtex-source": {
@@ -589,7 +568,7 @@ OPERATION_REGISTRY: dict[str, dict] = {
     # separate vault-MCP requirements) and is not importable in this
     # environment — confirmed live: any raw_pdf_base64 refuses identically.
     # This is a real, by-design refusal (a clean typed error on a missing
-    # optional native dependency), not a code defect like #1391 — no xfail.
+    # optional native dependency), not a code defect.
     "capture-pdf-source": {
         "payload": {
             "work_id": "floor-sweep-pdf",
@@ -672,8 +651,7 @@ OPERATION_REGISTRY: dict[str, dict] = {
     },
     # worker.py:936-952, same run_prompt_operation path as analyze-claims
     # above. input_text describes two disagreeing sources (matching this
-    # op's own "two-or-more-notes" io_schema.input intent). Confirmed live:
-    # identical #1391 gitignored-staging crash — xfail(strict=True).
+    # op's own "two-or-more-notes" io_schema.input intent).
     "compare-and-contrast": {
         "payload": {
             "input_text": (
@@ -691,7 +669,7 @@ OPERATION_REGISTRY: dict[str, dict] = {
     # before its own commit_writer_changes call — so it does not share
     # #1391's bug of committing a still-staged, gitignored path. Uses
     # work_id "demo-work" (checked, text_status "full-text" per
-    # build_floor_seed's own docstring) since compile_source_digest requires
+    # _build_floor_seed's own docstring) since compile_source_digest requires
     # a digestable (full-text) checked source
     # (operations.py:_require_digestable_text). mode defaults to "test",
     # which resolves to the deterministic-fixture runner offline
@@ -724,10 +702,10 @@ OPERATION_REGISTRY: dict[str, dict] = {
     # knowledge.py:compose_project_draft, which reads the project's outline
     # slice (read_project_slice) and raises "project outline has no checked
     # members" when there is no members list — the seed has no outline.md
-    # for package-gate (write-project-slice, the op that creates it, is not
-    # yet seeded; it lands in Task 7b-2). This is a genuine missing
-    # precondition of the current seed state, not an actor/network
-    # restriction — confirmed live.
+    # for package-gate (write-project-slice, the op that creates it, is its
+    # own registry entry, run against its own fresh vault clone). This is a
+    # genuine missing precondition of the current seed state, not an
+    # actor/network restriction — confirmed live.
     "compose-project-draft": {
         "payload": {"project_path": "{project}"},
         "expect": "refused",
@@ -759,22 +737,19 @@ OPERATION_REGISTRY: dict[str, dict] = {
     },
     # worker.py:340-355 requires the *enqueue's own idempotency_key* to
     # equal f"empirical-event:{event['event_id']}" exactly (checked against
-    # `job["request_envelope"]["idempotency_key"]`, not the payload). Task
-    # 7b-1 registered this "refused" only because the sweep's harness then
-    # hardcoded `idempotency_key=f"floor:{operation_id}"` for every
-    # operation, which can never match "empirical-event:<uuid>" — leaving
-    # this op's real "done" path with zero coverage (flagged in
-    # task-7b1-report.md's review). Task 7b-2 fixes the gap: the sweep
-    # (test_floor_sweep_operations.py) now supports an OPTIONAL per-entry
-    # `idempotency_key` template, filled the same way as `payload`, and
-    # substituted for the default `f"floor:{operation_id}"` when present.
-    # The literal event_id below has no `{}` placeholders, so it needs no
-    # doubled braces. Payload is a fully valid `session.started` empirical
-    # event (validate_empirical_event, engine/empirical_events.py);
+    # `job["request_envelope"]["idempotency_key"]`, not the payload), which
+    # the sweep's default `idempotency_key=f"floor:{operation_id}"` can
+    # never match — hence the OPTIONAL per-entry `idempotency_key` below,
+    # which test_floor_sweep_operations.py fills the same way as `payload`
+    # and substitutes for that default when present. Without it this op's
+    # real "done" path would have zero coverage. The literal event_id below
+    # has no `{}` placeholders, so it needs no doubled braces. Payload is a
+    # fully valid `session.started` empirical event
+    # (validate_empirical_event, engine/empirical_events.py);
     # dispatches to operations.py:record_empirical_event, which since I1 T.3
     # inserts one `telemetry_events` row and returns (no journal append, no
     # commit, no file outputs: `"outputs": []`). `telemetry_events` is not in
-    # `_DIGEST_TABLES` and `*.sqlite` is skipped, so this operation's golden now
+    # `_DIGEST_TABLES` and `*.sqlite` is skipped, so this operation's golden
     # records a vault the sweep left untouched.
     # Confirmed live with the matching idempotency_key: "done".
     "empirical-event-record": {
@@ -815,8 +790,7 @@ OPERATION_REGISTRY: dict[str, dict] = {
     },
     # worker.py:936-952, same run_prompt_operation path as analyze-claims
     # above. input_text stands in for "checked Work text" (this op's own
-    # io_schema.input). Confirmed live: identical #1391 gitignored-staging
-    # crash — xfail(strict=True).
+    # io_schema.input).
     "extract-claim-stubs": {
         "payload": {
             "input_text": (
@@ -874,15 +848,6 @@ OPERATION_REGISTRY: dict[str, dict] = {
         "payload": {},
         "expect": "done",
     },
-    # Task 7b-2 (the final 23 ids, alphabetical integrity-link-target-check..
-    # write-project-slice). Every payload key below is read off the worker
-    # dispatch branch (grep '"<id>"' src/memoria_vault/runtime/worker.py),
-    # then run once against a real seeded vault via a scratch probe before
-    # being written here — see task-7b2-report.md for the per-op evidence
-    # trail. This batch also fixes empirical-event-record's own coverage gap
-    # (see its updated entry below) and finds two new product bugs
-    # (verify-project-draft, write-project-slice — see their entries below).
-    #
     # See integrity-citation-survival-check above for the shared
     # `_run_integrity_finding_operation` dispatch path (worker.py:356-366 ->
     # worker.py:1126-1142). check_link_targets (runtime/integrity.py:886)
@@ -922,9 +887,9 @@ OPERATION_REGISTRY: dict[str, dict] = {
     # worker.py:59, 907-924 pops target_path (required), dispatching to
     # trusted_writer.py:mark_checked. mark-checked is a
     # PROTECTED_OPERATION_ACTORS "pi"-only op; same actor-check-fires-first
-    # shape as acknowledge-attention (Task 7b-1) — confirmed live: refused
-    # before mark_checked's own body runs, regardless of target_path's real
-    # check status.
+    # shape as acknowledge-attention — confirmed live: refused before
+    # mark_checked's own body runs, regardless of target_path's real check
+    # status.
     "mark-checked": {
         "payload": {"target_path": "{note_claim}"},
         "expect": "refused",
@@ -975,7 +940,7 @@ OPERATION_REGISTRY: dict[str, dict] = {
     # its own separate registry entry — each sweep case gets its own fresh
     # `seed_vault()` clone, so that op's own test run never runs here). This
     # is the same "missing precondition" bucket as compose-project-draft
-    # (Task 7b-1): confirmed live, refused with a FileNotFoundError whose
+    # above: confirmed live, refused with a FileNotFoundError whose
     # message is the absolute digest path, ending in "digests/demo-work.md"
     # (`_digest_rel` normalizes the payload's own "digests/demo-work.md"
     # unchanged — that suffix is a stable substring regardless of the
@@ -1011,8 +976,7 @@ OPERATION_REGISTRY: dict[str, dict] = {
     # worker.py:936-952, same run_prompt_operation path as check-falsifiability/
     # analyze-claims/compare-and-contrast/extract-claim-stubs above.
     # input_text stands in for this op's own "selected_argument" io_schema
-    # input. Confirmed live: identical #1391 gitignored-staging crash —
-    # xfail(strict=True), the fifth of the six prompt-family ops.
+    # input.
     "red-team-argument": {
         "payload": {"input_text": "Claim: coffee consumption causally reduces default risk."},
         "expect": "done",
@@ -1064,8 +1028,8 @@ OPERATION_REGISTRY: dict[str, dict] = {
     # worker.py:55, shares acknowledge-attention's branch (worker.py:831-849,
     # `operation_id in {"acknowledge-attention", "resolve-attention"}`).
     # resolve-attention is also a PROTECTED_OPERATION_ACTORS "pi"-only op —
-    # same actor-check-fires-first shape as acknowledge-attention itself
-    # (Task 7b-1) — confirmed live.
+    # same actor-check-fires-first shape as acknowledge-attention itself —
+    # confirmed live.
     "resolve-attention": {
         "payload": {"target_id": "{attention_path}"},
         "expect": "refused",
@@ -1106,10 +1070,7 @@ OPERATION_REGISTRY: dict[str, dict] = {
     },
     # worker.py:936-952, same run_prompt_operation path as red-team-argument
     # above. input_text stands in for this op's own "selection_or_note"
-    # io_schema input. Confirmed live: identical #1391 gitignored-staging
-    # crash — xfail(strict=True), the sixth and last of the six
-    # prompt-family ops (GitHub issue #1391's full blast radius is now
-    # entirely registered).
+    # io_schema input.
     "summarize-for-recall": {
         "payload": {"input_text": "Some passage to summarize for recall."},
         "expect": "done",
@@ -1149,27 +1110,12 @@ OPERATION_REGISTRY: dict[str, dict] = {
         "reason": "requires PI actor authority",
     },
     # worker.py:680-699 pops project_path (required), dispatching to
-    # knowledge.py:verify_project_draft. NEW PRODUCT BUG (not #1391): when
-    # the project has no draft.md yet (build_floor_seed's own baseline
-    # state — write-project-slice/compose-project-draft are each their own
-    # separate registry entries with their own fresh vault clones),
-    # verify_project_draft's "missing-draft" early return
-    # (knowledge.py:2106-2117) omits the `max_findings`/`triaged_count`
-    # keys that worker.py's own dispatch branch unconditionally reads
-    # (worker.py:697-698: `result["max_findings"]`, `result["triaged_count"]`),
-    # so the worker job crashes with `KeyError: 'max_findings'` instead of
-    # returning the designed "done" verification report
-    # (`verification_status: "missing-draft"`). This is the realistic
-    # default state of any project before its first `compose-project-draft`
-    # run — not an edge case. Filed as GitHub issue #1393 (flagged from
-    # the controller in task-7b2-report.md — filing was outside this task's
-    # granted permissions). Registered as `expect: "done"` (the manifest's
-    # actual design intent) and
-    # xfail(strict=True) in test_floor_sweep_operations.py, following the
-    # exact #1391 precedent shape (same "instructed not to force the
-    # assertion, and not to fix out-of-scope product code" rule) — a
-    # distinct bug, its own `_KNOWN_BUGS` entry, not folded into
-    # `_PROMPT_STAGING_GITIGNORE_BUG`.
+    # knowledge.py:verify_project_draft. Runs against the seed's baseline
+    # state, where the project has no draft.md yet — write-project-slice and
+    # compose-project-draft are each their own registry entries with their
+    # own fresh vault clones — so this exercises the "missing-draft" early
+    # return (knowledge.py:2106-2117), the realistic default state of any
+    # project before its first compose-project-draft run.
     "verify-project-draft": {
         "payload": {"project_path": "{project}"},
         "expect": "done",
@@ -1179,21 +1125,14 @@ OPERATION_REGISTRY: dict[str, dict] = {
     # knowledge.py:write_project_outline, which BM25-ranks checked notes
     # against the project's own title/description (when query is omitted)
     # and writes `outline.md`. Confirmed live: "done", 2 members (the
-    # seed's package-thesis/package-support notes), 1 edge — the op itself
-    # behaves exactly as designed. NEW PRODUCT BUG (not #1391, not
-    # verify-project-draft's KeyError): this "done" run has an undocumented
-    # side effect on a *different* tracked projection — it retroactively
-    # makes the seed's existing `projects/package-gate/argument.canvas`
-    # (rendered during typed-graph seeding, before outline.md existed)
-    # "stale" per `assert_invariants`' tracked-projections check, because
+    # seed's package-thesis/package-support notes), 1 edge. Writing
+    # outline.md also changes what the seed's existing
+    # `projects/package-gate/argument.canvas` canonically renders to, since
     # `render_project_argument_canvas` (knowledge.py:1735-1743) switches its
-    # node/edge rendering strategy the moment outline.md exists, and that
-    # same renderer is what `check_tracked_projections` treats as canonical.
-    # xfail(strict=True) in test_floor_sweep_operations.py (its own
-    # `_KNOWN_BUGS` entry) — the per-op "done"/`creates` assertions below
-    # are both genuinely true; only the harness's own later
-    # `assert_invariants(vault)` call fails, which the xfail still catches
-    # (it wraps the whole parametrized test case, not a specific assertion).
+    # node/edge strategy the moment outline.md exists — so this entry also
+    # covers `write_project_outline` refreshing that canvas in the same
+    # write, which is what keeps `assert_invariants`' tracked-projections
+    # check green afterwards.
     "write-project-slice": {
         "payload": {"project_path": "{project}"},
         "expect": "done",
@@ -1282,7 +1221,7 @@ ARG_TABLE: dict[str, dict] = {
     # demo-work capture's started/done events, which have no path fields, so
     # a restricted read_scope like MCP_READ_SCOPE filters them out of
     # `_journal_in_scope`; event 3 is always "notes/floor-claim.md" given
-    # build_floor_seed's fixed write order, so it is deterministic and
+    # _build_floor_seed's fixed write order, so it is deterministic and
     # in-scope for all three transports).
     "journal.get": {
         "cli": ["journal", "show", "3"],
@@ -1373,27 +1312,26 @@ ARG_TABLE: dict[str, dict] = {
 }
 
 
-# Task 9: pairwise option variants for a handful of read actions whose
-# params actually branch on value (filters/limits) — small, hand-picked
-# all-pairs combinations, never the full param-value cross product (spec
-# §3.4 forbids it). Each value below was checked against the action's own
-# `actions_by_id()[id]["params"]` and the seeded vault's real data, with two
-# corrections vs the original task-9-brief.md table (see task-9-report.md):
-#   - attention.list's third variant used `"kind": "finding"` in the brief,
-#     which is not a real `attention_kind` anywhere in the product (real
-#     values are "flag"/"candidate"/"gap"/"work-prompt" — grep
-#     `attention_kind` under src/). The seed's one attention card (built by
-#     analyze-gaps, knowledge.py's `_write_full_text_gap_attention`) carries
-#     `attention_kind: "flag"`, `attention_status: "open"` — corrected to
-#     "flag" so the combined status+kind filter actually matches a real row
-#     instead of trivially returning zero results every run.
+# Pairwise option variants for a handful of read actions whose params
+# actually branch on value (filters/limits) — small, hand-picked all-pairs
+# combinations, never the full param-value cross product (spec §3.4 forbids
+# it). Each value below was checked against the action's own
+# `actions_by_id()[id]["params"]` and the seeded vault's real data; two are
+# easy to get wrong:
+#   - attention.list's third variant filters on `"kind": "flag"`. The real
+#     `attention_kind` values are "flag"/"candidate"/"gap"/"work-prompt"
+#     (grep `attention_kind` under src/), and the seed's one attention card
+#     (built by analyze-gaps, knowledge.py's
+#     `_write_full_text_gap_attention`) carries `attention_kind: "flag"`,
+#     `attention_status: "open"` — so the combined status+kind filter
+#     actually matches a real row instead of trivially returning zero
+#     results every run.
 #   - journal.list's `limit` is typed `int` in its own params entry
 #     (surface_contract.py) and in the MCP tool's own signature
-#     (mcp_transport.py: `journal(..., limit: int = 50)`); the brief's
-#     string "5" would pass through CLI/HTTP fine (both parse strings) but
-#     is unnecessary risk against MCP's typed arg model, so the value here
-#     is the real `int` 5 instead — correct for all three transports with
-#     no coercion.
+#     (mcp_transport.py: `journal(..., limit: int = 50)`), so the value here
+#     is a real `int` 5, not the string "5": CLI and HTTP both parse
+#     strings, but MCP's typed arg model would not — the `int` is correct
+#     for all three transports with no coercion.
 VARIANTS: dict[str, list[dict]] = {
     "concepts.list": [
         {"type": "note"},

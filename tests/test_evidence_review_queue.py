@@ -12,6 +12,8 @@ import pytest
 
 from memoria_vault.runtime import evidence_review, knowledge, state
 
+pytestmark = pytest.mark.unit
+
 EV_OPEN = "ev-11111111"
 EV_SPAN = "ev-22222222"
 EV_HOP = "ev-33333333"

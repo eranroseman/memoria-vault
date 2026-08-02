@@ -12,7 +12,7 @@ from memoria_vault.cli import _build_parser, main
 from memoria_vault.engine.surface_contract import SURFACE_ACTIONS, actions_by_id
 from memoria_vault.runtime import state
 from memoria_vault.runtime.vaultio import read_frontmatter, split_frontmatter
-from tests.cli_test_helpers import _cli_command_surface
+from tests.cli_test_helpers import cli_command_surface
 from tests.helpers import (
     ROOT,
     WORKSPACE_SEED,
@@ -21,6 +21,8 @@ from tests.helpers import (
     git,
     write_checked_concept,
 )
+
+pytestmark = pytest.mark.contract
 
 
 def _parser_for_command(parser: argparse.ArgumentParser, command: str) -> argparse.ArgumentParser:
@@ -142,7 +144,7 @@ def test_pyproject_exposes_memoria_console_script() -> None:
 
 
 def test_cli_command_surface_is_exact() -> None:
-    assert _cli_command_surface() == {
+    assert cli_command_surface() == {
         "memoria init",
         "memoria onboard",
         "memoria status",

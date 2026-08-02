@@ -18,6 +18,8 @@ from memoria_vault.runtime.operations import load_operation_policy
 from memoria_vault.runtime.time import now_iso
 from tests.helpers import git, init_git
 
+pytestmark = pytest.mark.contract
+
 
 def _workspace(tmp_path: Path) -> Path:
     init_git(tmp_path, "empirical@example.invalid", "Empirical Events")

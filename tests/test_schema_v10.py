@@ -8,6 +8,8 @@ import pytest
 from memoria_vault.runtime import state
 from memoria_vault.runtime.trusted_writer import OperationContext
 
+pytestmark = pytest.mark.unit
+
 
 def _conn(tmp_path):
     vault = tmp_path / "vault"

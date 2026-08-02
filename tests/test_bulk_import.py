@@ -31,6 +31,8 @@ from memoria_vault.runtime.bulk_import import (
 from memoria_vault.runtime.capture import bibtex_capture_payload, csl_capture_payload
 from tests.helpers import call_with_context, copy_memoria_dirs, init_git
 
+pytestmark = pytest.mark.contract
+
 TWO_ENTRIES = """@article{alpha2026,
   title = {Alpha Import},
   doi = {10.1000/alpha.2026},

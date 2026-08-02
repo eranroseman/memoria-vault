@@ -3,8 +3,12 @@
 import shutil
 from pathlib import Path
 
+import pytest
+
 from memoria_vault.runtime.subsystems.integrity.linter import precommit_check
 from tests.helpers import WORKSPACE_SEED
+
+pytestmark = pytest.mark.static
 
 
 def _vault(tmp_path: Path) -> Path:

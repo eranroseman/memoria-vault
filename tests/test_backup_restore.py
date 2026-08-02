@@ -16,6 +16,8 @@ from memoria_vault.cli import main
 from memoria_vault.runtime import backup, state, trusted_writer
 from tests.helpers import init_cli_workspace
 
+pytestmark = pytest.mark.runtime
+
 
 def _seed(vault: Path) -> Path:
     blob = vault / ".memoria/blobs/source-content/w-1/raw/source.txt"

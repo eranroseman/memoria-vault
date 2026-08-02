@@ -16,6 +16,8 @@ from tests.helpers import (
     write_checked_concept,
 )
 
+pytestmark = pytest.mark.runtime
+
 PROJECT_REL = "projects/study-alpha/project.md"
 OUTLINE_REL = "projects/study-alpha/outline.md"
 CLAIM_ONE = "notes/claim-one.md"

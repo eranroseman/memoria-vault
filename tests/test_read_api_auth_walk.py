@@ -24,6 +24,8 @@ from memoria_vault.cli import main
 from memoria_vault.engine.surface_contract import http_routes
 from memoria_vault.runtime.http_transport import _dispatch, make_http_server
 
+pytestmark = pytest.mark.contract
+
 TOKEN = "auth-walk-token"
 
 

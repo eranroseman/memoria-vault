@@ -5,7 +5,11 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from scripts.checks import removed_surface_gate as gate
+
+pytestmark = pytest.mark.static
 
 
 def write_contract(path: Path) -> None:

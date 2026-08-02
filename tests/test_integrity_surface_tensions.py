@@ -21,6 +21,8 @@ from memoria_vault.runtime.trusted_writer import (
 from memoria_vault.runtime.vaultio import read_frontmatter
 from tests.helpers import call_with_context, copy_memoria_dirs, init_git
 
+pytestmark = pytest.mark.runtime
+
 
 def stage_concept(vault: Path, *args, **kwargs):
     return call_with_context(_stage_concept, vault, *args, **kwargs)

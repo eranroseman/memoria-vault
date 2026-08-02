@@ -40,6 +40,8 @@ from memoria_vault.runtime.knowledge import verify_project_draft as _verify
 from memoria_vault.runtime.time import utc_z
 from tests.helpers import call_with_context, write_checked_concept
 
+pytestmark = pytest.mark.contract
+
 ALPHA = "projects/project-alpha/project.md"
 BETA = "projects/project-beta/project.md"
 

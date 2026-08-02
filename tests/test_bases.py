@@ -1,8 +1,11 @@
 """Ring 1 seeded Obsidian Base views (2026-07-12-surface-design-notes.md)."""
 
+import pytest
 import yaml
 
 from tests.helpers import WORKSPACE_SEED
+
+pytestmark = pytest.mark.contract
 
 RING1_BASES = ("catalog.base", "claims.base", "inbox.base", "projects.base", "sources.base")
 

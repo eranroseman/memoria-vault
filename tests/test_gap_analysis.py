@@ -4,6 +4,8 @@ import json
 import shutil
 from pathlib import Path
 
+import pytest
+
 from memoria_vault.runtime import state
 from memoria_vault.runtime.capture import capture_source as _capture_source
 from memoria_vault.runtime.knowledge import analyze_gaps as _analyze_gaps
@@ -21,6 +23,8 @@ from tests.helpers import (
     init_git,
     mark_file_status,
 )
+
+pytestmark = pytest.mark.runtime
 
 
 def capture_source(vault: Path, *args, **kwargs):

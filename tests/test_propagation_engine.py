@@ -23,6 +23,8 @@ from memoria_vault.runtime.vaultio import read_frontmatter
 from tests.helpers import call_with_context, git, write_note
 from tests.helpers import worker_workspace as workspace
 
+pytestmark = pytest.mark.runtime
+
 
 def _work(vault: Path, work_id: str, **kwargs: str) -> None:
     """Seed the catalog work whose Concept parent every FK-backed mark needs.

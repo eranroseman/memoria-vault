@@ -18,6 +18,8 @@ import pytest
 
 from memoria_vault.runtime import onboarding
 
+pytestmark = pytest.mark.unit
+
 _IS_ROOT = hasattr(os, "geteuid") and os.geteuid() == 0
 _needs_posix_permission_bits = pytest.mark.skipif(
     sys.platform.startswith("win"), reason="POSIX permission bits only"

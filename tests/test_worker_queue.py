@@ -25,6 +25,8 @@ from memoria_vault.runtime.worker import (
 from tests.helpers import git, work_text, write_note
 from tests.helpers import worker_workspace as workspace
 
+pytestmark = pytest.mark.runtime
+
 # Failsafe against a stuck child, not a performance budget: it bounds a process
 # spawn plus a full re-import of this module, which stretches under load.
 SPAWN_TIMEOUT = 30

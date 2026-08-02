@@ -3,7 +3,11 @@
 import os
 import time as _time
 
+import pytest
+
 from memoria_vault.runtime.policy import hook as _m
+
+pytestmark = pytest.mark.contract
 
 Path = _m.Path
 _pending_file = _m._pending_file

@@ -6,6 +6,8 @@ import ast
 import re
 from pathlib import Path
 
+import pytest
+
 from memoria_vault.product import copi_conversational_ask
 from memoria_vault.product.copi_conversational_ask import (
     PRIORS_REFUSAL,
@@ -13,6 +15,8 @@ from memoria_vault.product.copi_conversational_ask import (
 )
 from memoria_vault.runtime import retrieval_pipeline
 from tests.helpers import ROOT
+
+pytestmark = pytest.mark.contract
 
 
 def _string_constants(path: Path) -> list[str]:

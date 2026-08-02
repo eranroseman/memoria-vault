@@ -6,6 +6,8 @@ import pytest
 
 from scripts.test_vault import e2e_smoke
 
+pytestmark = pytest.mark.package
+
 
 def test_stage_labels_preserve_e2e_smoke_order() -> None:
     assert [label.split(":", 1)[0] for label in e2e_smoke.STAGE_LABELS.values()] == [

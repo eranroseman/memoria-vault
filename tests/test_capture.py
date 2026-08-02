@@ -39,6 +39,8 @@ from tests.helpers import (
     capture_url_source_checked as _capture_url_source,
 )
 
+pytestmark = pytest.mark.contract
+
 
 def capture_source(vault: Path, *args, **kwargs):
     return call_with_context(_capture_source, vault, *args, **kwargs)

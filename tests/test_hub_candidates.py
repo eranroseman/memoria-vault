@@ -21,6 +21,8 @@ from memoria_vault.runtime.vaultio import split_frontmatter
 from memoria_vault.runtime.worker import enqueue_operation, run_next_job
 from tests.helpers import call_with_context, copy_memoria_dirs, git, init_git
 
+pytestmark = pytest.mark.contract
+
 HUB_ID = "01KBN6V6KX0000000000000007"
 CURATED_BODY = "# Framing\n\nHuman text.\n"
 HUB_TEXT = (

@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
+import pytest
+
 from memoria_vault.runtime.subsystems.lib import schema
+
+pytestmark = pytest.mark.contract
 
 ULID = "01KBN6V6KX0000000000000001"
 

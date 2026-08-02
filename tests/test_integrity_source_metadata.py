@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from memoria_vault.runtime import state
 from memoria_vault.runtime.capture import capture_source as _capture_source
 from memoria_vault.runtime.integrity import check_source_metadata as _check_source_metadata
@@ -13,6 +15,8 @@ from tests.helpers import (
     init_git,
     sync_file_verdicts,
 )
+
+pytestmark = pytest.mark.runtime
 
 
 def capture_source(vault: Path, *args, **kwargs):

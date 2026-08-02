@@ -13,6 +13,8 @@ from memoria_vault.engine import api
 from memoria_vault.runtime import state
 from tests.helpers import init_cli_workspace, write_checked_concept, write_checked_note
 
+pytestmark = pytest.mark.contract
+
 
 @pytest.fixture
 def workspace(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> Path:

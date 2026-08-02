@@ -25,6 +25,8 @@ from memoria_vault.runtime.knowledge import verify_project_draft as _verify_proj
 from memoria_vault.runtime.knowledge import write_project_export as _write_project_export
 from tests.helpers import call_with_context, write_checked_concept
 
+pytestmark = pytest.mark.runtime
+
 _URL_TRIGGER_CITEKEYS = (
     "http://example.test/key",
     "HTTPS://example.test/key",

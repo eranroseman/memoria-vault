@@ -32,6 +32,8 @@ from memoria_vault.engine.surface_contract import SURFACE_ACTIONS
 from memoria_vault.runtime.http_transport import _dispatch
 from tests.floor_lib import ARG_TABLE, _fill, seed_vault
 
+pytestmark = pytest.mark.floor
+
 # A syntactically valid, non-root scope matching nothing in the seed.
 VOID_SCOPE = ["scope-walk-void"]
 

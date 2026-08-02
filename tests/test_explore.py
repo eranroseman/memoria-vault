@@ -16,6 +16,8 @@ from memoria_vault.runtime.search_index import checked_search_universe
 from tests.floor_lib import read_only_guard
 from tests.helpers import copy_memoria_dirs
 
+pytestmark = pytest.mark.contract
+
 
 def _vault(tmp_path: Path) -> Path:
     copy_memoria_dirs(tmp_path, "schemas")

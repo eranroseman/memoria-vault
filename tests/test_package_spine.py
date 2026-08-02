@@ -9,9 +9,13 @@ import tomllib
 from importlib.resources import files
 from pathlib import Path
 
+import pytest
+
 import memoria_vault
 import memoria_vault.runtime.policy as packaged_policy
 from memoria_vault.runtime import state
+
+pytestmark = pytest.mark.package
 
 ROOT = Path(__file__).resolve().parent.parent
 

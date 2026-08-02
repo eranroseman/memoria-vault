@@ -21,6 +21,8 @@ from tests.helpers import (
     write_note,
 )
 
+pytestmark = pytest.mark.contract
+
 
 def _events_with_schema(vault: Path, schema: str) -> list[dict]:
     with state.connect(vault) as conn:

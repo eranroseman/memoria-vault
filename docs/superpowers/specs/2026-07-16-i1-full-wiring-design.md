@@ -321,7 +321,7 @@ status through the trusted writer. Pausing a producer inserts
 `producer-run-skipped` events that appear in the flow panel. Schema
 version is 19 and journal verification ignores `telemetry_events`.
 
-## 10. Testing (TEST_LEVELS registration)
+## 10. Testing (level declaration)
 
 | New/extended test file | Level |
 | --- | --- |

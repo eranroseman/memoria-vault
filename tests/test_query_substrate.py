@@ -23,6 +23,8 @@ from tests.helpers import (
     write_checked_concept,
 )
 
+pytestmark = pytest.mark.contract
+
 
 def answer_query(vault: Path, *args, **kwargs):
     return call_with_context(_answer_query, vault, *args, **kwargs)

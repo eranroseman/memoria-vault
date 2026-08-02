@@ -16,6 +16,8 @@ from memoria_vault.runtime import bundles
 from memoria_vault.runtime.policy.audit import sha256_file
 from tests.helpers import WORKSPACE_SEED, git
 
+pytestmark = pytest.mark.contract
+
 PERIMETER_MESSAGE = (
     "Memoria write perimeter: vault notes are engine-mediated — a direct edit "
     "would be recorded as the human's work by the provenance layer. "

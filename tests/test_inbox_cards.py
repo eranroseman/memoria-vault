@@ -13,6 +13,8 @@ import yaml
 from memoria_vault.runtime import state
 from memoria_vault.runtime.subsystems.lib import inbox, loudness
 
+pytestmark = pytest.mark.contract
+
 
 def _frontmatter(path) -> dict:
     text = path.read_text(encoding="utf-8")

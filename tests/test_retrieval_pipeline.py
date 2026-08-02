@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
+import pytest
+
 from memoria_vault.runtime import retrieval_pipeline as pipeline
+
+pytestmark = pytest.mark.unit
 
 
 def test_pipeline_counts_are_ordered_and_unique_suffix_repeated_filters() -> None:
