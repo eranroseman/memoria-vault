@@ -1105,3 +1105,53 @@ def test_commit_writer_extracts_rebuttal_candidate_and_skips_tension(tmp_path: P
     assert "rebuttal" in prompt_text
     assert "notes/beta.md" in prompt_text
     assert "notes/gamma.md" not in prompt_text
+
+
+def test_stage_concept_stamps_generated_and_strips_verified(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    tainted = note_text().replace(
+        "---\n", "---\nverified:\n- by: human:pi\n  at: 2020-01-01T00:00:00Z\n", 1
+    )
+
+    stage_concept(vault, "notes/alpha.md", tainted, machine="test-machine")
+
+    fm = read_frontmatter(vault / ".memoria/staging/notes/alpha.md")
+    assert "verified" not in fm, "staged content must not carry confirmation events"
+    by = fm["generated"]["by"]
+    assert by.startswith(("human:", "process:")) or "/" in by, f"not OKF actor grammar: {by}"
+    assert fm["generated"]["at"].endswith("Z")
+
+
+def test_stage_concept_derives_sources_from_inputs(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+
+    stage_concept(
+        vault,
+        "notes/alpha.md",
+        note_text(),
+        inputs=[{"id": "catalog/sources/source-a/source.md", "sha256": "sha256:abc"}],
+        machine="test-machine",
+    )
+
+    fm = read_frontmatter(vault / ".memoria/staging/notes/alpha.md")
+    assert fm["sources"] == [
+        {"id": "catalog-sources-source-a-source", "resource": "/catalog/sources/source-a/source.md"}
+    ]
+
+
+def test_stage_concept_keeps_author_supplied_sources(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    authored = note_text().replace(
+        "---\n", "---\nsources:\n- id: ext\n  resource: https://example.com\n", 1
+    )
+
+    stage_concept(
+        vault,
+        "notes/alpha.md",
+        authored,
+        inputs=[{"id": "catalog/sources/source-a/source.md", "sha256": "sha256:abc"}],
+        machine="test-machine",
+    )
+
+    fm = read_frontmatter(vault / ".memoria/staging/notes/alpha.md")
+    assert fm["sources"] == [{"id": "ext", "resource": "https://example.com"}]

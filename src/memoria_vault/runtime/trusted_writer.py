@@ -32,6 +32,7 @@ from memoria_vault.runtime.vaultio import (
     frontmatter_doc,
     is_ulid,
     iter_markdown,
+    okf_actor,
     read_frontmatter,
     retired_frontmatter_field_errors,
     split_frontmatter,
@@ -56,6 +57,11 @@ class OperationContext:
     *authorship*: a transport door can hold PI authority (loopback bind, per-boot
     bearer token) while the body it posts was composed by a machine. Doors set
     `machine_authored` so the two stay separable; see `body_is_pi_authored`.
+
+    `agent_identity` is request provenance, not authority: which named agent
+    (if any) composed the body, carried through from the request envelope's
+    `provenance["agent_identity"]` for OKF actor rendering (`okf_actor`). It
+    defaults to "" for contexts built without that provenance in scope.
     """
 
     actor: str
@@ -64,6 +70,7 @@ class OperationContext:
     operation_id: str
     machine: str
     machine_authored: bool = False
+    agent_identity: str = ""
 
     @property
     def body_is_pi_authored(self) -> bool:
@@ -128,6 +135,12 @@ def operation_context_from_job(job: Mapping[str, Any], machine: str | None) -> O
     if not isinstance(machine_authored, bool):
         raise ValueError("request envelope machine_authored must be a boolean")
 
+    provenance = envelope.get("provenance")
+    agent_identity_value = (
+        provenance.get("agent_identity") if isinstance(provenance, Mapping) else None
+    )
+    agent_identity = agent_identity_value.strip() if isinstance(agent_identity_value, str) else ""
+
     return OperationContext(
         actor=actor,
         run_id=run_id or request_id,
@@ -135,6 +148,7 @@ def operation_context_from_job(job: Mapping[str, Any], machine: str | None) -> O
         operation_id=operation_id,
         machine=safe_filename(machine or platform.node() or "local"),
         machine_authored=machine_authored,
+        agent_identity=agent_identity,
     )
 
 
@@ -849,6 +863,19 @@ def stage_concept(
     if not context.body_is_pi_authored:
         body = neutralize_untrusted_markdown(body)
     _inherit_authored_identity(vault, target, frontmatter)
+    frontmatter.pop("verified", None)
+    frontmatter["generated"] = {
+        "by": okf_actor(
+            context.actor,
+            agent_identity=context.agent_identity,
+            operation_id=context.operation_id,
+            machine_authored=context.machine_authored,
+        ),
+        "at": now_iso(),
+    }
+    input_rows = _input_rows(inputs)
+    if not frontmatter.get("sources") and input_rows:
+        frontmatter["sources"] = _sources_from_inputs(input_rows)
     _validate_concept(contract, target, frontmatter)
 
     staged_path = _staged_path(vault, target)
@@ -859,7 +886,7 @@ def stage_concept(
         "output_id": target,
         "staging_id": _rel(vault, staged_path),
         "output_sha256": sha256_file(staged_path),
-        "inputs": _input_rows(inputs),
+        "inputs": input_rows,
     }
     event = append_journal_event(vault, event, context=context)
     state.record_file_output(
@@ -1302,6 +1329,18 @@ def _write_checked(
     state.mark_checked(vault, target, output_sha256, payload_text)
     write_frontmatter_doc(output_path, frontmatter, body, create_parent=True)
     return events[0]
+
+
+def _sources_from_inputs(input_rows: list[dict[str, Any]]) -> list[dict[str, str]]:
+    """Project derivation inputs into OKF v0.2 `sources` entries (spec §5.1)."""
+    out: list[dict[str, str]] = []
+    for row in input_rows:
+        rid = str(row.get("id") or "")
+        if not rid:
+            continue
+        slug = rid.removesuffix(".md").replace("/", "-")
+        out.append({"id": slug, "resource": f"/{rid}"})
+    return out
 
 
 def _input_rows(inputs: Iterable[str | dict[str, Any]]) -> list[dict[str, Any]]:
