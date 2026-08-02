@@ -27,7 +27,10 @@ frozen history chapter.
 
 ## Files
 
-- `00-origins.md` through `21-alpha.21.md`: frozen release-history chapters.
+- `00-origins.md` through `22-alpha.22.md`: frozen release-history chapters.
+- `23-alpha.23.md`: the current checkpoint's chapter. **Not frozen** — three
+  plan items remain, all of which require a human at a keyboard (see its Status
+  section). It freezes when those close.
 - `arcs.md`: maintained cross-release synthesis and current/pending state.
 - `archive/`: primary-source research and explorations behind the chapters (see `archive/MANIFEST.md`).
 
