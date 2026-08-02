@@ -11050,6 +11050,119 @@ U3-PLUG.8–.11 checkbox and body is unchanged.
      a view the pane cannot draw, so `j`/`Enter` would move a selection nothing
      renders.
 
+### Execution amendment — U3-PLUG.5 as built (2026-08-01)
+
+Recorded by the executor of U3-PLUG.5. It governs U3-PLUG.5 and U3-PLUG.10's
+remaining seed half only; every other U3-PLUG.8–.11 checkbox and body is
+unchanged. **U3-PLUG.8 is unblocked**: `packages/memoria-obsidian/relate.js`
+exists, is seeded, and exports exactly `{ buildRelateOperation }` with the
+drafted signature, so `.8`'s `const { buildRelateOperation } =
+require("./relate");` and its `buildRelateOperation({fromPath, relation,
+toPath, warrant, roster})` call site need no change. The
+`AbstractInputSuggest` obligation of the U3-PLUG.6 amendment's item 10 still
+belongs to `.8`.
+
+1. **The body shipped is the drafted body, unchanged.** No line of the
+   prescribed `relate.js` needed repair, and its four prescribed test cases are
+   present verbatim. Three of its guards were unfixtured by the drafted suite
+   and are covered by item 3.
+2. **U3-PLUG.10's remaining seed half landed here**, for the reason the
+   U3-PLUG.6 amendment's item 1 gives: a module in the package but not in the
+   vault is a plugin that throws MODULE_NOT_FOUND the moment `.8` requires it,
+   and `test_memoria_obsidian_parity_roster_covers_every_shipped_module` goes
+   red on the change that creates the package copy, not on the change that
+   forgets the seed copy. The same six rosters moved together —
+   `bundles.BUNDLE_FILES["obsidian"]` (the writer), the provenance allowlist,
+   `test_installer_skeleton.py`, `test_package_spine.py`, `test_cli.py` (×2)
+   and `test_memoria_obsidian_package.py` — plus a seventh site nobody had
+   listed: **`tests/test_plugin_provenance.py`'s interloper was `relate.js`
+   itself.** Allowing the file turned that test's one denied file into an
+   allowed one, so it asserted an empty finding list against an empty
+   expectation and kept passing while proving nothing. The interloper is now
+   `not-a-bundled-module.js`, and the test asserts its own interloper is
+   *absent* from the allowlist, so the next widening that swallows it fails
+   loudly instead of quietly. What remains of U3-PLUG.10 is the full-gate run
+   and its commit; the roster tuple it prescribes is now the closed eight.
+3. **Tests added beyond the drafted body — three, each from the producer state
+   that reaches it.** (a) *A `warrant` relation carrying Warrant text.* The
+   drafted suite pairs the relation with blank text and the text with a
+   different relation, so nothing forbade a builder that treats the relation as
+   the text's owner; cross-section contract 12 says they are independent, and
+   now a test says so. (b) *Absent fields, not blank ones.* `String(undefined)`
+   is the five-character string `"undefined"`, so dropping either endpoint's
+   `|| ""` submits the literal word as a vault path and dropping the warrant's
+   hangs it on the edge as the PI's warrant — the same non-equivalence the
+   U3-PLUG.1–.4 amendment's item 8 recorded for `handshake.js`. The drafted
+   suite always passes a string. (c) *A non-list roster and exact membership.*
+   A string roster is the case with teeth: `"supports"` has a truthy `.length`
+   and its `.includes` is a **substring** test, so without `Array.isArray` a
+   served scalar admits `"support"` — an off-roster verb the engine refuses
+   only at the frontmatter layer, after the request is journaled. Trimming's
+   two jobs (refusing a space-only endpoint, and emitting the trimmed value)
+   are separated for the same reason.
+4. **`MIN_NODE_TESTS` is 49.** `test-relate.mjs` adds seven discovered tests
+   (44 → 51 on node 24 locally); the floor rises by the same seven and keeps
+   the cushion the previous tasks left.
+5. **The seeded-load proof now loads what the writer wrote, not what the
+   entrypoint requires.** `test_memoria_obsidian_seeded_plugin_loads_every_
+   module_it_requires` required only the seeded `main.js`, so its coverage was
+   whatever `main.js` happened to require that week — and `relate.js` is seeded
+   one task *before* its consumer requires it, so it would have sat in every
+   vault unproven for the length of `.8`. The probe now `require`s every `*.js`
+   the seeded directory actually received (still stubbing only `obsidian`) and
+   then checks the entrypoint's export, so a module the vault received that
+   does not load is caught whoever requires it. Presence is unchanged and still
+   chained elsewhere — package `*.js` ⊆ `SEED_PARITY_ARTIFACTS` (byte-identical
+   to the seed) ⊆ `BUNDLE_FILES` via `test_agent_bundle.py`'s
+   `test_bundle_files_registry_covers_every_packaged_bundle_file` — so this
+   adds loadability without adding a roster.
+6. **Golden regeneration, run last and fully accounted for.** 35 goldens,
+   `70 insertions / 35 deletions`, and every one of those 105 lines is one of
+   **two** distinct changes repeated 35 times: the added
+   `.obsidian/plugins/memoria-obsidian/relate.js` hash (`e9bcfe03ef1f`, the
+   same value in all 35) and `.memoria/vault.json` moving `2f9cbc3d97df` →
+   `8ab6e7cb35b7` because its `bundles.obsidian.files` receipt gained that one
+   path (also identical across all 35). Verified programmatically over the
+   parsed JSON, not by reading the diff: no other path in any golden moved and
+   no non-`files` section moved. `schema.js` keeps its pre-existing hash
+   `14d90d94b619` in all 35, confirming the untouched file was untouched.
+7. **Mutation result: 36 single mutations, 32 killed, 4 survivors, none of them
+   a coverage gap.** Twenty-two mutated `relate.js` (every guard dropped, both
+   `|| ""` and all three `.trim()`s removed, the roster check weakened to a
+   substring match, each payload key renamed, the source/target pair swapped,
+   the `warrant` emission switched to the legacy `reason` alias, the
+   `operationId` changed, and the export renamed) and all 22 died in
+   `test-relate.mjs`. Fourteen mutated the shipped artifact and the rosters: a
+   forgotten seed copy, a seeded copy that does not parse (killed by the widened
+   load probe alone, which is the proof item 5 earns its keep), the suite file
+   deleted and the suite file renamed out of node's discovery glob (both killed
+   by the floor plus the discoverability assertion), the writer roster, the
+   provenance allowlist, `test_installer_skeleton`, `test_cli`'s `doctor --json`
+   list, `SEED_PARITY_ARTIFACTS`, and an allowlist widened to swallow the
+   provenance test's interloper. The four survivors are all the same shape —
+   **deleting an entry from a one-directional pin**, which by construction
+   deletes an assertion rather than failing one:
+   - `tests/test_package_spine.py`'s presence loop and `tests/test_cli.py`'s
+     init `is_file()` assert. Both are `assert ...is_file()` per path. The
+     *product* regression they exist for is still caught twice over:
+     `test_installer_skeleton.py` compares the whole seed tree by set equality
+     and `test_cli.py`'s `doctor --json` compares `bundle_files` by list
+     equality, and dropping `relate.js` from `BUNDLE_FILES` dies in both.
+     Converting either survivor into a third derived equality would be a third
+     copy of a roster this plan spent a review round reducing to one writer.
+   - `NODE_SUITE_FILES` (`set(...) <= set(present)`) and `MIN_NODE_TESTS`
+     (`>=`). Both are ratchets by design — the U3-PLUG.1–.4 amendment's item 2
+     built them to catch a suite that stops running, not an author who lowers
+     the bar. The direction that matters is proved: deleting or renaming
+     `test-relate.mjs` kills.
+8. **Nothing was left knowingly unfixtured, and no branch was deleted.** Every
+   guard in `relate.js` distinguishes at least one input, so none is the
+   equivalent-mutation case that the U3-PLUG.6 amendment's item 8 resolved by
+   deletion. The one contract deliberately *not* pinned is the **order** in
+   which two simultaneously-invalid fields are reported (roster before
+   endpoints): no caller can act on it, `.8` shows one `Notice` either way, and
+   pinning it would freeze an incidental internal.
+
 ---
 
 ### Task U3-PLUG.1: Switch the plugin test harness to `node --test`
@@ -11980,7 +12093,7 @@ U3-PLUG.8–.11 checkbox and body is unchanged.
 
 **Steps:**
 
-- [ ] Write the failing test — create `packages/memoria-obsidian/scripts/test-relate.mjs`:
+- [x] Write the failing test — create `packages/memoria-obsidian/scripts/test-relate.mjs`:
   ```js
   import assert from "node:assert/strict";
   import test from "node:test";
@@ -12042,8 +12155,8 @@ U3-PLUG.8–.11 checkbox and body is unchanged.
     );
   });
   ```
-- [ ] Run test to verify it fails: `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test` — expected `Cannot find module '../relate.js'`.
-- [ ] Write minimal implementation — create `packages/memoria-obsidian/relate.js`:
+- [x] Run test to verify it fails: `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test` — expected `Cannot find module '../relate.js'`.
+- [x] Write minimal implementation — create `packages/memoria-obsidian/relate.js`:
   ```js
   // Pure relate-control payload builder (U3 spec section 4). The relation
   // roster is server-provided (summary payload `link_relations`, derived from
@@ -12076,7 +12189,7 @@ U3-PLUG.8–.11 checkbox and body is unchanged.
 
   module.exports = { buildRelateOperation };
   ```
-- [ ] Run test to verify it passes: `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test` — expected all pass.
+- [x] Run test to verify it passes: `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test` — expected all pass.
 - [ ] Commit:
   `git add packages/memoria-obsidian/relate.js packages/memoria-obsidian/scripts/test-relate.mjs`
   `git commit -m "feat(obsidian): pure relate payload builder validated against server roster` (blank line) `Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"`
@@ -13419,13 +13532,15 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
 
 ### Task U3-PLUG.10: Seed-parity roster extension + full gate
 
-> **Execution note (2026-08-01): the seed half of this task already landed
-> with U3-PLUG.6.** It had to — U3-PLUG.6's `main.js` requires `./handshake`
-> and `./pill`, so shipping .6 without the modules in the vault would have
-> given every freshly-inited vault an entrypoint that throws MODULE_NOT_FOUND.
-> The seed copies, the six rosters below, and the golden regeneration are done;
-> what remains for this task is the `relate.js` entry (blocked with U3-PLUG.5)
-> and the full-gate run. See the "U3-PLUG.6 as built" amendment, item 10.
+> **Execution note (2026-08-01): the seed half of this task is complete.** It
+> landed in two parts, and both times it had to: U3-PLUG.6's `main.js` requires
+> `./handshake` and `./pill`, so shipping .6 without the modules in the vault
+> would have given every freshly-inited vault an entrypoint that throws
+> MODULE_NOT_FOUND, and U3-PLUG.5 then carried `relate.js` through the same six
+> rosters plus a seventh site (see the "U3-PLUG.5 as built" amendment, item 2).
+> The seed copies, the rosters below, and the golden regeneration are done for
+> all eight files; what remains for this task is the full-gate run and its
+> commit. See the "U3-PLUG.6 as built" amendment, item 10.
 
 **Files:**
 - Modify: `tests/test_memoria_obsidian_package.py` (lines 31–35 artifact tuple; lines 26–28 file-presence asserts)

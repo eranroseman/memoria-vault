@@ -34,13 +34,19 @@ def test_plugin_scope_doctor_allows_ring1_view_preference_files(tmp_path):
 def test_plugin_scope_doctor_still_denies_an_unlisted_memoria_obsidian_file(tmp_path):
     """The allowlist stayed deny-by-default after U3-PLUG widened it.
 
-    It was widened once, from four files to seven, to let the plugin ship the
+    It was widened twice, from four files to eight, to let the plugin ship the
     CommonJS modules its entrypoint requires. A widening implemented as a
     prefix or glob over `plugins/memoria-obsidian/` would have passed every
     other test in this file while silently admitting anything dropped in that
     directory forever after -- which is the payload this doctor exists to
     refuse. So the seeded plugin directory is rebuilt with exactly its allowed
     files plus one interloper, and only the interloper may be reported.
+
+    The interloper is deliberately a name no plugin module will ever take. It
+    used to be `relate.js`, and U3-PLUG.5 -- the task that added `relate.js` to
+    the allowlist -- turned this test's interloper into an allowed file. The
+    membership assertion below is what makes that recurrence loud instead of
+    vacuous.
     """
     root = tmp_path / "repo"
     seed_obsidian = root / "src/memoria_vault/product/workspace_seed/.obsidian"
@@ -48,13 +54,16 @@ def test_plugin_scope_doctor_still_denies_an_unlisted_memoria_obsidian_file(tmp_
         target = seed_obsidian / rel
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text("", encoding="utf-8")
-    interloper = seed_obsidian / "plugins/memoria-obsidian/relate.js"
-    interloper.write_text("// not yet allowed\n", encoding="utf-8")
+    interloper_rel = Path("plugins/memoria-obsidian/not-a-bundled-module.js")
+    assert interloper_rel not in doctor.ALLOWED_SEED_OBSIDIAN_FILES
+    interloper = seed_obsidian / interloper_rel
+    interloper.write_text("// never allowed\n", encoding="utf-8")
 
     findings = doctor.check(root)
 
     assert [finding.split(":", 1)[0] for finding in findings] == [
-        "src/memoria_vault/product/workspace_seed/.obsidian/plugins/memoria-obsidian/relate.js"
+        "src/memoria_vault/product/workspace_seed/.obsidian/plugins/memoria-obsidian/"
+        "not-a-bundled-module.js"
     ]
     interloper.unlink()
     assert doctor.check(root) == []
