@@ -25,6 +25,7 @@ memoria = "memoria_vault.cli:main"
 [tool.setuptools.packages.find]
 where = ["src"]
 include = ["memoria_vault*"]
+namespaces = false
 
 [tool.setuptools.package-data]
 memoria_vault = ["runtime/*.sql"]

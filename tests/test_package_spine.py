@@ -157,3 +157,40 @@ def test_workspace_seed_is_packaged_runtime_minimum():
         "notes/.gitkeep",
     ):
         assert not seed.joinpath(*rel.split("/")).is_file(), rel
+
+
+def test_every_import_chain_directory_is_an_explicit_package():
+    """A directory reachable by import must carry __init__.py (audit §2.1).
+
+    Implicit namespace packages ship only while packages.find defaults
+    namespaces=true; an explicit package list, namespaces=false, or a move
+    drops them from the wheel silently. Scope: directories whose every path
+    segment under src/ is a Python identifier and that either lead to a .py
+    file or are named as a dotted package-data key. Data directories such as
+    product/workspace_seed/.claude/hooks are excluded by the identifier rule
+    -- an __init__.py there would be seeded into user vaults.
+    """
+    src = ROOT / "src"
+    src_root = src / "memoria_vault"
+
+    def importable(d: Path) -> bool:
+        return all(part.isidentifier() for part in d.relative_to(src).parts)
+
+    required: set[Path] = set()
+    for py in src_root.rglob("*.py"):
+        if "__pycache__" in py.parts:
+            continue
+        d = py.parent
+        while d != src and importable(d):
+            required.add(d)
+            d = d.parent
+    data = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+    for key in data["tool"]["setuptools"]["package-data"]:
+        p = src / Path(*key.split("."))
+        if p.is_dir():
+            required.add(p)
+
+    missing = sorted(
+        str(d.relative_to(ROOT)) for d in required if not (d / "__init__.py").is_file()
+    )
+    assert missing == [], f"implicit namespace directories: {missing}"
