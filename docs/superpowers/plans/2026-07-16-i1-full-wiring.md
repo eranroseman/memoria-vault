@@ -198,15 +198,61 @@ snippets; the retained snippets are drafting history where they disagree.
    the PI added survives the flip. PyYAML drops comments either way; no
    comment-preserving parser is worth a dependency here.
 
-**Not landed, and why (obligation for whoever takes H.4's application half):** the
+~~**Not landed, and why (obligation for whoever takes H.4's application half):** the
 PI-protected `apply-decision-rule-notices` worker operation — capability manifest,
-`OPERATION_REGISTRY` row, floor entry — is unimplemented. `test_floor_coverage.
+`OPERATION_REGISTRY` row, floor entry — is unimplemented.~~ **LANDED 2026-08-02**
+(gold4 golden-token session, issue #1715). `test_floor_coverage.
 test_every_operation_has_a_floor_entry` requires a floor entry per operation and
 the floor sweep mints one golden file per operation, so landing it **creates a
 37th golden**. It was held back under the golden freeze, not descoped. Until it
 lands, no code path flips `armed` to `fired` or mints a notice card; the panel
 reports and the PI acts. `update_rule_status` is shipped and tested, so the
 operation is the only missing piece.
+
+## H.4 application half + `memoria decision-rule set` (2026-08-02, BINDING)
+
+Landed together with issue #1715, in the gold4 golden-token session. Five things
+downstream work must bind to, and one correction to the paragraph above.
+
+1. **The "37th golden" prediction was wrong, and the reason generalizes.** The
+   operation is PI-protected (`PROTECTED_OPERATION_ACTORS["apply-decision-rule-
+   notices"] = "pi"`), and the floor sweep always enqueues as `actor="agent"`, so
+   its floor entry is `expect: "refused"` — and `test_floor_sweep_operations`
+   writes a golden **only on the `done` branch**. Measured: the sweep grew from 59
+   to 60 cases and the goldens stayed at 38 files. Every future PI-only operation
+   is likewise golden-free; only agent-runnable ones mint one. What it *does* move
+   is the capability index, because a new manifest adds a catalog row — one line in
+   the one golden that carries `.memoria/index/capability-index.json`.
+2. **The seam:** `decision_rules.apply_decision_rule_notices(vault, *, context) ->
+   {"commit", "applied", "notices", "outputs", "event"}`. `applied` is the rule ids
+   whose status flipped; `notices` is the card paths actually written. **They are
+   separate keys and can legitimately differ** — a `producers: {decision-rules:
+   paused}` throttle swallows the card but never the flip, because the status *is*
+   the record and the card is only the notification. Pinned by
+   `test_a_paused_producer_swallows_the_notice_but_never_the_record`.
+3. **Panels are recomputed inside the operation, never accepted from a caller**
+   (2026-07-29 amendment §1 honored): it calls `assemble_dashboard(vault)` and
+   reads its own `decision_rules.would_fire`. A caller-supplied panel dict would
+   let the caller choose which rules fired.
+4. **`evaluate_decision_rules` from the retained H.4 snippet does not exist and
+   will not.** The printed snippet wires firing into `assemble_dashboard`, which
+   the 2026-07-29 amendment already forbade, and two of its four predicates were
+   unmeasurable as printed. `assess_decision_rules` (pure) plus
+   `apply_decision_rule_notices` (the operation) are the shipped pair.
+5. **`memoria decision-rule set <id> <status>`** is the PI's route to
+   `update_rule_status`, journaled and committed the way `memoria steering edit` is
+   — the registry is a tracked vault file, so a durable write with no journal event
+   and no commit surfaces as a foreign edit on the next workspace scan. It is
+   `CLI_ONLY_COMMANDS` (PI-only judgment over a config file; no agent-reachable
+   transport to bind), and its `status` choices come from `decision_rules.STATUSES`
+   rather than a second literal. This closes O2 W.4's live hazard: the printed step
+   told the PI to hand-edit `.memoria/config/decision-rules.yaml`, and a
+   hand-written one-entry file *replaces* the shipped registry, dropping sixteen
+   rules. Both the command and the operation materialize the full registry on the
+   first write, pinned against the raw file in two tests.
+6. **Mutation: 30 mutants, 29 killed, 1 survivor** (the survivor is in the graph
+   plan's NID-C.6, not here — a manifest *body* edit is unobservable to any golden
+   because `floor_lib` redacts the `trust.sha256` it travels through).
 
 ---
 # Section T — Telemetry substrate (spec §1; slices 1–3)
@@ -1306,6 +1352,49 @@ order_by: [priority, loudness, impact, staleness, age]
 # producers: per-producer throttle — active | quiet | paused (absent = active).
 producers: {}
 ```
+
+> **Blocker A RESOLVED "will not seed" (2026-08-02, gold4 golden-token session,
+> BINDING).** The golden token was held and the seed file was still not written.
+> This is a ruling, not a deferral: `attention.yaml` ships as a code default with
+> no `workspace_seed` file, permanently, and A.2's `Create:` line for
+> `src/memoria_vault/product/workspace_seed/.memoria/config/attention.yaml` is
+> struck.
+>
+> **Why, in the order the reasons carry weight.**
+>
+> 1. **It is the H.3 argument, and it applies harder here.** The H.3/H.4 landing
+>    amendment §1 already ratified "one source of truth, readable on the vault that
+>    exists today, zero golden movement" for `decision-rules.yaml`, and named
+>    `attention.yaml`, `policy.yaml` and `edges.yaml` as the precedent it was
+>    following. `decision-rules.yaml` at least *needs* a per-vault file, because
+>    `update_rule_status` has to store status somewhere. `attention_config` has
+>    **no writer at all** -- its own module docstring says so -- so a seeded
+>    `attention.yaml` stores nothing a vault could not do without.
+> 2. **The seeded content would be an authoritative second copy of
+>    `DEFAULT_ORDER_BY`.** `attention_order_by` reads the file when it exists, so a
+>    vault seeded before a change to the shipped factor order keeps the old order
+>    forever, silently, with nothing on disk to show it diverged. That is the exact
+>    drift `test_the_registry_has_exactly_one_source_of_truth` was written to stop,
+>    one config over.
+> 3. **The discoverability gap the blocker names is already closed, in the right
+>    place.** `docs/reference/system/on-disk-layout.md` documents both knobs in
+>    full -- every factor name, the `active | quiet | paused` vocabulary, and the
+>    fail-safe behaviour. Seeding a file whose only content is a comment is
+>    documentation-by-artifact, and it teaches one vault instead of every reader.
+> 4. **`producers: {}` is the default anyway.** The seeded file would change no
+>    behaviour on any vault, while moving all 38 goldens.
+>
+> **What landed instead:** `tests/test_attention_ordering.py::
+> test_attention_yaml_has_exactly_one_source_of_truth`, the mirror of the
+> decision-rule guard, so the next executor to read A.2's `Create:` line fails
+> loudly instead of re-opening this. Mutation-checked -- creating the seed file is
+> a killed mutant. The on-disk-layout row's "Not seeded today", which read as a
+> temporary state, now states the design.
+>
+> **The cost, stated:** a PI who never opens the reference doc will not discover
+> `producers:` from the vault alone. Accepted; the alternative buys that discovery
+> with a silent-drift hazard on the ranking order, which is the more expensive
+> failure.
 
 **Blocker B — five producers bypass `inbox.py`, so A.3 and A.4 do not reach
 them.** `knowledge.py:1383`, `knowledge.py:1620`, `operations.py:906`,
@@ -2473,19 +2562,17 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 
 ### Task H.4: auto-rule evaluation — recommend via one deduped notice card
 
-> **Assessment half LANDED 2026-08-02; application half NOT landed.** The pure
-> `assess_decision_rules(panels, rules) -> list[dict]` and the `decision_rules`
-> panel are shipped and tested. The PI-protected `apply-decision-rule-notices`
-> operation — the only path that may mint a notice or flip `armed` to `fired` — is
-> **open**, held back because a new operation forces a 37th floor golden under an
-> active golden freeze. Whoever takes it owns: capability manifest,
-> `OPERATION_REGISTRY` row, floor entry + golden, and the `write_finding(...,
-> dedupe_slug=f"decision-rule-{rule_id}")` + `update_rule_status` effects
-> recomputed from the workspace, never from caller-supplied panels (2026-07-29
-> amendment §1). `update_rule_status` is shipped. Read the "H.3/H.4 landing
-> amendment" at the head of this plan first; the `evaluate_decision_rules` snippet
-> below writes from `assemble_dashboard`, which the 2026-07-29 amendment already
-> forbade, and two of its four predicates are unmeasurable as printed.
+> **BOTH HALVES LANDED — assessment 2026-08-02, application 2026-08-02 (gold4
+> golden-token session, issue #1715).** Read the "H.4 application half +
+> `memoria decision-rule set`" amendment at the head of this plan; it is binding
+> and this task's printed snippets below are drafting history. In particular
+> `evaluate_decision_rules` **does not exist**: it wires firing into
+> `assemble_dashboard`, which the 2026-07-29 amendment forbade, and two of its four
+> predicates were unmeasurable as printed. The shipped pair is the pure
+> `assess_decision_rules(panels, rules) -> list[dict]` and the PI-protected
+> `apply_decision_rule_notices(vault, *, context)` behind the
+> `apply-decision-rule-notices` operation. It minted **no** new floor golden: it is
+> PI-only, so the sweep refuses it and the sweep writes goldens only on `done`.
 
 **Files:**
 - Modify: `src/memoria_vault/runtime/decision_rules.py` (added `assess_decision_rules`, not `evaluate_decision_rules`), `src/memoria_vault/engine/dashboard.py` (wire into assembly)

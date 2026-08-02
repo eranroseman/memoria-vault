@@ -1,8 +1,8 @@
 ---
 title: Compile source digest
 type: operation
-description: Compile a checked Work into a machine-owned digest, new hubs, and curated
-  hub suggestions.
+description: Compile a checked Work into a machine-owned digest, new hubs, and
+  machine Candidates blocks on existing hubs.
 operation_id: compile-source-digest
 allowed_tools:
 - trusted_writer
@@ -37,5 +37,6 @@ links: {}
 # Pattern
 
 From the checked Work identified by {{input}}, compile the per-source digest,
-then compound hub updates. The digest and new hubs are machine-owned; curated hub
-changes stay as suggestions.
+then compound hub updates. The digest and new hubs are machine-owned; an existing
+hub receives only the terminal machine Candidates block — the curated body above
+it is never touched.

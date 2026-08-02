@@ -42,7 +42,7 @@
 5. **Outcome→decision dict** (`integrity.py:1169`): ERP-B adds `"confirm-tension": "accept"`, ERP-D adds `"decided-wrong": "override"` — merge, never overwrite.
 6. **Tension rows** store endpoints lexicographically sorted; ERP-C propagation and ERP-D counters must not assume direction.
 7. **Consequence-mark fields** (`stale: bool`, `consequence:` enum) are registered in the type yamls by NID-A's closed-validation task; ERP-C writes them, never touches yamls.
-8. **Floor-golden serialization:** NID-B.6, NID-C.2/.5/.6, ERP-D.1/.5 regenerate goldens — land sequentially, never in parallel worktrees, and not concurrently with other plans' golden tasks. **ERP-D.6 is off this list as built (2026-08-02):** `edge-write.v1` writes only the non-chained `telemetry_events` table, so it moved no golden and needs no serialization slot. **Outstanding (2026-08-02):** NID-C.6 landed its runtime change without the golden token, so one golden-moving edit it owns is still unapplied — the `compile-source-digest.md` manifest text plus the `regenerate-capability-index` golden. The next holder of this plan's token should clear it; the exact edit and expected one-line diff are in NID-C.6's 2026-08-02 execution amendment.
+8. **Floor-golden serialization:** NID-B.6, NID-C.2/.5/.6, ERP-D.1/.5 regenerate goldens — land sequentially, never in parallel worktrees, and not concurrently with other plans' golden tasks. **ERP-D.6 is off this list as built (2026-08-02):** `edge-write.v1` writes only the non-chained `telemetry_events` table, so it moved no golden and needs no serialization slot. ~~**Outstanding (2026-08-02):** NID-C.6 landed its runtime change without the golden token, so one golden-moving edit it owns is still unapplied — the `compile-source-digest.md` manifest text plus the `regenerate-capability-index` golden.~~ **Cleared 2026-08-02** by the gold4 golden-token session: both manifest replacements are applied and `regenerate-capability-index.json` is regenerated. See NID-C.6's "Manifest edit cleared" amendment for the measured correction — only the `description:` half moves the golden.
 9. **Execution order:** NID-A → NID-B → ERP-A → ERP-B → ERP-C → ERP-D → NID-C (NID-C.1/.2 may run any time; its golden tasks obey contract 8).
 10. **Catalog↔Concept FK (v16):** `catalog_sources.work_id` is the sole
     catalog↔Concept join and references `concepts.concept_id` immediately as the
@@ -4924,6 +4924,30 @@ Steps:
 >    The expected diff is one line: the `.memoria/index/capability-index.json`
 >    hash. Until then the manifest's `description` and its Pattern tail still say
 >    "curated hub changes stay as suggestions", which the code no longer does.
+
+> **Manifest edit cleared (2026-08-02, gold4 golden-token session).** Both text
+> replacements are applied as the "Update the operation doc" step writes them, and
+> `tests/fixtures/floor/goldens/regenerate-capability-index.json` is regenerated:
+> `.memoria/index/capability-index.json` `46a8924e1f16` → `df1a54e7becd`, one line,
+> no other golden key touched by this edit. Two corrections to the obligation text
+> above, both measured:
+>
+> 1. **Only the `description:` half moves the golden.** The Pattern-body edit
+>    reaches `capability-index.json` through exactly one key — `trust.sha256` of the
+>    whole manifest text — and `floor_lib.REDACTIONS` rewrites every 32-64
+>    lowercase-hex run to `<HASH>` before the digest is taken. Measured: reverting
+>    the Pattern tail alone leaves the redacted index digest at the identical
+>    `df1a54e7becd` while the raw index text changes. So **no golden can observe a
+>    body-only manifest edit, by construction** — it is a live mutation survivor
+>    against the whole suite (3989 passed), not a gap in this task's tests. Anyone
+>    predicting a golden diff from a future manifest edit must split it the same
+>    way: frontmatter `description:`/`title:` move the digest, prose below the
+>    frontmatter does not.
+> 2. **The `df1a54e7becd` value is not attributable to this edit alone.** The same
+>    session added the `apply-decision-rule-notices` manifest (I1 H.4), which adds a
+>    catalog row to the same index. Attribution was measured: description edit
+>    alone → `307af10a7323`, new manifest alone → `0cc026377604`, both →
+>    `df1a54e7becd`, and reverting both reproduces the committed `46a8924e1f16`.
 > 2. **The `docs/reference` half of that step *was* applied** — the
 >    `system-actions-operations.md` row is a published-docs edit with no golden
 >    coupling, so leaving it stale had no upside. The step below stays unticked
@@ -5143,7 +5167,7 @@ Steps:
 - [x] Run test to verify it passes:
   `python -m pytest tests/test_operations.py -v`
 
-- [ ] Update the operation doc. In
+- [x] Update the operation doc. In
   `src/memoria_vault/product/capabilities/operations/compile-source-digest.md`,
   replace the description (lines 4-5) with:
   ```yaml
@@ -5161,7 +5185,7 @@ Steps:
   "and writes the machine Candidates block on existing hubs (wholesale
   replace; the curated body above the block is never touched)."
 
-- [ ] Regenerate the one drifted golden and verify the sweep is otherwise
+- [x] Regenerate the one drifted golden and verify the sweep is otherwise
   stable:
   `MEMORIA_FLOOR_UPDATE_GOLDENS=1 python -m pytest "tests/test_floor_sweep_operations.py::test_operation[regenerate-capability-index]" -v`
   then `python -m pytest tests/test_floor_sweep_operations.py -q` —

@@ -51,6 +51,7 @@ INTEGRITY_FINDING_OPERATIONS = {
     "integrity-link-target-check": "check_link_targets",
 }
 PROTECTED_OPERATION_ACTORS = {
+    "apply-decision-rule-notices": "pi",
     "acknowledge-attention": "pi",
     "resolve-attention": "pi",
     "resolve-evidence": "pi",
@@ -360,6 +361,10 @@ def _run_operation_job(
             event,
             context=context,
         )
+    if operation_id == "apply-decision-rule-notices":
+        from memoria_vault.runtime.decision_rules import apply_decision_rule_notices
+
+        return apply_decision_rule_notices(vault, context=context)
     if operation_id in INTEGRITY_FINDING_OPERATIONS:
         return _run_integrity_finding_operation(vault, operation_id, payload, context)
     if operation_id == "trace-integrity-scan":

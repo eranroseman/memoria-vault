@@ -6617,6 +6617,19 @@ inherits three things already decided elsewhere:
    `.memoria/vault.json` digest value. The manifest's own hashes redact to
    `<HASH>`, so only its new key *names* move that value — no third kind of
    change should appear.
+4. **It owes `Start here.md` a repoint, and that is a fourth kind of change.**
+   Added 2026-08-02 by the gold4 golden-token session. O1 D.4 branch B landed
+   while this task was open and unowned: because nothing seeds
+   `.claude/skills/memoria-copi/SKILL.md`, the seeded co-PI bullet was a dangling
+   inline-code path, and it now reads "**Co-PI agent** (deferred): … see the
+   ADR-113 status note on [issue #902](…)". The moment this task seeds the file
+   the deferral text becomes false, so this task must **also** restore a truthful
+   pointer in `src/memoria_vault/product/workspace_seed/Start here.md` and swap
+   `tests/test_cli.py::test_cli_init_seeds_start_here_front_door` back — it
+   currently asserts the SKILL.md path is **absent** and `issues/902` present,
+   pinned in both directions on purpose. That makes the expected golden diff two
+   new `files` keys, one changed `.memoria/vault.json` digest, **and** one changed
+   `"Start here.md"` digest, in each of the (now 38) goldens.
 
 ---
 

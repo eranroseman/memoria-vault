@@ -72,6 +72,7 @@ This page summarizes `src/memoria_vault/cli.py`; use `--help` for exact flags.
 | `memoria project ask/trace/gaps/frame-paper/slice/compose/verify/resolve-evidence/promote/explore/suggest-hubs/export` | Query, frame, write, verify, record evidence-review dispositions, promote, explore, and export project-level knowledge. Framing, evidence dispositions, and promotion are PI-only. |
 | `memoria review list/show/accept/reject/edit/defer/stats` | Work the evidence-set review queue: list and inspect held evidence sets, record one of the four dispositions, and read the review telemetry summary. Engine-direct and PI-only; dispositions go through the same seam as `memoria project resolve-evidence`. See [Evidence-set review](../analysis-and-surfaces/evidence-review.md). |
 | `memoria steering show/edit` | Show effective steering—derived from active projects, hubs, and unresolved question notes—with per-token provenance; edit the PI-owned `steering.md` watch/mute override. |
+| `memoria decision-rule set <id> <status>` | Record a pre-registered decision rule as `armed`, `fired`, or `retired` in `.memoria/config/decision-rules.yaml`. PI-only. The first write materializes the whole shipped registry, so the file never carries fewer rules than the engine ships — a hand-edited one-entry file would replace the registry rather than override one row of it. |
 | `memoria vocab list/add/rename/merge` | Read controlled vocabulary; mutations are PI-only. |
 | `memoria journal tail/show/verify` | Inspect journal entries or verify the authoritative hash chain, live-tip anchor, committed anchor prefix, and JSONL export subset. |
 
@@ -94,6 +95,7 @@ This roster mirrors the live argparse tree:
 - `memoria attention worklist`
 - `memoria check`
 - `memoria dashboard`
+- `memoria decision-rule set`
 - `memoria doctor`
 - `memoria doctor bundle`
 - `memoria doctor self-test`
@@ -218,8 +220,8 @@ detail.
 ## Request controls
 
 All request controls are PI-only, as are `memoria project resolve-evidence`,
-`memoria review accept`/`reject`/`edit`/`defer`, `memoria steering edit`, and
-vocabulary mutations.
+`memoria review accept`/`reject`/`edit`/`defer`, `memoria steering edit`,
+`memoria decision-rule set`, and vocabulary mutations.
 
 | Control | Accepts | Effect |
 | --- | --- | --- |

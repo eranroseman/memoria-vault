@@ -410,3 +410,24 @@ def test_producer_mode_reads_the_map_and_fails_safe_to_active(tmp_path: Path) ->
     assert producer_mode(tmp_path, "typo-producer") == "active"  # unknown mode
     assert producer_mode(tmp_path, "unlisted") == "active"  # absent producer
     assert producer_mode(tmp_path / "nowhere", "sweep") == "active"  # no config at all
+
+
+def test_attention_yaml_has_exactly_one_source_of_truth() -> None:
+    """`attention.yaml` ships as a code default, never as a seeded file (I1 A.1 ruling).
+
+    A seeded `order_by: [priority, loudness, impact, staleness, age]` is a second
+    copy of `DEFAULT_ORDER_BY` that is *authoritative* wherever it exists: change
+    the constant and every vault seeded before the change keeps the old ranking,
+    silently. `attention_config` has no writer at all, so unlike the decision-rule
+    registry there is nothing a per-vault file has to store.
+    """
+    import memoria_vault
+    from memoria_vault.runtime.attention_config import ATTENTION_CONFIG
+
+    seeded = Path(memoria_vault.__file__).parent / "product/workspace_seed" / ATTENTION_CONFIG
+
+    assert not seeded.exists(), (
+        f"{seeded} now exists alongside attention_config.DEFAULT_ORDER_BY, so the "
+        "ranking order has two sources that can drift. Keep one: either delete the "
+        "constant and load the seeded file, or drop the seed file."
+    )

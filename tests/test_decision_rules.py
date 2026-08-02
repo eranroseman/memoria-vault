@@ -52,6 +52,8 @@ from memoria_vault.runtime.decision_rules import (
 from memoria_vault.runtime.operations import emit_explicit_disposition_event
 from memoria_vault.runtime.subsystems.lib.inbox import write_finding
 from memoria_vault.runtime.telemetry import record_telemetry_event
+from memoria_vault.runtime.worker import enqueue_operation, run_next_job
+from tests.helpers import git, worker_workspace
 
 pytestmark = pytest.mark.contract
 
@@ -670,3 +672,207 @@ def test_assembly_recommends_and_never_acts(tmp_path: Path) -> None:
     assert list(tmp_path.glob("inbox/*.md")) == []
     assert not (tmp_path / RULES_CONFIG).exists()
     assert all(rule["status"] == "armed" for rule in load_decision_rules(tmp_path))
+
+
+# --- H.4 application half: `apply-decision-rule-notices` (issue #1715) --------
+#
+# Driven through the worker queue rather than by calling
+# `apply_decision_rule_notices` directly. The operation's whole contract is
+# "PI-protected, and the only path that applies a rule": a direct call proves
+# neither, because the actor gate lives in the worker and a direct call is by
+# construction on the permitted side of it.
+
+
+def _apply(vault: Path, *, actor: str = "pi", key: str = "apply") -> dict[str, Any]:
+    enqueue_operation(
+        vault,
+        "apply-decision-rule-notices",
+        payload={},
+        idempotency_key=key,
+        actor=actor,
+    )
+    done = run_next_job(vault, machine="decision-rules-test")
+    assert done is not None
+    return done
+
+
+def _crossing_vault(tmp_path: Path) -> Path:
+    """A git-backed vault whose `attention-throttle` rule is over its threshold.
+
+    Producer state named: seven UTC days of admissions with no drain is the state
+    the shipped predicate reads, arranged through the same telemetry rows the flow
+    panel counts -- not by handing the assessor a panel dict.
+    """
+    vault = worker_workspace(tmp_path, email="rules@example.invalid", name="Rules")
+    for day in _utc_days(7):
+        _admit(vault, day, raised_by="analyze-gaps")
+    return vault
+
+
+def test_the_operation_mints_one_notice_flips_one_status_and_is_idempotent(
+    tmp_path: Path,
+) -> None:
+    """The whole point of H.4's application half, run twice.
+
+    The second run is not decoration: firing is absorbing, so a second `done` that
+    applied anything would mean the status flip is not gating re-application. Both
+    ends are pinned -- one card and `fired` after run 1, *the same* card and no
+    further application after run 2.
+    """
+    vault = _crossing_vault(tmp_path)
+
+    first = _apply(vault, key="apply-1")
+
+    assert first["status"] == "done", first
+    assert first["applied"] == ["attention-throttle"]
+    assert first["notices"] == ["inbox/flag-decision-rule-attention-throttle.md"]
+    assert (vault / "inbox/flag-decision-rule-attention-throttle.md").is_file()
+    statuses = {rule["id"]: rule["status"] for rule in load_decision_rules(vault)}
+    assert statuses["attention-throttle"] == "fired"
+
+    second = _apply(vault, key="apply-2")
+
+    assert second["status"] == "done", second
+    assert second["applied"] == []
+    assert second["notices"] == []
+    assert [path.name for path in sorted((vault / "inbox").glob("*.md"))] == [
+        "flag-decision-rule-attention-throttle.md"
+    ]
+
+
+def test_the_first_flip_materializes_the_whole_shipped_registry(tmp_path: Path) -> None:
+    """Issue #1715's live defect: a one-entry registry file drops sixteen rules.
+
+    `.memoria/config/decision-rules.yaml` is absent by default and *replaces* the
+    shipped registry when present, so the file this operation writes has to carry
+    every rule, not only the one it flipped. Asserted through `load_decision_rules`
+    after the flip *and* against the raw file, because the loader would fall back
+    to the shipped constant if the file it wrote were unreadable and hide the loss.
+    """
+    vault = _crossing_vault(tmp_path)
+
+    _apply(vault)
+
+    raw = yaml.safe_load((vault / RULES_CONFIG).read_text(encoding="utf-8"))
+    assert [entry["id"] for entry in raw] == SHIPPED_RULE_IDS
+    assert [rule["id"] for rule in load_decision_rules(vault)] == SHIPPED_RULE_IDS
+    assert sum(1 for entry in raw if entry["status"] == "fired") == 1
+
+
+def test_the_notice_carries_the_numbers_that_crossed(tmp_path: Path) -> None:
+    """A notice that names only the rule is a notification, not a record.
+
+    The card has to reproduce the pre-registered threshold, the recommendation and
+    the `observed` counters -- including `top_producer`, which is what makes
+    "quiet the top producer" actionable. Asserting only the title would pass for a
+    card built from the rule id alone.
+    """
+    vault = _crossing_vault(tmp_path)
+
+    _apply(vault)
+
+    card = (vault / "inbox/flag-decision-rule-attention-throttle.md").read_text(encoding="utf-8")
+    crossed = _ids(_would_fire(vault))
+    assert crossed == []  # applied, so it no longer *would* fire
+    assert "Decision rule crossed its threshold: attention-throttle" in card
+    assert "attention inflow exceeds drain on every one of the last 7 UTC days" in card
+    assert "Recommend quieting or pausing the top producer" in card
+    assert "top_producer: analyze-gaps" in card
+    assert "top_producer_admissions: 7" in card
+    assert "raised_by: decision-rules" in card
+    assert "loudness: notice" in card
+
+
+def test_the_operation_commits_the_registry_and_the_notice(tmp_path: Path) -> None:
+    """A durable write with no commit is a foreign edit the next scan flags."""
+    vault = _crossing_vault(tmp_path)
+
+    done = _apply(vault)
+
+    committed = set(git(vault, "show", "--name-only", "--format=", done["commit"]).splitlines())
+    assert {RULES_CONFIG, "inbox/flag-decision-rule-attention-throttle.md"} <= committed
+
+
+def test_an_agent_actor_cannot_apply_a_decision_rule(tmp_path: Path) -> None:
+    """PI-protection is the operation's contract, and the floor entry's claim.
+
+    Without this the `expect: refused` floor entry would be asserting a refusal
+    nothing in the product guarantees.
+    """
+    vault = _crossing_vault(tmp_path)
+
+    done = _apply(vault, actor="agent")
+
+    assert done["status"] != "done"
+    assert "requires PI actor authority" in str(done)
+    assert list((vault / "inbox").glob("*.md")) == []
+    assert not (vault / RULES_CONFIG).exists()
+
+
+def test_a_quiet_vault_applies_nothing_and_writes_no_registry(tmp_path: Path) -> None:
+    """No crossing, no record: the operation must not materialize the registry.
+
+    Writing the file unconditionally would look harmless and would silently freeze
+    the shipped rule text into every vault that ever ran the operation.
+    """
+    vault = worker_workspace(tmp_path, email="rules@example.invalid", name="Rules")
+
+    done = _apply(vault)
+
+    assert done["status"] == "done", done
+    assert done["applied"] == []
+    assert done["outputs"] == []
+    assert not (vault / RULES_CONFIG).exists()
+    assert not (vault / "inbox").exists()
+
+
+def test_the_operation_refuses_a_context_it_did_not_get_from_the_worker(tmp_path: Path) -> None:
+    """The writer's authentication is not decoration.
+
+    Every runtime writer authenticates its `OperationContext` against the running
+    request row before touching the vault, and a forged one must not reach
+    `write_finding`. Without this case the `validate_operation_context` call is a
+    line no test can distinguish from its absence.
+    """
+    from memoria_vault.runtime.decision_rules import apply_decision_rule_notices
+    from memoria_vault.runtime.trusted_writer import OperationContext
+
+    vault = _crossing_vault(tmp_path)
+    forged = OperationContext(
+        run_id="forged-run",
+        request_id="forged-request",
+        operation_id="apply-decision-rule-notices",
+        actor="pi",
+        machine="forged",
+    )
+
+    with pytest.raises(ValueError, match="request does not exist"):
+        apply_decision_rule_notices(vault, context=forged)
+
+    assert not (vault / RULES_CONFIG).exists()
+    assert not (vault / "inbox").exists()
+
+
+def test_a_paused_producer_swallows_the_notice_but_never_the_record(tmp_path: Path) -> None:
+    """The throttle is over notification, not over the pre-registration.
+
+    `producers: {decision-rules: paused}` makes `write_finding` return None. The
+    status flip is the record the registry exists for, so it must happen anyway --
+    and `applied` must still name the rule, or the operation reports that nothing
+    was recorded while the registry says otherwise. Without this case `applied` and
+    `notices` are indistinguishable and could be the same list.
+    """
+    vault = _crossing_vault(tmp_path)
+    config = vault / ".memoria/config/attention.yaml"
+    config.parent.mkdir(parents=True, exist_ok=True)
+    config.write_text("producers:\n  decision-rules: paused\n", encoding="utf-8")
+
+    done = _apply(vault)
+
+    assert done["status"] == "done", done
+    assert done["applied"] == ["attention-throttle"]
+    assert done["notices"] == []
+    assert done["outputs"] == [RULES_CONFIG]
+    assert not (vault / "inbox").exists()
+    statuses = {rule["id"]: rule["status"] for rule in load_decision_rules(vault)}
+    assert statuses["attention-throttle"] == "fired"
