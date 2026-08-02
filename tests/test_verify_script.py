@@ -93,7 +93,7 @@ def test_docs_only_scope_narrows_the_roster() -> None:
     assert not any("memoria --version" in d for d in docs)
 
     # a docs-only diff provably cannot change packaging, so the wheel gate is skipped
-    assert not any("wheel_gate" in f for f in docs)
+    assert not any("wheel_gate" in d for d in docs)
 
 
 def test_run_reports_a_missing_executable_instead_of_raising(
