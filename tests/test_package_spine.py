@@ -71,9 +71,16 @@ def test_stack_dependencies_stay_small_and_no_orm():
     assert data["project"]["optional-dependencies"]["mcp"] == ["mcp>=2,<3"]
 
 
+def _state_source() -> str:
+    state_dir = ROOT / "src/memoria_vault/runtime/state"
+    return "\n".join(
+        p.read_text(encoding="utf-8") for p in sorted(state_dir.glob("*.py"))
+    )
+
+
 def test_runtime_sqlite_schema_is_packaged_resource():
     schema = files("memoria_vault.runtime").joinpath("schema.sql").read_text(encoding="utf-8")
-    source = (ROOT / "src/memoria_vault/runtime/state.py").read_text(encoding="utf-8")
+    source = _state_source()
 
     assert "CREATE TABLE IF NOT EXISTS operation_requests" in schema
     assert f"PRAGMA user_version = {state.SCHEMA_VERSION}" in schema
@@ -81,7 +88,7 @@ def test_runtime_sqlite_schema_is_packaged_resource():
 
 
 def test_retired_citation_source_ref_helpers_are_absent():
-    source = (ROOT / "src/memoria_vault/runtime/state.py").read_text(encoding="utf-8")
+    source = _state_source()
 
     assert "def _source_refs(" not in source
     assert "def _collect_source_refs(" not in source
