@@ -51,6 +51,7 @@ TEST_LEVELS = {
     "test_copi_conversational_ask.py": "contract",
     "test_cspell_scope.py": "static",
     "test_dashboard_view.py": "contract",
+    "test_decision_rules.py": "contract",
     "test_detectors.py": "static",
     "test_diagnostics.py": "unit",
     "test_doc_claims_gate.py": "static",

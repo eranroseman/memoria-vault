@@ -2768,18 +2768,39 @@ the focused tests, then `python scripts/verify` before committing.
 This registry-only task may land before O2's I.1 and #1517's selected
 finalization contract; it creates neither real-vault ingestion nor telemetry.
 
-> **Frontier stop (2026-08-02).** Step 1's grep-first blocker fires: neither
-> `src/memoria_vault/product/workspace_seed/.memoria/config/decision-rules.yaml`
-> nor `tests/test_decision_rules.py` exists, and `grep -rn "load_decision_rules"
-> src/ tests/` has zero hits. I1 H.3 owns the sixteen-entry seed, the loader,
-> and the conftest registration; per the printed instruction this task does not
-> create them. **W.3 is the frontier stop for this wave.** W.4 is blocked
-> transitively — its Step 1 requires a `staged-import` hit in the seeded
-> registry, and its Step 2 protocol block is a real-vault run that stays gated
-> on the full external I1 merge regardless.
+> **UNBLOCKED 2026-08-02 — re-anchor before executing.** I1 H.3 landed the
+> loader, `tests/test_decision_rules.py`, and the sixteen-rule registry. It did
+> **not** create
+> `src/memoria_vault/product/workspace_seed/.memoria/config/decision-rules.yaml`:
+> per that plan's "H.3/H.4 landing amendment" §1, the registry ships as
+> `memoria_vault.runtime.decision_rules.DEFAULT_RULES_YAML` and
+> `.memoria/config/decision-rules.yaml` is an absent-by-default per-vault
+> override. Step 1's grep-first check below is therefore stale; use this instead:
 >
-> Note for whoever lands W.3: it seeds a file into `workspace_seed`, so it
-> **will move all 36 floor goldens** and needs that wave's golden token.
+> ```
+> grep -n "canvas-authoring" src/memoria_vault/runtime/decision_rules.py
+> grep -n "SHIPPED_RULE_IDS" tests/test_decision_rules.py
+> ```
+>
+> **W.3 appends its YAML block to `DEFAULT_RULES_YAML` in
+> `src/memoria_vault/runtime/decision_rules.py`, after the `canvas-authoring`
+> entry — the same YAML text, a different file.** It does not create the seed
+> file: `test_the_registry_has_exactly_one_source_of_truth` fails if the seed file
+> appears while the constant still ships, and creating it would move all 36 floor
+> goldens for no gain. **W.3 therefore moves no goldens and needs no golden
+> token.**
+>
+> Test edits, replacing Step 2 (a)/(b): `tests/test_decision_rules.py` has no
+> `_vault_with_registry` and no `== 16` literals. Add `"staged-import"` to the
+> `SHIPPED_RULE_IDS` list (after `"canvas-authoring"`, matching registry order —
+> the list is order-sensitive), leave `AUTO_RULE_IDS` alone (the new rule is
+> `manual`), and bump `EMPTY_REGISTRY_RULES = 16` to `17` in
+> `tests/test_dashboard_view.py`. Step 2 (c)'s new test works as printed once
+> `_vault_with_registry(tmp_path)` is replaced by `tmp_path` — a vault with no
+> registry file loads the shipped rules.
+>
+> W.4's Step 1 `staged-import` grep should target
+> `src/memoria_vault/runtime/decision_rules.py` for the same reason.
 
 **Files:**
 - Modify: `src/memoria_vault/product/workspace_seed/.memoria/config/decision-rules.yaml` (append one entry after the seeded file's final row, `id: canvas-authoring`), `tests/test_decision_rules.py` (extend; created and registered `contract` by I1 H.3)

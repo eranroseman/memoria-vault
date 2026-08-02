@@ -137,6 +137,77 @@ seven panels) and the CLI payload shape `{"ok": True, "dashboard": <panels>}` th
 parked in `CLI_ONLY_COMMANDS`; `views.dashboard`/`read_dashboard_view` are the
 HTTP view and are **not** U2's row.
 
+## H.3/H.4 landing amendment — the registry ships in code (2026-08-02, BINDING)
+
+H.3 and H.4's assessment half landed together. Five deviations from the printed
+snippets; the retained snippets are drafting history where they disagree.
+
+1. **The registry ships as `runtime.decision_rules.DEFAULT_RULES_YAML`, not as a
+   `workspace_seed` file.** Cross-section contract 8's "seeded in
+   `.memoria/config/decision-rules.yaml`" is amended to: the sixteen rules ship in
+   the module; `.memoria/config/decision-rules.yaml` is the per-vault **override
+   and status store**, absent by default and materialized by `update_rule_status`
+   on its first write. `load_decision_rules(vault)` reads the file when it exists
+   and the shipped rules when it does not.
+
+   This is the shape every other I1-era config already has — `attention.yaml`
+   (A.2), `policy.yaml`, `edges.yaml` are none of them in `workspace_seed` — and it
+   is what makes the registry readable on the vault that exists today rather than
+   only on vaults created after a seed change. It also keeps the pre-registration
+   to one source: two copies of a rule text drift silently, so
+   `test_the_registry_has_exactly_one_source_of_truth` fails if the seed file is
+   ever added while the constant still ships. **If a later task wants the seeded
+   file, it must delete `DEFAULT_RULES_YAML` in the same change** and accept the
+   golden move accounted for below.
+
+   *Golden accounting, if that move is ever made:* seeding `DEFAULT_RULES_YAML`
+   verbatim to `src/memoria_vault/product/workspace_seed/.memoria/config/decision-rules.yaml`
+   adds exactly one line to each of the 36 files in `tests/fixtures/floor/goldens/`,
+   immediately above the existing `".memoria/config/feedback.yaml"` line:
+   `    ".memoria/config/decision-rules.yaml": "f342c0f0cd20",`. No `db` counts and
+   no `journal_kinds` change — a config file is neither journaled nor a row. Total
+   diff: +36 lines, 0 removed, 0 modified.
+
+2. **`would_fire` carries the numbers, not bare ids.** The 2026-07-29 amendment's
+   `assess_decision_rules(panels, rules) -> list[str]` ships as
+   `-> list[dict]`, each entry `{id, threshold, recommendation, observed}` with
+   `observed` holding the counters that crossed — and, for `attention-throttle`,
+   `top_producer`/`top_producer_admissions`, because "recommend quieting the top
+   producer" is not a recommendation until it names one. A projection of ids alone
+   reads identically for a rule matching the wrong panel. Consumers wanting ids:
+   `[entry["id"] for entry in panel["would_fire"]]`.
+
+3. **Two of the four auto predicates were unmeasurable as printed and are
+   restated.** `attention-loudness` divided *open cards by band* (all-time) by
+   *seven-day inflow* — different denominators, a ratio that can exceed 1. It ships
+   as alert-or-block share of open cards, `open_total >= 10` and share `> 0.5`,
+   one denominator. `reactive-substrate-priority`'s `reads >= 7` was not the "seven
+   days" its threshold claimed; it ships as `reads >= 20` with a staleness-hit share
+   `> 0.1`. Both rules' `threshold:` prose was rewritten to state exactly what is
+   evaluated. `attention-throttle` and `evidence-review-sizing` keep their printed
+   predicates minus two dead guards (`inflow > 0` is implied by `inflow > drain`
+   over counts; `max(events, 1)` is unreachable after `events >= 10`).
+
+4. **The rolling window is UTC, not local.** The snippet's
+   `datetime.date.today()` is a local date compared against day keys that are
+   `substr(ts, 1, 10)` over `Z` timestamps (global constraint: "all flow metrics
+   bucket by UTC day"). `_recent_utc_days` uses `datetime.now(UTC).date()`.
+
+5. **`update_rule_status` raises on an unknown rule id** rather than writing the
+   file unchanged and reporting success, and rewrites the *raw* entries so a field
+   the PI added survives the flip. PyYAML drops comments either way; no
+   comment-preserving parser is worth a dependency here.
+
+**Not landed, and why (obligation for whoever takes H.4's application half):** the
+PI-protected `apply-decision-rule-notices` worker operation — capability manifest,
+`OPERATION_REGISTRY` row, floor entry — is unimplemented. `test_floor_coverage.
+test_every_operation_has_a_floor_entry` requires a floor entry per operation and
+the floor sweep mints one golden file per operation, so landing it **creates a
+37th golden**. It was held back under the golden freeze, not descoped. Until it
+lands, no code path flips `armed` to `fired` or mints a notice card; the panel
+reports and the PI acts. `update_rule_status` is shipped and tested, so the
+operation is the only missing piece.
+
 ---
 # Section T — Telemetry substrate (spec §1; slices 1–3)
 
@@ -2118,15 +2189,23 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 
 ### Task H.3: the seeded decision-rule registry + loader
 
+> **LANDED 2026-08-02 with deviations — read the "H.3/H.4 landing amendment" at
+> the head of this plan before using anything below.** The registry ships as
+> `runtime.decision_rules.DEFAULT_RULES_YAML`, **not** as a `workspace_seed` file,
+> and the four auto thresholds were restated. The snippets below are drafting
+> history.
+
 **Files:**
-- Create: `src/memoria_vault/product/workspace_seed/.memoria/config/decision-rules.yaml`, `src/memoria_vault/runtime/decision_rules.py`
+- Create: `src/memoria_vault/runtime/decision_rules.py` (as landed; the `workspace_seed` file was **not** created — amendment §1)
 - Test: `tests/test_decision_rules.py` (new; register `"test_decision_rules.py": "contract"`)
 
 **Interfaces:**
 - Consumes: the empirical plan §4 table (`docs/superpowers/specs/0.1.0-beta.1-empirical-use-action-plan.md:148-164`) — copy `metric` (Data to collect), `window` (Minimum observation), `recommendation` (Decision rule) **verbatim** per row.
 - Produces: contract 8's entry shape; `load_decision_rules(vault) -> list[dict]` (fail-safe: malformed entries skipped, never fatal); `update_rule_status(vault, rule_id, status) -> None` (durable write).
 
-- [ ] **Step 1: Write the failing tests** — create `tests/test_decision_rules.py`:
+- [x] **Step 1: Write the failing tests** — create `tests/test_decision_rules.py`:
+      *(Landed with a different body: no `_vault_with_registry` copy step, since the
+      registry is absent-by-default. See the H.3/H.4 landing amendment.)*
 
 ```python
 """Contract tests for the pre-registered decision-rule registry (I1 spec §5)."""
@@ -2186,7 +2265,9 @@ def test_update_rule_status_round_trips(tmp_path: Path) -> None:
 ```
 
 - [ ] **Step 2: Run to verify failure** — `ModuleNotFoundError` / missing seed file.
-- [ ] **Step 3: Implement.** Seed `decision-rules.yaml` with all sixteen entries — the four `auto` rules in full below; the twelve `manual` rows copy their three §4 columns verbatim into `metric`/`window`/`recommendation` with `threshold` restating the rule's trigger condition (ids: `srd-contract`, `seed-corpus`, `workspace-gate-topology`, `export-target`, `multi-device-topology`, `raw-dataset-bundling`, `mode-work-creation`, `non-api-schema-drift`, `fulltext-v2-shape`, `warrant-touch-budget`, `two-window-friction`, `canvas-authoring`):
+- [x] **Step 3: Implement.** *(Landed as `DEFAULT_RULES_YAML` in
+      `runtime/decision_rules.py`, not as a `workspace_seed` file — amendment §1;
+      the four auto thresholds were restated — amendment §3.)* Seed `decision-rules.yaml` with all sixteen entries — the four `auto` rules in full below; the twelve `manual` rows copy their three §4 columns verbatim into `metric`/`window`/`recommendation` with `threshold` restating the rule's trigger condition (ids: `srd-contract`, `seed-corpus`, `workspace-gate-topology`, `export-target`, `multi-device-topology`, `raw-dataset-bundling`, `mode-work-creation`, `non-api-schema-drift`, `fulltext-v2-shape`, `warrant-touch-budget`, `two-window-friction`, `canvas-authoring`):
 
 ```yaml
 # Pre-registered decision rules (I1 spec §5). Every beta.1 §4 blocker routes
@@ -2379,7 +2460,7 @@ def update_rule_status(vault: Path, rule_id: str, status: str) -> None:
 
 **SPEC GAP (resolved here):** the spec says firing flips status "via the trusted writer"; `.memoria/config/` is machine-owned runtime config outside the bundle roots, so the durable-write helper (`write_text_durable`) is the correct seam — the same one `feedback.yaml`-class config uses. Recorded for review.
 
-- [ ] **Step 4: Run to verify pass** — `python -m pytest tests/test_decision_rules.py -v` → PASS.
+- [x] **Step 4: Run to verify pass** — 47 passed; `python scripts/verify` → OK; mutation run 37/37 killed, 0 survivors.
 - [ ] **Step 5: Commit**
 
 ```bash
@@ -2392,8 +2473,22 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 
 ### Task H.4: auto-rule evaluation — recommend via one deduped notice card
 
+> **Assessment half LANDED 2026-08-02; application half NOT landed.** The pure
+> `assess_decision_rules(panels, rules) -> list[dict]` and the `decision_rules`
+> panel are shipped and tested. The PI-protected `apply-decision-rule-notices`
+> operation — the only path that may mint a notice or flip `armed` to `fired` — is
+> **open**, held back because a new operation forces a 37th floor golden under an
+> active golden freeze. Whoever takes it owns: capability manifest,
+> `OPERATION_REGISTRY` row, floor entry + golden, and the `write_finding(...,
+> dedupe_slug=f"decision-rule-{rule_id}")` + `update_rule_status` effects
+> recomputed from the workspace, never from caller-supplied panels (2026-07-29
+> amendment §1). `update_rule_status` is shipped. Read the "H.3/H.4 landing
+> amendment" at the head of this plan first; the `evaluate_decision_rules` snippet
+> below writes from `assemble_dashboard`, which the 2026-07-29 amendment already
+> forbade, and two of its four predicates are unmeasurable as printed.
+
 **Files:**
-- Modify: `src/memoria_vault/runtime/decision_rules.py` (add `evaluate_decision_rules`), `src/memoria_vault/engine/dashboard.py` (wire into assembly)
+- Modify: `src/memoria_vault/runtime/decision_rules.py` (added `assess_decision_rules`, not `evaluate_decision_rules`), `src/memoria_vault/engine/dashboard.py` (wire into assembly)
 - Test: `tests/test_decision_rules.py` (extend)
 
 **Interfaces:**

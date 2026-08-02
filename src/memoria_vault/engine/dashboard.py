@@ -13,10 +13,15 @@ can average them into one number.
 
 Several counters are honestly empty until their producer lands: `inflow_by_day`
 and `per_producer` need I1 A.3's admission emitters, `skipped_runs` needs A.4's
-throttles, `edge_writes` needs the graph plan's ERP-D.6, `evidence_review` needs
-V2R-C's client emitters, and `decision_rules` needs H.3/H.4. Zero is the honest
-reading of a stream nothing writes yet, so each stays a real query over the real
-table rather than a stub the later task has to find and replace.
+throttles, `edge_writes` needs the graph plan's ERP-D.6, and `evidence_review`
+needs V2R-C's client emitters. Zero is the honest reading of a stream nothing
+writes yet, so each stays a real query over the real table rather than a stub the
+later task has to find and replace.
+
+`decision_rules` is the one panel that is *not* empty on a fresh vault: the
+sixteen-rule pre-registration ships with the product (`runtime.decision_rules`),
+so a PI sees every blocker armed on day one and `would_fire` empty. Assembly stays
+pure -- assessment reports, `apply-decision-rule-notices` applies.
 """
 
 from __future__ import annotations
@@ -27,6 +32,7 @@ from pathlib import Path
 from typing import Any
 
 from memoria_vault.runtime import state
+from memoria_vault.runtime.decision_rules import assess_decision_rules, load_decision_rules
 
 # The panel roster and its order, in one place: `assemble_dashboard` builds its
 # dict in this order and `engine.api.read_dashboard_view` renders one text block
@@ -67,15 +73,18 @@ def assemble_dashboard(vault: Path) -> dict[str, Any]:
     """
     vault = Path(vault)
     cards = _attention_cards(vault)
-    return {
+    panels: dict[str, Any] = {
         "attention_flow": _attention_flow_panel(vault, cards),
         "dispositions": _dispositions_panel(vault),
         "evidence_review": _evidence_review_panel(vault),
         "reads_staleness": _reads_panel(vault),
         "edge_writes": _telemetry_group_counts(vault, "edge-write.v1", "relation_type"),
         "exploration": _exploration_panel(vault, cards),
-        "decision_rules": _decision_rules_panel(),
     }
+    # Last, and last in `DASHBOARD_PANELS`, because it is the only panel that reads
+    # the other six.
+    panels["decision_rules"] = _decision_rules_panel(vault, panels)
+    return panels
 
 
 def _attention_cards(vault: Path) -> list[dict[str, Any]]:
@@ -178,15 +187,20 @@ def _exploration_panel(vault: Path, cards: list[dict[str, Any]]) -> dict[str, An
     return {"surfaced": len(surfaced), "acted_on": len(acted)}
 
 
-def _decision_rules_panel() -> dict[str, Any]:
-    """Honest emptiness until H.3 seeds the registry and H.4 assesses it.
+def _decision_rules_panel(vault: Path, panels: dict[str, Any]) -> dict[str, Any]:
+    """The pre-registration and its verdict: every rule, and which would fire now.
 
-    H.3 fills `rules` from `load_decision_rules`; H.4 fills `would_fire` from the
-    pure `assess_decision_rules` (plan amendment 2026-07-29 §1 -- assessment
-    reports which armed rules *would* fire; only the explicit
-    `apply-decision-rule-notices` operation may flip one to `fired`).
+    `rules` is the whole registry, armed reminders included, because a
+    pre-registration nobody can read is not one. `would_fire` is the pure
+    `assess_decision_rules` over the six panels already assembled -- each entry
+    carries the numbers that crossed, not a bare id.
+
+    Reporting is not applying (plan amendment 2026-07-29 §1): nothing here mints a
+    card or flips `armed` to `fired`. Only the explicit
+    `apply-decision-rule-notices` operation may.
     """
-    return {"rules": [], "would_fire": []}
+    rules = load_decision_rules(vault)
+    return {"rules": rules, "would_fire": assess_decision_rules(panels, rules)}
 
 
 def _journal_payloads(vault: Path, event_type: str) -> list[dict[str, Any]]:
