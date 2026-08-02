@@ -115,3 +115,19 @@
   color: var(--text-muted);
 }
 .memoria-block-unknown-raw { font-size: 10px; overflow-x: auto; }
+
+/* Relate modal (U3 section 4). */
+.memoria-relate-modal textarea { min-height: 5rem; width: 100%; }
+.memoria-relation-segment { display: flex; margin: 8px 0; }
+.memoria-relation-option {
+  flex: 1;
+  padding: 4px 8px;
+  border: 1px solid var(--background-modifier-border);
+  background-color: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.memoria-relation-option.is-active {
+  color: var(--interactive-accent);
+  border-color: var(--interactive-accent);
+}

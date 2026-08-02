@@ -39,6 +39,9 @@ assert.equal(sanitizeItemId("memoria-id-1"), "memoria-id-1");
 const requests = [];
 const notices = [];
 const opened = [];
+const modals = [];
+const settings = [];
+const suggests = [];
 
 // The healthy poll payload. `open` — not `open_count` — is the wire field the
 // pill's count comes from (cross-section contract 2), and the two loudness
@@ -186,6 +189,18 @@ function makeEl(tag, options = {}, parent = null) {
 const flatten = (el) => [el, ...el.children.flatMap(flatten)];
 const withClass = (el, cls) => flatten(el).filter((node) => node.hasClass(cls));
 const clickOn = (target) => ({ target, preventDefault() {} });
+const fireClick = (el) => el.listeners.find((entry) => entry.event === "click").handler();
+
+// The relate modal builds its whole form through `Setting`, so an inert stub
+// leaves every decision it makes -- which field a value lands in, which control
+// carries the help text, what the button does -- unassertable. These record the
+// controls they build and let a test do what the PI does: type, pick, click.
+const settingsOf = (modal) => settings.filter((entry) => entry.containerEl === modal.contentEl);
+const componentsOf = (modal) => settingsOf(modal).flatMap((entry) => entry.components);
+const settingNamed = (modal, name) => settingsOf(modal).find((entry) => entry.name === name);
+const controlNamed = (modal, name) => settingNamed(modal, name).components[0];
+const buttonLabeled = (modal, label) =>
+  componentsOf(modal).find((component) => component.label === label);
 
 // Scenarios that need a 401 ladder, an error body, or a probe verdict install
 // their own responder; `null` means "healthy summary".
@@ -301,14 +316,129 @@ Module._load = function load(request, parent, isMain) {
         notices.push(String(message));
       }
     }
+    // The host owns a modal's `app`, its `contentEl`, and the `open`/`close`
+    // pair. `open()` really calls `onOpen()`, because the form the PI fills in
+    // only exists once it has run.
+    class ModalStub {
+      constructor(app) {
+        this.app = app;
+        this.contentEl = makeEl("div");
+        this.closed = 0;
+        modals.push(this);
+      }
+
+      open() {
+        this.onOpen();
+      }
+
+      close() {
+        this.closed += 1;
+      }
+    }
+    class SettingStub {
+      constructor(containerEl) {
+        this.containerEl = containerEl;
+        this.itemEl = containerEl.createDiv({ cls: "setting-item" });
+        this.name = "";
+        this.desc = "";
+        this.components = [];
+        settings.push(this);
+      }
+
+      setName(name) {
+        this.name = String(name);
+        return this;
+      }
+
+      setDesc(desc) {
+        this.desc = String(desc);
+        return this;
+      }
+
+      addText(build) {
+        return this._addInput("input", build);
+      }
+
+      addTextArea(build) {
+        return this._addInput("textarea", build);
+      }
+
+      addToggle(build) {
+        return this._addInput("checkbox", build);
+      }
+
+      addButton(build) {
+        const button = {
+          label: "",
+          cta: false,
+          click: null,
+          setButtonText(label) {
+            button.label = String(label);
+            return button;
+          },
+          setCta() {
+            button.cta = true;
+            return button;
+          },
+          onClick(handler) {
+            button.click = handler;
+            return button;
+          },
+        };
+        this.components.push(button);
+        build(button);
+        return this;
+      }
+
+      _addInput(tag, build) {
+        const component = {
+          value: "",
+          inputEl: this.itemEl.createEl(tag),
+          changed: null,
+          // Obsidian's `setValue` fills the control without firing `onChange`;
+          // a stub that fired it would let a modal that never reads what the PI
+          // typed still pass.
+          setValue(value) {
+            component.value = String(value);
+            return component;
+          },
+          onChange(handler) {
+            component.changed = handler;
+            return component;
+          },
+          type(value) {
+            component.value = String(value);
+            component.changed(component.value);
+            return component;
+          },
+        };
+        this.components.push(component);
+        build(component);
+        return this;
+      }
+    }
+    // The host constructs a suggester against one input element. Recording the
+    // instances is how a test reaches a picker the modal never stores.
+    class AbstractInputSuggestStub {
+      constructor(app, inputEl) {
+        this.app = app;
+        this.inputEl = inputEl;
+        this.closed = 0;
+        suggests.push(this);
+      }
+
+      close() {
+        this.closed += 1;
+      }
+    }
     return {
-      AbstractInputSuggest: Base,
+      AbstractInputSuggest: AbstractInputSuggestStub,
       ItemView: ItemViewStub,
-      Modal: Base,
+      Modal: ModalStub,
       Notice,
       Plugin,
       PluginSettingTab: Base,
-      Setting: Base,
+      Setting: SettingStub,
       requestUrl: async (options) => {
         requests.push(options);
         return respond ? respond(options) : { status: 200, json: SUMMARY_JSON };
@@ -881,7 +1011,7 @@ try {
   );
   assert.deepEqual(
     withClass(root, "memoria-attention-header")[0].children.map((child) => child.text),
-    ["ATTENTION", "7 open · as of 09:05"],
+    ["ATTENTION", "7 open · as of 09:05", "Relate…"],
   );
   const rowTitles = () => withClass(root, "memoria-row-title").map((node) => node.text);
   const cardTitles = () => withClass(root, "memoria-card-title").map((node) => node.text);
@@ -954,7 +1084,11 @@ try {
   assert.equal(link.getAttribute("data-ref"), "notes/alpha.md");
   await view.onClick(clickOn(link));
   assert.deepEqual(opened.slice(-1), [["notes/alpha.md", "", false]]);
-  const button = withClass(root, "memoria-action")[0];
+  // The header's `Relate…` shares the button class, so the card's action is
+  // taken by the attribute that makes it one.
+  const button = withClass(root, "memoria-action").find((node) =>
+    node.getAttribute("data-operation-id"),
+  );
   assert.equal(button.getAttribute("data-operation-id"), "resolve-attention");
   const postedFrom = requests.length;
   mark = noticesFrom();
@@ -1085,6 +1219,215 @@ try {
   delete polled.app.workspace.getLeavesOfType;
   await polled.poll();
   assert.equal(polled.connectionStatus, "connected");
+
+  // 27) The relate modal (U3 section 4). One form, the served roster rendered
+  // verbatim, and the body it queues -- Warrant text included, which is the hop
+  // nothing proved before this task.
+  respond = null;
+  assert.ok(plugin.commands.includes("relate"));
+  const relateCommand = plugin.commandRoster.find((command) => command.id === "relate");
+  assert.equal(relateCommand.name, "Memoria: Relate…");
+
+  // 27a) Before the first poll there is no roster, so the modal says so and
+  // queues nothing: the control is inert rather than inventing three verbs.
+  plugin.linkRelations = [];
+  plugin.app.workspace.getActiveFile = () => ({ path: "notes/active.md" });
+  relateCommand.callback();
+  let modal = modals.at(-1);
+  assert.ok(modal.contentEl.hasClass("memoria-relate-modal"));
+  assert.deepEqual(
+    withClass(modal.contentEl, "memoria-setting-warning").map((node) => node.text),
+    [
+      "Relation roster not loaded yet — it comes from the server payload. " +
+        "Retry after the next poll (click the status pill).",
+    ],
+  );
+  assert.deepEqual(withClass(modal.contentEl, "memoria-relation-option"), []);
+  let queuedFrom = requests.length;
+  mark = noticesFrom();
+  await buttonLabeled(modal, "Queue edge").click();
+  assert.deepEqual(notices.slice(mark), [
+    "relate: relation roster unavailable — retry after the next poll",
+  ]);
+  assert.equal(requests.length, queuedFrom, "a refused build queues nothing");
+  assert.equal(modal.closed, 0, "a refused build leaves the form open to fix");
+
+  // 27b) With a roster: rendered verbatim, in the served order, and the one the
+  // builder validates against.
+  const servedRoster = [
+    "contradicts",
+    "extends",
+    "qualifier",
+    "rebuttal",
+    "supports",
+    "warrant",
+  ];
+  plugin.linkRelations = servedRoster;
+  plugin.app.vault.getMarkdownFiles = () => [
+    { path: "notes/active.md" },
+    { path: "notes/Target-Note.md" },
+    { path: "inbox/other.md" },
+  ];
+  relateCommand.callback();
+  modal = modals.at(-1);
+  assert.deepEqual(withClass(modal.contentEl, "memoria-setting-warning"), []);
+  const relationOptions = withClass(modal.contentEl, "memoria-relation-option");
+  assert.deepEqual(
+    relationOptions.map((node) => node.text),
+    servedRoster,
+    "the relation control is the served roster verbatim -- no local relation list",
+  );
+  // The From field opens on the note the PI is reading, which is the whole
+  // reason the modal asks the workspace for it.
+  assert.equal(controlNamed(modal, "From").value, "notes/active.md");
+  assert.equal(controlNamed(modal, "To").value, "");
+  assert.equal(
+    settingNamed(modal, "Warrant (optional)").desc,
+    "A `warrant` relation links a license note; Warrant text annotates the selected edge.",
+  );
+
+  // Both endpoints filled but no relation picked: the refusal names the served
+  // roster, so a modal validating against a local list could not word it this
+  // way. Both endpoints, because U3-PLUG.5 left the order of two simultaneous
+  // refusals deliberately unpinned and this must not pin it by the back door.
+  controlNamed(modal, "To").type("notes/typed-then-replaced.md");
+  queuedFrom = requests.length;
+  mark = noticesFrom();
+  await buttonLabeled(modal, "Queue edge").click();
+  assert.deepEqual(notices.slice(mark), [
+    "relate: relation must be one of contradicts, extends, qualifier, rebuttal, supports, warrant",
+  ]);
+  assert.equal(requests.length, queuedFrom);
+
+  const pick = (label) => fireClick(relationOptions.find((node) => node.text === label));
+  const active = () =>
+    relationOptions.filter((node) => node.hasClass("is-active")).map((node) => node.text);
+  pick("supports");
+  assert.deepEqual(active(), ["supports"]);
+  pick("rebuttal");
+  assert.deepEqual(active(), ["rebuttal"], "one relation at a time, not an accumulating set");
+
+  // 27c) The pickers offer vault paths. Two suggesters, each on its own input:
+  // one bound to the wrong control would rewrite the wrong endpoint.
+  const [fromSuggest, toSuggest] = suggests.slice(-2);
+  assert.equal(fromSuggest.inputEl, controlNamed(modal, "From").inputEl);
+  assert.equal(toSuggest.inputEl, controlNamed(modal, "To").inputEl);
+  assert.deepEqual(toSuggest.getSuggestions("target-note"), ["notes/Target-Note.md"]);
+  assert.deepEqual(
+    toSuggest.getSuggestions("").length,
+    3,
+    "an empty query offers every note rather than none",
+  );
+  plugin.app.vault.getMarkdownFiles = () =>
+    Array.from({ length: 25 }, (_, index) => ({ path: `notes/bulk-${index}.md` }));
+  assert.equal(toSuggest.getSuggestions("bulk").length, 20, "the list is capped at 20");
+  plugin.app.vault.getMarkdownFiles = () => [
+    { path: "notes/active.md" },
+    { path: "notes/other-source.md" },
+    { path: "notes/Target-Note.md" },
+  ];
+
+  // A picked suggestion fills the field *and* the control the PI is looking at,
+  // replacing what was typed above. The From pick comes second and lands on a
+  // third path, so a picker wired to the other endpoint would be visible in the
+  // submitted body rather than hidden by the pick that follows it.
+  toSuggest.selectSuggestion("notes/Target-Note.md");
+  assert.equal(controlNamed(modal, "To").value, "notes/Target-Note.md");
+  assert.equal(toSuggest.closed, 1, "picking closes the suggester");
+  fromSuggest.selectSuggestion("notes/other-source.md");
+  assert.equal(controlNamed(modal, "From").value, "notes/other-source.md");
+  assert.equal(controlNamed(modal, "To").value, "notes/Target-Note.md", "one field per picker");
+  // The host draws each row through this, so a picker that renders nothing is a
+  // dropdown of blank lines -- unpickable, and silent about why.
+  const suggestionEl = {
+    text: "",
+    setText(value) {
+      this.text = value;
+    },
+  };
+  toSuggest.renderSuggestion("notes/Target-Note.md", suggestionEl);
+  assert.equal(suggestionEl.text, "notes/Target-Note.md");
+
+  // 27d) Warrant text rides the same submission. The body is asserted whole:
+  // the legacy `reason` alias, a dropped `warrant`, and a client-supplied
+  // `actor` are each one extra or missing key away.
+  controlNamed(modal, "Warrant (optional)").type("  RCTs in this population license it  ");
+  queuedFrom = requests.length;
+  mark = noticesFrom();
+  await buttonLabeled(modal, "Queue edge").click();
+  const relateBodies = requests
+    .slice(queuedFrom)
+    .filter((request) => request.url.endsWith("/operation/run"))
+    .map((request) => JSON.parse(request.body));
+  assert.deepEqual(relateBodies[0], {
+    operation_id: "curate-note-link",
+    payload: {
+      source_note_path: "notes/other-source.md",
+      link_type: "rebuttal",
+      target_path: "notes/Target-Note.md",
+      warrant: "RCTs in this population license it",
+    },
+    idempotency_key: "",
+  });
+  assert.deepEqual(notices.slice(mark, mark + 1), ["Memoria queued curate-note-link: req-123"]);
+  assert.equal(modal.closed, 1, "a queued edge closes the form");
+
+  // 27e) A blank Warrant omits the key entirely rather than sending "": the
+  // `warrant` *relation* is an edge in the frontmatter graph, and Warrant
+  // *text* is an annotation on it. This form sends one without the other.
+  const openRelateModal = (relation) => {
+    relateCommand.callback();
+    const form = modals.at(-1);
+    fireClick(
+      withClass(form.contentEl, "memoria-relation-option").find((node) => node.text === relation),
+    );
+    controlNamed(form, "To").type("notes/Target-Note.md");
+    return form;
+  };
+  modal = openRelateModal("warrant");
+  queuedFrom = requests.length;
+  await buttonLabeled(modal, "Queue edge").click();
+  assert.deepEqual(
+    requests
+      .slice(queuedFrom)
+      .filter((request) => request.url.endsWith("/operation/run"))
+      .map((request) => JSON.parse(request.body).payload)[0],
+    {
+      source_note_path: "notes/active.md",
+      link_type: "warrant",
+      target_path: "notes/Target-Note.md",
+    },
+  );
+
+  // 27f) A refused enqueue keeps the form open, so the PI retries the edge
+  // instead of retyping it. This is what U3-PLUG.7's `null` return is for.
+  respond = () => ({ status: 200, json: { ok: false, error: "operation refused" } });
+  modal = openRelateModal("extends");
+  mark = noticesFrom();
+  await buttonLabeled(modal, "Queue edge").click();
+  assert.deepEqual(notices.slice(mark, mark + 1), ["Memoria enqueue failed: operation refused"]);
+  assert.equal(modal.closed, 0, "a refused enqueue leaves the typed form standing");
+  respond = null;
+  await buttonLabeled(modal, "Queue edge").click();
+  assert.equal(modal.closed, 1, "and the same form queues once the server answers");
+
+  // 27g) The pane header opens the same modal, so the PI never has to leave the
+  // queue to write an edge about what is in it.
+  respond = (options) =>
+    options.url.endsWith("/v1/views/attention")
+      ? { status: 200, json: ATTENTION_VIEW_JSON }
+      : { status: 200, json: SUMMARY_JSON };
+  await view.refresh();
+  const relateButton = withClass(withClass(root, "memoria-attention-header")[0], "memoria-action")[0];
+  assert.equal(relateButton.text, "Relate…");
+  const modalsBefore = modals.length;
+  fireClick(relateButton);
+  assert.equal(modals.length, modalsBefore + 1, "the header button opens the relate modal");
+  assert.deepEqual(
+    withClass(modals.at(-1).contentEl, "memoria-relation-option").map((node) => node.text),
+    servedRoster,
+    "the header's modal is wired to the same plugin, roster and all",
+  );
 } finally {
   globalThis.setTimeout = realSetTimeout;
   delete globalThis.document;

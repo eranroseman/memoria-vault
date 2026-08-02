@@ -203,6 +203,13 @@ def test_memoria_obsidian_uses_memoria_operation_run_only() -> None:
     assert "vault.modify(" not in source
     assert "vault.delete(" not in source
     assert "adapter.write(" not in source
+    # The relate modal's help, pinned to the substance the 2026-07-29 amendment
+    # fixed: a `warrant` relation and Warrant text are different things, and a
+    # PI told otherwise writes request prose where promotion-ready edge data
+    # belongs. The wording is the product, so it is pinned as a literal.
+    assert (
+        "A `warrant` relation links a license note; Warrant text annotates the selected edge."
+    ) in source
 
 
 def test_memoria_obsidian_registers_minimal_proof_commands() -> None:
@@ -210,6 +217,7 @@ def test_memoria_obsidian_registers_minimal_proof_commands() -> None:
 
     for command_id in (
         "open-attention",
+        "relate",
         "connect",
         "show-attention",
         "show-active-concept",

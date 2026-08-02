@@ -17,6 +17,7 @@ from __future__ import annotations
 import datetime
 import json
 import re
+import subprocess
 import threading
 import urllib.error
 import urllib.request
@@ -31,14 +32,14 @@ from memoria_vault.engine import api
 from memoria_vault.runtime import state
 from memoria_vault.runtime.http_transport import _dispatch, make_http_server
 from memoria_vault.runtime.subsystems.lib import inbox
-from memoria_vault.runtime.subsystems.lib.edges import LINK_RELATIONS
+from memoria_vault.runtime.subsystems.lib.edges import LINK_RELATIONS, concept_edge_path_records
 from memoria_vault.runtime.vaultio import read_frontmatter
 from tests.cli_test_helpers import write_runner_provider_config
 from tests.helpers import init_cli_workspace, write_checked_note
 
-VIEWSPEC_JS = (
-    Path(__file__).resolve().parent.parent / "packages" / "memoria-obsidian" / "viewspec.js"
-)
+PLUGIN = Path(__file__).resolve().parent.parent / "packages" / "memoria-obsidian"
+VIEWSPEC_JS = PLUGIN / "viewspec.js"
+RELATE_JS = PLUGIN / "relate.js"
 CREDENTIAL_ENV_NAMES = (
     "KILOCODE_API_KEY",
     "OPENALEX_API_KEY",
@@ -1187,3 +1188,101 @@ def test_live_server_runs_each_served_note_link_as_pi_and_rejects_tension(
     assert tension_code == HTTPStatus.OK
     assert tension["ok"] is False
     assert tension["result"]["status"] == "failed"
+
+
+# The payload the relate modal submits, produced by the module the modal calls
+# rather than retyped here. A hand-written Python copy would keep passing after
+# the plugin renamed `warrant` to the legacy `reason` alias -- it would prove
+# only that the engine accepts a key nothing sends. The one thing this file
+# supplies is what the PI typed into the form.
+_RELATE_BUILDER = """
+const { buildRelateOperation } = require(process.argv[1]);
+process.stdout.write(JSON.stringify(buildRelateOperation(JSON.parse(process.argv[2]))));
+"""
+
+
+def _plugin_relate_operation(**typed: object) -> dict:
+    result = subprocess.run(
+        ["node", "-e", _RELATE_BUILDER, str(RELATE_JS), json.dumps(typed)],
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    return dict(json.loads(result.stdout))
+
+
+def test_live_server_carries_the_modal_warrant_text_to_the_edge_attribute(
+    workspace: Path, live_server: str
+) -> None:
+    """The hop nothing proved: plugin payload -> HTTP door -> worker -> attribute.
+
+    U3-PLUG.5 pinned `payload.warrant` at the builder and graph ERP-D.5 pinned
+    `attributes_json.warrant` at the worker, but the live proof above posts only
+    the three required keys, so the two halves met nowhere. This submits what
+    the modal builds, over the socket, and reads the edge back.
+
+    The two senses of "warrant" are separated by the fixture rather than
+    asserted about: the `warrant` *relation* is sent with no text and the
+    Warrant *text* is sent on a `supports` edge, so a builder that treated the
+    relation as the text's owner (or the text as a relation-specific field)
+    could not produce this pair.
+    """
+    write_checked_note(workspace, "notes/source.md", "Source")
+    write_checked_note(workspace, "notes/target.md", "Target")
+    typed = {
+        "fromPath": "notes/source.md",
+        "toPath": "notes/target.md",
+        "roster": sorted(LINK_RELATIONS),
+    }
+    annotated = _plugin_relate_operation(**typed, relation="supports", warrant="  the RCT   ")
+    licensed = _plugin_relate_operation(**typed, relation="warrant", warrant="")
+
+    # What travels is the builder's, key for key: no `reason`, no `actor`, and
+    # no empty `warrant` on the edge that carries none.
+    assert annotated == {
+        "operationId": "curate-note-link",
+        "payload": {
+            "source_note_path": "notes/source.md",
+            "link_type": "supports",
+            "target_path": "notes/target.md",
+            "warrant": "the RCT",
+        },
+    }
+    assert licensed["payload"] == {
+        "source_note_path": "notes/source.md",
+        "link_type": "warrant",
+        "target_path": "notes/target.md",
+    }
+
+    responses = []
+    for index, operation in enumerate((annotated, licensed)):
+        body = {
+            "operation_id": operation["operationId"],
+            "payload": operation["payload"],
+            "idempotency_key": f"live-relate-{index}",
+        }
+        assert "actor" not in body
+        responses.append(_http_post(f"{live_server}/operation/run", body, LIVE_TOKEN))
+
+    assert [code for code, _ in responses] == [HTTPStatus.OK, HTTPStatus.OK]
+    assert [payload["result"]["status"] for _, payload in responses] == ["done", "done"]
+    assert [
+        state.request_row(workspace, payload["job"]["job_id"])["actor"] for _, payload in responses
+    ] == ["pi", "pi"]
+    # Both relations reached the frontmatter graph...
+    assert read_frontmatter(workspace / "notes/source.md")["links"] == {
+        "supports": ["notes/target.md"],
+        "warrant": ["notes/target.md"],
+    }
+    # ... and exactly one edge row carries an attribute: the annotated one. The
+    # `warrant` relation wrote no attribute, and the trimmed text arrived whole.
+    assert concept_edge_path_records(workspace, checked_only=False) == [
+        {
+            "source_path": "notes/source.md",
+            "target_path": "notes/target.md",
+            "relation_type": "supports",
+            "attributes": {"warrant": "the RCT"},
+        }
+    ]

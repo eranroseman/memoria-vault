@@ -1,7 +1,6 @@
 // Obsidian-compatible CommonJS; hand-authored (no build step).
-// `AbstractInputSuggest` (U3-PLUG.8) joins this list when the code that uses it
-// lands, not before.
 const {
+  AbstractInputSuggest,
   ItemView,
   Modal,
   Notice,
@@ -12,6 +11,7 @@ const {
 } = require("obsidian");
 const { execFile } = require("child_process");
 const { sanitizeItemId, validateEvent } = require("./schema");
+const { buildRelateOperation } = require("./relate");
 const {
   HANDSHAKE_TIMEOUT_MS,
   buildHandshakeArgv,
@@ -72,6 +72,11 @@ module.exports = class MemoriaObsidianPlugin extends Plugin {
       id: "open-attention",
       name: "Memoria: Open attention pane",
       callback: () => this.activateAttentionView(),
+    });
+    this.addCommand({
+      id: "relate",
+      name: "Memoria: Relate…",
+      callback: () => new RelateModal(this.app, this).open(),
     });
     this.addCommand({
       id: "connect",
@@ -646,6 +651,10 @@ class AttentionView extends ItemView {
       cls: "memoria-attention-age",
       text: `${this.plugin.openCount} open · as of ${formatAsOf(this.plugin.lastPollAt)}`,
     });
+    const relateButton = header.createEl("button", { cls: "memoria-action", text: "Relate…" });
+    relateButton.addEventListener("click", () =>
+      new RelateModal(this.plugin.app, this.plugin).open(),
+    );
     if (!this.view || this.view.version !== "view-spec.v1") {
       for (const tree of renderView(this.view)) {
         materialize(tree, root);
@@ -716,6 +725,116 @@ class AttentionView extends ItemView {
     if (rowEl) {
       this.toggleExpand(Number(rowEl.getAttribute("data-row-index")));
     }
+  }
+}
+
+class RelateModal extends Modal {
+  constructor(app, plugin) {
+    super(app);
+    this.plugin = plugin;
+    const active = app.workspace.getActiveFile && app.workspace.getActiveFile();
+    this.fromPath = active ? active.path : "";
+    this.relation = "";
+    this.toPath = "";
+    this.warrant = "";
+  }
+
+  onOpen() {
+    const { contentEl } = this;
+    contentEl.empty();
+    contentEl.addClass("memoria-relate-modal");
+    contentEl.createEl("h2", { text: "Memoria: Relate" });
+    const roster = this.plugin.linkRelations || [];
+    if (!roster.length) {
+      contentEl.createDiv({
+        cls: "memoria-setting-warning",
+        text:
+          "Relation roster not loaded yet — it comes from the server payload. " +
+          "Retry after the next poll (click the status pill).",
+      });
+    }
+    // No `.trim()` on either endpoint: `buildRelateOperation` trims the same
+    // two fields on its way to the payload, so trimming here could not change
+    // an outcome for any input.
+    new Setting(contentEl).setName("From").addText((text) => {
+      text.setValue(this.fromPath).onChange((value) => (this.fromPath = value));
+      new NotePathSuggest(this.app, text.inputEl, (path) => {
+        this.fromPath = path;
+        text.setValue(path);
+      });
+    });
+    const segment = contentEl.createDiv({ cls: "memoria-relation-segment" });
+    for (const relation of roster) {
+      const button = segment.createEl("button", {
+        cls: "memoria-relation-option",
+        text: relation,
+      });
+      button.addEventListener("click", () => {
+        this.relation = relation;
+        for (const sibling of Array.from(segment.children)) {
+          sibling.removeClass("is-active");
+        }
+        button.addClass("is-active");
+      });
+    }
+    new Setting(contentEl).setName("To").addText((text) => {
+      text.onChange((value) => (this.toPath = value));
+      new NotePathSuggest(this.app, text.inputEl, (path) => {
+        this.toPath = path;
+        text.setValue(path);
+      });
+    });
+    new Setting(contentEl)
+      .setName("Warrant (optional)")
+      .setDesc("A `warrant` relation links a license note; Warrant text annotates the selected edge.")
+      .addTextArea((text) => text.onChange((value) => (this.warrant = value)));
+    new Setting(contentEl).addButton((button) =>
+      button.setButtonText("Queue edge").setCta().onClick(async () => {
+        let operation;
+        try {
+          operation = buildRelateOperation({
+            fromPath: this.fromPath,
+            relation: this.relation,
+            toPath: this.toPath,
+            warrant: this.warrant,
+            roster,
+          });
+        } catch (error) {
+          new Notice(error.message);
+          return;
+        }
+        // A refused enqueue keeps the form standing: the request the PI typed
+        // is still the request they want, and retyping it is the cost.
+        if (await this.plugin.enqueueNamedOperation(operation.operationId, operation.payload)) {
+          this.close();
+        }
+      }),
+    );
+  }
+}
+
+class NotePathSuggest extends AbstractInputSuggest {
+  constructor(app, inputEl, onPick) {
+    super(app, inputEl);
+    this.onPick = onPick;
+  }
+
+  getSuggestions(query) {
+    const needle = String(query || "").toLowerCase();
+    return this.app.vault
+      .getMarkdownFiles()
+      .map((file) => file.path)
+      .filter((path) => path.toLowerCase().includes(needle))
+      .slice(0, 20);
+  }
+
+  renderSuggestion(path, el) {
+    el.setText(path);
+  }
+
+  selectSuggestion(path) {
+    this.onPick(path);
+    this.close();
   }
 }
 
