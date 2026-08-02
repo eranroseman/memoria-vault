@@ -358,6 +358,8 @@ def _read(
             batch=_int_query(query, "batch", 10),
             read_scope=read_scope,
         )
+    if path == "/v1/views/dashboard":
+        return engine_api.read_dashboard_view(workspace)
     if path == "/concepts":
         return engine_api.read_concepts(
             workspace, concept_type=_one(query, "type"), read_scope=read_scope

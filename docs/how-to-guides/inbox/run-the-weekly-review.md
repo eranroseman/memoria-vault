@@ -19,6 +19,15 @@ queues run near-empty — **empty is success**.
 
 ## Steps
 
+**Step 0 — Read the week's flow (2 min).**
+
+Run `memoria dashboard --workspace .` and read the attention-flow panel —
+inflow versus drain per day, the age distribution, and the per-producer counts —
+before sweeping. The trend tells you whether this pass is triage (the queue is
+draining, work the items) or throttling (inflow keeps outrunning drain, so quiet
+the loudest producer instead). The panels are raw counts with their denominators
+and never a single health score; the reading is yours.
+
 **Step 1 — Refresh derived steering (2 min).**
 
 Run `memoria steering show --workspace .`. Effective steering derives from

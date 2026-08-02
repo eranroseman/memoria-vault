@@ -154,6 +154,22 @@ SURFACE_ACTIONS: tuple[dict[str, Any], ...] = (
         "http": {"method": "GET", "path": "/v1/views/evidence-review"},
         "response_version": ENGINE_READ_API_VERSION,
     },
+    # No cli/mcp binding: the engine-direct `memoria dashboard` front is a
+    # separate CLI-only command (I1 H.2), and U2 T.3 owns the `dashboard.read`
+    # row that gives it a registry entry. This row is the HTTP view only.
+    # Workspace scope with no params: the panels are vault-wide raw counts, so
+    # there is nothing for a read_scope to narrow and no filter to accept.
+    {
+        "id": "views.dashboard",
+        "job": "review",
+        "summary": "Render the raw-count instrumentation dashboard view.",
+        "engine": "read_dashboard_view",
+        "kind": "read",
+        "scope": "workspace",
+        "params": {},
+        "http": {"method": "GET", "path": "/v1/views/dashboard"},
+        "response_version": ENGINE_READ_API_VERSION,
+    },
     {
         "id": "concepts.list",
         "job": "read",

@@ -232,6 +232,18 @@ def _build_parser() -> argparse.ArgumentParser:
     cockpit_cmd.add_argument("--triage", action="store_true")
     cockpit_cmd.set_defaults(handler=_cmd_cockpit)
 
+    # A literal help string, not `_surface_help`: the registered `views.dashboard`
+    # row is the HTTP view, and U2 T.3 owns the `dashboard.read` row this command
+    # will hang off. Until then it is parked in `CLI_ONLY_COMMANDS` like the
+    # cockpit command above was before its row landed.
+    dashboard_cmd = sub.add_parser(
+        "dashboard",
+        description="Raw-count instrumentation panels",
+        help="Raw-count instrumentation panels",
+    )
+    _common(dashboard_cmd)
+    dashboard_cmd.set_defaults(handler=_cmd_dashboard)
+
     _surface_commands(sub)
     _new_commands(sub)
     _work_commands(sub)
@@ -863,6 +875,17 @@ def _cmd_cockpit(args: argparse.Namespace) -> int:
     else:
         sys.stdout.write(engine_cockpit.render_deep(payload))
     return 0
+
+
+def _cmd_dashboard(args: argparse.Namespace) -> int:
+    """I1 spec §4's engine-direct front: the seven panels, no server, no view.
+
+    Emits the assembler's payload whole rather than the view projection, so the
+    CLI reads the same counts the HTTP view renders into text blocks.
+    """
+    from memoria_vault.engine.dashboard import assemble_dashboard
+
+    return _emit({"ok": True, "dashboard": assemble_dashboard(_workspace(args))}, args)
 
 
 def _cmd_surface_schema(args: argparse.Namespace) -> int:

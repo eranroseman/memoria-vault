@@ -112,6 +112,9 @@ def test_cli_help_groups_carry_correct_membership(capsys: pytest.CaptureFixture[
     assert has("review", "memoria attention worklist")
     assert has("review", "memoria attention show")
     assert has("read", "memoria context")
+    # HTTP-only rows disclose themselves by id: the dashboard's CLI front is
+    # a separate CLI-only command, so the console must not claim one here.
+    assert has("review", "views.dashboard (http)")
     assert has("upkeep", "memoria operation run")
 
 
@@ -162,6 +165,7 @@ def test_cli_command_surface_is_exact() -> None:
         "memoria mv",
         "memoria check",
         "memoria cockpit",
+        "memoria dashboard",
         "memoria show",
         "memoria list",
         "memoria export",
