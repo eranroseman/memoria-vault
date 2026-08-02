@@ -6,7 +6,6 @@ from pathlib import Path
 from typing import Any
 
 from memoria_vault.runtime import graph_sql, retrieval_pipeline, state
-from memoria_vault.runtime.policy.paths import normalize_path
 from memoria_vault.runtime.search_index import _bm25, _tokens, checked_search_universe
 from memoria_vault.runtime.subsystems.lib.edges import concept_edge_path_pairs, thesis_rel
 
@@ -330,26 +329,10 @@ def _vetted_project_slice_ids(
     return seen
 
 
-def _vetted_project_rel(vault: Path, project: str) -> str:
-    relpath = normalize_path(str(project))
-    if "/" not in relpath:
-        nested = f"projects/{relpath}/project.md"
-        return nested if (Path(vault) / nested).is_file() else f"projects/{relpath}.md"
-    if not relpath.endswith(".md"):
-        relpath += ".md"
-    if not relpath.startswith("projects/"):
-        raise ValueError(f"project must live under projects: {relpath}")
-    return relpath
-
-
 def _active_member_id(member: object) -> str:
-    if isinstance(member, dict):
-        member = member.get("concept_id") or member.get("path") or member.get("id") or ""
-    text = str(member).strip()
-    if not text:
-        return ""
+    """`graph_sql`'s member unwrap, made total: an unnormalizable member is dropped."""
     try:
-        return normalize_path(text)
+        return graph_sql._member_id(member)
     except ValueError:
         return ""
 
@@ -359,6 +342,8 @@ def _active_member_id(member: object) -> str:
 # above already reaches for that module's private closure helpers.
 _link_targets = graph_sql._link_targets
 _link_target = graph_sql._link_target
+# Project path resolution was that same byte-identical copy.
+_vetted_project_rel = graph_sql._project_rel
 
 
 def _payload_titles(payload: dict[str, Any]) -> dict[str, str]:

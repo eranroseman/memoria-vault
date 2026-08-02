@@ -1961,14 +1961,9 @@ def _cmd_request_show(args: argparse.Namespace) -> int:
 
 
 def _cmd_request_resume(args: argparse.Namespace) -> int:
-    _require_pi_request_control(args)
+    _require_pi_actor(args, "request control")
     result = run_request(_workspace(args), args.request_id, machine="memoria-cli")
     return _emit({"ok": result.get("status") == "done", "result": result}, args)
-
-
-def _require_pi_request_control(args: argparse.Namespace) -> None:
-    if args.actor != "pi":
-        raise ValueError("request control requires PI actor authority")
 
 
 def _require_pi_actor(args: argparse.Namespace, action: str) -> None:
@@ -2130,7 +2125,7 @@ def _apply_request_mutation(
 
 
 def _cmd_request_answer(args: argparse.Namespace) -> int:
-    _require_pi_request_control(args)
+    _require_pi_actor(args, "request control")
     workspace = _workspace(args)
     answers = _key_values(args.answers)
 
@@ -2151,7 +2146,7 @@ def _cmd_request_answer(args: argparse.Namespace) -> int:
 
 
 def _cmd_request_amend(args: argparse.Namespace) -> int:
-    _require_pi_request_control(args)
+    _require_pi_actor(args, "request control")
     workspace = _workspace(args)
     updates = _key_values(args.updates)
     scoped = _scope_bearing_request_fields(updates)
@@ -2171,7 +2166,7 @@ def _cmd_request_amend(args: argparse.Namespace) -> int:
 def _cmd_request_cancel(args: argparse.Namespace) -> int:
     from memoria_vault.runtime.trusted_writer import append_explicit_journal_event
 
-    _require_pi_request_control(args)
+    _require_pi_actor(args, "request control")
     workspace = _workspace(args)
     with _workspace_lock(workspace):
         row = _request_control_row(workspace, args)
@@ -2230,7 +2225,7 @@ def _cmd_request_cancel(args: argparse.Namespace) -> int:
 def _cmd_request_retry(args: argparse.Namespace) -> int:
     from memoria_vault.runtime.trusted_writer import append_explicit_journal_event
 
-    _require_pi_request_control(args)
+    _require_pi_actor(args, "request control")
     workspace = _workspace(args)
     with _workspace_lock(workspace):
         row = _request_control_row(workspace, args)
@@ -2650,8 +2645,7 @@ def _cmd_eval_select_models(args: argparse.Namespace) -> int:
         [args.operation]
         if args.operation
         else sorted(
-            str(item["frontmatter"]["operation_id"])
-            for item in iter_capability_manifests("operation")
+            str(item["frontmatter"]["operation_id"]) for item in iter_capability_manifests()
         )
     )
     selections = []

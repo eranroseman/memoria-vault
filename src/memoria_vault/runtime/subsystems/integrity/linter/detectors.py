@@ -261,10 +261,9 @@ def frontmatter_link_check(vault: Path) -> list[Finding]:
 def broken_wikilinks(vault: Path) -> list[Finding]:
     notes = list(iter_notes(vault))
     stems = {p.stem for p in notes}
-    link_re = re.compile(r"\[\[([^\]|#]+)")
     out = []
     for p in notes:
-        for m in link_re.finditer(read(p)):
+        for m in _WIKI_VAL.finditer(read(p)):
             # rstrip a trailing "\" so a table-escaped pipe resolves: inside a
             # markdown table cell an aliased link must be written [[note\|alias]],
             # and the regex captures "note\" -> strip the escape to get "note".
@@ -301,9 +300,8 @@ def graph_analyze(vault: Path) -> list[Finding]:
     extend here if a graph-stats summary is wanted later."""
     notes = [p for p in iter_notes(vault) if not relpath(vault, p).startswith(("system/",))]
     indeg = {p.stem: 0 for p in notes}
-    link_re = re.compile(r"\[\[([^\]|#]+)")
     for p in notes:
-        for m in link_re.finditer(read(p)):
+        for m in _WIKI_VAL.finditer(read(p)):
             tgt = Path(m.group(1).strip()).stem
             if tgt in indeg:
                 indeg[tgt] += 1
@@ -339,13 +337,12 @@ def fama_exposure(vault: Path) -> list[Finding]:
             superseded[p.stem] = relpath(vault, p)
     if not superseded:
         return []
-    link_re = re.compile(r"\[\[([^\]|#]+)")
     out = []
     for p in notes:
         rp = relpath(vault, p)
         if rp.startswith(("system/", "notes/")):
             continue
-        for m in link_re.finditer(read(p)):
+        for m in _WIKI_VAL.finditer(read(p)):
             stem = Path(m.group(1).strip()).stem
             if stem in superseded:
                 out.append(

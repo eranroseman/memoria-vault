@@ -59,7 +59,7 @@ def test_every_swept_http_binding_names_the_registry_route() -> None:
 
 
 def test_every_operation_has_a_floor_entry() -> None:
-    catalog = {m["frontmatter"]["operation_id"] for m in iter_capability_manifests("operation")}
+    catalog = {m["frontmatter"]["operation_id"] for m in iter_capability_manifests()}
     missing = sorted(catalog - OPERATION_REGISTRY.keys())
     assert not missing, f"operations without floor entries: {missing}"
     stale = sorted(OPERATION_REGISTRY.keys() - catalog)

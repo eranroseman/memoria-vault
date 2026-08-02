@@ -191,29 +191,15 @@ def _write_tracked_projections(
     event = None
     commit_id = ""
     if commit:
-        payload = {
-            "event": "run",
-            "workflow": "generate_tracked_projections",
-            "status": "done",
-            "outputs": paths,
-        }
-        if context:
-            event = append_journal_event(vault, payload, context=context)
-            commit_id = commit_writer_changes(
-                vault,
-                "regenerate tracked projections",
-                paths,
-                context=context,
-            )
-        else:
-            event = append_explicit_journal_event(vault, payload, actor=actor, machine=machine)
-            commit_id = commit_explicit_writer_changes(
-                vault,
-                "regenerate tracked projections",
-                paths,
-                actor=actor,
-                machine=machine,
-            )
+        event, commit_id = _commit_projection_change(
+            vault,
+            workflow="generate_tracked_projections",
+            message="regenerate tracked projections",
+            paths=paths,
+            context=context,
+            actor=actor,
+            machine=machine,
+        )
     return {
         "paths": paths,
         "changed": changed,
@@ -381,27 +367,37 @@ def _write_workspace_indexes(
     event = None
     commit_id = ""
     if commit:
-        payload = {
-            "event": "run",
-            "workflow": "generate_workspace_indexes",
-            "status": "done",
-            "outputs": list(INDEX_PATHS),
-        }
-        if context:
-            event = append_journal_event(vault, payload, context=context)
-            commit_id = commit_writer_changes(
-                vault, "regenerate workspace indexes", INDEX_PATHS, context=context
-            )
-        else:
-            event = append_explicit_journal_event(vault, payload, actor=actor, machine=machine)
-            commit_id = commit_explicit_writer_changes(
-                vault,
-                "regenerate workspace indexes",
-                INDEX_PATHS,
-                actor=actor,
-                machine=machine,
-            )
+        event, commit_id = _commit_projection_change(
+            vault,
+            workflow="generate_workspace_indexes",
+            message="regenerate workspace indexes",
+            paths=list(INDEX_PATHS),
+            context=context,
+            actor=actor,
+            machine=machine,
+        )
     return {"paths": list(INDEX_PATHS), "changed": changed, "event": event, "commit": commit_id}
+
+
+def _commit_projection_change(
+    vault: Path,
+    *,
+    workflow: str,
+    message: str,
+    paths: list[str],
+    context: OperationContext | None,
+    actor: str,
+    machine: str,
+) -> tuple[dict[str, Any], str]:
+    """Journal and commit one generated-projection write, with or without an envelope."""
+    payload = {"event": "run", "workflow": workflow, "status": "done", "outputs": paths}
+    if context:
+        event = append_journal_event(vault, payload, context=context)
+        return event, commit_writer_changes(vault, message, paths, context=context)
+    event = append_explicit_journal_event(vault, payload, actor=actor, machine=machine)
+    return event, commit_explicit_writer_changes(
+        vault, message, paths, actor=actor, machine=machine
+    )
 
 
 def check_workspace_indexes(vault: Path) -> bool:

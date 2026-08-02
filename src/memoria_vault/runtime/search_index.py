@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import json
 import math
 import re
@@ -16,7 +15,7 @@ import yaml
 
 from memoria_vault.runtime import indexing, retrieval_pipeline, state
 from memoria_vault.runtime.paths import safe_filename
-from memoria_vault.runtime.policy.audit import sha256_file
+from memoria_vault.runtime.policy.audit import sha256_bytes, sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path
 from memoria_vault.runtime.read_barrier import is_consumable_checked_file
 from memoria_vault.runtime.subsystems.lib.edges import thesis_rel
@@ -33,14 +32,11 @@ SEARCH_MANIFEST = ".memoria/index/search/manifest.json"
 SEARCHABLE_TYPES = frozenset({"digest", "note", "hub", "project"})
 
 
-def rebuild_checked_search_index(
-    vault: Path, output_root: str = SEARCH_INPUT_ROOT, *, context: OperationContext
-) -> dict[str, Any]:
+def rebuild_checked_search_index(vault: Path, *, context: OperationContext) -> dict[str, Any]:
     """Rebuild the disposable checked retrieval tree and BM25 manifest."""
     validate_operation_context(vault, context)
     return _rebuild_checked_search_index(
         vault,
-        output_root,
         context=context,
         actor=context.actor,
         machine=context.machine,
@@ -49,7 +45,6 @@ def rebuild_checked_search_index(
 
 def rebuild_checked_search_index_explicit(
     vault: Path,
-    output_root: str = SEARCH_INPUT_ROOT,
     *,
     actor: str,
     machine: str,
@@ -61,7 +56,6 @@ def rebuild_checked_search_index_explicit(
         raise ValueError("search machine must be nonblank")
     return _rebuild_checked_search_index(
         vault,
-        output_root,
         context=None,
         actor=actor,
         machine=machine,
@@ -70,14 +64,13 @@ def rebuild_checked_search_index_explicit(
 
 def _rebuild_checked_search_index(
     vault: Path,
-    output_root: str,
     *,
     context: OperationContext | None,
     actor: str,
     machine: str,
 ) -> dict[str, Any]:
     vault = Path(vault)
-    out = vault / normalize_path(output_root)
+    out = vault / normalize_path(SEARCH_INPUT_ROOT)
     if out.exists():
         shutil.rmtree(out)
     out.mkdir(parents=True, exist_ok=True)
@@ -102,7 +95,7 @@ def _rebuild_checked_search_index(
     manifest = {
         "backend": "bm25",
         "mode": "bm25",
-        "input_root": normalize_path(output_root),
+        "input_root": normalize_path(SEARCH_INPUT_ROOT),
         "documents": docs,
     }
     manifest_path = vault / SEARCH_MANIFEST
@@ -232,7 +225,7 @@ def stale_checked_search_documents(
         rel = str(document["path"])
         seen.add(rel)
         known = states.get(rel)
-        text_sha256 = "sha256:" + hashlib.sha256(str(document["text"]).encode()).hexdigest()
+        text_sha256 = sha256_bytes(str(document["text"]).encode())
         if known is not None and str(known.get("source_sha256") or "") == text_sha256:
             continue
         stale.append(document)

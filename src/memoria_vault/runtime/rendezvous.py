@@ -19,6 +19,8 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
 
+from memoria_vault.runtime.paths import path_redirects
+
 try:
     import fcntl
 except ImportError:  # pragma: no cover - non-POSIX fallback.
@@ -198,15 +200,11 @@ def _windows_pid_alive(pid: int) -> bool:
         close_handle(handle)
 
 
-def _path_redirects(path: Path) -> bool:
-    return path.is_symlink() or path.is_junction()
-
-
 def _open_serve_lock_file(state_dir: Path) -> int:
     """Open a regular serve lock without following direct reparse points."""
     state_dir = Path(state_dir)
     lock_path = state_dir / "serve.lock"
-    if _path_redirects(state_dir) or _path_redirects(lock_path):
+    if path_redirects(state_dir) or path_redirects(lock_path):
         raise ValueError(_REDIRECT_ERROR)
 
     flags = os.O_RDWR | os.O_CREAT | getattr(os, "O_NOFOLLOW", 0)
@@ -268,10 +266,10 @@ def gc_stale_entries(root: Path | None = None) -> list[str]:
     """Delete rendezvous entries whose recorded pid is dead; return removed keys."""
     base = Path(root) if root is not None else state_root()
     removed: list[str] = []
-    if _path_redirects(base) or not base.is_dir():
+    if path_redirects(base) or not base.is_dir():
         return removed
     for entry_dir in sorted(
-        path for path in base.iterdir() if not _path_redirects(path) and path.is_dir()
+        path for path in base.iterdir() if not path_redirects(path) and path.is_dir()
     ):
         record = read_runtime(entry_dir)
         if record is None:
@@ -363,6 +361,16 @@ class HandshakeError(RuntimeError):
     """Raised when no live server can be reached or spawned."""
 
 
+def _finite_positive_duration(value: object) -> bool:
+    """Return whether ``value`` is a real, finite, strictly positive duration."""
+    return (
+        not isinstance(value, bool)
+        and isinstance(value, (int, float))
+        and math.isfinite(value)
+        and value > 0
+    )
+
+
 def handshake(
     vault_path: Path,
     *,
@@ -371,12 +379,7 @@ def handshake(
     spawn_command: list[str] | None = None,
 ) -> dict[str, Any]:
     """Connect to a live server, or spawn and wait for one when requested."""
-    if (
-        isinstance(timeout, bool)
-        or not isinstance(timeout, (int, float))
-        or not math.isfinite(timeout)
-        or timeout <= 0
-    ):
+    if not _finite_positive_duration(timeout):
         raise HandshakeError("handshake timeout must be finite positive seconds")
     vault = Path(vault_path).expanduser().resolve()
     state_dir = vault_state_dir(vault)
@@ -441,7 +444,7 @@ def _spawn_server(vault: Path, state_dir: Path, spawn_command: list[str] | None)
     elif os.name == "nt":
         popen_kwargs["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP
     try:
-        if _path_redirects(state_dir) or _path_redirects(log_path):
+        if path_redirects(state_dir) or path_redirects(log_path):
             raise ValueError(_REDIRECT_ERROR)
         with log_path.open("ab") as log_file:
             subprocess.Popen(command, stdout=log_file, **popen_kwargs)
@@ -451,12 +454,7 @@ def _spawn_server(vault: Path, state_dir: Path, spawn_command: list[str] | None)
 
 def _wait_for_live(state_dir: Path, *, timeout: float) -> dict[str, Any] | None:
     """Return a PID-live published record before the finite wait expires."""
-    if (
-        isinstance(timeout, bool)
-        or not isinstance(timeout, (int, float))
-        or not math.isfinite(timeout)
-        or timeout <= 0
-    ):
+    if not _finite_positive_duration(timeout):
         return None
     deadline = time.monotonic() + timeout
     while True:

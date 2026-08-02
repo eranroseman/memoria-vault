@@ -16,7 +16,7 @@ def test_gap_and_project_argument_operations_are_read_only_capabilities() -> Non
         path = OPERATIONS / f"{operation}.md"
         text = path.read_text(encoding="utf-8")
         raw_fm = read_frontmatter(path)
-        fm = read_capability_manifest("operation", operation)["frontmatter"]
+        fm = read_capability_manifest(operation)["frontmatter"]
         assert fm["type"] == "operation"
         assert "check_status" not in fm
         assert "standing" not in fm

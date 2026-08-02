@@ -400,7 +400,7 @@ def test_attention_view_actions_name_cataloged_operation_ids(workspace: Path) ->
 
     payload = api.read_attention_view(workspace)
 
-    catalog = {m["frontmatter"]["operation_id"] for m in iter_capability_manifests("operation")}
+    catalog = {m["frontmatter"]["operation_id"] for m in iter_capability_manifests()}
     named = {
         action["operation_id"]
         for card in payload["view"]["blocks"]

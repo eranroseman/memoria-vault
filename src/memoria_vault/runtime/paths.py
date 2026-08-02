@@ -12,6 +12,11 @@ def load_json(path: Path) -> object:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def path_redirects(path: Path) -> bool:
+    """Return whether a path is itself a symlink or a Windows junction."""
+    return path.is_symlink() or path.is_junction()
+
+
 def safe_filename(value: str) -> str:
     """Replace characters outside ``[A-Za-z0-9._-]`` with underscores."""
     return "".join(char if char.isalnum() or char in "._-" else "_" for char in str(value))
