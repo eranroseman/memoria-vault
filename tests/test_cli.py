@@ -11,6 +11,7 @@ import yaml
 from memoria_vault import __version__
 from memoria_vault.cli import _build_parser, main
 from memoria_vault.engine.surface_contract import SURFACE_ACTIONS, actions_by_id
+from memoria_vault.product.copi_skill import copi_bundle_files
 from memoria_vault.runtime import state
 from memoria_vault.runtime.vaultio import read_frontmatter, split_frontmatter
 from tests.cli_test_helpers import cli_command_surface
@@ -767,8 +768,10 @@ def test_cli_init_seeds_exact_boot_c1_agent_bundle(
     capsys.readouterr()
 
     expected = {
+        ".claude/hooks/session_status.py",
         ".claude/hooks/write_perimeter.py",
         ".claude/settings.json",
+        ".claude/skills/memoria-copi/SKILL.md",
         ".codex/hooks.json",
         ".mcp.json",
         "CLAUDE.md",
@@ -781,8 +784,13 @@ def test_cli_init_seeds_exact_boot_c1_agent_bundle(
     } | {rel for rel in (".mcp.json", "CLAUDE.md") if (workspace / rel).is_file()}
 
     assert delivered == expected
-    for rel in expected:
-        assert (workspace / rel).read_bytes() == (WORKSPACE_SEED / rel).read_bytes()
+    # Two byte sources, one bundle: the co-PI method files are rendered by the
+    # engine (#1699 wired the seam), everything else ships as a seed template.
+    rendered = dict(copi_bundle_files())
+    for rel in sorted(expected - set(rendered)):
+        assert (workspace / rel).read_bytes() == (WORKSPACE_SEED / rel).read_bytes(), rel
+    for rel, provider in sorted(rendered.items()):
+        assert (workspace / rel).read_text(encoding="utf-8") == provider(), rel
 
 
 def test_cli_init_no_obsidian_skips_obsidian_seed(
@@ -826,8 +834,10 @@ def test_cli_init_no_obsidian_skips_obsidian_seed(
     assert not {".claude", ".codex"} & set(output["package"]["seed_trees"])
     assert not {".mcp.json", "CLAUDE.md"} & set(output["package"]["seed_files"])
     assert output["package"]["bundle_files"] == [
+        ".claude/hooks/session_status.py",
         ".claude/hooks/write_perimeter.py",
         ".claude/settings.json",
+        ".claude/skills/memoria-copi/SKILL.md",
         ".codex/hooks.json",
         ".mcp.json",
         "CLAUDE.md",
@@ -1008,8 +1018,10 @@ def test_cli_init_dry_run_reports_runtime_setup_without_mutation(
     # The bundle files are reported separately: `runtime.bundles` writes them,
     # not the seed-class copy (BOOT-C.6, one writer).
     assert output["package"]["bundle_files"] == [
+        ".claude/hooks/session_status.py",
         ".claude/hooks/write_perimeter.py",
         ".claude/settings.json",
+        ".claude/skills/memoria-copi/SKILL.md",
         ".codex/hooks.json",
         ".mcp.json",
         ".obsidian/plugins/memoria-obsidian/handshake.js",
@@ -1065,14 +1077,15 @@ def test_cli_init_seeds_start_here_front_door(
     assert "type: system" in text
     assert "tutorials/01-system-tour" in text
     assert "tutorials/07-customize" in text
-    # O1 spec §3: no seeded link dangles. Nothing writes
-    # `.claude/skills/memoria-copi/SKILL.md` into a vault yet (the bundle-seeding
-    # task is open and unowned, surfaces plan "Open, unowned: nothing seeds the
-    # co-PI method files"), so the bullet points at the ADR-113 re-deferral
-    # instead. Pinned in both directions — asserting only the replacement would
-    # stay green if the dead path were left beside it.
-    assert ".claude/skills/memoria-copi/SKILL.md" not in text
-    assert "issues/902" in text
+    # O1 spec §3: no seeded link dangles. `init` now seeds
+    # `.claude/skills/memoria-copi/SKILL.md` (issue #1699 wired the provider
+    # seam), so the bullet points at the file again and the ADR-113 re-deferral
+    # pointer is gone — it would read as a live deferral of a shipped method.
+    # Pinned in both directions, as the reverse swap was: asserting only the
+    # replacement would stay green with the stale text left beside it.
+    assert ".claude/skills/memoria-copi/SKILL.md" in text
+    assert (workspace / ".claude/skills/memoria-copi/SKILL.md").is_file()
+    assert "issues/902" not in text
     assert "memoria status --workspace ." in text
 
 
