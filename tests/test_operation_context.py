@@ -293,6 +293,10 @@ def test_context_journal_metadata_comes_from_context_and_saved_request(tmp_path:
         "event": "derived",
         "output_id": "notes/context.md",
         "actor": "agent",
+        # 1599: _saved_operation_context builds its context without passing
+        # machine_authored, so it defaults False on both the context and the
+        # envelope — the decorated event carries that same default.
+        "machine_authored": False,
         "run_id": "run-1",
         "request_id": "request-1",
         "operation": "create-concept",

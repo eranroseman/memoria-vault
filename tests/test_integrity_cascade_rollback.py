@@ -184,6 +184,68 @@ def test_cascade_rollback_reverts_machine_descendants_and_flags_pi_notes(
     }
 
 
+def test_cascade_rollback_quarantines_machine_authored_pi_actor_descendants(
+    tmp_path: Path,
+) -> None:
+    """PI *authority* without PI *authorship* routes to quarantine, not needs_human (#1599).
+
+    A body posted through the loopback door runs with actor `pi` and
+    `machine_authored=True`. Its derived events must not inherit the
+    human-review routing that protects the PI's own hand-written notes:
+    the journal now records authorship, and cascade routing reads it.
+    Legacy rows without the field still read as PI-authored — conservative.
+    """
+    vault = workspace(tmp_path)
+    capture_source(
+        vault,
+        "source-alpha",
+        "Alpha Source",
+        "A fixture source.",
+        "Alpha content about framing, methods, outcomes, gaps, and impact.",
+        machine="capture-machine",
+    )
+    digest = compile_source_digest(
+        vault,
+        "source-alpha",
+        ["Framing", "Methods", "Outcomes", "Gaps", "Impact"],
+        machine="digest-machine",
+    )
+    notes = emit_note_candidates(
+        vault,
+        "source-alpha",
+        [
+            {
+                "title": "Machine framing note",
+                "description": "A plugin-posted candidate.",
+                "body": "The source reframes the problem before measuring outcomes.",
+                "claim_text": "Framing changes which outcomes matter.",
+            }
+        ],
+        machine="plugin-machine",
+        actor="pi",
+        machine_authored=True,
+    )
+    note_path = notes["note_paths"][0]
+    derived = next(
+        event
+        for event in trace_downstream(vault, digest["digest_path"])
+        if event["output_id"] == note_path
+    )
+    assert derived["actor"] == "pi"
+    assert derived["machine_authored"] is True
+
+    result = cascade_rollback(
+        vault,
+        "catalog/sources/source-alpha",
+        reason="seeded poisoned source",
+        machine="integrity-machine",
+    )
+
+    assert note_path in result["reverted"]
+    assert note_path not in result["needs_human"]
+    assert state.concept_check_status(vault, note_path) == "quarantined"
+
+
 def test_cascade_rollback_restores_previous_file_version_with_git(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
     target = "notes/versioned.md"
