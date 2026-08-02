@@ -46,6 +46,7 @@ def test_pyproject_declares_installable_memoria_package():
         "Start here.md",
         "steering.md",
         "system/*.md",
+        "system/templates/*.md",
     ]
 
 
@@ -130,6 +131,7 @@ def test_workspace_seed_is_packaged_runtime_minimum():
         "projects.base",
         "sources.base",
         "steering.md",
+        "system/templates/session-diary.md",
         "system/vocabulary.md",
     ):
         assert seed.joinpath(*rel.split("/")).is_file(), rel

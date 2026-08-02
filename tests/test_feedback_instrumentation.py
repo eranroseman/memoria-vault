@@ -148,6 +148,7 @@ def test_record_empirical_event_lands_in_telemetry_and_never_in_the_journal(
         ).fetchone()[0]
         telemetry = conn.execute(
             "SELECT event_id, event_type, session_id, surface, payload_json FROM telemetry_events"
+            " WHERE event_type = 'empirical_event.v1'"
         ).fetchall()
     # Journal side: not one row, one line, one anchor byte, or one commit more.
     assert log_after == log_before
@@ -157,7 +158,9 @@ def test_record_empirical_event_lands_in_telemetry_and_never_in_the_journal(
     assert git(workspace, "rev-parse", "HEAD") == head_before
     assert git(workspace, "status", "--porcelain") == status_before
     assert state.verify_journal_chain(workspace)["ok"] is True
-    # Telemetry side: exactly the one row, with the client's own columns kept.
+    # Telemetry side: exactly the one row, with the client's own columns kept. Scoped
+    # to this event type -- `init_cli_workspace` also records O1's `init-done`
+    # onboarding step, and a bare table count would conflate the two namespaces.
     assert len(telemetry) == 1
     assert telemetry[0]["event_id"] == result["telemetry_id"]
     assert telemetry[0]["event_type"] == "empirical_event.v1"
@@ -190,7 +193,15 @@ def test_record_empirical_event_rejects_a_forged_context_before_recording(
         record_empirical_event(workspace, event, context=forged)
 
     with state.connect(workspace) as conn:
-        assert conn.execute("SELECT COUNT(*) FROM telemetry_events").fetchone()[0] == 0
+        # Scoped to this writer's own event type: the workspace's `init-done`
+        # onboarding step (O1 T.2) is a different producer and must not mask a
+        # forged-context row landing here.
+        assert (
+            conn.execute(
+                "SELECT COUNT(*) FROM telemetry_events WHERE event_type = 'empirical_event.v1'"
+            ).fetchone()[0]
+            == 0
+        )
 
 
 def test_doctor_bundle_surfaces_feedback_flag(

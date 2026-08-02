@@ -68,6 +68,7 @@ def test_package_seed_is_runtime_minimum():
         "CLAUDE.md",
         "Start here.md",
         "steering.md",
+        "system/templates/session-diary.md",
         "system/vocabulary.md",
     }
 
