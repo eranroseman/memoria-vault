@@ -84,6 +84,7 @@ Only `GET` and `POST` are implemented.
 | `GET` | `/attention/card` | `path`, `read_scope` or `scope` | `read_attention_card(...)` |
 | `GET` | `/v1/views/attention` | `summary=true`, `read_scope` or `scope` | `read_attention_view(...)` |
 | `GET` | `/v1/views/evidence-review` | `routing_type`, `project`, `min_age_days` (0 means no age filter), `batch` (positive), `read_scope` or `scope` | `read_evidence_review_view(...)` |
+| `GET` | `/v1/views/dashboard` | none; workspace-wide, so `read_scope` does not narrow it | `read_dashboard_view(workspace)` |
 | `GET` | `/concepts` | `type`, `read_scope` or `scope` | `read_concepts(...)` |
 | `GET` | `/concept` | `target`, `read_scope` or `scope` | `read_concept(...)` |
 | `GET` | `/work` | `id`, `read_scope` or `scope` | `read_work(...)` |

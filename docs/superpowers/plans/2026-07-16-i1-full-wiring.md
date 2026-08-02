@@ -93,6 +93,50 @@ called from the CLI, engine, or HTTP.
    `views.dashboard` or `read_dashboard_view`. This is additive to U3's view
    transport, not a second view registry.
 
+## H.1/H.2 landing amendment — panel shapes as shipped (2026-08-02, BINDING)
+
+H.1 and H.2 landed ahead of section A and H.3/H.4, which the execution order
+(cross-section contract 9) did not anticipate. Four snippet-level deviations, all
+in the direction of a panel that is honest on the vault that exists today. The
+retained H.1 snippet is drafting history where it disagrees with this.
+
+1. **`age_days` comes from the card's `created:`, not from `rank_factors`.**
+   A.1 is unlanded, so no card payload carries `rank_factors`; the snippet's
+   `card.get("rank_factors", {}).get("age_days", 0)` would read 0 for every card
+   ever and collapse `age_distribution` to a single `0-7d` bucket — including for
+   `engine.cockpit._flow_panel`, which names the oldest non-empty bucket off it.
+   `dashboard._age_days` therefore derives from `frontmatter["created"]` using
+   A.1's own formula and its own local-date basis (`inbox`'s writers stamp
+   `date.today()`). **A.1 should delete `_age_days` and read
+   `card["rank_factors"]["age_days"]` when it lands** — one source, not two.
+
+2. **The exploration panel counts every surfaced candidate, not the open ones.**
+   The snippet's `surfaced_open`/`acted_on` pair is unmeasurable: acting on a card
+   resolves it, so a card leaves the denominator at the moment it enters the
+   numerator and `acted_on` can only ever read 0. Shipped as
+   `{"surfaced", "acted_on"}` over every `raised_by: analyze-gaps` card on disk,
+   with `acted_on` counting distinct candidates rather than dispositions so the
+   numerator cannot exceed its denominator. This is spec §4.6's ratio
+   ("acted-on exploration candidates over candidates surfaced") read literally.
+
+3. **`decision_rules` ships flat, with no `ImportError` guard.**
+   The snippet's `try: from ...decision_rules import load_decision_rules` has no
+   reachable success branch until H.3 lands, so it is untestable machinery, not
+   order tolerance. Shipped as `{"rules": [], "would_fire": []}` — the
+   post-amendment-§1 key names, so **H.3 fills `rules` and H.4 fills `would_fire`
+   without renaming either.**
+
+4. **Panel order is one constant.** `dashboard.DASHBOARD_PANELS` is the roster and
+   its order; `assemble_dashboard` builds its dict in that order and
+   `read_dashboard_view` renders its blocks from the same tuple, so the payload
+   order and the wire order cannot drift.
+
+Unblocked for U2 T.3: `engine.dashboard.assemble_dashboard(vault) -> dict` (the
+seven panels) and the CLI payload shape `{"ok": True, "dashboard": <panels>}` that
+`read_dashboard` must reproduce for `cockpit._flow_panel`. `memoria dashboard` is
+parked in `CLI_ONLY_COMMANDS`; `views.dashboard`/`read_dashboard_view` are the
+HTTP view and are **not** U2's row.
+
 ---
 # Section T — Telemetry substrate (spec §1; slices 1–3)
 
@@ -1468,7 +1512,7 @@ Executes after T and A (reads their stores). Anchors: `event_log` payloads via `
 - Consumes: contract 2's table; journal `event_log`; `_attention_cards` (`engine/api.py`, post-A.1); H.3's `load_decision_rules` + H.4's `evaluate_decision_rules` (H.1 ships the panel with `"rules": []` until H.3 lands in the same PR — implement H.1, H.3, H.4 in that order before wiring the final panel).
 - Produces: contract 7 — `assemble_dashboard(vault: Path) -> dict[str, Any]` with exactly the seven panel keys.
 
-- [ ] **Step 1: Write the failing tests** — create `tests/test_dashboard_view.py`:
+- [x] **Step 1: Write the failing tests** — create `tests/test_dashboard_view.py`:
 
 ```python
 """Contract tests for the honest dashboard (I1 spec §4): raw counts, no composite score."""
@@ -1532,8 +1576,8 @@ def test_reads_and_edge_panels_read_telemetry(tmp_path: Path) -> None:
     assert payload["edge_writes"] == {}   # zeros until graph ERP-D.6 lands — honest emptiness
 ```
 
-- [ ] **Step 2: Run to verify failure** — `python -m pytest tests/test_dashboard_view.py -v` → FAIL (`ModuleNotFoundError`).
-- [ ] **Step 3: Implement** — create `src/memoria_vault/engine/dashboard.py`:
+- [x] **Step 2: Run to verify failure** — `python -m pytest tests/test_dashboard_view.py -v` → FAIL (`ModuleNotFoundError`).
+- [x] **Step 3: Implement** — create `src/memoria_vault/engine/dashboard.py`:
 
 ```python
 """Honest dashboard assembly (I1 spec §4): raw counts from both planes, never a score."""
@@ -1704,8 +1748,8 @@ def _telemetry_payloads(vault: Path, event_type: str) -> list[dict[str, Any]]:
     return [json.loads(str(row["payload_json"])) for row in rows]
 ```
 
-- [ ] **Step 4: Run to verify pass** — `python -m pytest tests/test_dashboard_view.py -v` → PASS.
-- [ ] **Step 5: Commit**
+- [x] **Step 4: Run to verify pass** — `python -m pytest tests/test_dashboard_view.py -v` → PASS.
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/memoria_vault/engine/dashboard.py tests/test_dashboard_view.py tests/conftest.py
@@ -1726,7 +1770,7 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 - Consumes: H.1's `assemble_dashboard`; the CLI `_emit(payload, args)` idiom (`cli.py:1612`).
 - Produces: `memoria dashboard [--json]` — engine-direct, keep-test, no server.
 
-- [ ] **Step 1: Write the failing test** — append to `tests/test_cli.py` (mirror its nearest command test's `main([...])` + `capsys` idiom):
+- [x] **Step 1: Write the failing test** — append to `tests/test_cli.py` (mirror its nearest command test's `main([...])` + `capsys` idiom):
 
 ```python
 def test_dashboard_command_emits_seven_panels(tmp_path, capsys):
@@ -1741,8 +1785,8 @@ def test_dashboard_command_emits_seven_panels(tmp_path, capsys):
     }
 ```
 
-- [ ] **Step 2: Run to verify failure** — unknown command `dashboard`.
-- [ ] **Step 3: Implement.** Add the subparser beside the attention group:
+- [x] **Step 2: Run to verify failure** — unknown command `dashboard`.
+- [x] **Step 3: Implement.** Add the subparser beside the attention group:
 
 ```python
     dashboard_cmd = sub.add_parser("dashboard", help="Raw-count instrumentation panels")
@@ -1770,8 +1814,8 @@ sweeping — the trend tells you whether this pass is triage or throttling.
 
 (`memoria dashboard` exists as of this task, so the doc-claims gate accepts the backticked CLI path.)
 
-- [ ] **Step 4: Run to verify pass** — `python -m pytest tests/test_cli.py -k dashboard -v` → PASS.
-- [ ] **Step 5: Commit**
+- [x] **Step 4: Run to verify pass** — `python -m pytest tests/test_cli.py -k dashboard -v` → PASS.
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/memoria_vault/cli.py tests/test_cli.py

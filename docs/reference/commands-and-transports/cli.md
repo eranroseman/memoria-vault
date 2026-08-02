@@ -33,6 +33,7 @@ This page summarizes `src/memoria_vault/cli.py`; use `--help` for exact flags.
 | `memoria handshake --vault <path> [--spawn]` | Return live local HTTP coordinates for a vault; `--spawn` starts an on-demand ephemeral server when none is live. |
 | `memoria mcp --workspace <path> --read-scope <path>` | Run the optional [MCPServer stdio transport](mcp-transport.md) with a required engine read scope. |
 | `memoria help` | Show registered surfaces grouped by the five workspace jobs. |
+| `memoria dashboard` | Print the seven raw-count instrumentation panels (attention flow, dispositions, evidence review, reads/staleness, edge writes, exploration, decision rules). Engine-direct and read-only; raw counts with their denominators, never a composite score. The same panels are served over HTTP at `/v1/views/dashboard`. |
 | `memoria eval select-models [--operation <id>] [--mode test\|live]` | Run the seeded-error bar against manifest-declared runner pins and report the selected passing runner. |
 
 ## Work
@@ -91,6 +92,7 @@ This roster mirrors the live argparse tree:
 - `memoria attention show`
 - `memoria attention worklist`
 - `memoria check`
+- `memoria dashboard`
 - `memoria doctor`
 - `memoria doctor bundle`
 - `memoria doctor self-test`

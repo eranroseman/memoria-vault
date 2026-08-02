@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from memoria_vault import __version__
+from memoria_vault.engine.dashboard import DASHBOARD_PANELS, assemble_dashboard
 from memoria_vault.engine.surface_contract import ENGINE_READ_API_VERSION as READ_API_VERSION
 from memoria_vault.runtime import evidence_review, state
 from memoria_vault.runtime.capabilities import render_capability_index
@@ -309,6 +310,32 @@ def read_evidence_review_view(
     facets["shown"] = len(blocks)
     facets["batch"] = batch
     return _read_payload(view=_view("evidence-review", blocks), facets=facets)
+
+
+def read_dashboard_view(workspace: Path) -> dict[str, Any]:
+    """The `views.dashboard` payload: one text block per raw-count panel.
+
+    Workspace scope and no params (I1 plan amendment 2026-07-29 §2): the panels
+    are vault-wide aggregates, so there is nothing for a read_scope to narrow
+    and no filter to accept. The assembler stays pure -- this only projects.
+
+    Each block carries the panel serialized compactly, sorted, and non-escaped,
+    so a pane can `JSON.parse` it back without the transport having invented a
+    second panel grammar. No dashboard block embeds an action row: raw counts
+    recommend, they never act.
+    """
+    panels = assemble_dashboard(Path(workspace))
+    blocks = [
+        {
+            "id": f"dashboard-{panel}",
+            "kind": "text",
+            "text": json.dumps(
+                panels[panel], ensure_ascii=False, sort_keys=True, separators=(",", ":")
+            ),
+        }
+        for panel in DASHBOARD_PANELS
+    ]
+    return _read_payload(view=_view("dashboard", blocks))
 
 
 def read_concept(

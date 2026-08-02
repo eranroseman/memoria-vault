@@ -30,6 +30,7 @@ def test_surface_contract_registry_is_minimal_and_unique() -> None:
         "attention.get",
         "views.attention",
         "views.evidence_review",
+        "views.dashboard",
         "concepts.list",
         "concepts.get",
         "work.get",
@@ -150,6 +151,7 @@ def test_surface_contract_matches_current_http_and_mcp_bindings() -> None:
         ("GET", "/attention/card"),
         ("GET", "/v1/views/attention"),
         ("GET", "/v1/views/evidence-review"),
+        ("GET", "/v1/views/dashboard"),
         ("GET", "/concepts"),
         ("GET", "/concept"),
         ("GET", "/work"),
@@ -264,6 +266,10 @@ CLI_ONLY_COMMANDS: set[str] = {
     "memoria eval run",
     "memoria eval seeded-error-verdict",
     "memoria eval select-models",
+    # I1 H.2: the engine-direct dashboard front. U2 T.3 registers
+    # `dashboard.read` and moves this out; `views.dashboard` is the HTTP view
+    # and deliberately declares no CLI binding of its own.
+    "memoria dashboard",
 }
 
 
@@ -298,6 +304,7 @@ def test_surface_contract_job_mapping_is_pinned() -> None:
         "attention.get": "review",
         "views.attention": "review",
         "views.evidence_review": "review",
+        "views.dashboard": "review",
         "concepts.list": "read",
         "concepts.get": "read",
         "work.get": "read",

@@ -1249,6 +1249,14 @@ ARG_TABLE: dict[str, dict] = {
         "http": ("GET", "/v1/views/evidence-review"),
         "mcp": None,
     },
+    # No cli/mcp binding: the engine-direct `memoria dashboard` front is CLI-only
+    # (I1 H.2) and carries no registry row until U2 T.3 adds `dashboard.read`, so
+    # this row declares http only.
+    "views.dashboard": {
+        "cli": None,
+        "http": ("GET", "/v1/views/dashboard"),
+        "mcp": None,
+    },
     # No cli binding: the contract declares http+mcp only for exploration.list
     # (surface_contract.py has no "cli" key for this action).
     "exploration.list": {
