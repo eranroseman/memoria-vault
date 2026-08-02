@@ -25,8 +25,10 @@ import yaml
 from memoria_vault import __version__
 from memoria_vault.engine import api as engine_api
 from memoria_vault.engine import cockpit as engine_cockpit
+from memoria_vault.engine.empirical_events import REASON_CODES
 from memoria_vault.engine.surface_contract import SURFACE_ACTIONS, SURFACE_JOBS, actions_by_id
-from memoria_vault.runtime import state
+from memoria_vault.runtime import evidence_review, state
+from memoria_vault.runtime.evidence_review import EVIDENCE_REVIEW_ROUTING_TYPES
 from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.subsystems.lib.edges import LINK_RELATIONS
 from memoria_vault.runtime.time import now_iso
@@ -241,6 +243,7 @@ def _build_parser() -> argparse.ArgumentParser:
     _request_commands(sub)
     _attention_commands(sub)
     _operation_commands(sub)
+    _review_commands(sub)
     _simple_resource(sub, "steering", {"show", "edit"})
     _simple_resource(sub, "vocab", {"list", "add", "merge", "rename"})
     _simple_resource(sub, "journal", {"revert-preview", "show", "tail", "verify"})
@@ -564,6 +567,52 @@ def _operation_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]
     payload.add_argument("--payload-json", default="{}")
     payload.add_argument("--payload-file")
     run.set_defaults(handler=_cmd_operation_run)
+
+
+def _nonnegative_int(value: str) -> int:
+    parsed = int(value)
+    if parsed < 0:
+        raise argparse.ArgumentTypeError("must be nonnegative")
+    return parsed
+
+
+def _positive_int(value: str) -> int:
+    parsed = int(value)
+    if parsed <= 0:
+        raise argparse.ArgumentTypeError("must be positive")
+    return parsed
+
+
+def _review_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
+    review = sub.add_parser("review")
+    review_sub = review.add_subparsers(dest="review_command", required=True)
+    list_cmd = review_sub.add_parser("list")
+    _common(list_cmd)
+    list_cmd.add_argument("--type", choices=EVIDENCE_REVIEW_ROUTING_TYPES, default="")
+    list_cmd.add_argument("--project", default="")
+    # Stricter than the collector: `batch=0` is the engine-direct id lookup.
+    list_cmd.add_argument("--min-age-days", type=_nonnegative_int, default=0)
+    list_cmd.add_argument("--batch", type=_positive_int, default=10)
+    list_cmd.set_defaults(handler=_cmd_review_list)
+    show = review_sub.add_parser("show")
+    _common(show)
+    show.add_argument("evidence_id")
+    show.add_argument("--show-analysis", action="store_true")
+    show.set_defaults(handler=_cmd_review_show)
+    for decision in ("accept", "reject", "edit", "defer"):
+        action = review_sub.add_parser(decision)
+        _common(action)
+        action.add_argument("evidence_id")
+        action.add_argument("--reason", default="")
+        action.add_argument("--reason-code", choices=sorted(REASON_CODES), default="other")
+        if decision == "accept":
+            # The seam raises on a warrant riding any other decision, so the
+            # parser never offers one.
+            action.add_argument("--warrant", default="")
+        action.set_defaults(handler=_cmd_review_action, review_decision=decision)
+    stats = review_sub.add_parser("stats")
+    _common(stats)
+    stats.set_defaults(handler=_cmd_review_stats)
 
 
 def _workspace_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
@@ -2246,6 +2295,307 @@ def _cmd_attention_resolve(args: argparse.Namespace) -> int:
 
 def _cmd_attention_worklist(args: argparse.Namespace) -> int:
     return _emit(engine_api.read_attention(_workspace(args), worklist=True), args)
+
+
+# Presentation-only, and never renamed: the raw queue's own spellings
+# (`routing_type`, `disposition`) are the CLI's too (V2 plan, 2026-07-29
+# raw-queue amendment §3). `items` and analysis are deliberately absent —
+# a list row is claim + item count + routing reason (spec §3).
+_REVIEW_SUMMARY_FIELDS = (
+    "evidence_id",
+    "claim_text",
+    "item_count",
+    "routing_type",
+    "reviewable",
+    "cure",
+    "age_days",
+    "disposition",
+    "warrant",
+)
+
+
+def _review_summary_row(row: dict[str, Any]) -> dict[str, Any]:
+    """Project one raw queue row into its list summary.
+
+    Both arms of the queue's discriminated union keep their `kind`, so an SRD
+    gap stays a distinct read-only entry rather than an evidence row missing
+    its fields.
+    """
+    if row["kind"] == "srd-gap":
+        card = row["card_block"]
+        return {"kind": "srd-gap", "title": str(card["title"]), "ref": str(card["ref"])}
+    summary = {key: row[key] for key in _REVIEW_SUMMARY_FIELDS if key in row}
+    summary["kind"] = "evidence-set"
+    summary["project"] = row["project_path"]
+    summary["routing_reason"] = evidence_review.routing_reason(row, row["item_previews"])
+    return summary
+
+
+def _truncate(text: str, width: int = 60) -> str:
+    text = " ".join(str(text).split())
+    return text if len(text) <= width else text[: width - 1] + "…"
+
+
+def _review_summary_line(row: dict[str, Any]) -> str:
+    if row["kind"] == "srd-gap":
+        return f"{row['ref']}  {'srd-gap':<9}  {_truncate(row['title'])}  — read-only"
+    if not row["reviewable"]:
+        marker = f"  [read-only: {row['cure']}]"
+    elif row["disposition"] != "open":
+        marker = f"  [{row['disposition']}]"
+    else:
+        marker = ""
+    return (
+        f"{row['evidence_id']}  {row['routing_type'] or '-':<9}  "
+        f"{row['item_count']} item(s)  {_truncate(row['claim_text'])}"
+        f"  — {row['routing_reason']}{marker}"
+    )
+
+
+def _cmd_review_list(args: argparse.Namespace) -> int:
+    queue = engine_api.evidence_review_queue(
+        _workspace(args),
+        routing_type=args.type,
+        project=args.project,
+        min_age_days=args.min_age_days,
+        batch=args.batch,
+    )
+    rows = [_review_summary_row(row) for row in queue["rows"]]
+    payload = {
+        "ok": True,
+        "rows": rows,
+        "total": queue["total"],
+        "batch": args.batch,
+        "facet_totals": queue["facet_totals"],
+    }
+    if args.json or args.quiet:
+        return _emit(payload, args)
+    for row in rows:
+        print(_review_summary_line(row))
+    print(f"{len(rows)} of {queue['total']} row(s) shown (batch {args.batch})")
+    return 0
+
+
+# A show that did not record its required client event is not a successful show,
+# and the CLI never invents a reason the operation did not give.
+_VIEW_OPENED_UNRECORDED = "evidence detail was read but view.opened was not recorded"
+
+
+def _review_queue_row(workspace: Path, evidence_id: str) -> dict[str, Any] | None:
+    """The one raw queue row an evidence id names, or `None`.
+
+    `batch=0` is the engine-direct unbounded lookup. Only the evidence arm of
+    the discriminated union answers an evidence id: an SRD gap shares the queue
+    and carries no `evidence_id` at all.
+    """
+    queue = engine_api.evidence_review_queue(workspace, batch=0)
+    return next(
+        (
+            row
+            for row in queue["rows"]
+            if row["kind"] == "evidence-set" and row["evidence_id"] == evidence_id
+        ),
+        None,
+    )
+
+
+def _review_detail_row(row: dict[str, Any], *, show_analysis: bool) -> dict[str, Any]:
+    """The list summary plus resolved grounds previews (spec §3, evidence-first).
+
+    Analysis is folded by default, and absent entirely when the shared helper is
+    empty — a permanently blocked row never shows analysis it cannot act on.
+    """
+    detail = _review_summary_row(row)
+    detail["items"] = row["item_previews"]
+    if show_analysis:
+        analysis = evidence_review.analysis_fields(row, row["item_previews"])
+        if analysis:
+            detail["analysis"] = analysis
+    return detail
+
+
+def _emit_review_view_opened(
+    args: argparse.Namespace, workspace: Path, evidence_id: str
+) -> dict[str, Any]:
+    """Record one `view.opened` client event through the empirical-event door.
+
+    `empirical-event-record` is the only seam that writes client telemetry, and
+    since I1 T.3 it lands in `telemetry_events`, never the journal.
+    """
+    event = {
+        "event_id": str(uuid.uuid4()),
+        "event_type": "view.opened",
+        "timestamp": now_iso(),
+        "session_id": uuid.uuid4().hex,
+        "surface": "cli",
+        "workflow": "evidence-review",
+        "item_type": "evidence-set",
+        "item_id": evidence_id,
+    }
+    result = engine_api.run_operation(
+        workspace,
+        "empirical-event-record",
+        event,
+        idempotency_key=f"empirical-event:{event['event_id']}",
+        actor=args.actor,
+        command="review-show",
+    )
+    telemetry: dict[str, Any] = {"ok": bool(result["ok"]), "event_id": event["event_id"]}
+    if not telemetry["ok"]:
+        telemetry["result"] = result["result"]  # the failed operation's own account
+    return telemetry
+
+
+def _review_item_line(preview: dict[str, Any]) -> str:
+    resolves = "resolves" if preview["resolves"] else "does not resolve"
+    line = f"  - {preview['ref']}  [{resolves}]"
+    excerpt = str(preview.get("excerpt") or "")
+    return f"{line}  {excerpt}" if excerpt else line
+
+
+def _print_review_detail(row: dict[str, Any], *, show_analysis: bool) -> None:
+    print(f"Claim ({row['evidence_id']}, {row['routing_type'] or '-'}):")
+    # Verbatim, unlike the list's one-line collapse: a soft-wrapped block keeps
+    # its own lines, indented into the claim body.
+    for line in str(row["claim_text"]).splitlines():
+        print(f"  {line}")
+    print(f"Grounds items ({row['item_count']}):")
+    for preview in row["items"]:
+        print(_review_item_line(preview))
+    print(f"Why routed: {row['routing_reason']}")
+    print(f"Disposition: {row['disposition']}")
+    if "cure" in row:
+        print(f"Read-only: {row['cure']}")
+    if "warrant" in row:
+        print(f"Warrant: {row['warrant']}")
+    analysis = row.get("analysis")
+    if not show_analysis:
+        print("Machine analysis folded — pass --show-analysis to expand.")
+    elif analysis:
+        print("Machine analysis:")
+        # The helper's own order is the reading order — arguments, what tipped
+        # it, then certainty — and re-sorting here would only scramble it.
+        for key, value in analysis.items():
+            print(f"  {key}: {value}")
+    else:
+        print("Machine analysis: none recorded for this row.")
+
+
+def _cmd_review_show(args: argparse.Namespace) -> int:
+    workspace = _workspace(args)
+    row = _review_queue_row(workspace, args.evidence_id)
+    if row is None:
+        return _fail(
+            f"evidence id is not in the review queue: {args.evidence_id}",
+            json_output=args.json,
+        )
+    shown = _review_detail_row(row, show_analysis=args.show_analysis)
+    telemetry = _emit_review_view_opened(args, workspace, args.evidence_id)
+    payload: dict[str, Any] = {"ok": telemetry["ok"], "row": shown, "telemetry": telemetry}
+    if not telemetry["ok"]:
+        payload["error"] = (
+            str((telemetry["result"] or {}).get("error") or "") or _VIEW_OPENED_UNRECORDED
+        )
+        return _emit(payload, args)
+    if args.json or args.quiet:
+        return _emit(payload, args)
+    _print_review_detail(shown, show_analysis=args.show_analysis)
+    return 0
+
+
+# The decision itself is journaled and stays journaled; only the client-side
+# record of it is missing, and the CLI says so rather than reporting success.
+_DISPOSITION_UNRECORDED = "disposition succeeded but client telemetry was not recorded"
+
+
+def _emit_review_disposition_recorded(
+    args: argparse.Namespace, workspace: Path, dwell: float | None
+) -> dict[str, Any]:
+    """Record one `disposition.recorded` client event for this decision.
+
+    `duration_s` rides only a dwell the journal can support: the schema refuses
+    a nonpositive duration, and a sub-second gap is noise, never a real look.
+    """
+    event: dict[str, Any] = {
+        "event_id": str(uuid.uuid4()),
+        "event_type": "disposition.recorded",
+        "timestamp": now_iso(),
+        "session_id": uuid.uuid4().hex,
+        "surface": "cli",
+        "workflow": "evidence-review",
+        "decision": args.review_decision,
+        "reason_code": args.reason_code,
+        "item_type": "evidence-set",
+        "item_id": args.evidence_id,
+    }
+    if dwell is not None and dwell >= 1.0:
+        event["duration_s"] = round(dwell, 1)
+    result = engine_api.run_operation(
+        workspace,
+        "empirical-event-record",
+        event,
+        idempotency_key=f"empirical-event:{event['event_id']}",
+        actor=args.actor,
+        command=f"review-{args.review_decision}",
+    )
+    telemetry: dict[str, Any] = {"ok": bool(result["ok"]), "event_id": event["event_id"]}
+    if "duration_s" in event:
+        telemetry["duration_s"] = event["duration_s"]
+    if not telemetry["ok"]:
+        telemetry["result"] = result["result"]  # the failed operation's own account
+    return telemetry
+
+
+def _cmd_review_action(args: argparse.Namespace) -> int:
+    from memoria_vault.runtime.knowledge import resolve_evidence_review, review_dwell_seconds
+
+    _require_pi_actor(args, f"review-{args.review_decision}")
+    workspace = _workspace(args)
+    dwell = review_dwell_seconds(workspace, args.evidence_id)
+    event = resolve_evidence_review(
+        workspace,
+        args.evidence_id,
+        decision=args.review_decision,
+        reason=args.reason,
+        warrant=getattr(args, "warrant", ""),
+        actor=args.actor,
+        machine="memoria-cli",
+    )
+    telemetry = _emit_review_disposition_recorded(args, workspace, dwell)
+    payload: dict[str, Any] = {
+        "ok": telemetry["ok"],
+        "evidence_id": args.evidence_id,
+        "decision": args.review_decision,
+        "event": event,
+        "telemetry": telemetry,
+    }
+    if not telemetry["ok"]:
+        payload["error"] = (
+            str((telemetry["result"] or {}).get("error") or "") or _DISPOSITION_UNRECORDED
+        )
+        return _emit(payload, args)
+    if args.json or args.quiet:
+        return _emit(payload, args)
+    # `_emit`'s generic success line says only "completed"; the cockpit front
+    # names the decision it just recorded, in the list's own row grammar.
+    line = f"{args.review_decision} {args.evidence_id}"
+    print(f"{line}  — {args.reason}" if args.reason else line)
+    return 0
+
+
+def _cmd_review_stats(args: argparse.Namespace) -> int:
+    from memoria_vault.runtime.knowledge import review_telemetry_summary
+
+    summary = review_telemetry_summary(_workspace(args))
+    if args.json or args.quiet:
+        return _emit({"ok": True, "telemetry": summary}, args)
+    # One line per metric, derived from the summary itself, so a metric added
+    # to it reaches the human front without a second list to keep in step.
+    for key, value in summary.items():
+        if isinstance(value, dict):
+            value = "  ".join(f"{name} {count}" for name, count in value.items())
+        print(f"{key}: {value}")
+    return 0
 
 
 def _cmd_eval_seeded_error_verdict(args: argparse.Namespace) -> int:

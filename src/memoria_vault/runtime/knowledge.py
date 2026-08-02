@@ -11,9 +11,10 @@ import shutil
 import subprocess
 from collections import Counter, defaultdict
 from collections.abc import Iterable
-from datetime import UTC, date, timedelta
+from datetime import UTC, date, datetime, timedelta
 from itertools import pairwise
 from pathlib import Path
+from statistics import mean, median
 from tempfile import TemporaryDirectory
 from typing import Any
 
@@ -3814,6 +3815,176 @@ def _disposed_evidence_digests(vault: Path) -> dict[str, str]:
         evidence_id: str(items_sha256)
         for evidence_id, (decision, items_sha256) in latest.items()
         if decision == "accept" and items_sha256
+    }
+
+
+def review_dwell_seconds(vault: Path, evidence_id: str) -> float | None:
+    """Seconds from the latest evidence-review detail-open to now (spec §4).
+
+    The open is a *client* fact, so since I1 T.3 it lives in `telemetry_events`
+    and never in the journal. Insertion order (`rowid`) picks the latest one:
+    `ts` has whole-second resolution and `event_id` is a random uuid, so neither
+    orders two opens inside the same second.
+
+    `None` when the row was never shown, or when the open is not in the past —
+    a clock-skewed future timestamp is not a dwell.
+    """
+    if not state.db_path(vault).is_file():
+        return None
+    with state.connect(vault) as conn:
+        row = conn.execute(
+            """
+            SELECT json_extract(payload_json, '$.timestamp') AS opened_at
+            FROM telemetry_events
+            WHERE event_type = 'empirical_event.v1'
+              AND json_extract(payload_json, '$.event_type') = 'view.opened'
+              AND json_extract(payload_json, '$.workflow') = 'evidence-review'
+              AND json_extract(payload_json, '$.item_id') = ?
+            ORDER BY rowid DESC
+            LIMIT 1
+            """,
+            (evidence_id,),
+        ).fetchone()
+    if row is None or not row["opened_at"]:
+        return None
+    opened = parse_iso(str(row["opened_at"]))
+    if opened is None or opened.tzinfo is None:
+        return None
+    dwell = (datetime.now(UTC) - opened).total_seconds()
+    return dwell if dwell > 0 else None
+
+
+_REVIEW_DECISIONS = ("accept", "reject", "edit", "defer")
+
+
+def _review_show_rows(vault: Path) -> list[tuple[str, str]]:
+    """`(session_id, item_id)` per evidence-review detail-open, in write order."""
+    with state.connect(vault) as conn:
+        rows = conn.execute(
+            """
+            SELECT json_extract(payload_json, '$.session_id') AS session_id,
+                   json_extract(payload_json, '$.item_id') AS item_id
+            FROM telemetry_events
+            WHERE event_type = 'empirical_event.v1'
+              AND json_extract(payload_json, '$.event_type') = 'view.opened'
+              AND json_extract(payload_json, '$.workflow') = 'evidence-review'
+              AND json_extract(payload_json, '$.item_id') IS NOT NULL
+            ORDER BY rowid
+            """
+        ).fetchall()
+    return [(str(row["session_id"]), str(row["item_id"])) for row in rows]
+
+
+def _review_dwell_samples(vault: Path) -> list[float]:
+    """Every `duration_s` a client disposition carried. An action taken on a row
+    that was never shown carries none, and is not a zero-second look."""
+    with state.connect(vault) as conn:
+        rows = conn.execute(
+            """
+            SELECT json_extract(payload_json, '$.duration_s') AS duration_s
+            FROM telemetry_events
+            WHERE event_type = 'empirical_event.v1'
+              AND json_extract(payload_json, '$.event_type') = 'disposition.recorded'
+              AND json_extract(payload_json, '$.workflow') = 'evidence-review'
+              AND json_extract(payload_json, '$.duration_s') IS NOT NULL
+            ORDER BY rowid
+            """
+        ).fetchall()
+    return [float(row["duration_s"]) for row in rows]
+
+
+def _review_disposition_rows(vault: Path) -> list[tuple[str, str, str]]:
+    """`(evidence_id, decision, items_sha256)` per seam event, in journal order."""
+    with state.connect(vault) as conn:
+        rows = conn.execute(
+            """
+            SELECT json_extract(payload_json, '$.evidence_id') AS evidence_id,
+                   json_extract(payload_json, '$.decision') AS decision,
+                   json_extract(payload_json, '$.items_sha256') AS items_sha256
+            FROM event_log
+            WHERE json_extract(payload_json, '$.operation') = 'resolve-evidence-review'
+            ORDER BY event_id
+            """
+        ).fetchall()
+    return [
+        (str(row["evidence_id"]), str(row["decision"]), str(row["items_sha256"] or ""))
+        for row in rows
+        if row["evidence_id"] and row["decision"]
+    ]
+
+
+def review_telemetry_summary(vault: Path) -> dict[str, Any]:
+    """Deterministic evidence-review telemetry, over both planes (spec §4).
+
+    Action counts are **server** truth read from the journal — a client
+    `disposition.recorded` reports a decision, it is not the decision. Shows,
+    sessions and dwell samples are **client** facts, which I1 T.3 put in
+    `telemetry_events`. Skip rate and reopen rate are derived here rather than
+    emitted: a skip is the absence of a disposition, a reopen a pattern over
+    the stream, and neither is ever a point-in-time event.
+    """
+    if state.db_path(vault).is_file():
+        shows = _review_show_rows(vault)
+        dwell_samples = _review_dwell_samples(vault)
+        dispositions = _review_disposition_rows(vault)
+        current_digests = {
+            str(row["id"]): _evidence_items_sha256(row["items"])
+            for row in state.evidence_sets(vault)
+        }
+    else:
+        shows, dwell_samples, dispositions, current_digests = [], [], [], {}
+    actions = dict.fromkeys(_REVIEW_DECISIONS, 0)
+    deferred: set[str] = set()
+    reopened_after_defer: set[str] = set()
+    latest_decision: dict[str, str] = {}
+    latest_accept_digest: dict[str, str] = {}
+    for evidence_id, decision, digest in dispositions:
+        if decision in actions:
+            actions[decision] += 1
+        if decision in {"accept", "reject", "edit"} and evidence_id in deferred:
+            reopened_after_defer.add(evidence_id)
+        if decision == "defer":
+            deferred.add(evidence_id)
+        latest_decision[evidence_id] = decision
+        if decision == "accept":
+            latest_accept_digest[evidence_id] = digest
+    # Fail closed on a vanished id (S35.4's inert-legacy rule): with no current
+    # evidence set there is no digest for the accept to disagree with.
+    accept_voided = {
+        evidence_id
+        for evidence_id, digest in latest_accept_digest.items()
+        if latest_decision.get(evidence_id) == "accept"
+        and digest
+        and current_digests.get(evidence_id) not in (None, digest)
+    }
+    shown_items = {item for _session, item in shows}
+    disposed_items = {evidence_id for evidence_id, _decision, _digest in dispositions}
+    per_session: dict[str, set[str]] = defaultdict(set)
+    for session, item in shows:
+        per_session[session].add(item)
+    reopens = len(reopened_after_defer) + len(accept_voided)
+    return {
+        "sessions": len(per_session),
+        "shows": len(shows),
+        "items_shown": len(shown_items),
+        "items_per_session": (
+            float(mean(len(items) for items in per_session.values())) if per_session else 0.0
+        ),
+        "actions": actions,
+        "disposed_items": len(disposed_items),
+        # `_review_dwell_samples` already floats every sample, so `mean`/`median`
+        # are floats by construction; `items_per_session` averages ints and is not.
+        "dwell_s": {
+            "count": len(dwell_samples),
+            "mean": mean(dwell_samples) if dwell_samples else 0.0,
+            "median": median(dwell_samples) if dwell_samples else 0.0,
+        },
+        "skip_rate": (len(shown_items - disposed_items) / len(shown_items) if shown_items else 0.0),
+        "reopens": {
+            "defer_then_disposed": len(reopened_after_defer),
+            "accept_voided": len(accept_voided),
+        },
+        "reopen_rate": (reopens / len(disposed_items)) if disposed_items else 0.0,
     }
 
 
