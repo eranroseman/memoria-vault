@@ -395,3 +395,113 @@ def test_edge_write_event_rejects_extra_fields_and_non_objects() -> None:
         )
     with pytest.raises(ValueError, match="must be an object"):
         validate_edge_write_event([("relation_type", "supports")])  # type: ignore[arg-type]
+
+
+def _import_run_row(**overrides: object) -> dict[str, object]:
+    row: dict[str, object] = {
+        "run_id": "import-20260717-a1b2",
+        "format": "bibtex",
+        "entries_total": 13,
+        "admitted": 9,
+        "skipped": 1,
+        "failed": 2,
+        "duplicates_flagged": 1,
+        "duration_s": 41.5,
+        "index_refresh_s": 3.2,
+    }
+    row.update(overrides)
+    return row
+
+
+def test_validate_import_run_event_normalizes_one_row_per_run() -> None:
+    from memoria_vault.engine.empirical_events import (
+        IMPORT_RUN_EVENT_SCHEMA,
+        validate_import_run_event,
+    )
+
+    assert IMPORT_RUN_EVENT_SCHEMA == "import-run.v1"
+    event = validate_import_run_event(_import_run_row())
+    assert event == _import_run_row()
+    assert isinstance(event["entries_total"], int)
+    assert isinstance(event["duration_s"], float)
+    assert validate_import_run_event(_import_run_row(format="csl"))["format"] == "csl"
+
+
+def test_validate_import_run_event_accepts_the_honest_zeros_of_a_no_op_run() -> None:
+    # A re-run that admits nothing refreshes no index (O2 plan GAP 4) and flags no
+    # duplicates. Every count and both timings must survive as literal zero: a
+    # truthiness-based required-field check would call them missing and refuse the
+    # only run shape the resume path can produce.
+    from memoria_vault.engine.empirical_events import validate_import_run_event
+
+    row = _import_run_row(
+        entries_total=0,
+        admitted=0,
+        skipped=0,
+        failed=0,
+        duplicates_flagged=0,
+        duration_s=0.0,
+        index_refresh_s=0.0,
+    )
+
+    assert validate_import_run_event(row) == row
+
+
+def test_validate_import_run_event_rejects_bad_shapes() -> None:
+    from memoria_vault.engine.empirical_events import validate_import_run_event
+
+    with pytest.raises(ValueError, match="admitted must be an integer"):
+        validate_import_run_event(_import_run_row(admitted=True))
+    with pytest.raises(ValueError, match="entries_total must be an integer"):
+        validate_import_run_event(_import_run_row(entries_total=13.0))
+    with pytest.raises(ValueError, match="failed must be >= 0"):
+        validate_import_run_event(_import_run_row(failed=-1))
+    with pytest.raises(ValueError, match="format must be one of"):
+        validate_import_run_event(_import_run_row(format="ris"))
+    with pytest.raises(ValueError, match="missing required fields: run_id"):
+        validate_import_run_event(
+            {key: value for key, value in _import_run_row().items() if key != "run_id"}
+        )
+    with pytest.raises(ValueError, match="unsupported fields: verdict"):
+        validate_import_run_event(_import_run_row(verdict="clean"))
+    with pytest.raises(ValueError, match="opaque id"):
+        validate_import_run_event(_import_run_row(run_id="../escape"))
+    with pytest.raises(ValueError, match="index_refresh_s must be numeric"):
+        validate_import_run_event(_import_run_row(index_refresh_s="3.2"))
+    with pytest.raises(ValueError, match="duration_s must be numeric"):
+        validate_import_run_event(_import_run_row(duration_s=True))
+    with pytest.raises(ValueError, match="index_refresh_s must be >= 0"):
+        validate_import_run_event(_import_run_row(index_refresh_s=-0.1))
+    with pytest.raises(ValueError, match="payload must be an object"):
+        validate_import_run_event([("run_id", "x")])  # type: ignore[arg-type]
+
+
+def test_validate_import_run_event_guards_every_count_and_timing_field() -> None:
+    # Class-1 guard: one representative field proves nothing about a per-field loop.
+    # Each name is checked alone so a truncated IMPORT_RUN_COUNT_FIELDS /
+    # IMPORT_RUN_TIMING_FIELDS tuple cannot pass by riding a neighbour's assertion.
+    from memoria_vault.engine.empirical_events import (
+        IMPORT_RUN_COUNT_FIELDS,
+        IMPORT_RUN_TIMING_FIELDS,
+        validate_import_run_event,
+    )
+
+    assert IMPORT_RUN_COUNT_FIELDS == (
+        "entries_total",
+        "admitted",
+        "skipped",
+        "failed",
+        "duplicates_flagged",
+    )
+    assert IMPORT_RUN_TIMING_FIELDS == ("duration_s", "index_refresh_s")
+
+    for field in IMPORT_RUN_COUNT_FIELDS:
+        with pytest.raises(ValueError, match=f"{field} must be an integer"):
+            validate_import_run_event(_import_run_row(**{field: "3"}))
+        with pytest.raises(ValueError, match=f"{field} must be >= 0"):
+            validate_import_run_event(_import_run_row(**{field: -1}))
+    for field in IMPORT_RUN_TIMING_FIELDS:
+        with pytest.raises(ValueError, match=f"{field} must be numeric"):
+            validate_import_run_event(_import_run_row(**{field: "3.2"}))
+        with pytest.raises(ValueError, match=f"{field} must be >= 0"):
+            validate_import_run_event(_import_run_row(**{field: -1}))

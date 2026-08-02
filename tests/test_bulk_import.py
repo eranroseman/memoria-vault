@@ -522,3 +522,53 @@ def test_same_doi_entries_collapse_structurally_to_one_row(tmp_path: Path) -> No
     assert state.catalog_source(vault, second["work_id"]) is not None
     assert len(state.catalog_sources(vault, checked_only=False)) == 1
     assert detect_identifier_collisions(vault, second["work_id"], second["identifiers"]) == []
+
+
+def test_parse_entry_fields_derives_the_adapter_shape_from_one_entry_chunk() -> None:
+    """The one seam that feeds `entry_item_type` / `entry_fetch` from a raw chunk.
+
+    Without it the driver would re-implement BibTeX/CSL extraction in cli.py and the
+    adapter helpers would be fed a differently-shaped dict than the one their own
+    contract tests use.
+    """
+    from memoria_vault.runtime.bulk_import import parse_entry_fields
+
+    bib = """@techreport{report2026,
+  title = {Field Shape},
+  doi = {10.1000/report.2026},
+  url = {https://example.test/report.pdf}
+}
+"""
+    fields = parse_entry_fields("bibtex", bib)
+
+    assert fields == {
+        "type": "techreport",
+        "title": "Field Shape",
+        "doi": "10.1000/report.2026",
+        "url": "https://example.test/report.pdf",
+    }
+    # The derived shape is the one A.1/A.2 were contract-tested against, not a
+    # look-alike: the adapters must read `type` and `url` straight out of it.
+    assert entry_item_type(fields) == "report"
+    assert entry_type_mapped(fields) is True
+    assert entry_fetch(fields, {}) == {
+        "method": "pdf-url",
+        "url": "https://example.test/report.pdf",
+    }
+
+    item = {"id": "solo-csl", "type": "article-journal", "title": "Solo", "PMCID": "6099118"}
+    csl_fields = parse_entry_fields("csl", json.dumps(item))
+    assert csl_fields == item
+    assert entry_item_type(csl_fields) == "article"
+    assert entry_fetch(csl_fields, {}) == {"method": "pmc-oa", "url": OA_URL}
+
+
+def test_parse_entry_fields_raises_on_the_chunks_the_driver_must_name_as_failed() -> None:
+    from memoria_vault.runtime.bulk_import import parse_entry_fields
+
+    with pytest.raises(ValueError):
+        parse_entry_fields("bibtex", "@article{broken2026,\n  title {Missing Equals}\n}\n")
+    with pytest.raises(ValueError):
+        parse_entry_fields("csl", "not json")
+    with pytest.raises(ValueError, match="CSL entry must be a JSON object"):
+        parse_entry_fields("csl", "[1, 2]")
