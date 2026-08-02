@@ -60,10 +60,10 @@ def write_proposal(
         raise ValueError(f"certainty must be one of {CERTAINTY}")
     if loudness not in LOUDNESS:
         raise ValueError(f"loudness must be one of {LOUDNESS}")
-    throttled = _throttled(vault, raised_by, loudness)
-    if throttled is None:
+    band = throttled(vault, raised_by, loudness)
+    if band is None:
         return None
-    loudness = throttled
+    loudness = band
     today = datetime.date.today().isoformat()
     frontmatter = {
         "title": title,
@@ -86,7 +86,7 @@ def write_proposal(
         f"# Against\n\n{argument_against}\n\n# What tipped it\n\n{what_tipped_it}\n"
     )
     path = _write(vault, card_type, title, frontmatter_doc(frontmatter, body))
-    return _admit(vault, path, card_type, loudness, raised_by)
+    return admit(vault, path, card_type, loudness, raised_by)
 
 
 def write_finding(
@@ -123,10 +123,10 @@ def write_finding(
         raise ValueError(f"loudness must be one of {LOUDNESS}")
     if card_type == "flag" and not (target or citekey):
         raise ValueError("a flag must point at a target or citekey")
-    throttled = _throttled(vault, raised_by, loudness)
-    if throttled is None:
+    band = throttled(vault, raised_by, loudness)
+    if band is None:
         return None
-    loudness = throttled
+    loudness = band
     # Canonical from here on, so producers that disagree about padding still match.
     fingerprint = fingerprint.strip()
     today = datetime.date.today().isoformat()
@@ -173,8 +173,8 @@ def write_finding(
             if path.exists():
                 return None
             write_text_durable(path, content)
-            return _admit(vault, path, card_type, loudness, raised_by)
-        return _admit(
+            return admit(vault, path, card_type, loudness, raised_by)
+        return admit(
             vault, _write(vault, card_type, title, content), card_type, loudness, raised_by
         )
 
@@ -208,10 +208,10 @@ def write_work_prompt(
         raise ValueError(f"loudness must be one of {LOUDNESS}")
     if not (target or request_id):
         raise ValueError("a work-prompt must point at a target or request_id")
-    throttled = _throttled(vault, raised_by, loudness)
-    if throttled is None:
+    band = throttled(vault, raised_by, loudness)
+    if band is None:
         return None
-    loudness = throttled
+    loudness = band
     today = datetime.date.today().isoformat()
     frontmatter = {
         "title": title,
@@ -244,8 +244,8 @@ def write_work_prompt(
         if path.exists():
             return None
         write_text_durable(path, content)
-        return _admit(vault, path, "work-prompt", loudness, raised_by)
-    return _admit(
+        return admit(vault, path, "work-prompt", loudness, raised_by)
+    return admit(
         vault, _write(vault, "work-prompt", title, content), "work-prompt", loudness, raised_by
     )
 
@@ -314,7 +314,7 @@ def _write(vault: Path, card_type: str, title: str, content: str) -> Path:
     return path
 
 
-def _throttled(vault: Path, raised_by: str, loudness: str) -> str | None:
+def throttled(vault: Path, raised_by: str, loudness: str) -> str | None:
     """The band this producer may mint at right now, or None when it is paused.
 
     The PI's throttle from `.memoria/config/attention.yaml` (I1 spec §6.4). This
@@ -324,9 +324,25 @@ def _throttled(vault: Path, raised_by: str, loudness: str) -> str | None:
     this week") rather than becoming a silent hole in the inflow. An absent or
     unreadable config reads as `active`, so a config typo can never mute a
     producer.
+
+    Public because the three writers above are not the only way a card is minted.
+    Five producers build frontmatter this module's shape cannot express -- their
+    own extra keys, their own deterministic `inbox/` filenames, which they return
+    and journal -- so they write directly and call this and `admit` around the
+    write instead. That is the seam, not `write_finding`: a producer that skips it
+    is invisible to the flow panel and deaf to `producers: {<name>: paused}`.
+    `tests/test_attention_flow.py` enforces it over the tree, because the
+    convention alone is one five call sites already broke (issue #1703).
+
+    It validates the band for the same reason. The three writers above validate
+    their own argument, so before #1703 those five producers reached no validator
+    at all -- which is how `loudness: normal`, a band no reader rosters, shipped
+    and stayed. Now every path that sets a card's band passes through here.
     """
     from memoria_vault.runtime.attention_config import producer_mode
 
+    if loudness not in LOUDNESS:
+        raise ValueError(f"loudness must be one of {LOUDNESS}")
     mode = producer_mode(vault, raised_by)
     if mode == "paused":
         _record_telemetry(
@@ -336,7 +352,7 @@ def _throttled(vault: Path, raised_by: str, loudness: str) -> str | None:
     return "quiet" if mode == "quiet" else loudness
 
 
-def _admit(vault: Path, path: Path, card_type: str, loudness: str, raised_by: str) -> Path:
+def admit(vault: Path, path: Path, card_type: str, loudness: str, raised_by: str) -> Path:
     """Record one `attention-admitted` row for a card that was actually written.
 
     Returns `path` so every writer's return statement is its admission point. A
@@ -344,6 +360,10 @@ def _admit(vault: Path, path: Path, card_type: str, loudness: str, raised_by: st
     paused no-op -- never routes through here, so inflow counts cards on disk
     rather than attempts, and the dashboard's inflow-versus-drain reading stays a
     queue measurement.
+
+    Public for the direct writers named in `throttled`. `path` is the file that was
+    just written, so the direct callers pass their own `vault / rel` rather than a
+    path this module minted.
     """
     _record_telemetry(
         vault,

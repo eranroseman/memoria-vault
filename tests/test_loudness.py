@@ -155,32 +155,44 @@ def test_discovered_work_candidates_mint_at_notice(tmp_path):
 
 
 def test_no_shipped_producer_writes_an_unrostered_band():
-    """Every literal `loudness:` in the runtime is one of the four bands.
+    """Every literal band in the runtime is one of the four.
 
-    `inbox.write_*` validates its argument, but five producers assemble card
-    frontmatter directly and reach no validator at all -- which is how
-    `loudness: normal` shipped and stayed. An unrostered band is invisible rather
-    than loud: it ranks with the default in `engine.api._order_key` and counts as
-    its own bucket on the dashboard, so nothing fails and the card just never
-    behaves as its author meant.
+    An unrostered band is invisible rather than loud: it ranks with the default in
+    `engine.api._order_key` and counts as its own bucket on the dashboard, so
+    nothing fails and the card just never behaves as its author meant. That is how
+    `loudness: normal` shipped and stayed.
+
+    Where the literal lives moved in #1703. It used to sit in the frontmatter dict,
+    because the five direct producers assembled the card themselves and reached no
+    validator at all. They now name the band in the `inbox.throttled(vault,
+    producer, band)` call, which validates it, and write the band that call returns.
+
+    So the seam scan is the one that must always match, and the `assert seam` below
+    is load-bearing: with the dict scan alone this test matched nothing after the
+    move and would have gone on passing as a rule that checks nothing (escape class
+    5). The dict scan stays even though it is legitimately empty today, because it
+    is the only thing that would catch a producer that asks the seam for `alert` and
+    then hard-codes something else onto the card -- a disagreement the seam cannot
+    see and `tests/test_attention_flow.py`'s call-site rule does not read.
     """
     import re
 
     from tests.helpers import ROOT
 
     source = ROOT / "src/memoria_vault"
-    written = {
-        match.group(1)
-        for path in source.rglob("*.py")
-        for match in re.finditer(
-            r"""["']loudness["']\s*:\s*["']([a-z-]+)["']""", path.read_text(encoding="utf-8")
-        )
-    }
+    sources = [path.read_text(encoding="utf-8") for path in source.rglob("*.py")]
 
-    assert written, "the scan found no literal bands at all -- it has stopped matching"
-    assert written <= set(inbox.LOUDNESS), (
-        f"unrostered band(s): {sorted(written - set(inbox.LOUDNESS))}"
-    )
+    def _scan(pattern: str) -> set[str]:
+        return {match.group(1) for text in sources for match in re.finditer(pattern, text)}
+
+    # `inbox.throttled(vault, "analyze-gaps", "alert")` -- the seam's band argument
+    seam = _scan(r"""throttled\([^)]*,\s*["'][a-z-]+["']\s*,\s*["']([a-z-]+)["']""")
+    # `"loudness": "alert"` -- a band written straight onto the card
+    written_directly = _scan(r"""["']loudness["']\s*:\s*["']([a-z-]+)["']""")
+
+    assert seam, "the seam scan found no literal bands at all -- it has stopped matching"
+    unrostered = (seam | written_directly) - set(inbox.LOUDNESS)
+    assert not unrostered, f"unrostered band(s): {sorted(unrostered)}"
 
 
 def _card_loudness(path) -> str:

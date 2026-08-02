@@ -15,42 +15,24 @@ reads differently rather than identically.
 
 from __future__ import annotations
 
-import json
+import ast
 from pathlib import Path
 
 import pytest
 
-from memoria_vault.runtime import state
+import memoria_vault
+from memoria_vault.runtime.subsystems.lib import inbox as inbox_lib
 from memoria_vault.runtime.subsystems.lib.inbox import (
     write_finding,
     write_proposal,
     write_work_prompt,
 )
 from memoria_vault.runtime.vaultio import split_frontmatter
+from tests.helpers import admitted_cards as _admitted
+from tests.helpers import attention_flow_rows as _rows
+from tests.helpers import set_attention_config as _configure
 
 pytestmark = pytest.mark.contract
-
-
-def _rows(vault: Path, event_type: str) -> list[dict[str, str]]:
-    # Insertion order, not `ts`: `now_iso` is second-resolution and `event_id` is a
-    # random uuid4, so two rows written in the same second have no stable order of
-    # their own and these assertions are about which write admitted, in sequence.
-    with state.connect(vault) as conn:
-        rows = conn.execute(
-            "SELECT payload_json FROM telemetry_events WHERE event_type = ? ORDER BY rowid",
-            (event_type,),
-        ).fetchall()
-    return [json.loads(str(row["payload_json"])) for row in rows]
-
-
-def _admitted(vault: Path) -> list[dict[str, str]]:
-    return _rows(vault, "attention-admitted")
-
-
-def _configure(vault: Path, body: str) -> None:
-    config = vault / ".memoria/config/attention.yaml"
-    config.parent.mkdir(parents=True, exist_ok=True)
-    config.write_text(body, encoding="utf-8")
 
 
 def _band(path: Path) -> str:
@@ -242,4 +224,116 @@ def test_an_unthrottled_vault_needs_no_config_file(tmp_path: Path) -> None:
 
     assert path is not None
     assert _band(path) == "alert"
+    assert _rows(tmp_path, "producer-run-skipped") == []
+
+
+def _mints_attention_frontmatter(node: ast.AST) -> bool:
+    """True when this node builds a `projection: attention` frontmatter mapping.
+
+    The one syntactic tell every attention-card writer in the tree shares: a dict
+    literal whose `projection` key is the constant `"attention"`. It is what
+    `lifecycle`, `loudness` and `engine.api` all read to decide that a file in
+    `inbox/` is a card at all, so a writer that omits it has not written a card.
+    """
+    return any(
+        isinstance(sub, ast.Dict)
+        and any(
+            isinstance(key, ast.Constant)
+            and key.value == "projection"
+            and isinstance(value, ast.Constant)
+            and value.value == "attention"
+            for key, value in zip(sub.keys, sub.values, strict=True)
+            if key is not None
+        )
+        for sub in ast.walk(node)
+    )
+
+
+def _called_names(node: ast.AST) -> set[str]:
+    names = set()
+    for sub in ast.walk(node):
+        if not isinstance(sub, ast.Call):
+            continue
+        func = sub.func
+        if isinstance(func, ast.Attribute):
+            names.add(func.attr)
+        elif isinstance(func, ast.Name):
+            names.add(func.id)
+    return names
+
+
+def test_no_attention_card_is_minted_outside_the_throttle_and_admission_seam() -> None:
+    """Every writer of attention frontmatter calls `inbox.throttled` and `inbox.admit`.
+
+    A rule, because the convention was already broken. Five producers wrote card
+    frontmatter directly (issue #1703), so `producers: {<name>: paused}` parsed,
+    validated, reported as applied and did nothing for them, and the dashboard's
+    flow panel under-counted three producers while its exploration panel counted
+    the same producer's cards on disk -- two numbers for one vault with nothing
+    flagging the disagreement.
+
+    The rule is deliberately *not* "only `inbox.py` may write a card". Those five
+    carry keys `write_finding`/`write_proposal` cannot express (`candidate_tag`,
+    `discovered_work_id`, `relation_type`, `source_count`) and deterministic
+    `inbox/` filenames they return, journal and re-read for dedupe, which
+    `inbox._write`'s `-2`, `-3` suffixing cannot produce. Forcing them through
+    those three functions would change the card vocabulary and the filenames,
+    which is a bigger and less honest change than making the seam callable. What
+    must be single is the *seam*, and this asserts exactly that.
+
+    Syntactic on purpose: it fails on the sixth producer the day it is written,
+    with no vault, no fixture and no way for the producer to be added without the
+    author seeing this test name.
+    """
+    package_root = Path(memoria_vault.__file__).parent
+    offenders = []
+    for path in sorted(package_root.rglob("*.py")):
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        for node in ast.walk(tree):
+            if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                continue
+            if not _mints_attention_frontmatter(node):
+                continue
+            missing = {"throttled", "admit"} - _called_names(node)
+            if missing:
+                rel = path.relative_to(package_root).as_posix()
+                offenders.append(f"{rel}:{node.name} never calls {sorted(missing)}")
+    assert offenders == []
+
+
+def test_the_guard_would_catch_a_producer_that_skipped_the_seam(tmp_path: Path) -> None:
+    """The guard's own kill test: a writer shaped like the five, minus the seam.
+
+    Without this, `_mints_attention_frontmatter` returning False for everything --
+    a renamed key, a walk that never descends -- reads as a green tree-wide rule
+    forever. Escape class 5: a checker whose detector is dead is not a checker.
+    """
+    bypass = ast.parse(
+        "def _write_card(vault, path):\n"
+        "    write_frontmatter_doc(path, {'projection': 'attention'}, 'body')\n"
+    ).body[0]
+    honest = ast.parse(
+        "def _write_card(vault, path):\n"
+        "    band = inbox.throttled(vault, 'p', 'notice')\n"
+        "    write_frontmatter_doc(path, {'projection': 'attention'}, 'body')\n"
+        "    inbox.admit(vault, path, 'flag', band, 'p')\n"
+    ).body[0]
+
+    assert _mints_attention_frontmatter(bypass)
+    assert {"throttled", "admit"} - _called_names(bypass) == {"throttled", "admit"}
+    assert _mints_attention_frontmatter(honest)
+    assert not {"throttled", "admit"} - _called_names(honest)
+
+
+def test_the_seam_rejects_a_band_no_reader_rosters(tmp_path: Path) -> None:
+    """`loudness: normal` shipped once and stayed, because the five direct producers
+    reached no validator at all. They reach this one now, so it has to refuse --
+    ahead of the config read, so a paused producer cannot mask a bad band either."""
+    with pytest.raises(ValueError, match="loudness must be one of"):
+        write_finding(tmp_path, "flag", "f1", "finding", "sweep", target="x.md", loudness="normal")
+    _configure(tmp_path, "producers:\n  sweep: paused\n")
+    with pytest.raises(ValueError, match="loudness must be one of"):
+        inbox_lib.throttled(tmp_path, "sweep", "normal")
+
+    assert not (tmp_path / "inbox").exists()
     assert _rows(tmp_path, "producer-run-skipped") == []

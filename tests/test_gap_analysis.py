@@ -17,11 +17,14 @@ from memoria_vault.runtime.vaultio import read_frontmatter
 from tests.helpers import (
     WORKSPACE_SEED,
     _md,
+    admitted_cards,
+    attention_flow_rows,
     call_with_context,
     copy_memoria_dirs,
     git,
     init_git,
     mark_file_status,
+    set_attention_config,
 )
 
 pytestmark = pytest.mark.runtime
@@ -626,7 +629,15 @@ def test_analyze_gaps_adds_project_argument_health(tmp_path: Path) -> None:
     _assert_gap_contract(gaps["thin-argument"], "argument-unsupported")
     assert gaps["thin-argument"]["note_count"] == 3
     _assert_gap_contract(gaps["conflict"], "argument-fragile")
-    assert gaps["conflict"]["advice"] == "resolve or preserve the contradiction"
+    assert gaps["conflict"]["advice"] == "resolve or preserve the challenge"
+    # `seed = advice or _argument_next_action(kind)`. Asserting `advice` alone cannot
+    # see that precedence -- the mutant that drops `advice or` leaves the `advice`
+    # key untouched and only changes what the card proposes (escape class 7). Nor can
+    # `no-support`, where the row's advice and the fallback are the same sentence
+    # (escape class 8). `conflict` is a kind where they differ, so the seed is where
+    # the precedence is observable at all.
+    assert gaps["conflict"]["proposed_seed"] == "resolve or preserve the challenge"
+    assert gaps["conflict"]["next_actions"] == ["resolve or preserve the challenge"]
     paper_gap = next(gap for gap in result["gaps"] if gap["kind"] == "paper-readiness")
     assert "target" in paper_gap["missing"]
     assert result["saturation"] == {
@@ -685,6 +696,13 @@ def test_analyze_gaps_counts_a_rebuttal_as_the_claim_counterpoint(tmp_path: Path
     gaps = {gap["finding_kind"]: gap for gap in result["gaps"] if "finding_kind" in gap}
     assert set(gaps) == {"thin-argument", "conflict"}
     _assert_gap_contract(gaps["conflict"], "argument-fragile")
+    # #1681: Graph-R11 widened the gate to `_challenge_count`; the sentence and the
+    # advice explaining it still named `contradicts` alone. This vault's gap is
+    # driven by a `rebuttal`, so the old prose described an edge that is not here.
+    assert gaps["conflict"]["why"] == (
+        "The checked project argument carries an unresolved challenge to the thesis."
+    )
+    assert gaps["conflict"]["advice"] == "resolve or preserve the challenge"
     assert result["saturation"] == {
         "claims": 1,
         "saturated": 1,
@@ -771,3 +789,146 @@ def test_analyze_gaps_seeds_project_scope_and_thesis_terms(tmp_path: Path) -> No
     assert gaps["patient-generated-data"]["gap_type"] == "under-grounded"
     assert gaps["patient-generated-data"]["note_count"] == 1
     assert gaps["care coordination"]["gap_type"] == "under-grounded"
+
+
+def _throttled_gap_vault(tmp_path: Path) -> Path:
+    """A vault whose `analyze-gaps` run mints both cards this module writes directly.
+
+    Two producers in one run, on purpose: `_write_full_text_gap_attention` mints a
+    `flag` at `alert` and `_write_tag_candidate_attention` a `candidate` at
+    `notice`, so a throttle that stamped one band or admitted one kind for
+    everything reads differently here rather than identically.
+    """
+    vault = workspace(tmp_path / "vault")
+    (vault / "system").mkdir()
+    shutil.copyfile(WORKSPACE_SEED / "system/vocabulary.md", vault / "system/vocabulary.md")
+    state.upsert_catalog_record(
+        vault,
+        work_id="metadata-only",
+        title="Metadata Only",
+        text_status="metadata-only",
+        check_status="checked",
+    )
+    work_rel = "digests/source-alpha.md"
+    work = vault / work_rel
+    work.parent.mkdir(parents=True, exist_ok=True)
+    work.write_text(
+        "---\n"
+        "type: digest\n"
+        "id: 01ARZ3NDEKTSV4RRFFQ69G5FC0\n"
+        "title: Retrieval practice digest\n"
+        "tags: []\n"
+        "links: {}\n"
+        "work_id: catalog/sources/source-alpha\n"
+        "---\n"
+        "Neural retrieval improves durable memory systems.\n"
+        "Neural retrieval also changes review timing.\n"
+        "Personal informatics covers behavior data.\n"
+        "Personal informatics supports reflection.\n",
+        encoding="utf-8",
+    )
+    mark_file_status(vault, work_rel, "digest")
+    return vault
+
+
+def test_analyze_gaps_admits_the_cards_it_writes_without_going_through_inbox(
+    tmp_path: Path,
+) -> None:
+    """Both direct writers admit, with their own kind and band (issue #1703).
+
+    Before the fix the flow panel's `per_producer` and `inflow_by_day` read
+    admission rows and so under-counted `analyze-gaps`, while the exploration
+    panel counted the same producer's cards on disk -- one vault, two numbers.
+    """
+    vault = _throttled_gap_vault(tmp_path)
+
+    analyze_gaps(vault, machine="gap-machine")
+
+    assert {
+        (row["card_path"], row["kind"], row["loudness"], row["raised_by"])
+        for row in admitted_cards(vault)
+    } == {
+        ("inbox/flag-gap-full-text-metadata-only.md", "flag", "alert", "analyze-gaps"),
+        ("inbox/candidate-tag-neural-retrieval.md", "candidate", "notice", "analyze-gaps"),
+    }
+
+
+def test_a_paused_analyze_gaps_writes_no_card_at_all(tmp_path: Path) -> None:
+    """`producers: {analyze-gaps: paused}` used to parse, validate, report as
+    applied and do nothing here, because neither producer asked (issue #1703)."""
+    vault = _throttled_gap_vault(tmp_path)
+    set_attention_config(vault, "producers:\n  analyze-gaps: paused\n")
+
+    result = analyze_gaps(vault, machine="gap-machine")
+
+    assert result["full_text_attention_paths"] == []
+    assert result["tag_candidate_paths"] == []
+    assert not list((vault / "inbox").glob("*.md"))
+    assert admitted_cards(vault) == []
+    assert attention_flow_rows(vault, "producer-run-skipped") == [
+        {"producer": "analyze-gaps", "reason": "paused"},
+        {"producer": "analyze-gaps", "reason": "paused"},
+    ]
+
+
+def test_a_quiet_analyze_gaps_still_lands_both_cards_at_the_quiet_band(tmp_path: Path) -> None:
+    """Demotion is not suppression. The `alert` flag and the `notice` candidate
+    both land at `quiet`, and the admission rows record the band they got --
+    which is the assertion a fix that only skipped on `paused` would fail."""
+    vault = _throttled_gap_vault(tmp_path)
+    set_attention_config(vault, "producers:\n  analyze-gaps: quiet\n")
+
+    result = analyze_gaps(vault, machine="gap-machine")
+
+    written = result["full_text_attention_paths"] + result["tag_candidate_paths"]
+    assert len(written) == 2
+    assert {read_frontmatter(vault / rel)["loudness"] for rel in written} == {"quiet"}
+    assert {row["loudness"] for row in admitted_cards(vault)} == {"quiet"}
+
+
+def test_a_paused_analyze_gaps_writes_no_discovery_candidate_either(tmp_path: Path) -> None:
+    """The third card `analyze-gaps` mints, through the writer it borrows (#1703).
+
+    `_write_gap_discovery_candidates` calls `enrichment._write_discovery_candidate`
+    with `raised_by="analyze-gaps"`, then annotates the path it returns. Paused,
+    that path is `""`, and `_annotate_discovery_candidate` would read `vault / ""`.
+    The vault above cannot reach this: with no work-graph edges the function
+    returns before writing anything, so the guard needs its own edges to be
+    observed at all.
+    """
+    vault = workspace(tmp_path / "vault")
+    capture_source(
+        vault,
+        "source-alpha",
+        "Alpha Source",
+        "A fixture source.",
+        "rare alpha full text for checked search gap analysis",
+        machine="capture-machine",
+    )
+    state.replace_work_graph_edges(
+        vault,
+        "source-alpha",
+        [
+            {
+                "relation_type": "references",
+                "target_id": "https://openalex.org/W999",
+                "target_title": "Beta Work",
+                "target_doi": "10.1000/beta",
+                "source_provider": "openalex",
+            }
+        ],
+    )
+    rebuild_checked_search_index(vault)
+    set_attention_config(vault, "producers:\n  analyze-gaps: paused\n")
+
+    result = analyze_gaps(
+        vault, seed_terms=["rare alpha"], dense_threshold=1, machine="gap-machine"
+    )
+
+    assert result["discovery_candidate_paths"] == []
+    assert result["discovery_candidate_channels"] == {"ranked": 0, "exploration": 0}
+    assert not list((vault / "inbox").glob("*.md"))
+    assert admitted_cards(vault) == []
+    assert {row["producer"] for row in attention_flow_rows(vault, "producer-run-skipped")} == {
+        "analyze-gaps"
+    }

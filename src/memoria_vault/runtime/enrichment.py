@@ -27,6 +27,7 @@ from memoria_vault.runtime.integrity import record_integrity_check
 from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.audit import sha256_bytes
 from memoria_vault.runtime.policy.paths import normalize_path
+from memoria_vault.runtime.subsystems.lib import inbox
 from memoria_vault.runtime.trusted_writer import (
     OperationContext,
     append_journal_event,
@@ -91,7 +92,11 @@ def _flag_and_commit(
         finding=reason,
         evidence=evidence,
     )
-    commit = commit_writer_changes(vault, commit_message, [attention_path], context=context)
+    # No path when `enrich-source` is paused: the integrity finding above is still
+    # recorded, only the card is withheld, so there is nothing to stage.
+    commit = commit_writer_changes(
+        vault, commit_message, [attention_path] if attention_path else [], context=context
+    )
     result = {
         "enrichment_status": status,
         "finding": finding,
@@ -285,9 +290,11 @@ def enrich_source(
         )
 
     candidate_paths = [
-        _write_discovery_candidate(vault, source, edge)
+        rel
         for edge in graph_edges
         if edge["relation_type"] in {"references", "related"}
+        # Empty when the producer is paused -- a withheld card is not a path.
+        if (rel := _write_discovery_candidate(vault, source, edge))
     ]
     references_path = "bibliography.bib"
     references_text = render_references_bib(vault)
@@ -471,6 +478,9 @@ def _write_attention_flag(
     path = vault / rel
     if path.exists():
         return rel
+    band = inbox.throttled(vault, "enrich-source", "quiet")
+    if band is None:
+        return ""
     safe_finding = neutralize_untrusted_markdown(finding)
     safe_evidence = neutralize_untrusted_markdown(evidence)
     text = frontmatter_doc(
@@ -488,12 +498,13 @@ def _write_attention_flag(
             # "any routine alert is a mis-tiered producer" is the policy's own
             # calibration rule. The card is unchanged otherwise: it still lands,
             # still counts, and still names what to fix.
-            "loudness": "quiet",
+            "loudness": band,
             "created": date.today().isoformat(),
         },
         f"# Finding\n\n{safe_finding}\n\n# Evidence\n\n{safe_evidence}\n",
     )
     write_text_durable(path, text, create_parent=True)
+    inbox.admit(vault, path, "flag", band, "enrich-source")
     return rel
 
 
@@ -515,6 +526,9 @@ def _write_discovery_candidate(
     path = vault / rel
     if path.exists():
         return rel
+    band = inbox.throttled(vault, raised_by, "notice")
+    if band is None:
+        return ""
     safe_target_title = neutralize_untrusted_markdown(target_title)
     text = frontmatter_doc(
         {
@@ -531,7 +545,7 @@ def _write_discovery_candidate(
             # rosters. It sorted after every rostered band in the pane and counted
             # as its own bucket on the dashboard. I1 spec §3 puts candidates at
             # `notice`, which is also what `write_proposal` defaults to.
-            "loudness": "notice",
+            "loudness": band,
             "created": date.today().isoformat(),
         },
         (
@@ -540,6 +554,7 @@ def _write_discovery_candidate(
         ),
     )
     write_text_durable(path, text, create_parent=True)
+    inbox.admit(vault, path, "candidate", band, raised_by)
     return rel
 
 

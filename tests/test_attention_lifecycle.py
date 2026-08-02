@@ -341,6 +341,61 @@ def test_journaled_outcome_keeps_status_and_outcome_consistent(
     assert journaled[0]["resolution_outcome"] == expected
 
 
+@pytest.mark.parametrize(
+    "written",
+    ['" act "', "Act", '" Act "', "escalate"],
+    ids=["padded", "capitalized", "both", "off-roster"],
+)
+def test_every_routing_class_reader_agrees_on_one_spelling(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    written: str,
+) -> None:
+    """One card per spelling of `routing_class`, asserted against every reader (#1670).
+
+    Third field to diverge this way after `projection` (#1617) and `attention_status`
+    (#1633). The issue filed it as latent and display-only; it was neither. The payload
+    field feeds `engine.api.resolve_attention`'s operation payload, so `routing_class:
+    Act` on an open `block` card gated delegation and review-gated promotion while
+    `integrity.resolve_attention` rejected the operation that would clear it -- the card
+    the CLI could not resolve -- and `lifecycle` folded the same card and journaled a
+    disposition for it. Six readers, and the raw one was upstream of four of them.
+
+    The off-roster case is here because a fold that only lowercased would keep the
+    three casing rows green and still hand `escalate` to the validator that raises.
+    """
+    workspace = init_cli_workspace(tmp_path, capsys)
+    open_rel, resolved_rel = "inbox/alert-open.md", "inbox/alert-done.md"
+    _write_card(workspace, "alert-open.md", "open", extra=f"routing_class: {written}\n")
+    _write_card(workspace, "alert-done.md", "resolved", extra=f"routing_class: {written}\n")
+    canonical = "act" if written != "escalate" else "ask"
+
+    # engine.api._attention_card -- the payload boundary, canonical for every consumer
+    card = engine_api.read_attention_card(workspace, open_rel)
+    assert card["attention"]["routing_class"] == canonical
+    # engine.api._attention_card_view -- the field `memoria attention view` renders
+    assert card["view"]["blocks"][0]["fields"]["routing_class"] == canonical
+    # engine.api.read_attention -- the same boundary on the list path
+    listing = engine_api.read_attention(workspace)["attention"]
+    assert {row["routing_class"] for row in listing} == {canonical}
+    # lifecycle._disposition_row -- the unattributed-close journal
+    journaled = lifecycle.journal_unattributed_dispositions(workspace, machine="test-machine")
+    assert [(row["target_id"], row["routing_class"]) for row in journaled] == [
+        (resolved_rel, canonical)
+    ]
+    # engine.api.resolve_attention -> worker -> integrity.resolve_attention, which
+    # validates the value and raises on anything off the roster. This is the hop the
+    # issue missed: unfolded, the operation failed and left the card open.
+    resolved = engine_api.resolve_attention(
+        workspace, open_rel, outcome="apply", reason="pin", actor="pi"
+    )
+    assert resolved["ok"] is True
+    assert resolved["result"]["resolution"]["routing_class"] == canonical
+    # integrity writes the class back onto the card, so the disk value is canonical too
+    assert read_frontmatter(workspace / open_rel)["routing_class"] == canonical
+    assert read_frontmatter(workspace / open_rel)["attention_status"] == "resolved"
+
+
 def test_journaled_event_carries_no_card_body_text(tmp_path: Path) -> None:
     unbounded = "x" * 50_000
     _write_card(

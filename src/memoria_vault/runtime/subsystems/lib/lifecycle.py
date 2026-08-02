@@ -66,7 +66,7 @@ from pathlib import Path
 from typing import Any
 
 from memoria_vault.runtime import state
-from memoria_vault.runtime.subsystems.lib.loudness import attention_status
+from memoria_vault.runtime.subsystems.lib.loudness import attention_status, routing_class
 from memoria_vault.runtime.time import now_iso
 from memoria_vault.runtime.trusted_writer import (
     EVENT_RESOLVED,
@@ -90,8 +90,6 @@ JOURNAL_REASON = "journaled an unattributed attention_status close"
 # A closed status names its own outcome; `resolve_attention` writes the two in step.
 CLOSED_STATUS_OUTCOMES = {"resolved": "apply", "deferred": "defer"}
 RESOLVED_OUTCOMES = frozenset({"apply", "reject"})
-ROUTING_CLASSES = frozenset({"act", "ask", "log"})
-DEFAULT_ROUTING_CLASS = "ask"
 
 
 def _machine(machine: str) -> str:
@@ -148,11 +146,6 @@ def _closed_outcome(status: str, frontmatter: Mapping[str, Any]) -> str:
     return written if written in RESOLVED_OUTCOMES else default
 
 
-def _closed_routing_class(frontmatter: Mapping[str, Any]) -> str:
-    written = str(frontmatter.get("routing_class") or "").strip().lower()
-    return written if written in ROUTING_CLASSES else DEFAULT_ROUTING_CLASS
-
-
 def _closed_cards(inbox: Path, vault: Path) -> list[tuple[str, str, Mapping[str, Any]]]:
     """Return `(relpath, status, frontmatter)` for every closed attention card."""
     closed: list[tuple[str, str, Mapping[str, Any]]] = []
@@ -176,7 +169,7 @@ def _disposition_row(
         "resolution": RESOLUTION_RESOLVED,
         "outcome": outcome,
         "resolution_outcome": outcome,
-        "routing_class": _closed_routing_class(frontmatter),
+        "routing_class": routing_class(frontmatter),
         "decided_at": decided_at,
         "target_id": rel,
         "reason": JOURNAL_REASON,

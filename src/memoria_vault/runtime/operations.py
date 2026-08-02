@@ -23,6 +23,7 @@ from memoria_vault.runtime.hub_candidates import candidate_entry, write_hub_cand
 from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.audit import sha256_bytes, sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path, require_policy_path
+from memoria_vault.runtime.subsystems.lib import inbox
 from memoria_vault.runtime.trusted_writer import (
     OperationContext,
     append_explicit_journal_event,
@@ -934,9 +935,16 @@ def _require_digestable_text(
     if text_status == "full-text":
         return
     attention_path = _write_digest_text_attention(vault, source_fm, text_status, context=context)
+    # The gate is not the card. A paused `compile-source-digest` withholds the
+    # attention card, never the refusal to compile a digest without full text, so
+    # the raise still happens and the message says why there is nothing to open.
+    where = (
+        f"attention_path is {attention_path}"
+        if attention_path
+        else "no attention card was raised: producer compile-source-digest is paused"
+    )
     raise ValueError(
-        "checked digest requires full-text source content; "
-        f"text_status is {text_status}; attention_path is {attention_path}"
+        f"checked digest requires full-text source content; text_status is {text_status}; {where}"
     )
 
 
@@ -949,6 +957,11 @@ def _write_digest_text_attention(
     path = vault / rel
     if path.exists():
         return rel
+    band = inbox.throttled(vault, "compile-source-digest", "alert")
+    if band is None:
+        # Paused: no card, and so no `check-fired` row naming a card that is not
+        # there. The caller still raises -- see `_require_digestable_text`.
+        return ""
     title = f"Digest needs full text for {work_id}"
     finding = (
         "Digest compilation is blocked because the source has "
@@ -967,7 +980,7 @@ def _write_digest_text_attention(
                 "agent_recommendation": "issues-found",
                 "target": source_ref,
                 "raised_by": "compile-source-digest",
-                "loudness": "alert",
+                "loudness": band,
                 "created": date.today().isoformat(),
             },
             (
@@ -991,6 +1004,7 @@ def _write_digest_text_attention(
         context=context,
     )
     commit_writer_changes(vault, f"flag digest full text {work_id}", [rel], context=context)
+    inbox.admit(vault, path, "flag", band, "compile-source-digest")
     return rel
 
 
