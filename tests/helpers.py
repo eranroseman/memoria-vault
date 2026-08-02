@@ -46,9 +46,7 @@ def operation_context(
         provenance={"surface": "pytest"},
         machine_authored=machine_authored,
     )
-    context = OperationContext(
-        actor, run_id, request_id, operation_id, machine, machine_authored
-    )
+    context = OperationContext(actor, run_id, request_id, operation_id, machine, machine_authored)
     job = {
         "job_id": request_id,
         "kind": "operation",
