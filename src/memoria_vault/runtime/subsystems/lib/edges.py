@@ -5,8 +5,8 @@ EDGE_RELATIONS governs concept_edges.relation_type: the DB CHECK mirrors it
 and tests/test_query_substrate.py holds the parity test. LINK_RELATIONS is
 the frontmatter-legal subset — everything except 'tension', which is
 machine-surfaced and PI-confirmed, never authored in links: frontmatter
-(docs/superpowers/specs/2026-07-15-graph-edges-roles-propagation-design.md,
-sections 1, 3, 4). Every relation roster in the repo imports from here; a
+(design record: design-history/23-alpha.23.md §1 "The graph propagates").
+Every relation roster in the repo imports from here; a
 relation change is a one-file edit, never a hunt across hardcoded sets.
 
 Two target namespaces, two functions — mixing them is a silent bug:

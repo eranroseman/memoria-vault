@@ -1311,8 +1311,7 @@ def _argument_next_action(finding_kind: str) -> str:
     text was copied verbatim from those rows' `advice`; nothing reached them, a
     mutation of any of them survived the whole suite, and a duplicated string that
     no test can observe drifts from its original in one direction only. Deleted in
-    #1681 after the plan that wrote them confirmed no future caller
-    (`docs/superpowers/plans/2026-07-15-graph-substrate.md`). If a caller ever
+    #1681 after the plan that wrote them confirmed no future caller. If a caller ever
     hands this an advice-less gap kind, the fallback is the honest answer and the
     fix is to give that row an `advice`, next to the kind that names it.
     """
