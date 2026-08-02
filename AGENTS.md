@@ -7,15 +7,14 @@ review → finish), not by this file. Human contributors: see
 
 ## What Memoria is
 
-An opinionated, phase-gated, personal knowledge-production tool — a durable
-research vault for one researcher who owns all judgment. Sources enter the
-**catalog**, become connected claims in **Knowledge Bundles** (a Toulmin
-argument graph parallel to the catalog graph), and drive to output in
-**Projects**. Built on Karpathy's LLM-Wiki (inflow) and Luhmann's Zettelkasten
-(topology), with Toulmin (logic) and autoresearch (self-improvement), expanded
-with agentic capabilities. All trust is placed in inspectable grounding
-structure, never in any author — human or machine — which is what reserves
-judgment to the one human. It should feel like a co-PI, not a knowledge base.
+An opinionated, phase-gated, personal knowledge-production tool for one
+researcher who owns all judgment. Sources enter the **catalog**, become
+connected claims in **Knowledge Bundles** (a Toulmin argument graph parallel
+to the catalog graph), and drive to output in **Projects**. All trust lives in
+inspectable grounding structure, never in any author — human or machine. It
+should feel like a co-PI, not a knowledge base. Product pitch:
+[README](README.md); intellectual lineage:
+[intellectual-foundations](docs/explanation/rationale/foundations/intellectual-foundations.md).
 
 ## Ground truth
 
@@ -73,12 +72,12 @@ appropriate mechanism per case:
   default, under `.worktrees/`; Claude has to run `git worktree add
   .claude/worktrees/<name> -b wip/<name> origin/main`, then
   `EnterWorktree(path: ".claude/worktrees/<name>")` before editing. Both
-  directories are gitignored and both stay — they are two tools' live working
-  areas, not one superseding the other. The split is forced, not cosmetic:
-  Claude Code treats only `.claude/worktrees/` as a managed worktree, and
-  anywhere else `EnterWorktree` raises a `safetyCheck` prompt that no
-  allow-rule or `PreToolUse` hook can suppress, plus refuses to switch straight
-  from one worktree to another.
+  directories are gitignored and both stay — two tools' live working areas.
+  The split is forced: Claude Code manages only `.claude/worktrees/`, and
+  `EnterWorktree` anywhere else raises a `safetyCheck` prompt that cannot be
+  pre-approved. Create new worktrees from the main checkout — `EnterWorktree`
+  refuses to create one from inside another worktree (switching into an
+  existing managed worktree by `path` is allowed).
 - **Claude-side repo policy:** the checked-in `.claude/settings.json` carries
   what AGENTS.md promises about Claude sessions — the process spine
   (superpowers, pinned) and security-guidance enablement, a recurring-safe-
