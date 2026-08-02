@@ -4315,7 +4315,7 @@ each is the standard reading; assembler may veto):
 
 **Steps:**
 
-- [ ] Write the failing operation tests in `tests/test_operations.py`.
+- [x] Write the failing operation tests in `tests/test_operations.py`.
   Update `test_compile_source_digest_can_use_pydantic_ai_runner` to set all three old
   names (`MEMORIA_MODEL_API_KEY`, `OPENAI_API_KEY`, and `KILOCODE_API_KEY`) to distinct
   sentinels, then assert the local provider receives exactly
@@ -4337,7 +4337,7 @@ each is the standard reading; assembler may veto):
   supplied value. Include a malformed provider with a missing key and assert its refusal
   names literal `runner`, not the supplied provider text.
 
-- [ ] In `tests/test_cli_doctor_eval.py`, update the three existing local doctor assertions
+- [x] In `tests/test_cli_doctor_eval.py`, update the three existing local doctor assertions
   (construction, default base URL, and live dispatch) so their provider kwargs include
   `"api_key": "api-key-not-set"`. First extend `tests/helpers.py`'s `FakeProvider` to:
 
@@ -4395,7 +4395,7 @@ each is the standard reading; assembler may veto):
   `{"base_url": "https://gateway.test/v1", "api_key": "gateway-key"}`. This proves
   both construction and live-dispatch adapter paths use only the configured key.
 
-- [ ] In `tests/test_token_ceiling.py`, add one keyless direct-chat proof that sets all
+- [x] In `tests/test_token_ceiling.py`, add one keyless direct-chat proof that sets all
   legacy names to distinct sentinels, calls the existing `RUNNER` (`key_env: None`), and
   asserts the patched provider receives the exact inert placeholder. This closes a direct
   internal caller that does not pass through doctor or compile-source-digest.
@@ -4406,7 +4406,7 @@ each is the standard reading; assembler may veto):
   `__suppress_context__ is True`. A `doctor --provider gateway --live --json` run must
   likewise omit that sentinel from stdout and stderr while marking the live dispatch false.
 
-- [ ] Run the red subset:
+- [x] Run the red subset:
 
   ```
   PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest \
@@ -4417,7 +4417,7 @@ each is the standard reading; assembler may veto):
   `api_key` and Pydantic AI can consume `OPENAI_API_KEY`; the missing gateway doctor and
   operation cases construct via one of the old fallback values instead of refusing.
 
-- [ ] Write minimal implementation. In `operations.py`, import `Mapping` alongside
+- [x] Write minimal implementation. In `operations.py`, import `Mapping` alongside
   `Iterable`, add the inert constant and resolver next to `_KEY_ENV_RE`, and preserve
   source-safe diagnostics:
 
@@ -4465,7 +4465,7 @@ each is the standard reading; assembler may veto):
   broad `except` then turns a missing gateway key into doctor data without constructing an
   adapter or attempting a network call.
 
-- [ ] Run the full affected suite:
+- [x] Run the full affected suite:
 
   ```
   PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest \
@@ -5808,6 +5808,14 @@ EOF
 )"
 ```
 
+> **Verification receipt (2026-08-02, no code change).** BOOT-C.2 is landed:
+> `2a05a37b` ("surfaces BOOT-C.2: fresh-init bundle writer + current-hash
+> manifest", #1607) is an ancestor of `main`, and `tests/test_agent_bundle.py`
+> is green (26 passed). The unticked boxes above are the superseded historical
+> steps this task's own binding execution text replaced — they are drafting
+> history, not open work. **Do not re-dispatch this task from its checkbox
+> state**; a 2026-08-02 dispatch did exactly that.
+
 ---
 
 ### Task BOOT-C.3: Removed — no bundle upgrade, backup, or recovery path
@@ -6559,6 +6567,56 @@ once); `schema_version` and per-bundle versions were retired by the 2026-07-30
 amendment. That spec's §6 upgrade/skew story and §9.3 slice remain drafting
 history superseded wholesale by the same amendment; this task reconciled the
 decision row only.
+
+> **Verification receipt (2026-08-02, no code change).** BOOT-C.6 is landed:
+> `3f31607a` ("surfaces BOOT-C.6: one writer, one policy for the agent bundle",
+> #1615) is an ancestor of `main`, and every claim in the decision above is
+> shipped and pinned — `bundles.BUNDLE_PATHS` refused by `cli._seed_write_allowed`
+> (cli.py:3547), no `AGENT_BUNDLE_SEED_TREES`/`AGENT_BUNDLE_SEED_FILES` anywhere
+> in the tree, write-if-absent on both the bundle files and the manifest
+> (`bundles.seed_bundles`), `bundle_write_targets` reaching `_repair_write_targets`
+> only under `include_agent_bundle`, and the spec decision row carrying the
+> shipped shape (`specs/2026-07-15-surfaces-bootstrap-design.md:23`). All four
+> "Post-BOOT-C.2 review follow-ups" are closed. `tests/test_agent_bundle.py`:
+> 26 passed. BOOT-B.5 and BOOT-C.1 are likewise landed, inside the squash
+> `31e3bc1a` (#1556) — their receipts name pre-squash SHAs (`e10615e5`,
+> `3b0a1454`) that are not ancestors of `main`, which reads as "unlanded" to a
+> `merge-base` check.
+
+### Open, unowned: nothing seeds the co-PI method files (2026-08-02)
+
+Cross-section contract 6 promises that fresh `memoria init` iterates
+`(relpath, content_provider)` pairs and that "U4-A registers via
+`copi_bundle_files()`". **No landed or active task performs that registration.**
+`runtime/bundles.py` seeds packaged bytes only (`seed_bytes(rel)` reads
+`memoria_vault.product.workspace_seed`) and has no provider seam; BOOT-C.2 and
+BOOT-C.6 closed without one; U4-A.1/.2 only *produce* `copi_bundle_files()`. So
+`.claude/skills/memoria-copi/SKILL.md` and `.claude/hooks/session_status.py` are
+seeded into no vault, and the co-PI method ships nowhere. Whoever takes it
+inherits three things already decided elsewhere:
+
+1. **Shape mismatch.** `copi_bundle_files() -> ((relpath, provider), ...)`
+   returns *rendered* content, while `BUNDLE_FILES` maps a bundle name to
+   relpaths whose bytes come from the package tree. A provider branch in
+   `seed_bundles` is the contract-6 reading; packaging the two files under
+   `workspace_seed/` is the alternative and forfeits the reason U4-A made
+   `session_status.py` a real ruff-linted module.
+2. **The registry test constrains the roster.**
+   `tests/test_agent_bundle.py::test_bundle_files_registry_covers_every_packaged_bundle_file`
+   asserts `sorted(BUNDLE_FILES["agent"]) == _packaged_agent_bundle_files()` —
+   the roster *equals* the walked package tree. A rendered file joining the
+   agent bundle fails it by construction, and its reason (a third hand-written
+   roster silently under-records the manifest the first time a file joins) must
+   survive whatever replaces it.
+3. **It moves all 36 floor goldens**, so it needs contract 10's serialization
+   token. `floor_lib.vault_digest` hashes every vault file and the goldens
+   already carry `.claude/…`, `.codex/…`, `.mcp.json`, `CLAUDE.md`, and
+   `.memoria/vault.json`. Expected diff, identical in each of the 36 goldens:
+   two new `files` keys (`.claude/hooks/session_status.py`,
+   `.claude/skills/memoria-copi/SKILL.md`) plus one changed
+   `.memoria/vault.json` digest value. The manifest's own hashes redact to
+   `<HASH>`, so only its new key *names* move that value — no third kind of
+   change should appear.
 
 ---
 
@@ -13773,7 +13831,8 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
 > warrant amendment above. Never put the per-boot token in a child process's
 > arguments.
 
-> **NOT EXECUTED (2026-08-02). This task is still open.** It was assigned with
+> **NOT EXECUTED (2026-08-02). This task is still open — tracked as issue
+> #1690.** It was assigned with
 > U3-PLUG.9/.10 and could not be run: it needs an interactive desktop Obsidian
 > session with a human operator, and it Consumes `memoria` on PATH, which is
 > broken repo-wide right now — the shared `.venv` console script resolves
@@ -15173,6 +15232,15 @@ Steps:
   Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
   ```
 # U4-A: The co-PI method bundle
+
+> **Plan reconciliation 2026-08-02 (applies to every U4-A and U4-B task
+> below).** None of this work is on `origin/main`: `copi_skill`,
+> `session_status.py`, `extra_frontmatter`, and the `generate-questions`
+> operation are all absent there. It is reported complete in an unmerged
+> session and held on the floor-golden serialization token — U4-B.6 mints a
+> new golden, and only one session per wave may move `tests/fixtures/floor/
+> goldens/`. The boxes stay unticked until it lands on `main`; do not
+> re-execute these tasks in the meantime.
 
 Section of the composite implementation plan for U4
 (`docs/superpowers/specs/2026-07-15-u4-copi-agent-plugin-design.md` §1–2) plus
@@ -17068,6 +17136,12 @@ Contract 7 is amended accordingly (**one** single-source constant remains: `PRIO
 > "Nothing emits it yet ... real emission is deferred"). Task U4-C.5 pins the
 > current no-emission state so a future emitter forces this contract to be
 > revisited; the "fires" claim itself needs the deferred beta.1 emitter.
+>
+> **Superseded in part (2026-08-02).** The emitter landed: I1 T.4 emits
+> `read-observed.v1` from the attention detail read, and I1 T.1/T.3 moved
+> telemetry rows to the `telemetry_events` table. The gap that survives is
+> narrower — no emitter exists on the *answer-query* path — and U4-C.5's pin
+> must be rewritten against `telemetry_events`. See the note on U4-C.5.
 
 **Cross-section assumption (U4-A content module).** U4-A owns the SKILL.md
 generator. This section assumes U4-A exposes a section-provider interface of
@@ -17109,6 +17183,14 @@ required.
 ---
 
 ### Task U4-C.1: Single-source honest-empty wording constant
+
+> **Removed as satisfied — see the 2026-08-01 BINDING amendment above this
+> section ("honest-empty is engine-rendered, not templated").** The deliverable
+> `HONEST_EMPTY_PREFIX` has no subject: the anchoring literal is gone and
+> `retrieval_pipeline.honest_empty(...)` is already the single source under
+> `src/`. The unchecked steps below are the superseded original body — do not
+> execute them. (Plan reconciliation 2026-08-02: only the `tests/conftest.py`
+> registration named here landed, and it landed as part of U4-C.2.)
 
 **Files:**
 - Modify: `src/memoria_vault/runtime/search_index.py` (constants at lines 29-30; wording literal at line 243)
@@ -17468,6 +17550,16 @@ required.
   them: ImportError on `HONEST_EMPTY_PREFIX` — confirming the test binds to
   the shared constant, not to a retyped string.
 
+  > **Plan reconciliation 2026-08-02: deliberately not run, and not runnable.**
+  > This ordering check's premise died with U4-C.1: there is no
+  > `HONEST_EMPTY_PREFIX` to fail the import on. The task's product shipped in
+  > the retargeted payload-structure form in #1683 —
+  > `tests/test_mcp_transport.py::test_mcp_answer_query_no_hit_payload_rides_dispatch_intact`
+  > (docstring "U4-C.4 (amended 2026-08-01)") pins `pipeline_counts`,
+  > `excluded_strata` and `unknowns` surviving worker dispatch. Nothing about
+  > U4-C.4 is outstanding; the box stays unticked only because the step as
+  > written cannot be executed.
+
 - [x] Run the whole file: `python -m pytest tests/test_mcp_transport.py -v` — all pass.
 
 - [ ] Commit:
@@ -17482,6 +17574,18 @@ required.
 ---
 
 ### Task U4-C.5: Read-observed telemetry — pin what I1 actually shipped
+
+> **Plan reconciliation 2026-08-02 (BINDING): open, but re-specify before
+> executing — the printed test would pass vacuously.** Two premises died since
+> this section was written. (1) "Nothing emits `read-observed.v1`" is false on
+> `main`: I1 T.4 shipped `_record_attention_read` (`engine/api.py`), which
+> emits on every attention detail read and is pinned by
+> `tests/test_telemetry_read_paths.py` and consumed by `engine/dashboard.py`.
+> (2) I1 T.1/T.3 moved these rows out of the journal: telemetry lands in
+> `telemetry_events`, not `event_log`, so the printed
+> `SELECT payload_json FROM event_log` queries the wrong table and would assert
+> nothing. Narrow the pin to "the answer-query path emits no `read-observed.v1`",
+> read `telemetry_events`, and drop the "emission is deferred" rationale.
 
 **Files:**
 - Modify: `tests/test_mcp_transport.py` (insert after the U4-C.4 test, before

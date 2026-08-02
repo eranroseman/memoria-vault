@@ -8129,13 +8129,13 @@ the spec; C.6 defines it as: every `type: project` note whose frontmatter
 
 **Steps:**
 
-- [ ] Register the test file. In `tests/conftest.py` `TEST_LEVELS` (line 18 dict), add alphabetically:
+- [x] Register the test file. In `tests/conftest.py` `TEST_LEVELS` (line 18 dict), add alphabetically:
 
   ```python
       "test_propagation.py": "runtime",
   ```
 
-- [ ] Write the failing tests. Create `tests/test_propagation.py`:
+- [x] Write the failing tests. Create `tests/test_propagation.py`:
 
   ```python
   from __future__ import annotations
@@ -8308,9 +8308,9 @@ the spec; C.6 defines it as: every `type: project` note whose frontmatter
       }
   ```
 
-- [ ] Run to verify failure: `python -m pytest tests/test_propagation.py -v` — expected: `ModuleNotFoundError: No module named 'memoria_vault.runtime.propagation'`.
+- [x] Run to verify failure: `python -m pytest tests/test_propagation.py -v` — expected: `ModuleNotFoundError: No module named 'memoria_vault.runtime.propagation'`.
 
-- [ ] Write the minimal implementation. Create `src/memoria_vault/runtime/propagation.py`:
+- [x] Write the minimal implementation. Create `src/memoria_vault/runtime/propagation.py`:
 
   ```python
   """Typed-consequence propagation over the grounding closure and derivation DAG."""
@@ -8474,8 +8474,8 @@ the spec; C.6 defines it as: every `type: project` note whose frontmatter
       )
   ```
 
-- [ ] Run to verify pass: `python -m pytest tests/test_propagation.py -v`.
-- [ ] Run the gate: `python scripts/verify`.
+- [x] Run to verify pass: `python -m pytest tests/test_propagation.py -v`.
+- [x] Run the gate: `python scripts/verify`.
 - [ ] Commit:
 
   ```
@@ -10530,7 +10530,7 @@ cover `tension` at the roster level in `tests/test_edges.py`, not with a
 
 **Steps:**
 
-- [ ] Write the failing tests first, in `tests/test_project_knowledge.py`.
+- [x] Write the failing tests first, in `tests/test_project_knowledge.py`.
   Each must mutate exactly one arm:
   - three `rebuttal` edges into the thesis component → `argument_stage ==
     "contested"`, `displayed_confidence == "contested"`,
@@ -10551,14 +10551,14 @@ cover `tension` at the roster level in `tests/test_edges.py`, not with a
   only exercises the `developing` short-circuit and proves nothing about the
   roster).
 
-- [ ] Run to verify failure:
+- [x] Run to verify failure:
   `python -m pytest tests/test_project_knowledge.py -v` — expected: the
   rebuttal and qualifier cases fail with `argument_stage == "supported"`.
 
-- [ ] Add the rosters to `edges.py` and pin them in `tests/test_edges.py`,
+- [x] Add the rosters to `edges.py` and pin them in `tests/test_edges.py`,
   including the partition assertion against `EDGE_RELATIONS`.
 
-- [ ] Write the minimal implementation in `knowledge.py`: a private
+- [x] Write the minimal implementation in `knowledge.py`: a private
   `_challenge_count(counts)`/`_support_count(counts)` pair summing the
   imported rosters, then
   - `_argument_stage`: below threshold → unchanged; challenge present →
@@ -10571,16 +10571,16 @@ cover `tension` at the roster level in `tests/test_edges.py`, not with a
   `_argument_advisories` alone — ERP-D.3 owns that family, and splitting the
   edit across two tasks is what the ordering note above prevents.
 
-- [ ] Re-check the callers that re-export the stage without recomputing it:
+- [x] Re-check the callers that re-export the stage without recomputing it:
   `knowledge.py:788`, `worker.py:570`, `worker.py:606`. They pass the value
   through; confirm by content that none re-derives it, and if one does, fix it
   in this task rather than leaving a second stage machine.
 
-- [ ] Run to verify pass, including the surfaces that assert a stage string:
+- [x] Run to verify pass, including the surfaces that assert a stage string:
   `python -m pytest tests/test_project_knowledge.py tests/test_edges.py tests/test_gap_analysis.py tests/test_cli_work_project.py tests/test_worker_product_jobs.py tests/test_project_structural_impact.py -v`
   (the last file must pass **unmodified** — it pins the other lens).
 
-- [ ] Run the gate: `python scripts/verify`.
+- [x] Run the gate: `python scripts/verify`.
 
 - [ ] Commit:
   `git add src/memoria_vault/runtime/subsystems/lib/edges.py src/memoria_vault/runtime/knowledge.py tests/test_project_knowledge.py tests/test_edges.py`
@@ -10664,7 +10664,7 @@ cover `tension` at the roster level in `tests/test_edges.py`, not with a
 
 **Steps:**
 
-- [ ] Write the failing tests — append to `tests/test_project_knowledge.py`:
+- [x] Write the failing tests — append to `tests/test_project_knowledge.py`:
 
 ```python
 def _seed_argument(vault: Path) -> None:
@@ -10759,13 +10759,13 @@ def test_warrant_absence_finding_fires_above_threshold_with_denominator(
   the mirror re-keys paths to ULIDs rather than only in the provisional
   path-keyed state.
 
-- [ ] Run to verify they fail:
+- [x] Run to verify they fail:
   `python -m pytest tests/test_project_knowledge.py::test_no_support_gap_replaces_unstated_warrant_alias tests/test_project_knowledge.py::test_warrant_absence_finding_disabled_by_default tests/test_project_knowledge.py::test_warrant_absence_finding_fires_above_threshold_with_denominator -v`
   Expected: first fails (`"unstated-warrant" in kinds` — the alias still fires); second fails
   the same way (the alias fires with zero warrant edges); third fails with no
   `unstated-warrant` row / `KeyError: 'warrant_count'`.
 
-- [ ] Write the config loader — append to `src/memoria_vault/runtime/subsystems/lib/edges.py` (add `import yaml` and `from pathlib import Path` to its imports if ERP-A's module does not already have them):
+- [x] Write the config loader — append to `src/memoria_vault/runtime/subsystems/lib/edges.py` (add `import yaml` and `from pathlib import Path` to its imports if ERP-A's module does not already have them):
 
 ```python
 EDGES_CONFIG = ".memoria/config/edges.yaml"
@@ -10794,7 +10794,7 @@ def warrant_absence_threshold(vault: Path) -> int | None:
     return value
 ```
 
-- [ ] Write the knowledge.py changes. (1) In `_argument_gap_findings` (lines 2943-2977) replace the `supports == 0` block (lines 2953-2960) and thread the guard:
+- [x] Write the knowledge.py changes. (1) In `_argument_gap_findings` (lines 2943-2977) replace the `supports == 0` block (lines 2953-2960) and thread the guard:
 
 ```python
 def _argument_gap_findings(
@@ -10898,7 +10898,7 @@ def _warrant_absence_gap(
 
   (`_argument_gap_why` already handles `no-support` at line 978; `_argument_gap_kind` maps both kinds to its default `argument-unsupported` — no change, the gap-card vocabulary is stable.)
 
-- [ ] Run to verify the three new tests pass and the existing lens pins hold:
+- [x] Run to verify the three new tests pass and the existing lens pins hold:
   `python -m pytest tests/test_project_knowledge.py tests/test_gap_analysis.py -v`
 
 - [ ] Commit:

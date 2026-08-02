@@ -2146,6 +2146,29 @@ environment-variable identifier, not a credential.
 > not copy or execute that draft. In particular, LOOP.3 must never call
 > `result.usage()` or pass a raw SDK result to `_record_token_usage`.
 
+> **Plan reconciliation 2026-08-02: partially applied — four named gaps
+> remain, one of them a live behavioral defect.** The breaker itself shipped
+> (`TOKEN_CEILING_ENV`, `_TOKEN_LEDGER`, `_token_ceiling`,
+> `_require_token_budget` called first in `_pydantic_ai_chat`, one `usage()`
+> harvest, charge before `text` is read — all in `runtime/operations.py`), and
+> `tests/test_token_ceiling.py` is registered `unit` in `tests/conftest.py`.
+> Still outstanding, and why every step below stays unticked:
+>
+> 1. `_record_token_usage` still takes the **raw result**, not the canonical
+>    data the override requires.
+> 2. **Live defect:** a legitimate `total_tokens=0` is charged the `max_tokens`
+>    fallback (`if total <= 0: total = int(settings.get("max_tokens") or 0)`),
+>    violating "a valid zero is charged as zero".
+> 3. The test file hardcodes 25 instead of importing `LIVE_USAGE`, and is
+>    missing four named cases: valid-zero-charges-zero, empty-output
+>    (ledger already charged, `usage_calls == 1`), deterministic-fixture-under-
+>    a-ceiling, and a `run_sync`-raises case asserting zero ledger change with
+>    no `usage()` harvest.
+> 4. The doctor regression was never written: `tests/test_cli_doctor_eval.py`
+>    contains no `TOKEN_CEILING` / `_TOKEN_LEDGER` / `model_call` reference, so
+>    the two-dispatch ceiling path, the `model token ceiling reached` message,
+>    and the absent-journal-row assertion are all unproved.
+
 - [ ] **Write the canonical failing tests.** Create
   `tests/test_token_ceiling.py` with the existing `POLICY`/keyless `RUNNER`, a
   ledger reset helper, and `LIVE_USAGE, patch_pydantic_ai` imported from
@@ -2917,10 +2940,18 @@ authors the method, user's agent voices it**), `mcp-server-wiring`,
   Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
   ```
 
-- [ ] Run `Skill(skill="superpowers:writing-plans", args="docs/superpowers/specs/$(date +%F)-u4-copi-agent-plugin-design.md — produce docs/superpowers/plans/$(date +%F)-u4-copi-skill.md")`
+- [x] Run `Skill(skill="superpowers:writing-plans", args="docs/superpowers/specs/$(date +%F)-u4-copi-agent-plugin-design.md — produce docs/superpowers/plans/$(date +%F)-u4-copi-skill.md")`
   and commit the plan.
 - [x] Acceptance: spec exists; the write path is exclusively `operation_run`;
   the engine-authored vs agent-voiced boundary is explicit per artifact.
+
+> **Plan-reconciliation amendment (2026-08-02).** The plan deliverable landed
+> under a different filename: the U4 tasks were written into the combined
+> `docs/superpowers/plans/2026-07-15-surfaces-bootstrap-and-plugins.md`
+> (sections U4-A.1 through U4-C.5), not a standalone `*-u4-copi-skill.md` —
+> the same merge LOOP.11 made for its U3 plan. The spec of record is
+> `docs/superpowers/specs/2026-07-15-u4-copi-agent-plugin-design.md`. Nothing
+> is outstanding; do not create a second U4 plan file.
 
 ---
 
