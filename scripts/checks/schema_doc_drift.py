@@ -112,10 +112,10 @@ def _schema_claim_errors(claim: dict[str, Any], live: dict[str, Any], type_name:
             errors.append(
                 f"{type_name}.{scalar}: documented {claim.get(scalar)!r} != live {live.get(scalar)!r}"
             )
-    errors.extend(_field_map_errors(claim, live, type_name, "required"))
-    errors.extend(_field_map_errors(claim, live, type_name, "optional"))
-    errors.extend(_enum_errors(claim, live, type_name))
-    errors.extend(_required_when_errors(claim, live, type_name))
+    errors.extend(_map_section_errors(claim, live, type_name, "required", "field"))
+    errors.extend(_map_section_errors(claim, live, type_name, "optional", "field"))
+    errors.extend(_map_section_errors(claim, live, type_name, "enums", "enum", normalize=list))
+    errors.extend(_map_section_errors(claim, live, type_name, "required_when", "rule"))
     errors.extend(_list_subset_errors(claim, live, type_name, "required_any"))
     errors.extend(_list_subset_errors(claim, live, type_name, "forbidden"))
     return errors
@@ -144,20 +144,6 @@ def _map_section_errors(
                 f"{type_name}.{section}.{key}: documented {value!r} != live {live_map[key]!r}"
             )
     return errors
-
-
-def _field_map_errors(
-    claim: dict[str, Any], live: dict[str, Any], type_name: str, section: str
-) -> list[str]:
-    return _map_section_errors(claim, live, type_name, section, "field")
-
-
-def _enum_errors(claim: dict[str, Any], live: dict[str, Any], type_name: str) -> list[str]:
-    return _map_section_errors(claim, live, type_name, "enums", "enum", normalize=list)
-
-
-def _required_when_errors(claim: dict[str, Any], live: dict[str, Any], type_name: str) -> list[str]:
-    return _map_section_errors(claim, live, type_name, "required_when", "rule")
 
 
 def _list_subset_errors(

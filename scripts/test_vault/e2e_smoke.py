@@ -26,7 +26,6 @@ STAGE_LABELS = {
     "workflow-replay": "7. workflow-replay: package-gate test-env harness",
     "final-integrity": "8. final-integrity: lint over the worked vault",
 }
-STAGE_ORDER = tuple(STAGE_LABELS)
 
 
 def assert_vault_skeleton(root: Path, vault: Path) -> None:
@@ -67,12 +66,6 @@ def assert_executable(path: Path, label: str) -> None:
     )
 
 
-def add_repo_paths(root: Path) -> None:
-    for path in (root, root / "src"):
-        if str(path) not in sys.path:
-            sys.path.insert(0, str(path))
-
-
 def _operation_context(vault: Path, operation_id: str):
     from memoria_vault.runtime import state
     from memoria_vault.runtime.trusted_writer import OperationContext, operation_context_record
@@ -101,8 +94,6 @@ def _operation_context(vault: Path, operation_id: str):
 
 
 def assert_offline_ingest(root: Path, vault: Path) -> None:
-    add_repo_paths(root)
-
     from memoria_vault.runtime import state
     from memoria_vault.runtime.capture import (
         bibtex_capture_payload,
@@ -149,8 +140,6 @@ def assert_offline_ingest(root: Path, vault: Path) -> None:
 
 
 def assert_typed_graph(root: Path, vault: Path) -> None:
-    add_repo_paths(root)
-
     from memoria_vault.runtime import state
     from memoria_vault.runtime.knowledge import write_project_argument_canvas
     from memoria_vault.runtime.policy.audit import sha256_file
@@ -252,25 +241,21 @@ def _env(root: Path) -> dict[str, str]:
 
 
 def _run(
-    command: list[str],
-    *,
-    env: dict[str, str] | None = None,
-    stdout: int | None = None,
-    stderr: int | None = None,
+    command: list[str], *, env: dict[str, str] | None = None
 ) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
         command,
         cwd=ROOT,
         env=env,
         text=True,
-        stdout=stdout,
-        stderr=stderr,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
         check=False,
     )
 
 
 def _run_or_fail(command: list[str], message: str, *, env: dict[str, str] | None = None) -> None:
-    result = _run(command, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    result = _run(command, env=env)
     if result.returncode != 0:
         _fail(f"{message}\n{result.stdout}")
 
@@ -278,12 +263,7 @@ def _run_or_fail(command: list[str], message: str, *, env: dict[str, str] | None
 def _git(
     vault: Path, *args: str, env: dict[str, str] | None = None
 ) -> subprocess.CompletedProcess[str]:
-    return _run(
-        ["git", "-C", str(vault), *args],
-        env=env,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-    )
+    return _run(["git", "-C", str(vault), *args], env=env)
 
 
 def _git_or_fail(vault: Path, *args: str, message: str, env: dict[str, str] | None = None) -> None:
@@ -293,7 +273,7 @@ def _git_or_fail(vault: Path, *args: str, message: str, env: dict[str, str] | No
 
 
 def _python() -> str:
-    return os.environ.get("PYTHON", sys.executable)
+    return sys.executable
 
 
 def _test_vault_root() -> Path:
@@ -334,8 +314,6 @@ def _detector_verdict(vault: Path, env: dict[str, str]) -> str:
             str(vault),
         ],
         env=env,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
     )
     if result.returncode != 0:
         _fail(f"detectors failed\n{result.stdout}")
@@ -454,7 +432,6 @@ def _workflow_replay(root: Path, vault: Path, env: dict[str, str]) -> None:
         [
             _python(),
             str(root / "scripts/test_vault/test_env_harness.py"),
-            "replay",
             "--root",
             str(root),
             "--vault",
