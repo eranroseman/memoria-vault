@@ -14,12 +14,14 @@ workflow, a `read-observed.v1` with `staleness_hit: false`, and a telemetry row
 whose grouping field is absent.
 
 **Emptiness that is honest vs. emptiness that is degenerate.** `inflow_by_day`,
-`per_producer`, `skipped_runs`, `edge_writes` and `decision_rules` have no shipped
-producer yet (I1 A.3/A.4, graph ERP-D.6, I1 H.3/H.4). Every one of them is still
-proved against a real fixture here -- through `record_telemetry_event` where the
-event type validates today, and through a direct `telemetry_events` insert for
-`edge-write.v1`, whose writer lands with ERP-D.6 -- so the query is proved to read
-the column and the event type it claims, not merely to return `{}`.
+`per_producer`, `skipped_runs` and `edge_writes` have no shipped producer yet (I1
+A.3/A.4, graph ERP-D.6). Every one of them is still proved against a real fixture
+here -- through `record_telemetry_event` where the event type validates today, and
+through a direct `telemetry_events` insert for `edge-write.v1`, whose writer lands
+with ERP-D.6 -- so the query is proved to read the column and the event type it
+claims, not merely to return `{}`. `decision_rules` is the exception: its producer
+is the registry that ships in `runtime.decision_rules` (I1 H.3), so it is populated
+from the first read and `tests/test_decision_rules.py` owns its cases.
 """
 
 from __future__ import annotations
@@ -76,8 +78,13 @@ EMPTY_PAYLOAD: dict[str, Any] = {
     "reads_staleness": {"reads": 0, "staleness_hits": 0},
     "edge_writes": {},
     "exploration": {"surfaced": 0, "acted_on": 0},
-    "decision_rules": {"rules": [], "would_fire": []},
 }
+# `decision_rules` is deliberately absent above: it is the one panel that is *not*
+# empty on a fresh vault. The sixteen-rule pre-registration ships in
+# `runtime.decision_rules`, so a new vault reads every blocker armed with nothing
+# crossing. `tests/test_decision_rules.py` owns the roster and the thresholds; here
+# only the wiring is pinned.
+EMPTY_REGISTRY_RULES = 16
 
 
 def _card(vault: Path, name: str, **frontmatter: Any) -> str:
@@ -168,8 +175,12 @@ def test_fresh_vault_assembles_seven_honestly_empty_panels(tmp_path: Path) -> No
     """
     payload = assemble_dashboard(tmp_path)
 
-    assert payload == EMPTY_PAYLOAD
     assert tuple(payload) == DASHBOARD_PANELS
+    registry = payload.pop("decision_rules")
+    assert payload == EMPTY_PAYLOAD
+    assert len(registry["rules"]) == EMPTY_REGISTRY_RULES
+    assert all(rule["status"] == "armed" for rule in registry["rules"])
+    assert registry["would_fire"] == []
 
 
 def test_dashboard_has_exactly_seven_panels_and_no_composite_score(tmp_path: Path) -> None:
