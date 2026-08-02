@@ -418,6 +418,142 @@ def test_worker_runs_frame_paper_operation(tmp_path: Path) -> None:
     assert frontmatter["outcome_frame"]["status"] == "framed"
 
 
+def _frame_paper_payload(**extra: object) -> dict:
+    payload: dict = {
+        "project_path": "project-alpha",
+        "target": "Journal of Testable Systems",
+        "audience": "local-first tool builders",
+        "research_question": "Can Memoria support standalone CLI research?",
+        "central_contribution": "A checked CLI loop can produce usable evidence.",
+        "gap_statement": "Existing PKM loops lack local checked export.",
+        "claim_evidence_map": {"CLI loop works": "notes/support.md"},
+        "figure_plan": {"Figure 1": "CLI loop stages"},
+        "limitations": "Single-corpus dogfood run.",
+    }
+    payload.update(extra)
+    return payload
+
+
+def _framable_project(vault: Path) -> str:
+    project_rel = "projects/project-alpha/project.md"
+    project = vault / project_rel
+    project.parent.mkdir(parents=True, exist_ok=True)
+    project.write_text(
+        "---\n"
+        "type: project\n"
+        "id: 01ARZ3NDEKTSV4RRFFQ69G5FAV\n"
+        "title: Alpha project\n"
+        "tags: []\n"
+        "links: {}\n"
+        "paper_plan: {}\n"
+        "outcome_frame: {}\n"
+        "---\n"
+        "Body.\n",
+        encoding="utf-8",
+    )
+    mark_file_status(vault, project_rel, "project")
+    return project_rel
+
+
+def dispositions(vault: Path) -> list[dict]:
+    return state.read_event_log(vault, event_types=["disposition"])
+
+
+def test_curate_note_link_worker_branch_threads_proposal_ref(tmp_path: Path) -> None:
+    """The dispatch branch reads `proposal_ref` off the payload, or the gate is unreachable.
+
+    The engine-level pair in `test_knowledge.py` proves `curate_note_link`; this
+    one proves the worker actually hands it the payload field, which is the only
+    route a real caller has.
+    """
+    vault = workspace(tmp_path)
+    write_note(vault, "support", "checked", "Support body.")
+    write_note(vault, "thesis", "checked", "Thesis body.")
+    write_note(vault, "aside", "checked", "Aside body.")
+
+    enqueue_operation(
+        vault,
+        "curate-note-link",
+        payload={
+            "source_note_path": "notes/support.md",
+            "target_path": "notes/thesis.md",
+            "link_type": "supports",
+            "proposal_ref": "inbox/candidate-link-x.md",
+        },
+        idempotency_key="link-proposed",
+        actor="pi",
+    )
+    proposed = run_next_job(vault, machine="test-machine")
+    enqueue_operation(
+        vault,
+        "curate-note-link",
+        payload={
+            "source_note_path": "notes/support.md",
+            "target_path": "notes/aside.md",
+            "link_type": "supports",
+        },
+        idempotency_key="link-original",
+        actor="pi",
+    )
+    original = run_next_job(vault, machine="test-machine")
+
+    assert proposed is not None and proposed["status"] == "done"
+    assert original is not None and original["status"] == "done"
+    rows = dispositions(vault)
+    assert [(row["decision"], row["item_type"], row["item_id"]) for row in rows] == [
+        ("accept", "edge-proposal", "inbox/candidate-link-x.md")
+    ]
+
+
+def test_frame_paper_with_proposal_ref_emits_one_frame_proposal_accept(tmp_path: Path) -> None:
+    """I1 spec §2 contract 4: framing a machine-proposed frame is PI judgment."""
+    vault = workspace(tmp_path)
+    _framable_project(vault)
+
+    enqueue_operation(
+        vault,
+        "frame-paper",
+        payload=_frame_paper_payload(proposal_ref="  inbox/candidate-frame-y.md  "),
+        idempotency_key="frame-paper-proposed",
+        actor="pi",
+    )
+    done = run_next_job(vault, machine="test-machine")
+
+    assert done is not None and done["status"] == "done"
+    rows = dispositions(vault)
+    assert len(rows) == 1
+    assert rows[0]["decision"] == "accept"
+    assert rows[0]["item_type"] == "frame-proposal"
+    assert rows[0]["item_id"] == "inbox/candidate-frame-y.md"
+
+
+def test_frame_paper_without_proposal_ref_emits_nothing(tmp_path: Path) -> None:
+    """PI-original framing records no disposition — absent and blank alike."""
+    vault = workspace(tmp_path)
+    _framable_project(vault)
+
+    enqueue_operation(
+        vault,
+        "frame-paper",
+        payload=_frame_paper_payload(),
+        idempotency_key="frame-paper-original",
+        actor="pi",
+    )
+    first = run_next_job(vault, machine="test-machine")
+    enqueue_operation(
+        vault,
+        "frame-paper",
+        payload=_frame_paper_payload(proposal_ref="   "),
+        idempotency_key="frame-paper-blank",
+        actor="pi",
+    )
+    second = run_next_job(vault, machine="test-machine")
+
+    assert first is not None and first["status"] == "done"
+    assert second is not None and second["status"] == "done"
+    assert dispositions(vault) == []
+
+
 def test_worker_runs_project_argument_analysis_operation_jobs(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
     (vault / "projects/project-alpha").mkdir(parents=True)
@@ -1012,6 +1148,70 @@ def test_worker_runs_mark_checked_operation_jobs(tmp_path: Path) -> None:
     assert committed == {state.JOURNAL_HEAD_REL, "notes/pi.md"}
 
 
+def test_mark_checked_emits_accept_disposition_with_the_target_doc_type(tmp_path: Path) -> None:
+    """I1 spec §2: promoting machine-staged content to checked is PI judgment on it.
+
+    Two concept types, never one: `item_type` is the *target's* frontmatter
+    `type`, and a single-type fixture cannot tell that from a hardcoded "note".
+    """
+    vault = workspace(tmp_path)
+    enqueue_trusted_write(
+        vault, "notes/pi.md", note_text(), idempotency_key="write-note", actor="operation"
+    )
+    run_next_job(vault, machine="test-machine")
+    enqueue_trusted_write(
+        vault,
+        "hubs/pi.md",
+        "---\ntype: hub\ntitle: Worker hub\ntag: worker\ntags: []\nlinks: {}\n---\nBody.\n",
+        idempotency_key="write-hub",
+        actor="operation",
+    )
+    run_next_job(vault, machine="test-machine")
+
+    for rel, key in (("notes/pi.md", "mark-note"), ("hubs/pi.md", "mark-hub")):
+        enqueue_operation(
+            vault,
+            "mark-checked",
+            payload={"target_path": rel},
+            idempotency_key=key,
+            actor="pi",
+        )
+        done = run_next_job(vault, machine="test-machine")
+        assert done is not None and done["status"] == "done", done
+
+    rows = dispositions(vault)
+    assert {row["item_id"]: row["item_type"] for row in rows} == {
+        "notes/pi.md": "note",
+        "hubs/pi.md": "hub",
+    }
+    assert {row["decision"] for row in rows} == {"accept"}
+
+
+def test_mark_checked_disposition_survives_an_unnormalized_target_path(tmp_path: Path) -> None:
+    """The payload path is caller text; the recorded `item_id` is the canonical one.
+
+    `mark_checked` normalizes before it writes, so a disposition keyed off the
+    raw payload string would file the same document under two different ids.
+    """
+    vault = workspace(tmp_path)
+    enqueue_trusted_write(
+        vault, "notes/pi.md", note_text(), idempotency_key="write-note", actor="operation"
+    )
+    run_next_job(vault, machine="test-machine")
+
+    enqueue_operation(
+        vault,
+        "mark-checked",
+        payload={"target_path": "./notes/pi.md"},
+        idempotency_key="mark-unnormalized",
+        actor="pi",
+    )
+    done = run_next_job(vault, machine="test-machine")
+
+    assert done is not None and done["status"] == "done", done
+    assert [row["item_id"] for row in dispositions(vault)] == ["notes/pi.md"]
+
+
 def test_worker_runs_update_work_operation_jobs(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
     state.upsert_catalog_record(
@@ -1067,6 +1267,139 @@ def test_worker_runs_update_work_operation_jobs(tmp_path: Path) -> None:
     committed = set(git(vault, "show", "--name-only", "--format=", done["commit"]).splitlines())
     assert committed == {state.JOURNAL_HEAD_REL, ".memoria/overrides.jsonl"}
     assert git(vault, "status", "--short", "--", ".memoria/overrides.jsonl") == ""
+
+
+def _seed_work(vault: Path, work_id: str, **fields: object) -> None:
+    state.upsert_catalog_record(
+        vault,
+        work_id=work_id,
+        title="Original",
+        description="Original description",
+        check_status="checked",
+        **fields,
+    )
+
+
+def _run_update_work(vault: Path, key: str, payload: dict) -> dict:
+    enqueue_operation(vault, "update-work", payload=payload, idempotency_key=key, actor="pi")
+    done = run_next_job(vault, machine="test-machine")
+    assert done is not None and done["status"] == "done", done
+    return done
+
+
+def test_update_work_overwriting_a_machine_enriched_value_is_an_edit(tmp_path: Path) -> None:
+    """I1 spec §2: correcting what enrich-source wrote is PI judgment over machine output.
+
+    Overwriting a previously non-empty `identifiers`/`csl_json` value is a
+    correction; filling a previously empty one is completion. That distinction
+    is the precision signal, and it needs the *before* value to exist.
+    """
+    vault = workspace(tmp_path)
+    _seed_work(
+        vault,
+        "alpha",
+        identifiers={"doi": "10.1000/machine"},
+        csl_json={"title": "Original", "DOI": "10.1000/machine"},
+    )
+
+    _run_update_work(vault, "correct-doi", {"work_id": "alpha", "doi": "10.1000/corrected"})
+
+    rows = dispositions(vault)
+    assert [(row["decision"], row["item_type"], row["item_id"]) for row in rows] == [
+        ("edit", "work", "alpha")
+    ]
+
+
+def test_update_work_correction_is_seen_through_identifiers_alone(tmp_path: Path) -> None:
+    """`identifiers`' before-state is load-bearing on its own, not a spare wheel.
+
+    A DOI update writes `identifiers["doi"]` and `csl_json["DOI"]` together, so
+    a fixture carrying both prior values passes even with the `identifiers`
+    before-state thrown away. Capture can leave a DOI in `identifiers` while the
+    provider payload behind `csl_json` carries none — then only the identifiers
+    pair sees a prior value, and the csl side is a completion.
+    """
+    vault = workspace(tmp_path)
+    _seed_work(
+        vault,
+        "zeta",
+        identifiers={"doi": "10.1000/machine"},
+        csl_json={"title": "Original"},
+    )
+
+    _run_update_work(vault, "correct-identifier", {"work_id": "zeta", "doi": "10.1000/pi"})
+
+    assert [row["decision"] for row in dispositions(vault)] == ["edit"]
+
+
+def test_update_work_correction_is_seen_through_csl_json_alone(tmp_path: Path) -> None:
+    """`csl_json`'s before-state is load-bearing on its own, not a spare wheel.
+
+    A DOI correction moves `identifiers` *and* `csl_json` together, so a test
+    that only ever corrects a DOI passes even if the `csl_json` before-state is
+    thrown away. `resource` moves `csl_json["URL"]` and nothing else.
+    """
+    vault = workspace(tmp_path)
+    _seed_work(
+        vault,
+        "epsilon",
+        identifiers={},
+        csl_json={"title": "Original", "URL": "https://example.invalid/machine"},
+        resource="https://example.invalid/machine",
+    )
+
+    _run_update_work(
+        vault, "correct-url", {"work_id": "epsilon", "resource": "https://example.invalid/pi"}
+    )
+
+    assert [row["decision"] for row in dispositions(vault)] == ["edit"]
+
+
+def test_update_work_filling_an_empty_value_is_completion_not_an_edit(tmp_path: Path) -> None:
+    """No prior machine value means nothing was corrected — completion is silent."""
+    vault = workspace(tmp_path)
+    _seed_work(vault, "beta", identifiers={}, csl_json={"title": "Original"})
+
+    _run_update_work(vault, "fill-doi", {"work_id": "beta", "doi": "10.1000/first"})
+
+    assert dispositions(vault) == []
+
+
+def test_update_work_restating_the_same_value_is_not_an_edit(tmp_path: Path) -> None:
+    """A no-op rewrite of an enriched value corrects nothing."""
+    vault = workspace(tmp_path)
+    _seed_work(
+        vault,
+        "gamma",
+        identifiers={"doi": "10.1000/machine"},
+        csl_json={"title": "Original", "DOI": "10.1000/machine"},
+    )
+
+    _run_update_work(vault, "restate-doi", {"work_id": "gamma", "doi": "10.1000/machine"})
+    _run_update_work(vault, "retitle-only", {"work_id": "gamma", "title": "Retitled"})
+
+    assert dispositions(vault) == []
+
+
+def test_update_work_memoria_block_changes_are_never_machine_corrections(tmp_path: Path) -> None:
+    """`csl_json.memoria` has no machine author, so rewriting it corrects nobody.
+
+    `worker.py` is the only writer of that block (standing, research_area,
+    methodology): none of it comes from enrich-source or import. Comparing it
+    would fire an `edit` on every second standing change a PI ever makes.
+    """
+    vault = workspace(tmp_path)
+    _seed_work(
+        vault,
+        "delta",
+        csl_json={"title": "Original", "memoria": {"standing": "current", "topics": ["legacy"]}},
+    )
+
+    _run_update_work(vault, "restand", {"work_id": "delta", "standing": "archived"})
+    _run_update_work(vault, "remethod", {"work_id": "delta", "methodology": ["rct"]})
+
+    assert dispositions(vault) == []
+    assert state.catalog_source(vault, "delta")["csl_json"]["memoria"]["standing"] == "archived"
 
 
 def test_update_work_preserves_unrecognized_topics_from_catalog_row(tmp_path: Path) -> None:

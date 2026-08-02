@@ -97,6 +97,21 @@ def workspace(tmp_path: Path) -> Path:
     return tmp_path
 
 
+def _last_event(vault: Path, machine: str, kind: str) -> dict:
+    """The last journal export line of one event kind, selected by kind not position."""
+    events = [
+        event
+        for event in iter_jsonl(vault / f".memoria/journal/{machine}.jsonl")
+        if event["event"] == kind
+    ]
+    assert events, f"no {kind} event on {machine}"
+    return events[-1]
+
+
+def _dispositions(vault: Path) -> list[dict]:
+    return state.read_event_log(vault, event_types=["disposition"])
+
+
 def checked_note(vault: Path, name: str, title: str, note_id: str) -> Path:
     path = vault / "notes" / f"{name}.md"
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -355,7 +370,10 @@ def test_curate_note_candidate_accepts_checked_candidate_with_journal(tmp_path: 
     assert "status" not in read_frontmatter(vault / note_rel)
     assert state.note_curation_status(vault, note_rel) == "accepted"
     assert "The body stays intact." in (vault / note_rel).read_text(encoding="utf-8")
-    event = list(iter_jsonl(vault / ".memoria/journal/curator.jsonl"))[-1]
+    # Selected by kind, not by position: this curation now also appends a
+    # `disposition` row behind the `resolved` one (I1 spec §2), so `[-1]` would
+    # read the companion and stop testing the resolution it names.
+    event = _last_event(vault, "curator", "resolved")
     assert event["event"] == "resolved"
     assert event["operation"] == "curate-note-candidate"
     assert event["target_id"] == note_rel
@@ -428,6 +446,68 @@ def test_curate_note_candidate_rejects_non_candidate_status(tmp_path: Path) -> N
         raise AssertionError("curating an accepted note should fail")
 
 
+def _two_candidates(tmp_path: Path) -> tuple[Path, str, str]:
+    vault = workspace(tmp_path)
+    capture_source(
+        vault,
+        "source-alpha",
+        "Alpha Source",
+        "A fixture source.",
+        "Alpha content about framing, methods, outcomes, gaps, and impact.",
+        machine="capture-machine",
+    )
+    compile_source_digest(
+        vault,
+        "source-alpha",
+        ["Framing", "Methods", "Outcomes", "Gaps", "Impact"],
+        machine="digest-machine",
+    )
+    notes = emit_note_candidates(
+        vault,
+        "source-alpha",
+        [
+            {"title": "Kept candidate", "body": "Kept body."},
+            {"title": "Dropped candidate", "body": "Dropped body."},
+        ],
+        machine="note-machine",
+    )
+    kept, dropped = notes["note_paths"]
+    return vault, kept, dropped
+
+
+def test_curate_note_candidate_emits_disposition_accept_and_reject(tmp_path: Path) -> None:
+    """I1 spec §2: curation is PI judgment over machine-proposed content, always recorded.
+
+    Two candidates with opposite verdicts, never one: a single-decision fixture
+    cannot tell the honest accepted->accept/rejected->reject map from a constant.
+    The spec's `edit` row ("adopted modified") has no substrate here — the
+    signature carries no modified-content parameter — so it stays reserved.
+    """
+    vault, kept, dropped = _two_candidates(tmp_path)
+
+    curate_note_candidate(vault, kept, "accepted", actor="pi", machine="curator")
+    curate_note_candidate(vault, dropped, "rejected", actor="pi", machine="curator")
+
+    rows = _dispositions(vault)
+    assert {row["item_id"]: row["decision"] for row in rows} == {kept: "accept", dropped: "reject"}
+    assert {row["item_type"] for row in rows} == {"note-candidate"}
+    assert {row["schema"] for row in rows} == {"disposition.v1"}
+
+
+def test_curate_note_candidate_disposition_rides_the_same_commit(tmp_path: Path) -> None:
+    """The companion is journalled inside the operation, before its commit."""
+    vault, kept, _dropped = _two_candidates(tmp_path)
+
+    result = curate_note_candidate(vault, kept, "accepted", actor="pi", machine="curator")
+
+    committed = set(git(vault, "show", "--name-only", "--format=", result["commit"]).splitlines())
+    assert committed == {state.JOURNAL_HEAD_REL}
+    # Inside the operation's transaction: the disposition is already in the
+    # chain when `commit_writer_changes` writes the anchor this commit carries.
+    assert _last_event(vault, "curator", "disposition")["decision"] == "accept"
+    assert state.verify_journal_chain(vault)["ok"] is True
+
+
 def test_curate_note_link_records_typed_link_on_checked_note(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
     checked_note(vault, "source", "Source", "01KBN6V6KX0000000000000001")
@@ -456,6 +536,53 @@ def test_curate_note_link_records_typed_link_on_checked_note(tmp_path: Path) -> 
     assert event["reason"] == "PI linked claims"
     committed = set(git(vault, "show", "--name-only", "--format=", result["commit"]).splitlines())
     assert committed == {state.JOURNAL_HEAD_REL, "notes/source.md"}
+
+
+def test_curate_note_link_with_proposal_ref_emits_one_accept(tmp_path: Path) -> None:
+    """I1 spec §2 contract 4: `proposal_ref` present -> exactly one edge-proposal accept.
+
+    The spec's `edit` variant ("relation or target changed") needs the proposal's
+    original relation/target to diff against; a bare ref string carries neither,
+    so a present ref is always an `accept` until a structured proposal exists.
+    """
+    vault = workspace(tmp_path)
+    checked_note(vault, "source", "Source", "01KBN6V6KX0000000000000001")
+    checked_note(vault, "target", "Target", "01KBN6V6KX0000000000000002")
+
+    curate_note_link(
+        vault,
+        "source",
+        "supports",
+        "target",
+        actor="pi",
+        machine="curator",
+        proposal_ref="  inbox/candidate-link-x.md  ",
+    )
+
+    rows = _dispositions(vault)
+    assert len(rows) == 1
+    assert rows[0]["decision"] == "accept"
+    assert rows[0]["item_type"] == "edge-proposal"
+    assert rows[0]["item_id"] == "inbox/candidate-link-x.md"
+
+
+def test_curate_note_link_without_proposal_ref_emits_nothing(tmp_path: Path) -> None:
+    """PI-original linking is not judgment over a proposal, so it records none.
+
+    Two absent forms, not one: omitted entirely, and supplied blank. A gate
+    written `if proposal_ref:` passes the first and fails the second.
+    """
+    vault = workspace(tmp_path)
+    checked_note(vault, "source", "Source", "01KBN6V6KX0000000000000001")
+    checked_note(vault, "target", "Target", "01KBN6V6KX0000000000000002")
+    checked_note(vault, "other", "Other", "01KBN6V6KX0000000000000003")
+
+    curate_note_link(vault, "source", "supports", "target", actor="pi", machine="curator")
+    curate_note_link(
+        vault, "source", "supports", "other", actor="pi", machine="curator", proposal_ref="   "
+    )
+
+    assert _dispositions(vault) == []
 
 
 def test_curate_note_link_fires_edge_added_propagation(tmp_path: Path) -> None:

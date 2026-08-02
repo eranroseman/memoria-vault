@@ -10,6 +10,7 @@ import pytest
 from memoria_vault.cli import main
 from memoria_vault.runtime import state
 from memoria_vault.runtime.knowledge import promote_draft_passage as _promote_draft_passage
+from memoria_vault.runtime.operations import emit_disposition_event
 from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.vaultio import read_frontmatter
 from tests.helpers import call_with_context, copy_memoria_dirs, init_git
@@ -46,6 +47,41 @@ def test_promote_draft_passage_creates_unchecked_note_and_links_draft(tmp_path: 
     draft_text = draft.read_text(encoding="utf-8")
     assert "[Selected Claim](../../notes/selected-claim.md)" in draft_text
     assert "![[notes/selected-claim.md]]" not in draft_text
+
+
+def test_promote_draft_passage_emits_no_disposition(tmp_path: Path) -> None:
+    """I1 spec §2: a PI-original act is not judgment over a machine proposal.
+
+    The PI selects their own passage and titles it, so there is no proposal to
+    accept, reject or edit — `promote-draft-passage` is the section's one
+    never-emit site. The control at the end is not decoration: it proves this
+    fixture *can* surface a disposition, so the empty assertion above is a
+    property of the operation and not of the vault.
+    """
+    vault = _workspace(tmp_path)
+    _checked_project(vault)
+    draft = vault / "projects/project-alpha/draft.md"
+    draft.write_text("# Alpha draft\n\nFirst claim text.\n\nSecond claim text.\n", encoding="utf-8")
+
+    promote_draft_passage(
+        vault, "project-alpha", title="First Claim", passage="First claim text.", actor="pi"
+    )
+    promote_draft_passage(
+        vault, "project-alpha", title="Second Claim", passage="Second claim text.", actor="pi"
+    )
+
+    assert state.read_event_log(vault, event_types=["disposition"]) == []
+    call_with_context(
+        emit_disposition_event,
+        vault,
+        decision="accept",
+        item_type="note-candidate",
+        item_id="notes/control.md",
+        actor="pi",
+    )
+    assert [row["item_id"] for row in state.read_event_log(vault, event_types=["disposition"])] == [
+        "notes/control.md"
+    ]
 
 
 def test_promote_draft_passage_neutralizes_machine_draft_text(tmp_path: Path) -> None:
