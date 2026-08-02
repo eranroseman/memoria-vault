@@ -14,12 +14,14 @@ from memoria_vault.runtime import state
 from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.trusted_writer import OperationContext, operation_context_record
 from memoria_vault.runtime.vaultio import read_frontmatter
-from tests.paths import ROOT, WORKSPACE_SEED
+from tests.paths import ROOT as ROOT
+from tests.paths import WORKSPACE_SEED
 
-# Re-exported from tests.paths, which is the one place test code derives the
-# repo root -- kept apart from this module (which imports the runtime stack
-# above) so that runtime-free tests can get a Path without pulling the
-# runtime in; see tests/paths.py's docstring for why.
+# `ROOT as ROOT` above is the explicit re-export form: nothing in this module
+# uses it, but 21 test modules import it from here, so it is public surface
+# rather than a stray import. It is derived in tests/paths.py, kept apart
+# from this module -- which imports the runtime stack above -- so that
+# runtime-free tests can get a Path without pulling the runtime in.
 
 LIVE_USAGE = {
     "input_tokens": 17,
