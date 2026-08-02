@@ -316,14 +316,28 @@ def test_engine_attention_read_api_returns_table_and_card_view_specs(workspace: 
                 "title": "Attention",
                 "check_status": "unchecked",
                 "refs": ["inbox/alpha.md"],
-                "columns": ["title", "kind", "status", "target"],
+                "columns": [
+                    "title",
+                    "kind",
+                    "loudness",
+                    "raised_by",
+                    "created",
+                    "status",
+                    "target",
+                ],
                 "rows": [
                     {
                         "ref": "inbox/alpha.md",
                         "check_status": "unchecked",
+                        # This fixture carries no `loudness:`, `raised_by:` or
+                        # `created:`, so the three columns I1 A.1 added render
+                        # empty rather than inventing a band, a producer or a date.
                         "cells": {
                             "title": "alpha",
                             "kind": "gap",
+                            "loudness": "",
+                            "raised_by": "",
+                            "created": "",
                             "status": "open",
                             "target": "notes/alpha.md",
                         },

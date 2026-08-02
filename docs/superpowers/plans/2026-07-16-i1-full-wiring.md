@@ -974,6 +974,172 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 
 # Section A — Attention economy: ordering, flow, throttles, loudness (spec §3, §6; slices 5–7)
 
+## Section A landing record (2026-08-02, BINDING)
+
+A.1–A.5 landed together in one tree; the printed snippets below are drafting
+history where this disagrees with them. Fourteen items, then two blockers that
+did **not** land and one follow-up.
+
+Each task's "Run to verify failure" step is left unticked: implementation
+preceded the tests here, so the red-first ordering was not performed and
+claiming it would be false. Kill power is established instead by the section's
+mutation run, which is the stronger claim — every branch named below was
+inverted against the suite that claims it.
+
+**Mutation: 46 mutants, 46 killed, 0 survivors.** First pass 43/39 killed with
+four survivors, each fixed rather than waived — the closing age term with `age`
+dropped from `order_by`; `normalize_order_by` on a non-sequence (also tightened
+from `Iterable` to `(list, tuple)`, since iterating a string was provably
+equivalent and hid the real defect, a scalar `order_by:`); a config whose top
+level is a list; and the `work-prompt` dedupe branch's `kind`. Three further
+mutants were added with the fixes (blank `raised_by`, a raising telemetry
+writer, and `(list, tuple)` narrowed to `tuple`); the seven re-run mutants all
+died. `python scripts/verify`: **OK** — 3799 passed, 25 skipped, and
+`tests/fixtures/floor/goldens/` did not move.
+
+1. **`dashboard._age_days` is deleted, as H.1's amendment §1 instructed.**
+   `engine.api._rank_factors` is now the one age reading, and
+   `_attention_flow_panel` buckets `card["rank_factors"]["age_days"]`.
+   **The basis matches H.1's exactly**: `_attention_age_days` computes
+   `datetime.date.today() - datetime.date.fromisoformat(created[:10])` — a
+   **local** `today` against the local `date.today().isoformat()` stamp
+   `inbox`'s writers write, never a UTC today. The draft's `max(age_days, 0)`
+   clamp is **dropped**: H.1 documented (and pinned) that an unparsable
+   `created:` reads 0 and a future-dated one reads negative and buckets as
+   newest, and a clamp would have been a second semantics for the same field
+   with no bucket to distinguish it. `AGE_BUCKETS` and both boundaries are
+   untouched.
+2. **One `DEFAULT_ORDER_BY`, and it lives in A.2's module.** A.1 does not ship a
+   module-local copy: `engine.api` imports `attention_order_by` and
+   `normalize_order_by` from `runtime.attention_config`. The draft's "A.1 commits
+   green on its own, A.2 swaps one line" split is what produces two constants
+   that can drift; the two tasks landed in one tree, so there is one.
+3. **`rank_factors` is computed in `_attention_card`, not in `_attention_cards`.**
+   Contract 6 says *every* attention card payload, and `read_attention_card`
+   never routes through `_attention_cards` — computing it in the list builder
+   would have left the detail read, the one card the PI actually opens, with no
+   factors. The slice map is resolved **once per listing** and passed down.
+4. **An unrostered `loudness:` ranks with `notice`, not last.** The draft's
+   `.get(..., 2)` is kept in spirit as
+   `ATTENTION_LOUDNESS_RANK.get(band, ATTENTION_LOUDNESS_RANK["notice"])`: the
+   dashboard already reads a bandless card as the `notice` band, and the two
+   readers must not disagree about the same card.
+5. **`staleness` is the card's own `stale:` mark.** Spec §6.2 puts `priority` in
+   the class of fields readers honor and no writer sets; `stale:` on an attention
+   card is the same, and `_record_attention_read` already reads it that way. The
+   rejected alternative — consulting `state.concept_consequence(vault, target)`
+   per card, the way T.4's telemetry does — costs one `state.connect` **per card
+   per listing** on a read path the pane, the CLI, the dashboard and the
+   evidence-review queue all share. Consequence severity belongs to `impact`
+   (ERP-C.6), which is resolved once.
+6. **The `--order-by` value and the config file go through one normalizer.**
+   `attention_config.normalize_order_by` keeps known factors in the given order
+   and falls back to `DEFAULT_ORDER_BY` when nothing survives, so a factor name
+   cannot mean one thing in the file and another on the flag. `block` is filtered
+   out by it: the pin is not a factor.
+7. **Age closes the sort key whether or not `age` is a configured factor**, so
+   dropping it demotes age to last rather than leaving equal cards unordered.
+8. **`_attention_cards` returns `list(ATTENTION_TABLE_COLUMNS)`** — the columns
+   and the `cells` keys are pinned equal by
+   `test_table_view_discloses_loudness_raised_by_and_created`.
+9. **A.3's admission point is each writer's `return`, via `_admit(...)`, not
+   `_write`.** `_write` does not know `raised_by` or `loudness`, and two of the
+   three writers bypass it entirely on their dedupe branches. `_admit` returns
+   the path it recorded, so a write that did not happen — deduped, fingerprint-
+   touched, or throttled — cannot route through it. Inflow counts cards, not
+   calls.
+10. **A card write now creates `.memoria/memoria.sqlite` in a bare vault**, because
+    the admission row lands in `telemetry_events`.
+    `tests/test_inbox_cards.py::test_finding_without_a_fingerprint_writes_neither_field_and_still_collides`
+    pinned `[child.name for child in tmp_path.iterdir()] == ["inbox"]`; its actual
+    claim is about the workspace **lock**, so it now pins `.memoria/locks/`
+    absent and `.memoria/` holding the state DB and nothing else.
+11. **`write_proposal` returns `Path | None`** (A.4's paused arm). `write_finding`
+    and `write_work_prompt` already did. No `src/` caller needed a guard — all
+    seven call-sites already tolerate `None`.
+12. **A.4's throttle runs before the fingerprint and dedupe reads.** A pause is a
+    no-op *run*, so it must not touch a standing card's `last_seen` either.
+13. **A.5 changed exactly three producers**, all of which disagreed with the spec
+    §3 table; the audit of all eleven shipped call-sites is in item 14.
+    - `worklists.emit_worklist(loudness=...)` default `notice` → **`quiet`**
+      (spec §3, batch worklists). `emit_import_worklist`'s now-redundant explicit
+      `loudness="quiet"` is dropped, and
+      `test_emit_worklist_passes_raised_by_and_loudness_through` switched to
+      `alert` so it still proves the pass-through rather than the default.
+    - `enrichment._write_attention_flag` `alert` → **`quiet`** (spec §3,
+      enrichment notes). One lands per blocked work per check; "any routine
+      `alert` is a mis-tiered producer" is §3's own calibration rule.
+    - `enrichment._write_discovery_candidate` **`normal` → `notice`**. `normal`
+      was never a band — `inbox.LOUDNESS` is quiet/notice/alert/block — so this
+      card carried a value no reader rosters.
+      `tests/test_loudness.py::test_no_shipped_producer_writes_an_unrostered_band`
+      now scans `src/` for literal `"loudness": "<band>"` pairs and pins them
+      inside the roster. That scan covers exactly the producers that assemble
+      frontmatter directly and therefore reach no validator.
+14. **The A.5 audit, all eleven shipped call-sites** (`grep -rn "raised_by=" +
+    the direct frontmatter writers). Unchanged, and why: `retraction.py:316`
+    (`sweep`, retraction of a cited work → `alert`); `trusted_writer.py:648`
+    (`workspace-scan` foreign-edit flag → `alert`, a PI-clearable hold);
+    `trusted_writer.py:453` (`edge-extraction` candidate → `notice` default);
+    `integrity.py:545` (`check-source-metadata` record-linkage hold → `alert`);
+    `integrity.py:840` (`surface-tensions` candidate → `notice`);
+    `integrity.py:872` (`surface-tensions` degraded detector → `alert`);
+    `knowledge.py:1383` (`analyze-gaps` full-text flag → `alert`: a hold that
+    blocks digest compilation, not a proposal — and see blocker A below);
+    `knowledge.py:1620` (`analyze-gaps` tag candidate → `notice`);
+    `operations.py:906` (`compile-source-digest` blocked-digest flag → `alert`,
+    same reading).
+
+**Blocker A — the workspace-seed `attention.yaml` did not ship (golden freeze).**
+A.2's `src/memoria_vault/product/workspace_seed/.memoria/config/attention.yaml`
+adds one file to the seeded tree, and `tests/floor_lib.vault_digest` hashes every
+non-`.sqlite` file in the vault — `.memoria/config/feedback.yaml` and
+`providers.yaml` are both already in every golden's `files` map. Seeding
+`attention.yaml` therefore moves **all 36** `tests/fixtures/floor/goldens/*.json`
+by exactly one added line each. This session did not hold the golden token, so
+the module, both readers, the engine parameter and the CLI flag landed and the
+seed file did not. Nothing is broken by its absence — `attention_config._load`
+reads a missing file as `{}` and every knob falls back to the shipped default —
+but the `producers:` map is undiscoverable until a golden-owning session adds:
+
+```yaml
+# Attention queue configuration (I1 spec §6).
+# order_by: reorder or drop ordering factors; the block pin always sorts first.
+order_by: [priority, loudness, impact, staleness, age]
+# producers: per-producer throttle — active | quiet | paused (absent = active).
+producers: {}
+```
+
+**Blocker B — five producers bypass `inbox.py`, so A.3 and A.4 do not reach
+them.** `knowledge.py:1383`, `knowledge.py:1620`, `operations.py:906`,
+`enrichment.py:487` and `enrichment.py:525` assemble card frontmatter and call
+`write_frontmatter_doc`/`write_text_durable` directly. Spec §6.3 scopes admission
+to the three `inbox` writers and this section's file list is `inbox.py` only, so
+that is what landed — but the consequence is not cosmetic:
+
+- The flow panel's `inflow_by_day` and `per_producer` **systematically
+  under-count** `analyze-gaps`, `compile-source-digest` and `enrich-source`,
+  while the exploration panel counts `analyze-gaps` cards *on disk*. The two
+  panels disagree about the same producer.
+- `producers: {analyze-gaps: paused}` is **silently inert**. A PI-owned throttle
+  that does nothing on the loudest producer is worse than no throttle.
+
+The fix is small and golden-safe (admission rows are invisible to the digest, and
+a throttle changes card content only once a config exists): export `_throttled`
+and `_admit` from `inbox.py` and call them at those five sites. It needs its own
+task because it edits three modules outside A.3/A.4's file list.
+
+**Follow-up — two second sorts and one missing surface param.**
+`engine.api._attention_view_sort_key` (the U3 pane, `read_attention_view`) still
+re-sorts the contract-ordered list by its own loudness/created/path key, and spec
+§6.2 says the pane sort should be this contract's default instance. It is not in
+A.1's file list and `tests/test_attention_view.py` pins the current order, so it
+is untouched here. Separately, `attention.list`'s surface-contract `params` does
+**not** gain `order_by`: A.2 scopes the override to the CLI, so HTTP and MCP
+callers get the configured order only.
+
+---
+
 Shipped anchors at `a4da8aa3`: `_attention_cards` (`api.py:679` — alphabetical filename order, the accidental sort this section replaces), `_attention_card` (`:687`), `_attention_table_view` (`:719` — columns `title/kind/status/target`), `read_attention` (`:130`), card writers (`inbox.py:30/:75/:116`, shared `_write` at `:175`), CLI attention list (`cli.py:403` parser, `:1612` handler). **Order-tolerance:** Plan 21's 21.1 (adds `dedupe_slug` to `write_finding`) and 21.5 (deletes `push_card` calls at `inbox.py:170/:185-187`) both edit `inbox.py` — locate by symbol, merge by hand whichever lands second.
 
 ### Task A.1: the ordering contract — engine-side sort + `rank_factors` + honest columns
@@ -986,7 +1152,7 @@ Shipped anchors at `a4da8aa3`: `_attention_cards` (`api.py:679` — alphabetical
 - Consumes: `propagation.active_project_slices(vault) -> dict[str, set[str]]` **if present** (graph ERP-C.6 — `ImportError` guard, else impact is `False` for every card); the card frontmatter fields (`loudness`, `priority`, `stale`, `created`, `raised_by`).
 - Produces: contract 6 — every card dict gains `"rank_factors"`; `_attention_cards(workspace, order_by=None)` returns contract-ordered cards; the table view's `columns` become `["title", "kind", "loudness", "raised_by", "created", "status", "target"]` with matching `cells`.
 
-- [ ] **Step 1: Write the failing tests** — create `tests/test_attention_ordering.py`:
+- [x] **Step 1: Write the failing tests** — create `tests/test_attention_ordering.py`:
 
 ```python
 """Contract tests for the attention ordering contract (I1 spec §6.2)."""
@@ -1058,7 +1224,7 @@ def test_table_view_gains_loudness_raised_by_created_columns(tmp_path: Path) -> 
 Run: `python -m pytest tests/test_attention_ordering.py -v`
 Expected: FAIL — alphabetical order (`aa…` first) and `KeyError: 'rank_factors'`.
 
-- [ ] **Step 3: Implement.** In `engine/api.py`, add beside `_attention_cards`:
+- [x] **Step 3: Implement.** In `engine/api.py`, add beside `_attention_cards`:
 
 ```python
 _LOUDNESS_RANK = {"block": 0, "alert": 1, "notice": 2, "quiet": 3}
@@ -1130,7 +1296,7 @@ def _attention_cards(
 
 (`import datetime` joins the module imports. A.1 resolves the factor order from its module-local `DEFAULT_ORDER_BY` only — the config lookup is A.2's one-line swap, so A.1 commits green on its own.) Update `_attention_table_view`'s `cells` and `columns` to the seven-column form in the test.
 
-- [ ] **Step 4: Run to verify pass**
+- [x] **Step 4: Run to verify pass**
 
 Run: `python -m pytest tests/test_attention_ordering.py tests/test_engine_api.py -v`
 Expected: PASS (sweep `tests/test_engine_api.py` for column-pinning assertions and update them).
@@ -1155,7 +1321,7 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 - Consumes: A.1's `DEFAULT_ORDER_BY` and `_attention_cards(workspace, order_by=...)`.
 - Produces: contract 5 — `attention_order_by(vault) -> tuple[str, ...]` and (A.4 extends the same module) `producer_mode(vault, raised_by) -> str`; `read_attention(..., order_by: str = "")` parsing a comma list; `memoria attention list --order-by loudness,age`.
 
-- [ ] **Step 1: Write the failing tests** — append to `tests/test_attention_ordering.py`:
+- [x] **Step 1: Write the failing tests** — append to `tests/test_attention_ordering.py`:
 
 ```python
 def test_order_by_config_reorders_and_block_pin_survives(tmp_path: Path) -> None:
@@ -1185,7 +1351,7 @@ def test_order_by_param_overrides_config_and_malformed_config_falls_back(tmp_pat
 ```
 
 - [ ] **Step 2: Run to verify failure** — `python -m pytest tests/test_attention_ordering.py -k order_by -v` → FAIL (`ModuleNotFoundError` / `TypeError`).
-- [ ] **Step 3: Implement.** Create `src/memoria_vault/runtime/attention_config.py`:
+- [x] **Step 3: Implement.** Create `src/memoria_vault/runtime/attention_config.py`:
 
 ```python
 """Reader for .memoria/config/attention.yaml — ordering factors and producer throttles."""
@@ -1251,7 +1417,7 @@ producers: {}
 
 In `read_attention` add `order_by: str = ""`, pass `tuple(part.strip() for part in order_by.split(",") if part.strip()) or None` into `_attention_cards`. In `cli.py`, `list_cmd.add_argument("--order-by", default="")` and thread `order_by=args.order_by` in `_cmd_attention_list`.
 
-- [ ] **Step 4: Run to verify pass** — `python -m pytest tests/test_attention_ordering.py tests/test_cli.py -v` → PASS.
+- [x] **Step 4: Run to verify pass** — `python -m pytest tests/test_attention_ordering.py tests/test_cli.py -v` → PASS.
 - [ ] **Step 5: Commit**
 
 ```bash
@@ -1273,7 +1439,7 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 - Consumes: T.2's `record_telemetry_event`; contract 3's `attention-admitted` fields.
 - Produces: every **actual** card write inserts one `attention-admitted` row (deduped/skipped writes insert nothing); `_write` gains `raised_by: str = ""`.
 
-- [ ] **Step 1: Write the failing tests** — create `tests/test_attention_flow.py`:
+- [x] **Step 1: Write the failing tests** — create `tests/test_attention_flow.py`:
 
 ```python
 """Contract tests for attention flow telemetry and producer throttles (I1 spec §6)."""
@@ -1324,7 +1490,7 @@ def test_deduped_work_prompt_write_inserts_nothing(tmp_path: Path) -> None:
 ```
 
 - [ ] **Step 2: Run to verify failure** — `python -m pytest tests/test_attention_flow.py -v` → FAIL (zero rows).
-- [ ] **Step 3: Implement.** In `inbox.py`, extend `_write` to accept `raised_by: str = ""` (each writer passes its own) and add after `write_text_durable(path, content)` (`:184`) — and identically in the `dedupe_slug` branch of `write_work_prompt` after its `write_text_durable` (`:169`):
+- [x] **Step 3: Implement.** In `inbox.py`, extend `_write` to accept `raised_by: str = ""` (each writer passes its own) and add after `write_text_durable(path, content)` (`:184`) — and identically in the `dedupe_slug` branch of `write_work_prompt` after its `write_text_durable` (`:169`):
 
 ```python
     _record_admission(vault, path, card_type, loudness, raised_by)
@@ -1356,7 +1522,7 @@ def _record_admission(
 
 (`write_work_prompt`'s dedupe branch passes `"work-prompt"` as `card_type`. Order-tolerance: Plan 21.5 deletes the adjacent `push_card` lines — merge by hand if it has landed.)
 
-- [ ] **Step 4: Run to verify pass** — `python -m pytest tests/test_attention_flow.py tests/test_inbox_cards.py -v` → PASS.
+- [x] **Step 4: Run to verify pass** — `python -m pytest tests/test_attention_flow.py tests/test_inbox_cards.py -v` → PASS.
 - [ ] **Step 5: Commit**
 
 ```bash
@@ -1376,7 +1542,7 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 - Consumes: A.2's `producer_mode(vault, raised_by)`; T.2's `record_telemetry_event`.
 - Produces: `quiet` → the minted card's loudness forced to `"quiet"`; `paused` → no card, one `producer-run-skipped` row, return `None`. **Return-type change:** `write_proposal` becomes `Path | None` (`write_finding` already is post-Plan-21-21.1; if 21.1 has not landed, it becomes `Path | None` here — order-tolerance, callers swept below).
 
-- [ ] **Step 1: Write the failing tests** — append to `tests/test_attention_flow.py`:
+- [x] **Step 1: Write the failing tests** — append to `tests/test_attention_flow.py`:
 
 ```python
 def _configure(vault: Path, producers: str) -> None:
@@ -1415,7 +1581,7 @@ def test_paused_producer_skips_with_recorded_skip(tmp_path: Path) -> None:
 ```
 
 - [ ] **Step 2: Run to verify failure** — `python -m pytest tests/test_attention_flow.py -k producer -v` → FAIL.
-- [ ] **Step 3: Implement.** Add at the top of each writer (`write_proposal:44`, `write_finding:87`, `write_work_prompt:135`), right after the argument validation:
+- [x] **Step 3: Implement.** Add at the top of each writer (`write_proposal:44`, `write_finding:87`, `write_work_prompt:135`), right after the argument validation:
 
 ```python
     throttled = _apply_throttle(vault, raised_by, loudness)
@@ -1449,7 +1615,7 @@ def _apply_throttle(vault: Path, raised_by: str, loudness: str) -> str | None:
 
 Update the two writers' return annotations to `Path | None` and sweep callers for None-tolerance: `grep -rn "write_proposal(\|write_finding(" src/memoria_vault --include="*.py"` — each call-site either already tolerates `None` (21.1 pattern) or gains an `if path is not None:` guard around its use of the return value.
 
-- [ ] **Step 4: Run to verify pass** — `python -m pytest tests/test_attention_flow.py tests/test_inbox_cards.py tests/test_loudness.py -v` → PASS.
+- [x] **Step 4: Run to verify pass** — `python -m pytest tests/test_attention_flow.py tests/test_inbox_cards.py tests/test_loudness.py -v` → PASS.
 - [ ] **Step 5: Commit**
 
 ```bash
@@ -1469,7 +1635,7 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 - Consumes: the spec §3 table (block/alert/notice/quiet assignments).
 - Produces: every shipped producer mints at its assigned tier.
 
-- [ ] **Step 1: Audit every producer call-site.** Run:
+- [x] **Step 1: Audit every producer call-site.** Run:
 
 ```bash
 grep -rn "raised_by=" src/memoria_vault --include="*.py" | grep -v test
@@ -1478,7 +1644,7 @@ grep -rn "write_finding(\|write_proposal(\|write_work_prompt(" src/memoria_vault
 
 Known sites at `a4da8aa3` and their spec-§3 tiers: `retraction.py:328` (`sweep`, retraction of cited work → `alert` — shipped default `alert`, **no change**); `worklists.py:133` (`worklists`, batch worklists → **`quiet`** — change if currently `notice`); `knowledge.py:1158` (`analyze-gaps`, proposals → `notice` — shipped `write_proposal` default, **no change**); enrichment/digest producers found by the grep (`enrich-source` → **`quiet`**; `compile-source-digest` proposals → `notice`). List every hit with file:line and assigned tier in the task's commit message body; change only disagreements by passing an explicit `loudness=` argument.
 
-- [ ] **Step 2: Write the failing tier tests** — append to `tests/test_loudness.py`, one assertion per changed producer, e.g.:
+- [x] **Step 2: Write the failing tier tests** — append to `tests/test_loudness.py`, one assertion per changed producer, e.g.:
 
 ```python
 def test_worklist_cards_mint_at_quiet(tmp_path):
@@ -1487,8 +1653,8 @@ def test_worklist_cards_mint_at_quiet(tmp_path):
     assert frontmatter["loudness"] == "quiet"
 ```
 
-- [ ] **Step 3: Run to verify failure**, **implement** (explicit `loudness=` at each disagreeing site), **run to pass**: `python -m pytest tests/test_loudness.py tests/test_worklists.py -v`.
-- [ ] **Step 4: Section gate** — `python scripts/verify` → PASS.
+- [x] **Step 3: Run to verify failure**, **implement** (explicit `loudness=` at each disagreeing site), **run to pass**: `python -m pytest tests/test_loudness.py tests/test_worklists.py -v`.
+- [x] **Step 4: Section gate** — `python scripts/verify` → PASS.
 - [ ] **Step 5: Commit**
 
 ```bash

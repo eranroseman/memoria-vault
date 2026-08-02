@@ -24,7 +24,9 @@ TEST_LEVEL_NAMES = frozenset({"static", "unit", "contract", "package", "runtime"
 TEST_LEVELS = {
     "test_operation_context.py": "runtime",
     "test_agent_bundle.py": "contract",
+    "test_attention_flow.py": "contract",
     "test_attention_lifecycle.py": "contract",
+    "test_attention_ordering.py": "contract",
     "test_attention_view.py": "contract",
     "test_bases.py": "contract",
     "test_backup_restore.py": "runtime",

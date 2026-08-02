@@ -483,7 +483,12 @@ def _write_attention_flag(
             "agent_recommendation": "issues-found",
             "target": target,
             "raised_by": "enrich-source",
-            "loudness": "alert",
+            # I1 spec §3: enrichment notes mint at `quiet`. One of these lands per
+            # blocked work per check, so `alert` made the routine case loud -- and
+            # "any routine alert is a mis-tiered producer" is the policy's own
+            # calibration rule. The card is unchanged otherwise: it still lands,
+            # still counts, and still names what to fix.
+            "loudness": "quiet",
             "created": date.today().isoformat(),
         },
         f"# Finding\n\n{safe_finding}\n\n# Evidence\n\n{safe_evidence}\n",
@@ -521,7 +526,12 @@ def _write_discovery_candidate(
             "discovered_work_id": target_id,
             "relation_type": str(edge["relation_type"]),
             "raised_by": raised_by,
-            "loudness": "normal",
+            # `normal` was never a band: `inbox.LOUDNESS` is
+            # quiet/notice/alert/block, so this card carried a value no reader
+            # rosters. It sorted after every rostered band in the pane and counted
+            # as its own bucket on the dashboard. I1 spec §3 puts candidates at
+            # `notice`, which is also what `write_proposal` defaults to.
+            "loudness": "notice",
             "created": date.today().isoformat(),
         },
         (

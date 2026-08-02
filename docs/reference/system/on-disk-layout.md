@@ -180,6 +180,7 @@ Runtime-only (created in the deployed vault, never shipped):
 
 | Path | Created by | Holds |
 | --- | --- | --- |
+| `.memoria/config/attention.yaml` | the PI, by hand | Attention-queue knobs, both optional and both honored the moment the file exists: `order_by:` reorders or drops the ranking factors (`priority`, `loudness`, `impact`, `staleness`, `age`; the block pin is not a factor and always sorts first), and `producers:` maps a `raised_by` name to `active`, `quiet` (its future cards mint at the quiet band) or `paused` (its card-minting run becomes a recorded no-op). Absent, unreadable, or partly unknown, every knob falls back to the shipped default. Not seeded today — see the I1 plan's Section A landing record. |
 | `.memoria/data/retraction_watch.csv` | retraction refresh command | The local Retraction Watch index. |
 | `.memoria/.venv/` | installer | The vault-local Python used by the Memoria CLI/runtime package. |
 | `.git/hooks/pre-commit` | installer | The pre-commit hook (once the vault is a git repo). |

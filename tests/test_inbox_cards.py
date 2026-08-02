@@ -491,7 +491,14 @@ def test_finding_without_a_fingerprint_writes_neither_field_and_still_collides(t
     # writer's other callers -- the trusted writer's foreign-edit flag among them --
     # keep both their footprint and their timing. `.memoria/locks/` appears only when
     # a caller asks for the dedupe that needs serializing.
-    assert [child.name for child in tmp_path.iterdir()] == ["inbox"]
+    #
+    # The state DB is not part of that claim and is expected: I1 A.3 records one
+    # `attention-admitted` telemetry row per actual write, and `telemetry_events`
+    # lives in `.memoria/memoria.sqlite`. Every other `.memoria/` child is still an
+    # absence this pins.
+    assert not (tmp_path / ".memoria" / "locks").exists()
+    assert [child.name for child in (tmp_path / ".memoria").iterdir()] == ["memoria.sqlite"]
+    assert sorted(child.name for child in tmp_path.iterdir()) == [".memoria", "inbox"]
 
 
 def test_finding_fingerprint_scan_survives_an_unreadable_inbox_file(tmp_path):

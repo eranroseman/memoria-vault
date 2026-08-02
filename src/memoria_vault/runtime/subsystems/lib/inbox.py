@@ -49,14 +49,21 @@ def write_proposal(
     loudness: str = "notice",
     citekey: str = "",
     url: str = "",
-) -> Path:
-    """Write a candidate/gap card with the honesty body."""
+) -> Path | None:
+    """Write a candidate/gap card with the honesty body.
+
+    Returns None when the PI has paused this producer (I1 spec §6.4).
+    """
     if card_type not in PROPOSAL_TYPES:
         raise ValueError(f"not a proposal type: {card_type}")
     if certainty not in CERTAINTY:
         raise ValueError(f"certainty must be one of {CERTAINTY}")
     if loudness not in LOUDNESS:
         raise ValueError(f"loudness must be one of {LOUDNESS}")
+    throttled = _throttled(vault, raised_by, loudness)
+    if throttled is None:
+        return None
+    loudness = throttled
     today = datetime.date.today().isoformat()
     frontmatter = {
         "title": title,
@@ -78,7 +85,8 @@ def write_proposal(
         f"# Action\n\n{action}\n\n# For\n\n{argument_for}\n\n"
         f"# Against\n\n{argument_against}\n\n# What tipped it\n\n{what_tipped_it}\n"
     )
-    return _write(vault, card_type, title, frontmatter_doc(frontmatter, body))
+    path = _write(vault, card_type, title, frontmatter_doc(frontmatter, body))
+    return _admit(vault, path, card_type, loudness, raised_by)
 
 
 def write_finding(
@@ -115,6 +123,10 @@ def write_finding(
         raise ValueError(f"loudness must be one of {LOUDNESS}")
     if card_type == "flag" and not (target or citekey):
         raise ValueError("a flag must point at a target or citekey")
+    throttled = _throttled(vault, raised_by, loudness)
+    if throttled is None:
+        return None
+    loudness = throttled
     # Canonical from here on, so producers that disagree about padding still match.
     fingerprint = fingerprint.strip()
     today = datetime.date.today().isoformat()
@@ -161,8 +173,10 @@ def write_finding(
             if path.exists():
                 return None
             write_text_durable(path, content)
-            return path
-        return _write(vault, card_type, title, content)
+            return _admit(vault, path, card_type, loudness, raised_by)
+        return _admit(
+            vault, _write(vault, card_type, title, content), card_type, loudness, raised_by
+        )
 
 
 def write_work_prompt(
@@ -194,6 +208,10 @@ def write_work_prompt(
         raise ValueError(f"loudness must be one of {LOUDNESS}")
     if not (target or request_id):
         raise ValueError("a work-prompt must point at a target or request_id")
+    throttled = _throttled(vault, raised_by, loudness)
+    if throttled is None:
+        return None
+    loudness = throttled
     today = datetime.date.today().isoformat()
     frontmatter = {
         "title": title,
@@ -226,8 +244,10 @@ def write_work_prompt(
         if path.exists():
             return None
         write_text_durable(path, content)
-        return path
-    return _write(vault, "work-prompt", title, content)
+        return _admit(vault, path, "work-prompt", loudness, raised_by)
+    return _admit(
+        vault, _write(vault, "work-prompt", title, content), "work-prompt", loudness, raised_by
+    )
 
 
 def _open_fingerprint_match(
@@ -292,6 +312,64 @@ def _write(vault: Path, card_type: str, title: str, content: str) -> Path:
         path = inbox / f"{base}-{n}.md"
     write_text_durable(path, content)
     return path
+
+
+def _throttled(vault: Path, raised_by: str, loudness: str) -> str | None:
+    """The band this producer may mint at right now, or None when it is paused.
+
+    The PI's throttle from `.memoria/config/attention.yaml` (I1 spec §6.4). This
+    is not admission control: `quiet` still writes the card, at the band that
+    sorts last and is still counted in every denominator, and `paused` records the
+    skip so withheld work is itself visible ("2 producers paused · 14 runs skipped
+    this week") rather than becoming a silent hole in the inflow. An absent or
+    unreadable config reads as `active`, so a config typo can never mute a
+    producer.
+    """
+    from memoria_vault.runtime.attention_config import producer_mode
+
+    mode = producer_mode(vault, raised_by)
+    if mode == "paused":
+        _record_telemetry(
+            vault, "producer-run-skipped", {"producer": raised_by or "unknown", "reason": "paused"}
+        )
+        return None
+    return "quiet" if mode == "quiet" else loudness
+
+
+def _admit(vault: Path, path: Path, card_type: str, loudness: str, raised_by: str) -> Path:
+    """Record one `attention-admitted` row for a card that was actually written.
+
+    Returns `path` so every writer's return statement is its admission point. A
+    write that did not happen -- deduped, fingerprint-touched, or throttled to a
+    paused no-op -- never routes through here, so inflow counts cards on disk
+    rather than attempts, and the dashboard's inflow-versus-drain reading stays a
+    queue measurement.
+    """
+    _record_telemetry(
+        vault,
+        "attention-admitted",
+        {
+            "card_path": path.relative_to(vault).as_posix(),
+            "kind": card_type,
+            "loudness": loudness,
+            "raised_by": raised_by or "unknown",
+        },
+    )
+    return path
+
+
+def _record_telemetry(vault: Path, event_type: str, payload: dict[str, str]) -> None:
+    """Insert one analytics-only flow row. Never raises: an observer is not a gate.
+
+    Losing a telemetry row costs a count; raising here would cost the card, and
+    the card is the PI's work.
+    """
+    from memoria_vault.runtime.telemetry import record_telemetry_event
+
+    try:
+        record_telemetry_event(vault, event_type, payload)
+    except Exception:  # noqa: BLE001 -- flow measurement must never break a write.
+        return
 
 
 if __name__ == "__main__":

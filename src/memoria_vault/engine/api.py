@@ -11,6 +11,7 @@ from memoria_vault import __version__
 from memoria_vault.engine.dashboard import DASHBOARD_PANELS, assemble_dashboard
 from memoria_vault.engine.surface_contract import ENGINE_READ_API_VERSION as READ_API_VERSION
 from memoria_vault.runtime import evidence_review, state
+from memoria_vault.runtime.attention_config import attention_order_by, normalize_order_by
 from memoria_vault.runtime.capabilities import render_capability_index
 from memoria_vault.runtime.explore import explore_topic
 from memoria_vault.runtime.knowledge import exploration_channel as _exploration_channel
@@ -50,6 +51,17 @@ VIEW_SPEC_VERSION = "view-spec.v1"
 VIEW_BLOCK_KINDS = ("card", "text", "badge", "action-row", "evidence-list")
 # Ranks the four bands `inbox.LOUDNESS` writes; anything else ranks after them.
 ATTENTION_LOUDNESS_RANK = {"block": 0, "alert": 1, "notice": 2, "quiet": 3}
+_DEFAULT_LOUDNESS_RANK = ATTENTION_LOUDNESS_RANK["notice"]
+# The attention list's columns, and the `cells` keys every row carries.
+ATTENTION_TABLE_COLUMNS = (
+    "title",
+    "kind",
+    "loudness",
+    "raised_by",
+    "created",
+    "status",
+    "target",
+)
 # Frontmatter name -> public card name. Only nonblank text is carried, so a card
 # that never made a claim shows no empty slot where one would have been.
 ATTENTION_HONESTY_FIELDS = (
@@ -181,9 +193,10 @@ def read_attention(
     status: str = "",
     kind: str = "",
     worklist: bool = False,
+    order_by: str = "",
     read_scope: list[str] | None = None,
 ) -> dict[str, Any]:
-    cards = _attention_cards(Path(workspace))
+    cards = _attention_cards(Path(workspace), _parse_order_by(order_by))
     cards = [card for card in cards if _attention_in_scope(card, read_scope)]
     if worklist:
         cards = [
@@ -198,6 +211,12 @@ def read_attention(
             if (not status or card["status"] == status) and (not kind or card["kind"] == kind)
         ]
     return _read_payload(attention=cards, view=_attention_table_view(cards, worklist=worklist))
+
+
+def _parse_order_by(order_by: str) -> tuple[str, ...] | None:
+    """Parse the wire/CLI comma list. Blank means "ask the vault's config"."""
+    parts = [part.strip() for part in order_by.split(",") if part.strip()]
+    return normalize_order_by(parts) if parts else None
 
 
 def read_attention_card(
@@ -992,15 +1011,104 @@ def _resolve_concept_path(workspace: Path, target: str) -> Path | None:
     return None
 
 
-def _attention_cards(workspace: Path) -> list[dict[str, Any]]:
-    return [
+def _attention_cards(
+    workspace: Path, order_by: tuple[str, ...] | None = None
+) -> list[dict[str, Any]]:
+    """Every `inbox/` attention projection, in the I1 spec §6.2 contract order.
+
+    The sort is engine-side, at payload assembly, so every front -- CLI, HTTP,
+    MCP, the plugin pane, the dashboard -- reads the same order without each
+    re-deriving it. `order_by` overrides the vault's `attention.yaml` for one
+    invocation; `None` consults the config, which itself falls back to
+    `DEFAULT_ORDER_BY`.
+
+    `active_project_slices` is resolved once per listing, not once per card: it
+    is the same answer for every card, and the impact factor is the only reader.
+    """
+    slices = _active_slices(workspace)
+    cards = [
         card
         for path in sorted((workspace / "inbox").glob("*.md"))
-        if (card := _attention_card(path, workspace)) is not None
+        if (card := _attention_card(path, workspace, slices=slices)) is not None
     ]
+    resolved = order_by or attention_order_by(workspace)
+    return sorted(cards, key=lambda card: _order_key(card, resolved))
 
 
-def _attention_card(path: Path, workspace: Path) -> dict[str, Any] | None:
+def _active_slices(workspace: Path) -> dict[str, set[str]]:
+    """Active project slice membership, or `{}` while the graph plan's ERP-C.6 is unlanded.
+
+    Order-tolerance, not defensiveness: until `active_project_slices` exists no
+    card can intersect a slice, so `impact` reads False for every card and the
+    factor is inert rather than wrong. The `Exception` arm keeps a slice-walk
+    failure from turning a listing into an error -- ranking is an ordering, never
+    a gate.
+    """
+    try:
+        from memoria_vault.runtime.propagation import active_project_slices
+    except ImportError:
+        return {}
+    try:
+        return active_project_slices(workspace)
+    except Exception:  # noqa: BLE001 -- an unavailable slice walk is not an impact claim.
+        return {}
+
+
+def _rank_factors(card: dict[str, Any], slices: dict[str, set[str]]) -> dict[str, Any]:
+    """The five disclosed ranking inputs (I1 contract 6). No blended score, ever.
+
+    `priority` is carried **verbatim**, including a typo: the reader honors only
+    the exact value `high`, and disclosing what the card actually says is how the
+    PI sees that `priority: hgih` did nothing. `staleness` is the card's own
+    `stale:` mark -- like `priority`, a field readers honor and no writer sets
+    (spec §6.2) -- and `age_days` is the one age reading in the codebase, which
+    `engine.dashboard` buckets rather than recomputing.
+    """
+    frontmatter = card["frontmatter"]
+    target = str(card["target"] or "")
+    age_days = _attention_age_days(_attention_created(card))
+    return {
+        "loudness": str(card["loudness"] or "notice"),
+        "priority": str(frontmatter.get("priority") or ""),
+        "impact": bool(target) and any(target in members for members in slices.values()),
+        "staleness": frontmatter.get("stale") is True,
+        "age_days": 0 if age_days is None else age_days,
+    }
+
+
+def _order_key(card: dict[str, Any], order_by: tuple[str, ...]) -> tuple[Any, ...]:
+    """The contract sort key: block pin, then the configured factors, then age.
+
+    The `block` pin leads and is not in `order_by` -- it can be neither reordered
+    nor dropped, because a blocking card that sorted anywhere but first would let
+    a configuration hide the one band that denies review-gated mutations. Age
+    closes the key as the final tiebreaker (oldest first) whether or not it is a
+    configured factor, so dropping `age` demotes it rather than making equal
+    cards order arbitrarily. Every rank is ascending, so a factor's "yes" is 0.
+    """
+    factors = card["rank_factors"]
+    oldest_first = -factors["age_days"]
+    key: list[Any] = [0 if factors["loudness"] == "block" else 1]
+    for factor in order_by:
+        if factor == "priority":
+            key.append(0 if factors["priority"] == "high" else 1)
+        elif factor == "loudness":
+            # An unrostered band ranks with `notice`, the band `_attention_card`
+            # and the dashboard both read a bandless card as.
+            key.append(ATTENTION_LOUDNESS_RANK.get(factors["loudness"], _DEFAULT_LOUDNESS_RANK))
+        elif factor == "impact":
+            key.append(0 if factors["impact"] else 1)
+        elif factor == "staleness":
+            key.append(0 if factors["staleness"] else 1)
+        elif factor == "age":
+            key.append(oldest_first)
+    key.append(oldest_first)
+    return tuple(key)
+
+
+def _attention_card(
+    path: Path, workspace: Path, *, slices: dict[str, set[str]] | None = None
+) -> dict[str, Any] | None:
     """Return the card payload for an `inbox/` file, or None if it is not one.
 
     Reads the way `lifecycle` and `loudness` read -- `safe_read`, then
@@ -1026,7 +1134,7 @@ def _attention_card(path: Path, workspace: Path) -> dict[str, Any] | None:
     if str(frontmatter.get("projection") or "").strip().lower() != "attention":
         return None
     rel = path.resolve().relative_to(workspace.resolve()).as_posix()
-    return {
+    card = {
         "path": rel,
         "title": frontmatter.get("title") or path.stem,
         "kind": frontmatter.get("attention_kind") or "",
@@ -1039,6 +1147,13 @@ def _attention_card(path: Path, workspace: Path) -> dict[str, Any] | None:
         "body": body,
         "body_data": _untrusted_text(body),
     }
+    # Every card payload discloses its ranking inputs, the detail read included:
+    # the list explains its own order, and the card the PI opens from it explains
+    # its place in that order with the same five numbers.
+    card["rank_factors"] = _rank_factors(
+        card, _active_slices(workspace) if slices is None else slices
+    )
+    return card
 
 
 def _record_attention_read(workspace: Path, card: dict[str, Any]) -> None:
@@ -1276,6 +1391,9 @@ def _attention_table_view(cards: list[dict[str, Any]], *, worklist: bool) -> dic
             "cells": {
                 "title": card["title"],
                 "kind": card["kind"],
+                "loudness": card["loudness"],
+                "raised_by": str(card["frontmatter"].get("raised_by") or ""),
+                "created": _attention_created(card),
                 "status": card["status"],
                 "target": card["target"],
             },
@@ -1291,7 +1409,11 @@ def _attention_table_view(cards: list[dict[str, Any]], *, worklist: bool) -> dic
                 "title": "Attention worklist" if worklist else "Attention",
                 "check_status": _combined_check_status(row["check_status"] for row in rows),
                 "refs": [row["ref"] for row in rows],
-                "columns": ["title", "kind", "status", "target"],
+                # I1 spec §6.2: the row discloses the band it was minted at, who
+                # raised it, and when. All three are recorded on every card and
+                # were surfaced nowhere, so the list could not be read against
+                # the order the engine now sorts it in.
+                "columns": list(ATTENTION_TABLE_COLUMNS),
                 "rows": rows,
             }
         ],

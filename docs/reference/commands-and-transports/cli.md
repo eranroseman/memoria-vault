@@ -58,7 +58,7 @@ This page summarizes `src/memoria_vault/cli.py`; use `--help` for exact flags.
 | `memoria workspace restore <source> [--force]` | PI-only validated, rollback-capable restore; `--force` is required while a live database exists. |
 | `memoria workspace recover` | PI-only recovery of interrupted backup publication, restore, request, and materialization work. |
 | `memoria workspace scan/run/rollback/check/rebuild/export` | Observe valid direct Concept edits under bundle roots; quarantine changed tracked projections; regenerate projections with a current owner (add `--search` to `rebuild` to also rebuild the search index); and run queued work. An orphan `projects/<project>/argument.canvas` remains quarantined. |
-| `memoria attention list/show/resolve/worklist` | Review PI attention items. |
+| `memoria attention list/show/resolve/worklist` | Review PI attention items. Listings are engine-ordered: blocking cards pin to the top, then `priority: high`, loudness band, project impact, staleness, and oldest-first age as the final tiebreaker. Every row discloses the factors it was ranked on (`rank_factors` in the JSON payload). `list --order-by priority,age` reorders or drops factors for one invocation; the block pin is not a factor and always sorts first. |
 
 ## Knowledge And Projects
 
