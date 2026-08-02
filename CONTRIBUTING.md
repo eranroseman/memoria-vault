@@ -68,8 +68,8 @@ under `test-vault/`.
 - **Python:** Ruff is both linter and formatter for repo tooling and runtime code
   (`src/memoria_vault/`, `scripts/`, and `tests/`). `ruff format` owns layout at
   line length 100.
-- **Shell:** `scripts/install.sh` targets Bash on Ubuntu/WSL2. Run `shellcheck`
-  before submitting installer changes.
+- **Shell:** `scripts/install.sh` targets Bash on Ubuntu/WSL2. `shellcheck`
+  gates every shell script under `scripts/` through the pinned pre-commit hook.
 - **PowerShell:** `scripts/install.ps1` targets Windows PowerShell 5.1. Test on
   Windows when the change affects Windows behavior.
 - **Optional adapters:** do not add installed profile packages or lane overrides

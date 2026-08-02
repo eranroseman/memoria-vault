@@ -1,9 +1,6 @@
 """Only the standalone Obsidian proof-adapter package is allowed."""
 
-import sys
 from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 
 import pytest
 
