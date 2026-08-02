@@ -19,7 +19,11 @@ SEED_PLUGIN = ROOT / "src/memoria_vault/product/workspace_seed/.obsidian/plugins
 # So the exit code alone cannot tell a green suite from a suite that silently
 # stopped running: rename a file out of the glob and every assertion in it
 # disappears with the gate still green. These pin what must have run.
-MIN_NODE_TESTS = 49
+#
+# Raise this in the same change that adds a suite -- slack here is exactly the
+# room a gutted suite hides in. Measured 55 on both node 22 (mise.toml, CI) and
+# node 24.
+MIN_NODE_TESTS = 55
 NODE_SUITE_FILES = (
     "test.mjs",
     "test-handshake.mjs",
@@ -343,3 +347,29 @@ def test_memoria_obsidian_registers_the_canvas_commands() -> None:
 
     for command_id in ("fork-canvas", "graduate-scratch-edges"):
         assert f'id: "{command_id}"' in source
+
+
+def test_schema_js_enums_stay_a_subset_of_the_engine_roster() -> None:
+    """No plugin enum value may be one the engine would reject.
+
+    `schema.js` is a hand-authored narrowing of the engine's empirical-event
+    roster, not a generated mirror: it drops what an Obsidian client cannot
+    legitimately submit (`SURFACES` is `obsidian` alone; `WORKFLOWS` omits
+    `attention`, which only the server-authored `read-observed.v1` telemetry
+    emits). Nothing pinned that relationship, so an engine-side rename would
+    leave the plugin validating against a value the engine no longer accepts --
+    and the plugin's own validator would still pass it, so the break would
+    surface only when a real user's event is rejected over the wire. Subset,
+    never equality: widening the engine roster must stay free.
+    """
+    from memoria_vault.engine import empirical_events as engine
+
+    source = (PLUGIN / "schema.js").read_text(encoding="utf-8")
+
+    for name in ("SURFACES", "WORKFLOWS", "DECISIONS", "OUTCOMES", "REASON_CODES"):
+        match = re.search(rf"const {name} = new Set\(\[(.*?)\]\)", source, re.S)
+        assert match, f"{name} not found in schema.js"
+        plugin_values = set(re.findall(r'"([^"]+)"', match.group(1)))
+        assert plugin_values, f"{name} parsed empty -- the regex, not the roster, is wrong"
+        unknown = sorted(plugin_values - set(getattr(engine, name)))
+        assert not unknown, f"schema.js {name} has values the engine rejects: {unknown}"

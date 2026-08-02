@@ -56,9 +56,14 @@ memoria_vault = ["runtime/*.sql"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+# The repo root, so `tests.*` and `scripts.*` resolve under a bare `pytest` and
+# not only under `python -m pytest` (which inserts cwd itself). `scripts` is
+# deliberately NOT here: with both the root and `scripts` on the path, one file
+# imports as two distinct modules (`scripts.test_vault.e2e_smoke` and
+# `test_vault.e2e_smoke`), each with its own state.
 pythonpath = [
+  ".",
   "src",
-  "scripts",
 ]
 markers = [
   "static: formatting, lint, schema, docs refs, spell, design history, workflow safety",

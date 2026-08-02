@@ -34,12 +34,16 @@ repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.16.1
     hooks:
+      # Directory scope only: the hooks' own `types_or: [python, pyi, jupyter]`
+      # decides what is Python. Spelling `\.py$` here re-encoded that and got it
+      # wrong -- `scripts/verify`, the gate itself, is extensionless and was the
+      # one Python file in the repo exempt from both hooks, silently.
       - id: ruff
-        files: ^src/memoria_vault/.*\.py$|^scripts/.*\.py$|^tests/.*\.py$
+        files: ^(src/memoria_vault|scripts|tests)/
         stages: [manual]
 
       - id: ruff-format
-        files: ^src/memoria_vault/.*\.py$|^scripts/.*\.py$|^tests/.*\.py$
+        files: ^(src/memoria_vault|scripts|tests)/
         stages: [pre-commit, manual]
 
   - repo: https://github.com/adrienverge/yamllint
@@ -52,9 +56,16 @@ repos:
   - repo: https://github.com/shellcheck-py/shellcheck-py
     rev: v0.11.0.1
     hooks:
+      # Directory scope only, for the same reason as ruff above: the hook's own
+      # `types: [shell]` decides what is shell (and excludes install.ps1, which
+      # identifies as powershell). The previous exact-path form lint-ed one of
+      # the four tracked shell scripts and its second alternation named
+      # `scripts/install/`, deleted in #1322 -- a regex matching nothing is a
+      # green hook. `scripts/dev/setup.sh`, the first command CONTRIBUTING
+      # gives a new contributor, was covered by no gate at all.
       - id: shellcheck
         args: [--severity=warning]
-        files: ^scripts/install\.sh$|^scripts/install/.*\.sh$
+        files: ^scripts/
         stages: [manual]
 
   - repo: https://github.com/errata-ai/vale

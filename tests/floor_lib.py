@@ -96,7 +96,7 @@ def _build_floor_seed(workspace: Path) -> dict:
     assert code == 0
 
     # Catalog + typed graph via the proven deterministic e2e builders.
-    from test_vault.e2e_smoke import assert_offline_ingest, assert_typed_graph
+    from scripts.test_vault.e2e_smoke import assert_offline_ingest, assert_typed_graph
 
     assert_offline_ingest(ROOT, workspace)
     assert_typed_graph(ROOT, workspace)
@@ -176,10 +176,9 @@ def _seed_attention_item(workspace: Path, project_path: str) -> str:
     attention card via its own `_write_full_text_gap_attention` — an
     authentic product-code artifact, not a fabricated frontmatter file.
     """
-    from test_vault.e2e_smoke import _operation_context
-
     from memoria_vault.runtime.capture import write_references_bib
     from memoria_vault.runtime.worker import enqueue_operation, run_next_job
+    from scripts.test_vault.e2e_smoke import _operation_context
     from tests.helpers import capture_bibtex_source_checked
 
     bib = (
