@@ -82,11 +82,11 @@ EMPTY_PAYLOAD: dict[str, Any] = {
     "exploration": {"surfaced": 0, "acted_on": 0},
 }
 # `decision_rules` is deliberately absent above: it is the one panel that is *not*
-# empty on a fresh vault. The sixteen-rule pre-registration ships in
+# empty on a fresh vault. The seventeen-rule pre-registration ships in
 # `runtime.decision_rules`, so a new vault reads every blocker armed with nothing
 # crossing. `tests/test_decision_rules.py` owns the roster and the thresholds; here
 # only the wiring is pinned.
-EMPTY_REGISTRY_RULES = 16
+EMPTY_REGISTRY_RULES = 17
 
 
 def _card(vault: Path, name: str, **frontmatter: Any) -> str:

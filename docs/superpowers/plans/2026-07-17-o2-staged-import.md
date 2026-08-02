@@ -52,10 +52,24 @@
 - [x] **I.1 complete:** the driver composes the A.1–A.3 adapters and the W.1/W.2
   artifacts and finalizes at command return. See I.1's execution amendment for
   the precondition ruling, four deviations, and the 38/38 mutation report.
-- [ ] **W.3 BLOCKED** on external I1 H.3 (no seeded `decision-rules.yaml`, no
-  `tests/test_decision_rules.py`). This is the frontier stop.
-- [ ] **W.4 BLOCKED** transitively on W.3 plus the full external I1 merge its
-  real-vault protocol requires.
+- [x] **W.3 complete:** the `staged-import` stop rule, appended to
+  `runtime.decision_rules.DEFAULT_RULES_YAML` (not to a seed file — see W.3's
+  landing amendment) with the shipped count 16 → 17. Goldens untouched.
+- [x] **W.4 complete as documentation:** the corrected stage-1/stage-2 protocol
+  block (W.4's 2026-08-02 amendment supersedes the printed Step 2 body) plus the
+  section gate. **The run itself is not done and cannot be done by an agent** —
+  it needs a fresh real vault, a licensed Zotero export, live model dispatch and
+  human wall-clock triage. That is LOOP.13 (#1702), PI-executed.
+
+**Rebased onto `main` @ `81cbd707`** after `wip/i1h` merged as #1708; the
+`TEST_LEVELS` instructions this plan carries are stale as of #1671 — see the
+correction on cross-section contract 8.
+
+**This plan is at zero open tasks.** All eleven — P.1–P.3, A.1–A.3, W.1, W.2,
+I.1, W.3, W.4 — are executed; the only unticked boxes left are `Commit:` steps
+(orchestrator-owned by convention) and A.2's internal step list, whose section is
+recorded complete above at `8c1d0d41`. What O2 still owes the release is not a
+task in this plan: it is the PI's protocol run, tracked as LOOP.13.
 
 ## Cross-section contracts (BINDING — the manifests' seam resolutions)
 
@@ -64,9 +78,9 @@
 3. **Adapter seams** (A produces): `_ENTRY_TYPE_MAP`, `entry_item_type(entry_fields) -> str` (shipped vocabulary `article/book/webpage/software/dataset/report`), `entry_type_mapped(entry_fields) -> bool`, `entry_fetch(entry_fields, identifiers) -> {method,url} | None` (PMCID→`pmc-oa`, arXiv→`arxiv-pdf`, `.pdf` URL→`pdf-url`, else None), `entry_capture_request(payload, fetch, *, mapped)`, `capture-remote-pdf-source` (PI-only worker operation; the sole O2 caller of O1's policy-bound resolver), `detect_identifier_collisions(vault, work_id, identifiers) -> [{other_work_id, field}]`, `is_doi_collision_error(error) -> bool`.
 4. **Worklist seams** (W produces): `emit_worklist(…, raised_by="worklists", loudness="notice")` passthrough (defaults = shipped behavior); `emit_import_worklist(vault, *, run_id, rows, entries_total, admitted) -> dict | None` (None on zero judgment rows — no worklist, no card); worklist id `import-<run_id>`; rows ranked duplicates → retraction → failed → unmapped.
 5. **Telemetry** (W produces): `IMPORT_RUN_EVENT_SCHEMA = "import-run.v1"` + `validate_import_run_event` (typed ints, `format ∈ {bibtex, csl}`) in `engine/empirical_events.py`; dispatch branch in I1's `record_telemetry_event`; the chosen I.1 finalizer emits exactly one row per run.
-6. **Cross-plan order tolerance:** O1 M.2's `resolve_fetch(row, *, opener, authorize_url)` is consumed only inside A.2's policy-bearing `capture-remote-pdf-source` worker operation (grep-first; if absent, land O1 M.2 first). W.1 consumes no external I1 seam and is disposable-vault-safe. W.2 consumes external I1 T.1+T.2's `runtime/telemetry.py`; W.3 consumes external I1 H.3's seeded `decision-rules.yaml`; both stop at their named absent seam. O2's I.1 calls the pure `entry_capture_request` and never fetches in the CLI process; it waits for external I1 and #1517's finalization choice. Section P consumes neither.
+6. **Cross-plan order tolerance:** O1 M.2's `resolve_fetch(row, *, opener, authorize_url)` is consumed only inside A.2's policy-bearing `capture-remote-pdf-source` worker operation (grep-first; if absent, land O1 M.2 first). W.1 consumes no external I1 seam and is disposable-vault-safe. W.2 consumes external I1 T.1+T.2's `runtime/telemetry.py`; W.3 consumes external I1 H.3's registry — **as landed 2026-08-02 that is `runtime.decision_rules.DEFAULT_RULES_YAML`, not a seeded `decision-rules.yaml`; see W.3's landing amendment** — and both stop at their named absent seam. O2's I.1 calls the pure `entry_capture_request` and never fetches in the CLI process; it waits for external I1 and #1517's finalization choice. Section P consumes neither.
 7. **Execution order (partial, binding):** P.1 → P.2 → P.3 → A.1 → A.2 → A.3 → W.1 may land pre-I1. After external I1 T.1+T.2, W.2 may land; after external I1 H.3, W.3 may land. O2's I.1 driver stitch waits for external I1 full wiring and issue #1517's finalization decision; W.4 waits for W.1–W.3 and I.1. This preserves the seam order without falsely serializing independent work. The worker `capture-bibtex-source` auto-enrichment (a different surface) is **not** flipped (SPEC GAP P-5).
-8. **TEST_LEVELS:** `test_bulk_import.py: "contract"` (new, registered once in P.1; A and W extend it and other already-registered files with no further conftest change).
+8. **TEST_LEVELS:** `test_bulk_import.py: "contract"` (new, registered once in P.1; A and W extend it and other already-registered files with no further conftest change). **Stale as of 2026-08-02 — `tests/conftest.py` has no `TEST_LEVELS` registry any more.** PR #1671 (`cc55c40f`) colocated the levels: each test module declares its own with a module-level `pytestmark = pytest.mark.<level>`. Every instruction in this plan that says "register the file in `TEST_LEVELS`" (contract 8 here, P.1's Files line and its Step 2) is superseded — a new test file gets a `pytestmark` instead, and **its module must already `import pytest`**, because a `pytestmark` line without the import raises `NameError` at collection and the module's tests then vanish from every gate selection *silently*, with the run still green. Confirm with `python -m pytest <file> --collect-only -q | tail -1`. W.3 added no test file (it extends `tests/test_decision_rules.py` and `tests/test_dashboard_view.py`, both of which carry `pytestmark = pytest.mark.contract` since #1671), so nothing here needed a level declaration; collection re-confirmed after the rebase at 48 and 30 tests.
 
 ---
 
@@ -2144,7 +2158,7 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 
 This section lands the bulk-admission artifacts (spec §3: the `emit_worklist` raised_by/loudness seam co-change and the one run-scoped quiet worklist per run), the `import-run.v1` instrumentation row (spec §6), the `staged-import` decision-rule registry entry (spec §7), and the Phase 1 staged-run protocol block (spec §6 protocol-level rows, §7 stop rule, §8 beta.2 ceiling — nothing here assumes corpus sizes beyond the 100-work stage).
 
-**Cross-plan preconditions (per-task, binding):** W.1 is independent of external I1 and may be implemented and tested on disposable vaults before I1; it must not be wired to a real import or emit telemetry. W.2 consumes external I1 T.1+T.2's `runtime/telemetry.py` and stops until both are implemented and merged. W.3 consumes external I1 H.3's seeded `decision-rules.yaml` + `tests/test_decision_rules.py` and stops until H.3 is implemented and merged. O2's I.1 driver stitch waits for external I1 plus #1517's finalization choice. The O1 policy-bound resolver (`runtime/seed_install.py resolve_fetch(row, *, opener, authorize_url)`, O1 M.2) is consumed only inside A.2's PI-only worker; I.1 builds/enqueues the request and Section W consumes neither seam. All shipped line refs below are verified at `51395f15`; re-anchor by symbol if drifted.
+**Cross-plan preconditions (per-task, binding):** W.1 is independent of external I1 and may be implemented and tested on disposable vaults before I1; it must not be wired to a real import or emit telemetry. W.2 consumes external I1 T.1+T.2's `runtime/telemetry.py` and stops until both are implemented and merged. W.3 consumes external I1 H.3's registry + `tests/test_decision_rules.py` and stops until H.3 is implemented and merged (H.3 landed the registry as `runtime.decision_rules.DEFAULT_RULES_YAML`, not as a seeded `decision-rules.yaml` — W.3's landing amendment records the consequence). O2's I.1 driver stitch waits for external I1 plus #1517's finalization choice. The O1 policy-bound resolver (`runtime/seed_install.py resolve_fetch(row, *, opener, authorize_url)`, O1 M.2) is consumed only inside A.2's PI-only worker; I.1 builds/enqueues the request and Section W consumes neither seam. All shipped line refs below are verified at `51395f15`; re-anchor by symbol if drifted.
 
 **Driver stitches (for the plan assembler):** I.1, not the slice-2 P driver, composes W.1 and W.2 after A.1–.3. **The finalizer is the I.1 driver itself, at command return, after the documented index-refresh boundary** (#1517, 2026-08-01 amendment): it calls `emit_import_worklist(...)` at most once per run (zero judgment rows ⇒ `None`, no worklist, no card) and `record_telemetry_event(vault, "import-run.v1", row)` exactly once per run — a nine-field row with no retraction count, because `--enrich` only queues `enrich-source` jobs and retraction truth does not exist at return. I.1's one remaining blocker is external I1; #1517 is decided and closed. W.2's validator honestly allows `index_refresh_s >= 0`.
 
@@ -2762,9 +2776,9 @@ the focused tests, then `python scripts/verify` before committing.
 > (`git status --porcelain tests/fixtures/floor/goldens/` empty). Nothing here
 > reaches the workspace seed or the capability manifest.
 
-### Task W.3 (BLOCKED): `staged-import` decision-rule registry entry (spec §7; slice 7)
+### Task W.3: `staged-import` decision-rule registry entry (spec §7; slice 7)
 
-**Precondition:** external I1 H.3 has landed with its seeded registry and tests.
+**Precondition (met 2026-08-02):** external I1 H.3 has landed with its registry and tests.
 This registry-only task may land before O2's I.1 and #1517's selected
 finalization contract; it creates neither real-vault ingestion nor telemetry.
 
@@ -2802,16 +2816,16 @@ finalization contract; it creates neither real-vault ingestion nor telemetry.
 > W.4's Step 1 `staged-import` grep should target
 > `src/memoria_vault/runtime/decision_rules.py` for the same reason.
 
-**Files:**
-- Modify: `src/memoria_vault/product/workspace_seed/.memoria/config/decision-rules.yaml` (append one entry after the seeded file's final row, `id: canvas-authoring`), `tests/test_decision_rules.py` (extend; created and registered `contract` by I1 H.3)
+**Files (as landed 2026-08-02 — the printed seed-file path never existed):**
+- Modify: `src/memoria_vault/runtime/decision_rules.py` (append one entry to `DEFAULT_RULES_YAML` after `id: canvas-authoring`; bump the module docstring's rule counts), `tests/test_decision_rules.py` (extend; created and registered `contract` by I1 H.3), `tests/test_dashboard_view.py` (`EMPTY_REGISTRY_RULES` 16 → 17), `src/memoria_vault/engine/dashboard.py` (docstring count only)
 
 **Interfaces:**
 - Consumes: I1 H.3's seeded registry (entry shape `{id, blocker, metric, window, threshold, recommendation, check: auto|manual, status: armed|fired|retired}`), `load_decision_rules(vault) -> list[dict]`, and its pinned count tests — `test_seed_registers_all_sixteen_rules_with_four_auto` (`assert len(rules) == 16`) and `test_malformed_entry_is_skipped_not_fatal` (`assert len(rules) == 16`). Firing and retiring follow the I1 registry semantics (`update_rule_status`); a `manual` rule renders as an armed reminder — no evaluator change.
 - Produces: the `staged-import` registry entry (`check: manual`, `status: armed`) with the spec §7 wording verbatim in `recommendation`; the seeded count moves 16 → 17.
 
-- [ ] **Step 1: Grep-first (hard blocker).** Run `grep -n "canvas-authoring" src/memoria_vault/product/workspace_seed/.memoria/config/decision-rules.yaml && grep -n "== 16" tests/test_decision_rules.py`. **If either file is absent, this task BLOCKS: the I1 plan (2026-07-16-i1-full-wiring.md H.3) has not been executed and merged — the plan header's precondition is unmet. STOP and land I1 first; do not create these files here** (H.3 owns the sixteen-entry seed, the loader, and the conftest registration).
+- [x] **Step 1: Grep-first (hard blocker).** *Executed in the amended form above — `grep -n "canvas-authoring" src/memoria_vault/runtime/decision_rules.py` (one hit, line 205) and `grep -n "SHIPPED_RULE_IDS" tests/test_decision_rules.py` (five hits). The printed form below can never pass and is retained only as the record.* Run `grep -n "canvas-authoring" src/memoria_vault/product/workspace_seed/.memoria/config/decision-rules.yaml && grep -n "== 16" tests/test_decision_rules.py`. **If either file is absent, this task BLOCKS: the I1 plan (2026-07-16-i1-full-wiring.md H.3) has not been executed and merged — the plan header's precondition is unmet. STOP and land I1 first; do not create these files here** (H.3 owns the sixteen-entry seed, the loader, and the conftest registration).
 
-- [ ] **Step 2: Write the failing tests.** In `tests/test_decision_rules.py`, make three named edits: (a) rename `test_seed_registers_all_sixteen_rules_with_four_auto` to `test_seed_registers_all_seventeen_rules_with_four_auto`, change its `assert len(rules) == 16` to `assert len(rules) == 17`, and add `"staged-import"` to its id-superset assertion set; (b) in `test_malformed_entry_is_skipped_not_fatal`, change `assert len(rules) == 16   # the incomplete entry is dropped` to `assert len(rules) == 17   # the incomplete entry is dropped`; (c) append:
+- [x] **Step 2: Write the failing tests.** *Executed in the amended form above; the landed test names differ from the printed ones — see the landing amendment.* In `tests/test_decision_rules.py`, make three named edits: (a) rename `test_seed_registers_all_sixteen_rules_with_four_auto` to `test_seed_registers_all_seventeen_rules_with_four_auto`, change its `assert len(rules) == 16` to `assert len(rules) == 17`, and add `"staged-import"` to its id-superset assertion set; (b) in `test_malformed_entry_is_skipped_not_fatal`, change `assert len(rules) == 16   # the incomplete entry is dropped` to `assert len(rules) == 17   # the incomplete entry is dropped`; (c) append:
 
 ```python
 def test_staged_import_rule_is_seeded_manual_and_armed(tmp_path: Path) -> None:
@@ -2832,12 +2846,14 @@ def test_staged_import_rule_is_seeded_manual_and_armed(tmp_path: Path) -> None:
     assert "Shape-1/Shape-2 query latency" in rule["metric"]
 ```
 
-- [ ] **Step 3: Run to verify failure**
+- [x] **Step 3: Run to verify failure**
 
 Run: `python -m pytest tests/test_decision_rules.py -v`
 Expected: FAIL — the renamed count test asserts `17` against 16 loaded rules; the new test fails with `KeyError: 'staged-import'`.
 
-- [ ] **Step 4: Implement.** Append to `src/memoria_vault/product/workspace_seed/.memoria/config/decision-rules.yaml`, after the `canvas-authoring` entry (the `recommendation` carries the spec §7 rule wording verbatim; `threshold` restates the trigger clause and `metric` names the §6 rows plus the protocol-script measurements, both per H.3's manual-row convention and §7's own paragraph — SPEC GAP on blockquote→entry-shape mapping resolved inline, recorded for review):
+*Observed:* `test_shipped_registry_arms_all_seventeen_rules_with_four_auto` failed on the roster list (`Right contains one more item: 'staged-import'`) — the landed roster assertion is an ordered id list, not a count, so the failure names the missing id directly.
+
+- [x] **Step 4: Implement.** *Landed in `DEFAULT_RULES_YAML` (`src/memoria_vault/runtime/decision_rules.py`) — same YAML text, different file.* Append to `src/memoria_vault/product/workspace_seed/.memoria/config/decision-rules.yaml`, after the `canvas-authoring` entry (the `recommendation` carries the spec §7 rule wording verbatim; `threshold` restates the trigger clause and `metric` names the §6 rows plus the protocol-script measurements, both per H.3's manual-row convention and §7's own paragraph — SPEC GAP on blockquote→entry-shape mapping resolved inline, recorded for review):
 
 ```yaml
 - id: staged-import
@@ -2850,10 +2866,12 @@ Expected: FAIL — the renamed count test asserts `17` against 16 loaded rules; 
   status: armed
 ```
 
-- [ ] **Step 5: Run to verify pass**
+- [x] **Step 5: Run to verify pass**
 
 Run: `python -m pytest tests/test_decision_rules.py -v`
 Expected: PASS — 17 rules load, the four `auto` ids are unchanged, `staged-import` is `manual`/`armed` with the verbatim wording.
+
+*Observed:* `tests/test_decision_rules.py` + `tests/test_dashboard_view.py`, 78 passed.
 
 - [ ] **Step 6: Commit**
 
@@ -2864,6 +2882,62 @@ git commit -m "feat(decision-rules): pre-register the staged-import stop rule, s
 
 Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 ```
+
+> **W.3 landing amendment — 2026-08-02.**
+>
+> **Where the entry landed.** `DEFAULT_RULES_YAML` in
+> `src/memoria_vault/runtime/decision_rules.py`, after `canvas-authoring`, with
+> the printed YAML text unchanged. The seed file the printed steps name does not
+> exist and must not be created: `test_the_registry_has_exactly_one_source_of_truth`
+> fails the moment it appears alongside the constant. **Goldens are byte-identical**
+> (`git status --porcelain tests/fixtures/floor/goldens/` empty) — nothing here
+> reaches the workspace seed or the capability manifest, so W.3 needed no golden
+> token.
+>
+> **Test edits, as landed** (the printed names are H.3-draft names that never shipped):
+> `SHIPPED_RULE_IDS` in `tests/test_decision_rules.py` gains `"staged-import"`
+> after `"canvas-authoring"` — the list is ordered and is compared to the loaded
+> roster, so it pins position as well as membership;
+> `test_seed_registers_all_sixteen_rules_with_four_auto` is really
+> `test_shipped_registry_arms_all_sixteen_rules_with_four_auto`, renamed to
+> `…seventeen…`; there is no `== 16` literal to change in that file, and no
+> `_vault_with_registry` helper — the new test takes plain `tmp_path`, because a
+> vault with no registry file is exactly where the shipped rules load. The one
+> count literal in the repo is `EMPTY_REGISTRY_RULES` in
+> `tests/test_dashboard_view.py`, 16 → 17.
+>
+> **Three prose counts moved with it,** none of them behavior: the
+> `decision_rules` module docstring ("sixteen shipped rules" → seventeen,
+> "Twelve rules are `manual`" → thirteen), `engine/dashboard.py`'s panel
+> docstring ("sixteen-rule pre-registration" → seventeen), and one inline comment
+> in `test_update_rule_status_materializes_the_file_and_round_trips` ("the other
+> fifteen stay armed" → sixteen). A stale count in the docstring that explains
+> where the registry lives is the drift this task exists to prevent.
+>
+> **Mutation report: 8 mutants, 8 killed, 0 survivors.** W.3 adds registry *data*,
+> not a branch — no predicate, loader path, or comparison changes — so the mutated
+> surface is the entry itself, in `DEFAULT_RULES_YAML`: entry dropped (M1);
+> `check: manual` → `auto` (M2); `status: armed` → `fired` (M3); `threshold`
+> blanked so `_validated` drops the row (M4); `recommendation` loses its closing
+> "— the observation IS the finding" clause (M5); `metric` loses the `import-run`
+> rows (M6); `metric` loses the Shape-1/Shape-2 latency row (M7); the entry
+> reordered ahead of `canvas-authoring` (M8, which the ordered `SHIPPED_RULE_IDS`
+> comparison catches — a set comparison would have let it through). Harness:
+> sha256 whole-file snapshot, `inflight.json` recovery marker, byte-verified
+> restore in `finally`, `__pycache__` dropped after every apply and restore,
+> `git status --porcelain` swept against a pre-run baseline after every mutant,
+> baseline confirmed green three times. M2 is double-killed on purpose:
+> `test_every_auto_rule_has_a_predicate` pins `AUTO_PREDICATES` against the
+> registry's auto set in both directions, so an `auto` rule with no predicate —
+> a rule that could never fire — fails loudly rather than shipping silent.
+>
+> The docstring count edits (three of them) carry no mutants and are equivalent by
+> construction: no test observes prose. They are listed above so review can see
+> them rather than have them arrive unannounced.
+>
+> **Obligation written into W.4:** W.4's Step 1 grep must target
+> `src/memoria_vault/runtime/decision_rules.py`, not the seed path. Done in W.4's
+> own amendment below.
 
 ### Task W.4: The Phase 1 staged-run protocol block + section gate (spec §6 protocol rows, §7, §8; slice 8)
 
@@ -2877,12 +2951,25 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 
 **Home decision (repo convention, verified):** LOOP.13 is the precedent — a staged protocol lives as documented shell steps inside a plan task ("This is not a pytest task: it is a measured protocol run on a real vault", alpha23 plan `:2398`), with a recorded-metrics spec doc as the run's artifact. No shipped script: nothing under `scripts/` carries protocol runs, and a script would imply a maintained product surface the doc-claims gate would then police. This block is therefore plan documentation, executed by the PI after this plan merges and LOOP.13's preconditions hold.
 
-- [ ] **Step 1: Confirm the consumed pieces landed** (all in this section's commits):
+- [x] **Step 1: Confirm the consumed pieces landed** (all in this section's commits):
 
 Run: `grep -n "import-run.v1" src/memoria_vault/runtime/telemetry.py && grep -n "staged-import" src/memoria_vault/product/workspace_seed/.memoria/config/decision-rules.yaml && grep -n "emit_import_worklist" src/memoria_vault/runtime/subsystems/lib/worklists.py`
 Expected: one hit each (W.2, W.3, W.1).
 
-- [ ] **Step 2: The protocol block** (documentation — this text is the deliverable; it supersedes LOOP.13's csplit loop body, measurements and bars unchanged; beta.1 ceiling is the 100-work stage, spec §8 — 1000-scale is beta.2, nothing here may assume beyond it):
+**Two of the three greps are stale — corrected 2026-08-02, and this is the form that ran:**
+
+```
+grep -n "IMPORT_RUN_EVENT_SCHEMA" src/memoria_vault/runtime/telemetry.py   # W.2 dispatch
+grep -n "staged-import" src/memoria_vault/runtime/decision_rules.py        # W.3 registry entry
+grep -n "emit_import_worklist" src/memoria_vault/runtime/subsystems/lib/worklists.py  # W.1
+```
+
+`telemetry.py` dispatches on the *constant*, never the literal `"import-run.v1"` (that
+string lives once, in `engine/empirical_events.py`), so the printed grep reports zero on a
+correctly wired plane. The registry entry's home changed per W.3's landing amendment.
+Observed: one hit each — `telemetry.py:54`, `decision_rules.py:213`, `worklists.py:152`.
+
+- [x] **Step 2: The protocol block** (documentation — this text is the deliverable; it supersedes LOOP.13's csplit loop body, measurements and bars unchanged; beta.1 ceiling is the 100-work stage, spec §8 — 1000-scale is beta.2, nothing here may assume beyond it). **The block below is superseded by W.4's 2026-08-02 amendment at the end of this section; run that one.** It is kept as the record of what was drafted and where the draft was wrong:
 
 ```bash
 # ==== Phase 1 staged-run protocol (O2 spec §6/§7; supersedes LOOP.13's per-entry loop body) ====
@@ -2946,9 +3033,192 @@ memoria attention worklist --workspace "$VAULT" --json | tee stage1-worklist.jso
 # ---- Ceiling: 100 works. The 1000-scale seed-corpus-load run is beta.2 (spec §8). ----
 ```
 
-- [ ] **Step 3: Section gate**
+- [x] **Step 3: Section gate**
 
 Run: `python scripts/verify`
 Expected: exit 0 — lint, product gates (including the doc-claims gate: no new CLI surface beyond the existing `work import` flags plus `--enrich`, spec §10), tests, offline smoke, syntax all green.
 
-- [ ] **Step 4: No commit from this task.** W.1–W.3 committed every file this section touches; this plan document merges with its own PR, and the acceptance-run record is the PI's post-merge artifact (LOOP.13), never authored here.
+*Observed 2026-08-02:* `verify: OK`, exit 0 — lint, `doc_claims_gate.py` and the other product gates, the full pytest run, the e2e offline smoke (all eight gates green), compileall, and the shell/JSON/PowerShell syntax checks.
+
+- [x] **Step 4: No commit from this task.** W.1–W.3 committed every file this section touches; this plan document merges with its own PR, and the acceptance-run record is the PI's post-merge artifact (LOOP.13), never authored here.
+
+---
+
+**W.4 amendment — 2026-08-02: the corrected protocol block, and what an agent may not do.**
+
+**Executed here: the documentation and the gate. Not executed: the run.** Step 2's
+deliverable is the *text* of the block, and that is what this task lands. The protocol
+itself is PI-executed by construction and no agent session may stand in for it — it needs a
+fresh real vault at `$HOME/memoria-beta1-vault` (AGENTS.md permits agents only disposable
+vaults under `test-vault/`), a licensed 10-work and 100-work Zotero export, live model
+dispatch for `memoria ask`, live enrichment providers under `--enrich`, and human wall-clock
+triage timing plus the human judgment "did this fit one session". LOOP.13 (#1702) already
+records the same finding for the same reason. A green protocol result nobody ran would be
+worth less than nothing here, so none of it was simulated.
+
+**Five defects in the printed Step 2 block, each verified against landed code.**
+
+1. **The battery guard is decorative.** `memoria eval seeded-error-verdict … || { exit 1; }`
+   never fires on a failing battery: `_emit` (`cli.py:4303`) keys the exit code off the
+   envelope's `ok` — whether the *operation ran* — while the bars' verdict is
+   `result.passed` (`runtime/seeded_errors.py`, `passed = not bar_failures`). A battery that
+   ran and failed every bar exits 0. The guard has to read `result.passed`.
+2. **Shape-2 is `memoria explore`, not `memoria ask`,** and both shapes' text is now frozen
+   data rather than a placeholder. R2 F.3 froze `tests/fixtures/retrieval/cases.yaml` on
+   2026-08-02 (`frozen: true` + `frozen_on`, three rows) and LOOP.13's binding 2026-07-29
+   retrieval amendment already rules Shape 1 = `memoria ask`, Shape 2 = `memoria explore`
+   with the fixture's topic and **declared** depth. `memoria explore` takes the topic
+   positionally with `--depth` (default 1, `cli.py:186-193`); `present@1` is the declared
+   depth-1 metric, so depth is read, never assumed. Every latency is recorded beside its
+   fixture id.
+3. **The retraction count is cumulative, not per-stage.** `event_log` is append-only, so the
+   printed `SELECT COUNT(*) … check='source-retraction'` reports stage 1 + stage 2 when
+   stage 2 runs it, under the label `stage2_source_retraction_flags`. It needs an `event_id`
+   watermark taken before the stage. (The event shape itself is right: `check-fired` rows
+   carry a top-level `check`, `runtime/integrity.py:98-110`, and `source-retraction` is
+   raised at `runtime/enrichment.py:259`.)
+4. **"Repeat until the queue reports nothing pending" has a concrete reading and no loop.**
+   `memoria workspace run --json` returns `{"ok": true, "ran": N, "results": […]}`
+   (`cli.py:2833`); drain until `ran` is 0 rather than calling it once.
+5. **Flipping the stop rule has no shipped surface, and the printed instruction destroys the
+   registry.** `update_rule_status` has no CLI and no product caller — the only consumer of
+   the module is `assemble_dashboard`'s read. Worse, the printed step says to flip
+   `status: fired` in `"$VAULT"/.memoria/config/decision-rules.yaml`, a file that does not
+   exist by default and that, **when present, replaces the shipped registry rather than
+   overlaying it** (`decision_rules.load_decision_rules`). Hand-creating it with one entry
+   silently drops the other sixteen rules. `update_rule_status` materializes the full
+   registry and then flips one row, which is the only safe path today.
+
+**One standing product gap, flagged rather than worked around:** the
+`apply-decision-rule-notices` operation named in `decision_rules.py` and `dashboard.py`
+docstrings **does not exist** — I1 H.4 shipped assessment and left application open, held
+back by the floor-golden freeze (`docs/superpowers/plans/2026-07-16-i1-full-wiring.md`,
+H.4's 2026-08-02 blockquote).
+Nothing in the product moves a rule `armed` → `fired` or mints a notice card. For
+`staged-import` this changes no protocol step — the rule is `check: manual`, so no predicate
+was ever going to fire it and the PI's own flip is the intended path — but any protocol step
+that expects the vault to *auto-record* a firing will wait forever. The panel reports; the
+PI acts.
+
+```bash
+# ==== Phase 1 staged-run protocol (O2 spec §6/§7; supersedes LOOP.13's per-entry loop body) ====
+# Preconditions (blocking, LOOP.13): I1 + this plan merged; battery green on the target vault.
+VAULT="$HOME/memoria-beta1-vault"   # fresh real vault; NEVER test-vault/, never an existing personal vault
+DB="$VAULT/.memoria/memoria.sqlite"
+REPO="${REPO:-$PWD}"                # the memoria checkout, for the frozen retrieval fixtures
+
+# The gate is the verdict, not the exit code: `memoria eval` returns 0 whenever the
+# OPERATION ran, so `|| exit` alone waves through a battery whose bars failed.
+memoria eval seeded-error-verdict --workspace "$VAULT" --json | tee battery.json
+python -c "import json,sys; sys.exit(0 if json.load(open('battery.json'))['result']['passed'] else 1)" \
+  || { echo "BLOCKED: no real-vault import until the battery passes (empirical plan Phase 0)"; exit 1; }
+
+# The frozen retrieval fixtures, dumped into the artifact beside the latencies below, so a
+# retyped query or a silently-changed metric is visible in the record rather than trusted.
+python - "$REPO/tests/fixtures/retrieval/cases.yaml" <<'PY' | tee -a staged-import-metrics.txt
+import pathlib, sys, yaml
+for row in yaml.safe_load(pathlib.Path(sys.argv[1]).read_text(encoding="utf-8")):
+    print(f"fixture={row['id']} shape={row['shape']} metric={row['metric']} "
+          f"frozen={row['frozen']} query={row['query']!r}")
+PY
+
+# ---- Stage 1: 10 works (stage1.bib exported from Zotero as generic BibTeX) ----
+# Journal watermark FIRST: event_log is append-only, so the per-stage retraction count below
+# is a delta. Without this, stage 2 re-reports stage 1's flags.
+BEFORE=$(sqlite3 "$DB" "SELECT COALESCE(MAX(event_id), 0) FROM event_log;")
+
+# One bulk call per stage; --enrich is deliberate: this stage wants provider-load
+# measurements (spec §2 — default is off, keyless-first).
+memoria work import --workspace "$VAULT" --format bibtex --file stage1.bib --enrich --json \
+  | tee stage1-import.json
+
+# Product-side record: the run's one import-run.v1 row (duration_s, index_refresh_s, counts).
+# It is already written at this point — the driver finalizes at command return (#1517).
+sqlite3 "$DB" \
+  "SELECT payload_json FROM telemetry_events WHERE event_type='import-run.v1' ORDER BY ts DESC LIMIT 1;" \
+  | tee -a staged-import-metrics.txt
+
+# Queue drain: --enrich only QUEUED enrich-source jobs; this is where they run, and where
+# enrichment provider load and retraction counts become real (#1517 — no import-run field
+# claims them). `workspace run --json` reports {"ok":…, "ran":N,…}; drain until N is 0.
+while :; do
+  memoria workspace run --workspace "$VAULT" --json | tee -a stage1-enrichment.json \
+    | python -c "import json,sys; sys.exit(1 if json.load(sys.stdin)['ran'] else 0)" && break
+done
+
+# Per-stage retraction count (protocol-level), bounded by the watermark.
+sqlite3 "$DB" \
+  "SELECT COUNT(*) FROM event_log WHERE event_id > $BEFORE AND event_type='check-fired'
+     AND json_extract(payload_json, '\$.check')='source-retraction';" \
+  | xargs -I{} echo "stage1_source_retraction_flags={}" | tee -a staged-import-metrics.txt
+
+# Query timing (protocol-level, spec §6 — honestly a protocol measurement, not a product
+# event). Shape 1 is `memoria ask`; Shape 2 is `memoria explore` with the fixture's topic and
+# DECLARED depth (LOOP.13's 2026-07-29 amendment, binding). The three rows below are
+# transcribed from the file dumped above, frozen 2026-08-02 by R2 F.3: no query, gold id or
+# metric may be retyped, and no depth may be assumed. Record the fixture id with each latency.
+#
+#   shape1-spacing-effect-lookup            hit@5     ask
+#   shape1-undesirable-difficulty-boundary  hit@5     ask
+#   shape2-testing-effect-tension           present@1 explore, topic + depth 1
+#
+# LATENCY is what these probes measure per stage. Their gold anchors are O1 seed-corpus
+# works, so a hit@5/present@1 SCORE means something only on a vault where `memoria seed
+# install` ran (LOOP.13's time-to-first-answer step does run it) — record a score only then,
+# and never against the imported Zotero works.
+time memoria ask --workspace "$VAULT" --json \
+  --question "what did the spaced-repetition model find about lag effects"                    # shape1-spacing-effect-lookup
+time memoria ask --workspace "$VAULT" --json \
+  --question "when do desirable difficulties reverse for high element interactivity material" # shape1-undesirable-difficulty-boundary
+time memoria explore --workspace "$VAULT" "testing effect boundary conditions" --depth 1 --json  # shape2-testing-effect-tension
+time memoria project explore --workspace "$VAULT" --limit 10 --json                           # not a fixture row: project-surface probe
+# >200 ms interactive at any stage triggers the substrate re-comparison early
+# (query-mechanism-analysis §5) — record it either way.
+
+# Store sizing (protocol-level, spec §6: journal/DB growth per stage).
+sqlite3 "$DB" "SELECT COUNT(*) FROM event_log;" \
+  | xargs -I{} echo "stage1_event_log_rows={}" | tee -a staged-import-metrics.txt
+du -sh "$VAULT/.memoria" | tee -a staged-import-metrics.txt
+
+# Triage: the ONE run-scoped worklist (import-<run_id>) inside one bounded batch (<= 60 min).
+memoria attention worklist --workspace "$VAULT" --json | tee stage1-worklist.json
+# Resolve every row via:
+#   memoria attention resolve --workspace "$VAULT" <path> --apply|--reject|--defer --reason "<why>"
+# timing the batch; record triage minutes and whether it fit the session.
+
+# Stop-rule check (the staged-import registry entry, W.3 — check: manual). Read the panel:
+#   memoria dashboard --workspace "$VAULT" --json     # decision_rules.rules / .would_fire
+# If the worklist did not fit one session, or rebuild/query latency broke the session's flow,
+# STOP the protocol here: record the observation in the diary, then flip the rule. Nothing in
+# the product does this for you — `apply-decision-rule-notices` does not exist, and a manual
+# rule never appears in would_fire. Do NOT hand-write
+# "$VAULT/.memoria/config/decision-rules.yaml": when that file is present it REPLACES the
+# shipped registry, so a one-entry file drops the other sixteen rules. Use the writer, which
+# materializes the whole registry and then flips one row:
+python -c "from pathlib import Path; from memoria_vault.runtime.decision_rules import update_rule_status; \
+update_rule_status(Path('$VAULT'), 'staged-import', 'fired')"
+# The observation IS the finding.
+
+# ---- Stage 2: 100 works ----
+# Repeat the whole stage block with stage2.bib (100 entries) — including a FRESH $BEFORE
+# watermark, or the retraction count reports stage 1 again. A re-run after an interruption is
+# safe: the catalog pre-check skips admitted works, mints no second worklist and no card, and
+# exits clean (spec §2/§3). The recorded metrics land in LOOP.13's artifact:
+# docs/superpowers/specs/$(date +%F)-staged-import-acceptance-run.md
+# ---- Ceiling: 100 works. The 1000-scale seed-corpus-load run is beta.2 (spec §8). ----
+```
+
+**Obligations this leaves for LOOP.13 (#1702).** Its own body still carries the superseded
+`csplit` per-entry loop and the `grep …/.memoria/journal/*.jsonl` defect its 2026-08-01 audit
+already documented; both are superseded by the block above and by that audit's SQL. Two rows
+of that audit's precondition table are now stale and should be re-read before the run rather
+than trusted: **O2 W.2/W.3/W.4 are done** (this plan), and **I1 D.1–D.4 shipped 2026-08-02** —
+`curate-note-candidate`, `curate-note-link`, `frame-paper`, `mark-checked` and `update-work`
+all emit `disposition` alongside `resolve-attention` (`runtime/knowledge.py:161,365,475`,
+`runtime/worker.py:962,1107`, `runtime/integrity.py:1346`), so the "count ≥ 1 before stage 2"
+check now has six producers, not one. **R2 E.3 + F.3 also merged** (#1710, `649c7e22`) — all
+three fixture rows now carry `frozen: true, frozen_on: 2026-08-02` on `main`, which is what
+the block above transcribes. What LOOP.13 still needs is therefore only the missing
+**`apply-decision-rule-notices`** operation, and then only if a step is written to expect an
+auto-recorded firing, plus the PI-only inputs named at the top of this amendment. **No code
+precondition of LOOP.13 is open any more.**

@@ -5,7 +5,7 @@ measured, over what window, which number decides it, and what the decision then
 is. That is the whole point: a rule the PI can read today cannot be quietly
 re-derived once the numbers are in.
 
-**Where the registry lives.** The sixteen shipped rules are `DEFAULT_RULES_YAML`
+**Where the registry lives.** The seventeen shipped rules are `DEFAULT_RULES_YAML`
 below; `.memoria/config/decision-rules.yaml` is the per-vault override. Absent, the
 shipped registry loads; present, the file *is* the registry. That is the shape the
 other I1-era configs already use -- `attention.yaml` (`runtime/attention_config`),
@@ -26,8 +26,8 @@ records them as free text ("routine alert", "sustained staleness"); the constant
 below are that text resolved once, in the open, where review can argue with them --
 not a heuristic buried inside a predicate. Each `threshold:` line in the registry
 restates its constant in words, so the PI reads the same number the evaluator uses.
-Twelve rules are `manual`: they render as armed reminders and no predicate can fire
-them, because their evidence is the PI's own observation, not a counter.
+Thirteen rules are `manual`: they render as armed reminders and no predicate can
+fire them, because their evidence is the PI's own observation, not a counter.
 """
 
 from __future__ import annotations
@@ -208,6 +208,14 @@ DEFAULT_RULES_YAML = """\
   window: "every outline session in Phase 2"
   threshold: "repeated reaching for spatial arrangement during outline work"
   recommendation: "Repeated spatial reaching admits canvas-as-authoring (read .canvas back as authored input); silence keeps canvases projection-only"
+  check: manual
+  status: armed
+- id: staged-import
+  blocker: "Staged import (O2 Phase 1 protocol)"
+  metric: "import-run.duration_s / import-run.index_refresh_s / import-run.duplicates_flagged; flow-panel attention-admitted counts; protocol-measured session-fit, post-drain retraction counts, and Shape-1/Shape-2 query latency"
+  window: "after each stage (10 works, then 100)"
+  threshold: "the run's triage worklist did not fit one session, or rebuild/query latency broke the session's flow"
+  recommendation: "After each stage (10 works, then 100): if the run's triage worklist did not fit one session, or rebuild/query latency broke the session's flow, stop the protocol and record the observation in the diary and this rule — the observation IS the finding."
   check: manual
   status: armed
 """
