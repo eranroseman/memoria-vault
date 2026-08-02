@@ -1,1 +1,1 @@
-"""The zero-LLM, report-only vault linter; every module here ships a main()."""
+"""The zero-LLM, report-only vault linter; most modules ship a main() for CLI entry."""

@@ -168,7 +168,8 @@ def test_every_import_chain_directory_is_an_explicit_package():
     segment under src/ is a Python identifier and that either lead to a .py
     file or are named as a dotted package-data key. Data directories such as
     product/workspace_seed/.claude/hooks are excluded by the identifier rule
-    -- an __init__.py there would be seeded into user vaults.
+    (dot-prefixed names fail isidentifier()) -- an __init__.py there would be
+    seeded into user vaults.
     """
     src = ROOT / "src"
     src_root = src / "memoria_vault"

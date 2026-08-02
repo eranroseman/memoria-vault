@@ -1,1 +1,1 @@
-"""Processing subsystems."""
+"""Project-gate structural impact processing."""

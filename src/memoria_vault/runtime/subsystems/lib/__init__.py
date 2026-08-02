@@ -1,1 +1,1 @@
-"""Shared library helpers for the subsystems."""
+"""Shared helpers used across the runtime."""

@@ -1,1 +1,1 @@
-"""Runtime subsystems: filed implementations behind the flat runtime modules."""
+"""Runtime subsystems: linter modules (CLI entry points) and lib (direct imports)."""
