@@ -20,6 +20,7 @@ from memoria_vault.runtime.content_security import (
     neutralize_untrusted_markdown,
     neutralize_untrusted_markdown_fragment,
 )
+from memoria_vault.runtime.hub_candidates import candidate_entry, write_hub_candidates
 from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path, require_policy_path
@@ -37,6 +38,7 @@ from memoria_vault.runtime.trusted_writer import (
 from memoria_vault.runtime.vaultio import (
     concept_text,
     frontmatter_doc,
+    read_frontmatter,
     safe_read,
     split_frontmatter,
     write_text_durable,
@@ -732,6 +734,93 @@ def compile_source_digest(
         "finished": finished,
         "commit": commit,
         "interview_count": len(interviews),
+    }
+
+
+def _hub_work_ids(vault: Path, hub_tag: str) -> list[str]:
+    """Work ids of digests whose slugified tags include the hub's tag."""
+    if not hub_tag:
+        return []
+    digests_dir = vault / "digests"
+    if not digests_dir.is_dir():
+        return []
+    work_ids = set()
+    for path in sorted(digests_dir.glob("*.md")):
+        frontmatter = read_frontmatter(path)
+        if frontmatter.get("type") != "digest":
+            continue
+        tags = frontmatter.get("tags")
+        if not isinstance(tags, list):
+            continue
+        if any(_topic_slug(str(tag)) == hub_tag for tag in tags):
+            work_id = str(frontmatter.get("work_id") or "").strip()
+            if work_id:
+                work_ids.add(work_id)
+    return sorted(work_ids)
+
+
+def digest_related_works(
+    vault: Path,
+    hub_path: str,
+    *,
+    context: OperationContext,
+    k: int = 5,
+    operation_id: str = "digest-related-works",
+) -> dict[str, Any]:
+    """Refresh one hub's machine Candidates block from work-graph co-citation."""
+    validate_operation_context(vault, context)
+    vault = Path(vault)
+    policy = load_operation_policy(vault, operation_id)
+    _require_tool(policy, "trusted_writer")
+    promotion_checks = required_promotion_checks(policy)
+    hub_rel = normalize_path(hub_path)
+    require_policy_path(policy, hub_rel)
+    hub_file = vault / hub_rel
+    if not hub_file.is_file():
+        raise FileNotFoundError(hub_file)
+    hub_frontmatter = read_frontmatter(hub_file)
+    if hub_frontmatter.get("type") != "hub":
+        raise ValueError(f"digest-related-works target is not a hub: {hub_rel}")
+
+    started = append_journal_event(
+        vault,
+        {"event": "run", "workflow": operation_id, "status": "started"},
+        context=context,
+    )
+    work_ids = _hub_work_ids(vault, str(hub_frontmatter.get("tag") or "").strip())
+    ranked = state.related_work_candidates(vault, work_ids, k)
+    entries = [
+        candidate_entry(
+            f"catalog/sources/{row['work_id']}",
+            f"co-cites {row['shared_references']} shared references with this hub's works",
+            context.run_id,
+        )
+        for row in ranked
+    ]
+    event = write_hub_candidates(
+        vault,
+        hub_rel,
+        entries,
+        context=context,
+        checks=promotion_checks,
+        inputs=[f"catalog/sources/{work_id}" for work_id in work_ids],
+    )
+    finished = append_journal_event(
+        vault,
+        {"event": "run", "workflow": operation_id, "status": "done", "outputs": [hub_rel]},
+        context=context,
+    )
+    commit = commit_writer_changes(
+        vault, f"digest related works {hub_rel}", [hub_rel], context=context
+    )
+    return {
+        "run_id": context.run_id,
+        "hub_path": hub_rel,
+        "candidates": ranked,
+        "started": started,
+        "finished": finished,
+        "event": event,
+        "commit": commit,
     }
 
 

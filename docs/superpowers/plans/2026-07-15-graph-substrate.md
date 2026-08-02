@@ -4357,9 +4357,43 @@ Steps:
   (co-citation / bibliographic coupling), descending, tie-broken by
   `work_id` ascending; deterministic; empty input or `limit <= 0` returns `[]`.
 
+> **Amendment — the set binding and the six-test split (2026-08-01, applied).**
+> Verified by content at `be6d317e`:
+>
+> 1. **The work-id set binds through `json_each(?)`, not generated `?`
+>    placeholders.** The plan's `IN ({placeholders})` form is an f-string SQL
+>    statement, which ruff's bandit rule `S608` flags; the repo carries no
+>    `noqa: S608` anywhere and already has the idiom this needs —
+>    `state.py`'s own `concept_id NOT IN (SELECT value FROM json_each(?))`
+>    and five sites in `graph_sql.py`. The query is now static text with
+>    three bound parameters (`_json(ids)`, `_json(ids)`, `limit`).
+> 2. **One consequence to keep in mind:** with `json_each('[]')` the empty
+>    work set already yields no rows, so the `not ids` half of the early
+>    return is a short-circuit rather than a syntax-error guard. It stays —
+>    it keeps "empty work set returns `[]`" a statement of this function and
+>    avoids opening the database for a no-op read. The `limit <= 0` half is
+>    load-bearing either way: SQLite reads `LIMIT -1` as *unlimited*.
+> 3. **The plan's two tests became six, one branch each.** The plan's fixture
+>    uses `references` edges only and a disjoint hub work set, so four
+>    mutations of the shipped SQL survive it: dropping either side's
+>    `relation_type = 'references'`, `COUNT(DISTINCT ...)` → `COUNT(...)`, and
+>    the input `_work_id`/blank-id normalization. The shipped tests add a
+>    mixed-relation graph, an overlapping hub work set, and a normalization
+>    case, and split the plan's bundled `limit`/empty assertions into tests
+>    named for what they exercise.
+> 4. **Mutation-tested: 16 mutants, 10 killed, 6 equivalent survivors** —
+>    dropping the `not ids` short-circuit, `limit <= 0` → `limit < 0`
+>    (`LIMIT 0` returns nothing either way), `sorted(...)` and the set
+>    comprehension around the id set (neither changes an `IN`-set result),
+>    and the `str()`/`int()` row coercions (the columns are already `TEXT`
+>    and a `COUNT`). All six are unobservable; the coercions match the
+>    module's established row-projection style.
+
 Steps:
 
-- [ ] Write the failing tests. Append to `tests/test_hub_candidates.py`:
+- [x] Write the failing tests. Append to `tests/test_hub_candidates.py`:
+  *Applied: the snippet below is the seed; the shipped set is six tests, per
+  the amendment above.*
 
   ```python
   def _reference_edges(*targets: str) -> list[dict[str, str]]:
@@ -4398,13 +4432,16 @@ Steps:
       assert [row["work_id"] for row in rows] == ["cand-a", "cand-b"]
   ```
 
-- [ ] Run tests to verify they fail:
-  `python -m pytest tests/test_hub_candidates.py::test_related_work_candidates_ranks_by_shared_references tests/test_hub_candidates.py::test_related_work_candidates_breaks_ties_by_work_id -v`
+- [x] Run tests to verify they fail:
+  `python -m pytest tests/test_hub_candidates.py -k related_work_candidates -v`
   — expected failure: `AttributeError: module 'memoria_vault.runtime.state'
-  has no attribute 'related_work_candidates'`.
+  has no attribute 'related_work_candidates'`. *Measured exactly that, on all
+  seven of the appended cases.*
 
-- [ ] Write minimal implementation. In `src/memoria_vault/runtime/state.py`,
-  after `replace_work_graph_edges` (line 1837), add:
+- [x] Write minimal implementation. In `src/memoria_vault/runtime/state.py`,
+  after `replace_work_graph_edges` (drifted to `:2102`), add the function
+  below — with the `json_each(?)` set binding of the amendment above in place
+  of the generated placeholders:
 
   ```python
   def related_work_candidates(
@@ -4442,9 +4479,11 @@ Steps:
   If `Sequence` is not already imported in `state.py`'s
   `collections.abc` import line, add it there (check with
   `grep -n "from collections.abc" src/memoria_vault/runtime/state.py`).
+  *It was not; `Sequence` was appended to the existing
+  `from collections.abc import Iterable, Mapping` line.*
 
-- [ ] Run tests to verify they pass:
-  `python -m pytest tests/test_hub_candidates.py -v`
+- [x] Run tests to verify they pass:
+  `python -m pytest tests/test_hub_candidates.py -v` — 28 passed.
 
 - [ ] Commit:
   ```
@@ -4507,9 +4546,57 @@ Steps:
   - operation id `digest-related-works` (agent-runnable; not added to
     `PROTECTED_OPERATION_ACTORS`)
 
+> **Amendment — measured anchors, the extra tests, and the goldens
+> (2026-08-01, applied).** Verified by content at `be6d317e`:
+>
+> 1. **Every anchor in the Files list had drifted; all were resolved by
+>    content, not by line number.** `compile_source_digest`'s closing `return`
+>    is near `:745` (not 645), the worker's `compile-source-digest` branch
+>    returns at `:409` (not 405), the `curate-note-candidate` floor entry ends
+>    at `:736` (not 742), and the "Compile source digest" docs row is at
+>    `:114` (not 105). The code landed exactly as the plan writes it.
+> 2. **The floor entry's comment is corrected on one fact.** The seed *does*
+>    have a `digests/` directory (`memoria init` creates the bundle homes); it
+>    is empty. Confirmed live on a real seeded vault: status `done`,
+>    `candidates == []`, `hubs/floor-hub.md` still `unchecked`, and the
+>    curated `Seed body.` intact above an empty delimited block.
+> 3. **Goldens moved, as the plan predicts (contract 8).**
+>    `tests/fixtures/floor/goldens/digest-related-works.json` is new, and
+>    `regenerate-capability-index.json` moved by exactly one line — the
+>    `.memoria/index/capability-index.json` hash, because the new manifest
+>    joins the rendered index. No other golden changed.
+> 4. **The operation test became eight, because one test leaves the
+>    operation's own branches unfixtured.** Beyond the plan's ranked-block
+>    test: the hub's work set is scanned off the filesystem, so a test
+>    produces the messy `digests/` a PI edit can leave (a foreign `type:`, a
+>    scalar `tags:`, a blank `tags:`, a blank `work_id:`, an off-tag digest)
+>    and pins the resulting `inputs` list; three refusals are asserted as
+>    whole-surface no-writes (non-hub target, a path outside `allowed_paths`,
+>    an unbound request context) plus the honest `FileNotFoundError` for a
+>    missing hub — `safe_read` returns `""` for a missing file, so without
+>    that guard the type check would report "not a hub" about a file that
+>    does not exist; and the worker payload contract (`k` honored, `k`
+>    defaulting to five, `k` refused for `0`, `-1`, `True`, `"5"`) is run
+>    through the real queue.
+> 5. **Mutation-tested: 29 mutants, 23 killed, 6 survivors.** Survivors, all
+>    judged: `if not hub_tag: return []` and `if not digests_dir.is_dir():
+>    return []` (unobservable — `Path.glob` on a missing directory is already
+>    empty, and a tagless hub matches no digest and then fails schema
+>    validation at the write); `checks=promotion_checks` → `checks=None`
+>    (equivalent while `required_checks` is the singleton `memoria-runtime`
+>    that `normalize_promotion_checks` also defaults to); the top-of-function
+>    `validate_operation_context` (defence in depth — `append_journal_event`
+>    validates the same context before the first side effect, so the refusal
+>    and the no-write both still hold); `_require_tool` (manifest-dependent,
+>    unkillable without a fake manifest); and the worker's blank-`hub_path`
+>    guard (the run is refused either way, with a less honest message).
+>    `sorted(work_ids)` is killed only probabilistically: the mutant's
+>    set-iteration order is per-process hash-randomized, so the `inputs`
+>    assertion catches it on roughly half of runs.
+
 Steps:
 
-- [ ] Write the failing catalog-parity state: create
+- [x] Write the failing catalog-parity state: create
   `src/memoria_vault/product/capabilities/operations/digest-related-works.md`:
 
   ```markdown
@@ -4568,17 +4655,20 @@ Steps:
       },
   ```
 
-- [ ] Run tests to verify they fail:
+- [x] Run tests to verify they fail:
   `python -m pytest tests/test_capabilities.py::test_worker_operations_are_cataloged_and_policy_shaped "tests/test_floor_sweep_operations.py::test_operation[digest-related-works]" -v`
   — expected failures: the capabilities parity test fails with
   `digest-related-works` in `catalog_ids` but not `worker_ids`; the floor
   sweep case fails with worker status `failed` /
   `unsupported operation: 'digest-related-works'` (`worker.py:1090`).
+  *Measured both.*
 
-- [ ] Write the failing operation-level test. Append to
+- [x] Write the failing operation-level test. Append to
   `tests/test_hub_candidates.py` (add
-  `from memoria_vault.runtime.operations import digest_related_works as _digest_related_works`
-  to its imports):
+  `from memoria_vault.runtime.operations import digest_related_works`
+  to its imports — the plan's `as _digest_related_works` alias collides with
+  nothing in that file, and `call_with_context` derives the operation id from
+  `function.__name__`, which the alias does not change):
 
   ```python
   def test_digest_related_works_writes_ranked_candidates_block(tmp_path: Path) -> None:
@@ -4617,9 +4707,12 @@ Steps:
   Run it to verify it fails:
   `python -m pytest tests/test_hub_candidates.py::test_digest_related_works_writes_ranked_candidates_block -v`
   — expected failure: `ImportError: cannot import name 'digest_related_works'`.
+  *Measured exactly that (a collection error, since the import is at module
+  scope). The shipped set is eight cases, per the amendment above.*
 
-- [ ] Write minimal implementation. In `operations.py`, add
-  `read_frontmatter` to the `vaultio` import block (lines 35-41) and
+- [x] Write minimal implementation. In `operations.py`, add
+  `read_frontmatter` to the `vaultio` import block (drifted to lines 38-45)
+  and
   `from memoria_vault.runtime.hub_candidates import candidate_entry, write_hub_candidates`
   below the `content_security` import. After `compile_source_digest`'s
   closing `return`, add:
@@ -4713,7 +4806,7 @@ Steps:
   ```
 
   In `worker.py`, insert after the `compile-source-digest` branch's `return`
-  (line 405), matching the surrounding if-chain style:
+  (drifted to `:409`), matching the surrounding if-chain style:
 
   ```python
       if operation_id == "digest-related-works":
@@ -4733,10 +4826,11 @@ Steps:
           }
   ```
 
-- [ ] Run tests to verify they pass:
+- [x] Run tests to verify they pass:
   `python -m pytest tests/test_hub_candidates.py tests/test_capabilities.py -v`
+  — 40 + 12 passed.
 
-- [ ] Generate the new floor golden plus the drifted capability-index golden
+- [x] Generate the new floor golden plus the drifted capability-index golden
   (**golden addition noted here in the manifest**, per the floor harness's
   opt-in update contract at `tests/floor_lib.py:331-355`):
   `MEMORIA_FLOOR_UPDATE_GOLDENS=1 python -m pytest "tests/test_floor_sweep_operations.py::test_operation[digest-related-works]" "tests/test_floor_sweep_operations.py::test_operation[regenerate-capability-index]" -v`
@@ -4744,13 +4838,16 @@ Steps:
   capability-index hash change), then re-run both without the env var and
   confirm they pass; also run
   `python -m pytest tests/test_floor_coverage.py -v`.
+  *Measured exactly one new file and exactly one changed line — the
+  `.memoria/index/capability-index.json` hash. Both re-run clean without the
+  env var; `test_floor_coverage.py` passes.*
 
-- [ ] Update the hand-maintained docs. In
+- [x] Update the hand-maintained docs. In
   `docs/reference/commands-and-transports/system-actions.md:26`, insert
   `` `digest-related-works` `` into the alphabetical roster (after
   `` `curate-note-link` ``, before `` `enrich-source` ``). In
   `docs/reference/commands-and-transports/system-actions-operations.md`, add
-  after the "Compile source digest" row (line 105):
+  after the "Compile source digest" row (drifted to `:114`):
 
   ```markdown
   | Digest related works | worker operation `digest-related-works` + runtime helper (`digest_related_works`) | Deterministically ranks co-cited catalog Works (shared `references` targets in `work_graph_edges`) against one hub's works and replaces the hub's terminal machine Candidates block wholesale; the curated body above the block is never touched. |

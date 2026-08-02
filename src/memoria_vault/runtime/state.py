@@ -15,7 +15,7 @@ import subprocess
 import threading
 import time
 from collections import Counter
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Mapping, Sequence
 from importlib.resources import files
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -2174,6 +2174,37 @@ def replace_work_graph_edges(vault: Path, work_id: str, rows: Iterable[dict[str,
                     now_iso(),
                 ),
             )
+
+
+def related_work_candidates(
+    vault: Path, work_ids: Sequence[str], limit: int
+) -> list[dict[str, Any]]:
+    """Rank other catalog works by shared 'references' targets with a work set."""
+    ids = sorted({_work_id(work_id) for work_id in work_ids if str(work_id).strip()})
+    if not ids or limit <= 0:
+        return []
+    with connect(vault) as conn:
+        rows = conn.execute(
+            """
+            SELECT other.work_id AS work_id,
+                   COUNT(DISTINCT other.target_id) AS shared_references
+            FROM work_graph_edges AS mine
+            JOIN work_graph_edges AS other
+              ON other.relation_type = 'references'
+             AND other.target_id = mine.target_id
+            WHERE mine.relation_type = 'references'
+              AND mine.work_id IN (SELECT value FROM json_each(?))
+              AND other.work_id NOT IN (SELECT value FROM json_each(?))
+            GROUP BY other.work_id
+            ORDER BY shared_references DESC, other.work_id ASC
+            LIMIT ?
+            """,
+            (_json(ids), _json(ids), limit),
+        ).fetchall()
+    return [
+        {"work_id": str(row["work_id"]), "shared_references": int(row["shared_references"])}
+        for row in rows
+    ]
 
 
 def replace_work_aspects(vault: Path, source_ref: str, rows: Iterable[dict[str, Any]]) -> None:
