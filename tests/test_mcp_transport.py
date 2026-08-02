@@ -10,9 +10,12 @@ from typing import Any
 import pytest
 
 from memoria_vault.cli import main
+from memoria_vault.engine import api as engine_api
+from memoria_vault.engine.empirical_events import READ_EVENT_SCHEMA
 from memoria_vault.engine.surface_contract import actions_by_id
 from memoria_vault.runtime import mcp_transport, retrieval_pipeline, state, worker
 from memoria_vault.runtime.mcp_transport import make_mcp_app
+from memoria_vault.runtime.subsystems.lib.inbox import write_finding
 from tests.helpers import init_cli_workspace, write_checked_note
 
 
@@ -528,6 +531,101 @@ def test_mcp_answer_query_no_hit_payload_rides_dispatch_intact(workspace: Path) 
     assert result["unknowns"] == [
         retrieval_pipeline.honest_empty(counts, result["excluded_strata"])
     ]
+
+
+def _read_observed_rows(vault: Path) -> list[dict[str, Any]]:
+    """The `read-observed.v1` rows, from the table I1 T.1/T.3 routes them to.
+
+    Ordered by `rowid`, not `event_id`: the id is a uuid4 hex, so ordering by it
+    shuffles rows that share a timestamp.
+    """
+    with state.connect(vault) as conn:
+        rows = conn.execute(
+            "SELECT session_id, surface, payload_json FROM telemetry_events"
+            " WHERE event_type = ? ORDER BY rowid",
+            (READ_EVENT_SCHEMA,),
+        ).fetchall()
+    return [dict(row) for row in rows]
+
+
+def _journal_plane(vault: Path) -> dict[str, Any]:
+    """Every byte a journal append would move, so its absence is the assertion."""
+    head = vault / state.JOURNAL_HEAD_REL
+    with state.connect(vault) as conn:
+        events = [tuple(row) for row in conn.execute("SELECT * FROM event_log ORDER BY event_id")]
+    return {
+        "event_log": events,
+        "jsonl": sorted(
+            (path.name, path.read_bytes()) for path in (vault / ".memoria/journal").glob("*.jsonl")
+        ),
+        "head": head.read_bytes() if head.is_file() else None,
+    }
+
+
+def test_mcp_answer_query_records_no_read_observed_row_and_leaves_the_journal_intact(
+    workspace: Path,
+) -> None:
+    """U4-C.5 (re-specified 2026-08-02): the ask path is neither emitter nor writer.
+
+    U4 §4's last bullet has the co-PI's reads firing `read-observed` telemetry
+    "exactly as for any other consumer". They do not, and not by omission: I1's
+    design keeps `answer-query`'s manifest a pure read and gives the schema only
+    the view/detail emitters. So the honest contract is a double absence — no
+    analytics row, no journal byte — and each half is asserted behind a positive
+    control, because an unverified absence is exactly what this task originally
+    got wrong: it scanned `event_log` for a row that lives in `telemetry_events`,
+    where no ask-path emitter could ever have tripped it.
+    """
+    pytest.importorskip("mcp")
+    write_checked_note(workspace, "notes/groundterm.md", "Groundterm note")
+    card = write_finding(
+        workspace, "flag", "Drift check", "a note drifted", "sweep", target="notes/groundterm.md"
+    )
+    assert card is not None
+    app = make_mcp_app(workspace, read_scope=["notes"], agent_identity="agent")
+
+    # Control 1: a journaling write through this same door, so the identity claim
+    # below is made over a populated plane and not over three empty containers.
+    genesis = _journal_plane(workspace)
+    seed = _call(
+        app,
+        "operation_run",
+        operation_id="create-concept",
+        payload={
+            "target_path": "notes/journal-seed.md",
+            "content": "---\ntype: note\ntitle: Seed\ntags: []\nlinks: {}\n---\nBody.\n",
+            "concept_type": "note",
+        },
+        idempotency_key="ask-journal-seed",
+    )
+    assert seed["ok"] is True
+    seeded = _journal_plane(workspace)
+    assert len(seeded["event_log"]) > len(genesis["event_log"])
+    assert [name for name, _ in seeded["jsonl"]] == ["memoria-mcp.jsonl"]
+    assert seeded["head"] is not None
+    assert seeded["head"] != genesis["head"]
+
+    # Control 2: the one shipped `read-observed.v1` emitter (the attention detail
+    # read). Without it, an empty result below is indistinguishable from a query
+    # aimed at the wrong table — and it moves no journal byte either.
+    engine_api.read_attention_card(workspace, card.relative_to(workspace).as_posix())
+    observed = _read_observed_rows(workspace)
+    assert len(observed) == 1
+    assert _journal_plane(workspace) == seeded
+
+    response = _call(
+        app,
+        "operation_run",
+        operation_id="answer-query",
+        payload={"query": "groundterm"},
+        idempotency_key="ask-telemetry",
+    )
+
+    # Not a degenerate no-op: the ask really did retrieve a checked source.
+    assert response["ok"] is True
+    assert [source["path"] for source in response["result"]["sources"]] == ["notes/groundterm.md"]
+    assert _read_observed_rows(workspace) == observed
+    assert _journal_plane(workspace) == seeded
 
 
 def _list_tools(app: Any) -> list[Any]:

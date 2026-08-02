@@ -17302,6 +17302,17 @@ Contract 7 is amended accordingly (**one** single-source constant remains: `PRIO
 > telemetry rows to the `telemetry_events` table. The gap that survives is
 > narrower — no emitter exists on the *answer-query* path — and U4-C.5's pin
 > must be rewritten against `telemetry_events`. See the note on U4-C.5.
+>
+> **Gap closed, as a decision rather than a deferral (2026-08-02).** The
+> answer-query silence is not waiting on beta.1: I1's full-wiring design §8
+> ("Deliberately not building") names `read-observed.v1` emission from
+> `answer-query` as out of scope — "its manifest stays a pure read — first
+> emitters are the §1 view/detail paths only, which already assemble the
+> staleness state they report". U4 §4's last bullet ("fires exactly as for any
+> other consumer") is therefore **wrong for this path** and is superseded by
+> that decision. U4-C.5, re-specified below, pins the decision rather than a
+> deferral, so a future emitter on the ask path fails a test instead of quietly
+> contradicting a spec bullet nobody re-read.
 
 **Cross-section assumption (U4-A content module).** U4-A owns the SKILL.md
 generator. This section assumes U4-A exposes a section-provider interface of
@@ -17746,6 +17757,90 @@ required.
 > `SELECT payload_json FROM event_log` queries the wrong table and would assert
 > nothing. Narrow the pin to "the answer-query path emits no `read-observed.v1`",
 > read `telemetry_events`, and drop the "emission is deferred" rationale.
+
+**Re-specification 2026-08-02 (BINDING) — done; the printed body below is
+superseded and must not be executed.**
+
+*What the original step assumed.* Two things. (1) That `read-observed.v1` had
+no emitter anywhere, so the pin was a tripwire for a deferred beta.1 feature.
+(2) That a telemetry row, if one were ever written, would be visible in
+`event_log`.
+
+*Why neither can hold.* (1) is false since I1 T.4: the attention detail read
+emits on every call. (2) is false since I1 T.1/T.3: `record_telemetry_event`
+(`runtime/telemetry.py`) inserts into `telemetry_events` and never appends to
+the journal, so `READ_EVENT_SCHEMA` cannot appear in an `event_log` payload by
+construction — the printed `assert all(READ_EVENT_SCHEMA not in ...)` is true
+for a reason that has nothing to do with the ask path, and no ask-path emitter
+could ever fail it. Run verbatim against a `init_cli_workspace` vault the step
+does not even reach that line: `event_log` is empty on a fresh vault, so its
+own `assert rows` guard fails first (measured, 2026-08-02). Either way the step
+is unexecutable as printed.
+
+*What replaces it.* The claim is the one the section preamble's closed gap
+leaves standing: **the conversational-ask read path is neither a telemetry
+emitter nor a journal writer.** Both halves are absences, so both are asserted
+behind a positive control, V2R-C style
+(`tests/test_cli_review.py::_journal_plane`):
+
+1. **Journal plane.** Snapshot all `event_log` rows, the per-machine JSONL
+   bytes and the `journal-head` anchor, and assert identity across the
+   `answer-query` call. A fresh vault's journal is empty (0 rows, no JSONL,
+   `GENESIS` anchor), which would make identity a comparison of three empty
+   containers — escape class 1. So a real `create-concept` runs through the
+   *same* MCP door first: it moves all three components (`event_log` 0→1,
+   `memoria-mcp.jsonl` appears, the anchor leaves `GENESIS`), and the snapshot
+   is proven non-constant before it is used as an equality.
+2. **Telemetry plane.** Assert the `read-observed.v1` rows in
+   `telemetry_events` are unchanged across the call — after first exercising
+   the one shipped emitter (`engine_api.read_attention_card`) in the same
+   vault, so the query is proven to *find* a row of exactly the kind whose
+   absence is being claimed. This is the control the original step lacked, and
+   it is what makes a wrong table or a wrong event-type spelling fail rather
+   than pass.
+
+The ask itself is a **hit** query against a seeded checked note, not a miss:
+the retrieval really ran and really returned a source, so the double absence is
+measured over work done rather than over an early return.
+
+**Files (re-specified):**
+- Modify: `tests/test_mcp_transport.py` — helpers `_read_observed_rows` and
+  `_journal_plane` plus
+  `test_mcp_answer_query_records_no_read_observed_row_and_leaves_the_journal_intact`,
+  inserted after the U4-C.4 test and before `_list_tools`; imports
+  `engine.api as engine_api`, `READ_EVENT_SCHEMA`, and
+  `runtime.subsystems.lib.inbox.write_finding` added to the top block.
+
+**Interfaces (re-specified):**
+- Consumes: `READ_EVENT_SCHEMA` (`engine/empirical_events.py`),
+  `state.connect`, `state.JOURNAL_HEAD_REL`, `engine_api.read_attention_card`
+  (the I1 T.4 emitter, used as a control), `write_finding`, `create-concept`
+  and `answer-query` through `operation_run`.
+- Produces: nothing (state pin). The validator's acceptance of the ask-shaped
+  event (`{"workflow": "ask", "staleness_hit": bool}`) stays covered by
+  `tests/test_empirical_events.py` — not re-tested here.
+
+**Steps (re-specified):**
+
+- [x] Confirm the printed step is unexecutable, by running it verbatim:
+  fails at `assert rows` (`assert []`) on a fresh `init_cli_workspace` vault.
+- [x] Write the re-specified test with both positive controls.
+- [x] Run it: `python -m pytest tests/test_mcp_transport.py -q` — 19 passed.
+- [x] Mutation-test the new assertions: **10 mutants, 10 killed, no survivors.**
+  Three tripwires (an emitter added to `answer_query`, to the worker's
+  answer-query dispatch, and a journal append on that dispatch); three
+  control-liveness mutants (the attention emitter removed, respelled
+  `read-observed.v2`, and doubled); three journal-leg isolations (a stealth
+  ask-path row written with neither anchor nor JSONL mirror, the anchor never
+  rewritten, the mirror renamed); and one degeneracy check (retrieval truncated
+  to nothing). The stealth-row mutant is what shows the `event_log` leg pays
+  for itself: the anchor is a function of the chain, so only that leg catches a
+  row appended without an anchor rewrite.
+- [x] Run the full gate: `python scripts/verify` — green. Goldens unmoved.
+
+---
+
+**Superseded original body (2026-08-02) — do not execute.**
 
 **Files:**
 - Modify: `tests/test_mcp_transport.py` (insert after the U4-C.4 test, before
