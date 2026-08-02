@@ -8,6 +8,7 @@ __pycache__/
 .nox/
 .venv/
 *.egg-info/
+build/
 
 # Claude Code local worktrees (per-branch checkouts; never part of the repo)
 .claude/worktrees/
