@@ -1011,13 +1011,10 @@ def test_rename_reconciliation_still_refuses_edited_content(tmp_path: Path) -> N
     that new path — otherwise renaming would become a way to smuggle unchecked
     content into the searchable universe.
 
-    Scope: this proves the one-pass case it exercises — rename and edit both landing
-    before the next reindex. A rename indexed first and edited afterwards is *not*
-    refused: `indexing._previously_indexed_documents` re-indexes any path whose
-    `concept_check_status` is `checked` without calling `is_consumable_checked_file`,
-    so no sha256 comparison runs. That bypass predates this reconcile and is
-    identical for a file that was never renamed, so the perimeter is unchanged — it
-    is simply not what this test proves.
+    Scope: this proves the one-pass case — rename and edit both landing before
+    the next reindex. The two-pass route (index first, edit afterwards) is
+    proven by test_reindex_refuses_content_edited_after_a_prior_index_pass:
+    since #1591, _previously_indexed_documents runs the same barrier.
     """
     vault = tmp_path
     copy_memoria_dirs(vault, "schemas")
@@ -1046,6 +1043,39 @@ def test_rename_reconciliation_still_refuses_edited_content(tmp_path: Path) -> N
     # The identity still reconciles its path — that half is the rename contract.
     assert concept["path"] == "notes/alpha-edited.md"
     # But the changed bytes are refused: no passage row, and the text is unreachable.
+    assert state.indexed_passages(vault) == []
+    assert call_with_context(retrieval.fts_search, vault, "SMUGGLED") == []
+
+
+def test_reindex_refuses_content_edited_after_a_prior_index_pass(tmp_path: Path) -> None:
+    """The two-pass edit route hits the same sha256 barrier as the one-pass route (#1591).
+
+    `_previously_indexed_documents` re-indexes paths already present in
+    `file_index_state`. Before #1591 it trusted `concept_check_status` alone, so
+    index → edit → reindex landed the edited bytes in `passages` with
+    `check_status='checked'` while edit → reindex was refused. The barrier's
+    sha256 comparison must run on every route into the passage universe.
+    """
+    vault = tmp_path
+    copy_memoria_dirs(vault, "schemas")
+    write_checked_concept(
+        vault,
+        "notes/alpha.md",
+        f"type: note\nid: {ULID_NOTE}\ntitle: Alpha\ntags: []\nlinks: {{}}\n",
+        body="rarealpha the checked body",
+    )
+    rebuild_passage_index(vault)
+    assert {row["path"] for row in state.indexed_passages(vault)} == {"notes/alpha.md"}
+
+    # Edit in place, out of band, AFTER the file already has an index pass behind it.
+    target = vault / "notes/alpha.md"
+    target.write_text(
+        target.read_text(encoding="utf-8").replace("rarealpha the checked body", "SMUGGLED"),
+        encoding="utf-8",
+    )
+    rebuild_passage_index(vault)
+
+    # The edited bytes are refused: no passage row serves them, FTS cannot reach them.
     assert state.indexed_passages(vault) == []
     assert call_with_context(retrieval.fts_search, vault, "SMUGGLED") == []
 

@@ -41,4 +41,5 @@ def _enqueue_scan(vault: Path, relpath: str, reason: str, current_hash: str) -> 
         idempotency_key=f"read-guard-scan-{digest}",
         schedule_id="read-guard",
         actor="integrity",
+        machine_authored=False,
     )

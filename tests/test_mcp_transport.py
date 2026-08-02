@@ -420,6 +420,7 @@ def test_mcp_rejects_idempotency_key_bound_to_pending_pi_request(workspace: Path
         workspace,
         "resolve-attention",
         actor="pi",
+        machine_authored=False,
         idempotency_key="pi-pending-request",
         payload={
             "target_id": "inbox/pi-pending.md",

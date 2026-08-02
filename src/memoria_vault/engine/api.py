@@ -814,6 +814,7 @@ def write_new_concept(
     tags: list[str],
     extra: dict[str, Any],
     actor: str,
+    machine_authored: bool,
     idempotency_key: str | None = None,
     schedule_id: str | None = None,
 ) -> dict[str, Any]:
@@ -869,6 +870,7 @@ def write_new_concept(
             output_intents=[{"id": rel, "kind": concept_type}],
             primary_target=rel,
             actor=actor,
+            machine_authored=machine_authored,
             provenance={"surface": "memoria-cli", "command": f"new-{concept_type}"},
             schedule_id=schedule_id,
         )

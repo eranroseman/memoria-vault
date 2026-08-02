@@ -127,6 +127,7 @@ def test_cli_workspace_run_reports_schedule_id_for_queue_drain(
         payload={"seed_terms": ["new area"], "dense_threshold": 1},
         idempotency_key="pending-gaps",
         actor="pi",
+        machine_authored=False,
     )
 
     rc = main(
@@ -334,6 +335,7 @@ def test_cli_request_list_show_and_resume_pending_request(
         idempotency_key="resume-gaps",
         provenance={"surface": "test"},
         actor="pi",
+        machine_authored=False,
     )
 
     assert (
@@ -430,6 +432,7 @@ def test_cli_request_controls_reject_agent_for_pi_request_without_mutation(
         payload={"target_path": "notes/queued.md"},
         idempotency_key=f"pi-control-{command[0]}",
         actor="pi",
+        machine_authored=False,
     )
     request_id = str(job["job_id"])
     if request_status == "cancelled":
@@ -486,6 +489,7 @@ def test_cli_request_cancel_rejects_non_pending_status_without_mutation(
         payload={"query": "status"},
         idempotency_key=f"cancel-{status}",
         actor="pi",
+        machine_authored=False,
     )
     error = "test setup" if status in {"failed", "cancelled"} else ""
     state.finish_request(
@@ -528,6 +532,7 @@ def test_cli_request_retry_rejects_superseded_source(
         payload={"query": "status"},
         idempotency_key="superseded-source",
         actor="pi",
+        machine_authored=False,
         schedule_id="source-schedule",
     )
     assert (
@@ -586,6 +591,7 @@ def test_cli_request_amend_rejects_scope_bearing_payload_change(
         primary_target="notes/original.md",
         precondition_hashes={"notes/original.md": "sha256:original"},
         actor="pi",
+        machine_authored=False,
     )
 
     assert (
@@ -623,6 +629,7 @@ def test_cli_request_amend_rejects_integrity_only_source_without_superseding(
         payload={"reason": "manual"},
         idempotency_key="integrity-source",
         actor="integrity",
+        machine_authored=False,
     )
 
     assert (
@@ -664,6 +671,7 @@ def test_cli_request_answer_retry_repairs_missing_lifecycle_event(
         payload={"query": "status"},
         idempotency_key="event-source",
         actor="pi",
+        machine_authored=False,
     )
     command = [
         "request",
@@ -718,6 +726,7 @@ def test_cli_request_transition_retry_repairs_missing_lifecycle_event(
         payload={"query": action},
         idempotency_key=f"{action}-event-source",
         actor="pi",
+        machine_authored=False,
     )
     if action == "retry":
         state.finish_request(
@@ -776,6 +785,7 @@ def test_cli_request_cancel_and_retry_use_canonical_request_id(
         payload={"query": "canonical"},
         idempotency_key="unsafe/source",
         actor="pi",
+        machine_authored=False,
     )
 
     assert (
@@ -855,6 +865,7 @@ def test_cli_request_retry_repairs_event_after_retried_job_finishes(
         payload={},
         idempotency_key="retry-finish-source",
         actor="pi",
+        machine_authored=False,
     )
     state.finish_request(
         workspace,
@@ -910,6 +921,7 @@ def test_cli_request_amend_rejects_fork_from_superseded_source(
         payload={"query": "original"},
         idempotency_key="fork-source",
         actor="pi",
+        machine_authored=False,
     )
     first = [
         "request",
@@ -1351,6 +1363,7 @@ def test_cli_wires_maintenance_and_pi_commands(
         payload={"query": "status", "k": 1},
         idempotency_key="recoverable-request",
         actor="pi",
+        machine_authored=False,
     )
     original_before = state.request_detail(
         state.request_row(workspace, str(original_job["job_id"]))
@@ -1739,6 +1752,7 @@ def test_cli_workspace_recover_fails_running_requests_for_retry(
         payload={"query": "status"},
         idempotency_key="stuck-request",
         actor="pi",
+        machine_authored=False,
     )
     state.set_request_running(workspace, "stuck-request", job)
 

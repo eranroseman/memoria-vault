@@ -48,6 +48,7 @@ def test_worker_runs_integrity_operation_jobs(tmp_path: Path) -> None:
         payload={"shadow": False},
         idempotency_key="integrity-check",
         actor="integrity",
+        machine_authored=False,
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -84,6 +85,7 @@ def test_worker_runs_claim_quote_integrity_operation_jobs(tmp_path: Path) -> Non
         payload={"shadow": False},
         idempotency_key="claim-check",
         actor="integrity",
+        machine_authored=False,
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -136,6 +138,7 @@ def test_worker_runs_quote_anchor_integrity_operation_jobs(tmp_path: Path) -> No
         payload={"shadow": False},
         idempotency_key="quote-anchor-check",
         actor="integrity",
+        machine_authored=False,
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -171,6 +174,7 @@ def test_worker_runs_prompt_injection_integrity_operation_jobs(tmp_path: Path) -
         payload={"shadow": False},
         idempotency_key="prompt-injection-check",
         actor="integrity",
+        machine_authored=False,
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -208,6 +212,7 @@ def test_worker_runs_source_metadata_operation_jobs(tmp_path: Path) -> None:
         payload={"shadow": False},
         idempotency_key="source-metadata",
         actor="integrity",
+        machine_authored=False,
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -247,6 +252,7 @@ def test_worker_runs_contradiction_integrity_operation_jobs(tmp_path: Path) -> N
         payload={"shadow": False},
         idempotency_key="contradiction-check",
         actor="integrity",
+        machine_authored=False,
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -286,6 +292,7 @@ def test_worker_runs_surface_tensions_tier1_operation_jobs(tmp_path: Path) -> No
         payload={},
         idempotency_key="surface-tensions",
         actor="integrity",
+        machine_authored=False,
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -328,6 +335,7 @@ def test_worker_passes_surface_tensions_mode_to_tier2_runner(tmp_path: Path) -> 
         payload={"mode": "live"},
         idempotency_key="surface-tensions-live",
         actor="integrity",
+        machine_authored=False,
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -365,6 +373,7 @@ def test_worker_runs_link_target_integrity_operation_jobs(tmp_path: Path) -> Non
         payload={"shadow": False},
         idempotency_key="link-target-check",
         actor="integrity",
+        machine_authored=False,
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -396,6 +405,7 @@ def test_worker_runs_trace_integrity_scan_operation_jobs(tmp_path: Path) -> None
         payload={"reason": "test-foreign-write"},
         idempotency_key="trace-integrity",
         actor="integrity",
+        machine_authored=False,
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -433,6 +443,7 @@ def test_worker_observe_sweep_surfaces_change_witness_findings(tmp_path: Path) -
         "observe-pi-edits",
         idempotency_key="baseline-superseded",
         actor="integrity",
+        machine_authored=False,
     )
     run_next_job(vault, machine="test-machine")
 
@@ -445,6 +456,7 @@ def test_worker_observe_sweep_surfaces_change_witness_findings(tmp_path: Path) -
         "observe-pi-edits",
         idempotency_key="witness-superseded-removal",
         actor="integrity",
+        machine_authored=False,
     )
     done = run_next_job(vault, machine="test-machine")
 

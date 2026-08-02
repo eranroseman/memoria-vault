@@ -100,6 +100,7 @@ def render_argument_canvas(vault: Path) -> str:
         payload={"project_path": "project-alpha"},
         idempotency_key="render-project-alpha-canvas",
         actor="pi",
+        machine_authored=False,
     )
     done = run_next_job(vault, machine="test-machine")
     assert done is not None
@@ -364,6 +365,7 @@ def test_observe_pi_edits_regenerates_quarantined_argument_canvas(tmp_path: Path
         "observe-pi-edits",
         idempotency_key="observe-argument-canvas",
         actor="integrity",
+        machine_authored=False,
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -388,6 +390,7 @@ def test_observe_pi_edits_regenerates_deleted_argument_canvas(tmp_path: Path) ->
         "observe-pi-edits",
         idempotency_key="observe-deleted-argument-canvas",
         actor="integrity",
+        machine_authored=False,
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -486,6 +489,7 @@ def test_worker_runs_workspace_index_projection_operation_jobs(tmp_path: Path) -
         "regenerate-indexes",
         idempotency_key="workspace-indexes",
         actor="pi",
+        machine_authored=False,
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -508,6 +512,7 @@ def test_worker_regenerate_indexes_refuses_index_symlink(tmp_path: Path) -> None
         "regenerate-indexes",
         idempotency_key="workspace-indexes-symlink",
         actor="pi",
+        machine_authored=False,
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -528,6 +533,7 @@ def test_worker_runs_tracked_projection_operation_jobs(tmp_path: Path) -> None:
         "regenerate-tracked-projections",
         idempotency_key="tracked-projections",
         actor="pi",
+        machine_authored=False,
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -551,6 +557,7 @@ def test_worker_regenerate_tracked_projections_refuses_agents_symlink(tmp_path: 
         "regenerate-tracked-projections",
         idempotency_key="tracked-projections-agents-symlink",
         actor="pi",
+        machine_authored=False,
     )
     done = run_next_job(vault, machine="test-machine")
 

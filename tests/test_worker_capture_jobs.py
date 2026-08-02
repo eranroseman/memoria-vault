@@ -35,6 +35,7 @@ def test_worker_runs_capture_source_operation_jobs(tmp_path: Path) -> None:
         },
         idempotency_key="capture-alpha",
         actor="pi",
+        machine_authored=False,
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -81,6 +82,7 @@ def test_worker_runs_capture_pdf_source_operation_jobs(tmp_path: Path, monkeypat
         },
         idempotency_key="capture-pdf",
         actor="pi",
+        machine_authored=False,
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -115,6 +117,7 @@ def test_worker_capture_pdf_source_fails_before_partial_write(tmp_path: Path, mo
         },
         idempotency_key="capture-pdf-missing-selector",
         actor="pi",
+        machine_authored=False,
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -165,6 +168,7 @@ def test_worker_runs_policy_bound_remote_pdf_capture_as_pi(tmp_path: Path, monke
         payload=_remote_pdf_payload(),
         idempotency_key="capture-remote-pdf",
         actor="pi",
+        machine_authored=False,
     )
 
     done = run_next_job(vault, machine="test-machine")
@@ -207,6 +211,7 @@ def test_worker_stages_an_allowed_remote_pdf_through_the_default_resolver(
         payload=payload,
         idempotency_key="capture-remote-pdf-default-resolver",
         actor="pi",
+        machine_authored=False,
     )
 
     done = run_next_job(vault, machine="test-machine")
@@ -238,6 +243,7 @@ def test_worker_remote_pdf_policy_refuses_before_default_opener(
         payload=_remote_pdf_payload("https://outside.test/denied.pdf"),
         idempotency_key="capture-remote-pdf-denied",
         actor="pi",
+        machine_authored=False,
     )
 
     done = run_next_job(vault, machine="test-machine")
@@ -256,6 +262,7 @@ def test_worker_refuses_remote_pdf_capture_for_agent_before_fetch(tmp_path: Path
         payload=_remote_pdf_payload(),
         idempotency_key="capture-remote-pdf-agent",
         actor="agent",
+        machine_authored=False,
     )
 
     done = run_next_job(vault, machine="test-machine")
@@ -296,6 +303,7 @@ def test_worker_rejects_malformed_remote_pdf_requests_before_opening(
         payload=payload,
         idempotency_key=f"capture-remote-pdf-malformed-{field}",
         actor="pi",
+        machine_authored=False,
     )
 
     done = run_next_job(vault, machine="test-machine")
@@ -323,6 +331,7 @@ def test_worker_runs_capture_bibtex_source_operation_jobs(tmp_path: Path) -> Non
         payload={"bibtex": bibtex, "run_id": "capture-bibtex-harness"},
         idempotency_key="capture-bibtex-harness",
         actor="pi",
+        machine_authored=False,
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -380,6 +389,7 @@ def test_capture_bibtex_distinct_parents_create_distinct_enrichment_children(
             payload={"bibtex": bibtex},
             idempotency_key=request_id,
             actor="pi",
+            machine_authored=False,
         )
         results.append(run_request(vault, request["job_id"], machine="test-machine"))
 
@@ -423,6 +433,7 @@ def test_worker_runs_capture_url_source_operation_jobs(tmp_path: Path, monkeypat
         },
         idempotency_key="capture-url",
         actor="pi",
+        machine_authored=False,
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -462,6 +473,7 @@ def test_worker_rejects_capture_url_source_outside_allowed_network(
         payload={"url": "http://blocked.test/source", "run_id": "capture-blocked-url"},
         idempotency_key="capture-blocked-url",
         actor="pi",
+        machine_authored=False,
     )
 
     done = run_next_job(vault, machine="test-machine")

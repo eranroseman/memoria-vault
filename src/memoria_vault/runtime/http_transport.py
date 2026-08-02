@@ -207,6 +207,11 @@ def make_http_server(
             self.send_response(int(status))
             self.send_header("Content-Type", "application/json; charset=utf-8")
             self.send_header("Content-Length", str(len(body)))
+            # 1564: the 404 refusal reflects the client-supplied path into this
+            # JSON body, so declare the type non-negotiable; and read payloads
+            # carry vault content no intermediary should cache.
+            self.send_header("X-Content-Type-Options", "nosniff")
+            self.send_header("Cache-Control", "no-store")
             self.end_headers()
             self.wfile.write(body)
 

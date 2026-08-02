@@ -52,6 +52,7 @@ pytestmark = pytest.mark.runtime
 TARGET = "notes/root-claim.md"
 CHILD = "notes/machine-child.md"
 GONE = "notes/machine-deleted.md"
+MACHINE_PI_CHILD = "notes/machine-pi-child.md"
 PI_NOTE = "notes/pi-downstream.md"
 
 
@@ -59,18 +60,37 @@ def _note(title: str) -> str:
     return f"---\ntype: note\ntitle: {title}\ntags: []\nlinks: {{}}\n---\n{title} body.\n"
 
 
-def _write(vault: Path, rel: str, title: str, inputs: list[str] | None = None) -> str:
+def _write(
+    vault: Path,
+    rel: str,
+    title: str,
+    inputs: list[str] | None = None,
+    *,
+    actor: str = "operation",
+    machine_authored: bool = False,
+) -> str:
     call_with_context(
-        _stage_concept, vault, rel, _note(title), inputs=inputs or [], machine="writer"
+        _stage_concept,
+        vault,
+        rel,
+        _note(title),
+        inputs=inputs or [],
+        machine="writer",
+        actor=actor,
+        machine_authored=machine_authored,
     )
-    call_with_context(_promote_checked, vault, rel, machine="writer")
-    return call_with_context(_commit_writer_changes, vault, f"write {rel}", [rel], machine="writer")
+    call_with_context(_promote_checked, vault, rel, machine="writer", actor=actor)
+    return call_with_context(
+        _commit_writer_changes, vault, f"write {rel}", [rel], machine="writer", actor=actor
+    )
 
 
 def _vault(tmp_path: Path) -> tuple[Path, str]:
-    """One root claim with all three descendant arms the rollback loop decides:
+    """One root claim with all four descendant arms the rollback loop decides:
     a live machine child (quarantine), a machine child whose file was removed
-    (skip), and a PI-authored downstream note (flag)."""
+    (skip), a machine-authored body posted with PI actor authority (quarantine
+    — authorship, not authority, #1599), and a PI-authored downstream note
+    (flag)."""
     vault = tmp_path
     copy_memoria_dirs(vault, "schemas", "config")
     init_git(vault, "preview@example.invalid", "Preview")
@@ -78,6 +98,14 @@ def _vault(tmp_path: Path) -> tuple[Path, str]:
     _write(vault, CHILD, "Machine child", inputs=[TARGET])
     _write(vault, GONE, "Machine deleted", inputs=[TARGET])
     (vault / GONE).unlink()
+    _write(
+        vault,
+        MACHINE_PI_CHILD,
+        "Machine PI child",
+        inputs=[TARGET],
+        actor="pi",
+        machine_authored=True,
+    )
 
     pi_path = vault / PI_NOTE
     pi_path.parent.mkdir(parents=True, exist_ok=True)
@@ -174,7 +202,11 @@ def test_revert_preview_mutates_nothing_that_cascade_rollback_moves(tmp_path: Pa
     assert after["head"] != before["head"]
     assert after["status"] != before["status"]
     # And the preview predicted that outcome rather than deciding it again.
-    assert preview["would_quarantine"] == rollback["reverted"] == [CHILD]
+    # MACHINE_PI_CHILD carries actor "pi" but machine_authored=True: authority
+    # without authorship, so both sides quarantine it rather than flag it
+    # (#1599) — reverting integrity.py:1236's `and not machine_authored` guard
+    # alone would split preview and rollback here and fail this assertion.
+    assert preview["would_quarantine"] == rollback["reverted"] == [CHILD, MACHINE_PI_CHILD]
     assert preview["would_flag"] == rollback["needs_human"] == [PI_NOTE]
     assert preview["would_skip"] == rollback["skipped"] == [GONE]
 
@@ -386,7 +418,7 @@ def test_cli_journal_revert_preview_serves_a_computable_preview(
     assert payload["preview"]["computable"] is True
     assert payload["preview"]["event_id"] == event_id
     assert payload["preview"]["target"] == TARGET
-    assert payload["preview"]["would_quarantine"] == [CHILD]
+    assert payload["preview"]["would_quarantine"] == [CHILD, MACHINE_PI_CHILD]
 
 
 def test_cli_journal_revert_preview_names_an_unknown_event_without_crashing(
