@@ -23,7 +23,7 @@ than the substrate traversal it stands in for would be a worse reader, not a
 stricter one. If one were ever wanted it would be EDGE_RELATIONS, never
 LINK_RELATIONS.
 
-Stdlib-only at module scope by design so state.py, cli.py, and
+No first-party imports at module scope, by design, so state.py, cli.py, and
 structural_impact_graph.py can import it without a cycle. The path projections
 at the bottom read the database, and import `state` inside the function for
 exactly that reason.
@@ -35,6 +35,8 @@ import json
 import re
 from pathlib import Path
 from typing import Any
+
+import yaml
 
 EDGE_RELATIONS = frozenset(
     {"supports", "contradicts", "extends", "tension", "warrant", "qualifier", "rebuttal"}
@@ -56,6 +58,8 @@ TYPED_WIKILINK_RE = re.compile(r"\[\[([a-z][a-z0-9-]*)::([^\]\|]+)(?:\|[^\]]*)?\
 _LINK_TARGET_URI_RE = re.compile(r"^[A-Za-z][A-Za-z0-9+.-]*:")
 
 CONCEPT_ROOTS = ("catalog/sources/", "notes/", "hubs/", "digests/", "fulltexts/")
+
+EDGES_CONFIG = ".memoria/config/edges.yaml"
 
 
 def _normalized_link_target(target: str) -> tuple[str, str | None]:
@@ -133,10 +137,11 @@ def thesis_rel(frontmatter: object) -> str:
     thesis is a reader's miss to report, not its crash. `active_thesis:` is not
     consulted — `project.yaml` retires it.
 
-    `normalize_path` is imported inside the function because this module is
-    stdlib-only at module scope, the same reason `projected_edge_endpoints`
-    below does it. It cannot raise here: `_normalized_link_target` has already
-    rejected every `..` segment that `normalize_path` refuses.
+    `normalize_path` is imported inside the function because this module takes
+    no first-party import at module scope, the same reason
+    `projected_edge_endpoints` below does it. It cannot raise here:
+    `_normalized_link_target` has already rejected every `..` segment that
+    `normalize_path` refuses.
     """
     from memoria_vault.runtime.policy.paths import normalize_path
 
@@ -196,6 +201,33 @@ def parse_typed_wikilinks(body: str) -> list[tuple[str, str]]:
         if relation in LINK_RELATIONS and target:
             pairs.append((relation, target))
     return pairs
+
+
+def warrant_absence_threshold(vault: Path) -> int | None:
+    """Return the pre-registered warrant-absence threshold, or None when disabled.
+
+    Absence-honesty guard (EDGES spec section 4): warrant absence is never an
+    ambient finding until per-type usage crosses a threshold the researcher
+    registered, so silence reads as non-use rather than as "this claim has no
+    warrant". Disabled is the default and the fallback: an absent, unreadable,
+    malformed, or key-missing config all return None, and so does any value that
+    is not a positive integer. `True` is refused explicitly — `isinstance(True,
+    int)` holds, so a config that meant "on" would otherwise register the
+    loudest possible threshold in the guard that exists to stay quiet.
+    """
+    path = Path(vault) / EDGES_CONFIG
+    if not path.is_file():
+        return None
+    try:
+        data = yaml.safe_load(path.read_text(encoding="utf-8"))
+    except (OSError, yaml.YAMLError):
+        return None
+    if not isinstance(data, dict):
+        return None
+    value = data.get("warrant_absence_threshold")
+    if isinstance(value, bool) or not isinstance(value, int) or value < 1:
+        return None
+    return value
 
 
 def concept_edge_path_pairs(vault: Path, *, checked_only: bool = True) -> list[dict[str, str]]:

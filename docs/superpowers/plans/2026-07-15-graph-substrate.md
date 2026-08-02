@@ -10321,6 +10321,59 @@ cover `tension` at the roster level in `tests/test_edges.py`, not with a
 > `target_path`; its only attribute input is the projection's parsed
 > `record["attributes"]`.
 
+> **Execution amendment (2026-08-02) — what ERP-D.3 landed.** The task's Files
+> list is widened by the two inconsistencies ERP-D.3a disclosed and left, both
+> reproduced by execution before any edit. **Four producers, not one.** D.3a
+> converged `_argument_stage`/`_argument_confidence`/
+> `_argument_saturation_conditions` on the Graph-R11 rosters but explicitly left
+> the finding family to this task, so `_argument_findings` (`no-refutation`) and
+> `_argument_advisories` (the "seek a counterargument" line) move onto
+> `_challenge_count` here alongside `_argument_gap_findings`' `conflict` gate —
+> otherwise a rebuttal-only component stages `contested` with
+> `has_refutation: True` while the same payload asks for the counterargument it
+> already has. **`_saturation_block` (`knowledge.py:956-989`) is the fourth**, and
+> it is named in no plan section: it derived `has_support`/`has_counterpoint`
+> from `supports_count`/`contradicts_count` and then re-exported
+> `saturation_conditions` verbatim beside them, so the same block published
+> `uncountered: 1` and `has_counterpoint: False` next to
+> `conditions.has_refutation: True`. It cannot be repaired with a roster — the
+> payload exports no per-role count for `rebuttal`/`tension`, and D.3a froze that
+> export — so it now reads both sides off the conditions dict it already
+> re-exports, which makes the contradiction unrepresentable rather than merely
+> fixed. `structural_impact.py` is untouched, per D.3a's out-of-scope note.
+>
+> Three deviations from the snippets above. `_warrant_absence_gap` imports
+> `concept_edge_path_records`/`warrant_absence_threshold` at module scope, not
+> inside the function: `knowledge.py` already imports `lib.edges` at module
+> scope, so the local import would guard a cycle that does not exist.
+> `warrant_absence_threshold` catches `OSError` as well as `yaml.YAMLError`,
+> because "unreadable" is in the contract the docstring states and
+> `yaml.YAMLError` does not cover it. `edges.py` takes `import yaml` at module
+> scope and its "stdlib-only at module scope" note becomes "no first-party
+> imports at module scope" — that clause's stated reason is cycle avoidance,
+> which a third-party leaf import cannot threaten. No seeded
+> `.memoria/config/edges.yaml` template: the guard is disabled by default, so a
+> seeded file would only be a place to accidentally enable it (and
+> `tests/test_installer_skeleton.py:38` pins that roster).
+>
+> **`_argument_next_action("unstated-warrant")` is unreachable**, before and
+> after the retarget in step (4). Its only caller takes `seed = advice or
+> _argument_next_action(kind)`, every `gap_findings` row carries a non-empty
+> `advice`, and `findings` never carries that kind — the same is already true of
+> its `conflict`, `fragility` and `structural` branches. The line is retargeted
+> as instructed rather than deleted (deleting the four dead branches is a
+> different change than this task's), so its text is correct but unobserved; a
+> mutation of it survives by construction. The `no-support` half of step (4) *is*
+> reachable and is pinned in `tests/test_gap_analysis.py`, asserted across both
+> `finding_source` values because the two cards share one `finding_kind`.
+>
+> Goldens did not move: no seeded file changed and no floor entry reads the
+> argument lens. Mutation testing: 40 mutants at every roster and gate boundary,
+> both directions, 37 killed; the 3 survivors are equivalent mutants (two
+> respell `_support_count` as `counts["supports"]`, identical while
+> `SUPPORT_RELATIONS` is a singleton and kept as the roster consumer for the day
+> it is not; one is the unreachable branch above).
+
 **Files:**
 - Modify: `src/memoria_vault/runtime/subsystems/lib/edges.py` (ERP-A's module; append the config loader)
 - Modify: `src/memoria_vault/runtime/knowledge.py` (`_argument_gap_findings` lines 2943-2977, `_argument_next_action` lines 957-968, `analyze_project_argument` call site line 1716; new `_warrant_absence_gap` helper near `_note_edges` line 3001)

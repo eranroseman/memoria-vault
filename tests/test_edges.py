@@ -519,6 +519,45 @@ def test_unusable_edge_attributes_project_as_an_empty_dict(tmp_path: Path) -> No
     ]
 
 
+def _write_edges_config(vault: Path, body: str) -> None:
+    config = vault / ".memoria/config"
+    config.mkdir(parents=True, exist_ok=True)
+    (config / "edges.yaml").write_text(body, encoding="utf-8")
+
+
+def test_warrant_absence_threshold_is_disabled_until_registered(tmp_path: Path) -> None:
+    """The absence-honesty guard defaults off (EDGES section 4)."""
+    assert edges.warrant_absence_threshold(tmp_path) is None
+
+
+def test_warrant_absence_threshold_reads_the_registered_number(tmp_path: Path) -> None:
+    _write_edges_config(tmp_path, "warrant_absence_threshold: 4\n")
+
+    assert edges.warrant_absence_threshold(tmp_path) == 4
+
+
+def test_warrant_absence_threshold_fails_safe_to_disabled_on_junk(tmp_path: Path) -> None:
+    """Every unusable value disables rather than defaulting to some number.
+
+    `True` is the one that needs naming: `isinstance(True, int)` holds in Python,
+    so a config that meant "on" would otherwise register a threshold of 1 — the
+    loudest possible reading of the guard that exists to keep it quiet.
+    """
+    for body in (
+        "warrant_absence_threshold: 0\n",
+        "warrant_absence_threshold: -1\n",
+        "warrant_absence_threshold: true\n",
+        "warrant_absence_threshold: some\n",
+        "warrant_absence_threshold: 1.5\n",
+        "other_key: 3\n",
+        "- a list\n",
+        "",
+        "warrant_absence_threshold: [\n",
+    ):
+        _write_edges_config(tmp_path, body)
+        assert edges.warrant_absence_threshold(tmp_path) is None, body
+
+
 def test_single_roster_definition_repo_wide() -> None:
     """EDGES section 10's acceptance: grepping the repo finds one roster definition."""
     roster_literal = re.compile(r"['\"]supports['\"]\s*,\s*['\"]contradicts['\"]")

@@ -39,8 +39,10 @@ from memoria_vault.runtime.subsystems.lib.edges import (
     CHALLENGE_RELATIONS,
     LINK_RELATIONS,
     SUPPORT_RELATIONS,
+    concept_edge_path_records,
     normalize_link_target,
     thesis_rel,
+    warrant_absence_threshold,
 )
 from memoria_vault.runtime.time import now_iso, parse_iso
 from memoria_vault.runtime.trusted_writer import (
@@ -965,8 +967,14 @@ def _saturation_block(argument: dict[str, Any] | None) -> dict[str, Any]:
         }
     thesis = str(argument.get("thesis_path") or "").strip()
     claims = 1 if thesis and argument.get("node_count", 0) > 0 else 0
-    has_support = int(argument.get("supports_count") or 0) > 0
-    has_counterpoint = int(argument.get("contradicts_count") or 0) > 0
+    # One source for both sides, and it is the one this block already re-exports
+    # verbatim below (Graph-R11). The payload carries no per-role count for
+    # `rebuttal` or `tension`, so a block that re-derived the sides from
+    # `supports_count`/`contradicts_count` published `uncountered: 1` beside its
+    # own `conditions.has_refutation: True` for every rebuttal-only thesis.
+    conditions = argument.get("saturation_conditions") or {}
+    has_support = bool(conditions.get("has_support"))
+    has_counterpoint = bool(conditions.get("has_refutation"))
     claim_ready = claims > 0 and has_support and has_counterpoint
     return {
         "claims": claims,
@@ -984,7 +992,7 @@ def _saturation_block(argument: dict[str, Any] | None) -> dict[str, Any]:
         ]
         if claims
         else [],
-        "conditions": argument.get("saturation_conditions") or {},
+        "conditions": conditions,
         "evidence_saturation": argument.get("evidence_saturation") or "unknown",
     }
 
@@ -1223,8 +1231,10 @@ def _argument_next_action(finding_kind: str) -> str:
         return "resolve or preserve the contradiction"
     if finding_kind == "fragility":
         return "add independent support"
-    if finding_kind == "unstated-warrant":
+    if finding_kind == "no-support":
         return "add supporting evidence notes"
+    if finding_kind == "unstated-warrant":
+        return "state the warrant on a grounding edge or link a warrant note"
     if finding_kind == "structural":
         return "seed checked notes around the thesis"
     return "curate checked notes or links around the project thesis"
@@ -1960,7 +1970,11 @@ def analyze_project_argument(vault: Path, project_path: str) -> dict[str, Any]:
         "extends_count": counts["extends"],
         "node_count": len(component),
         "findings": findings,
-        "gap_findings": _argument_gap_findings(counts, relation_count),
+        "gap_findings": _argument_gap_findings(
+            counts,
+            relation_count,
+            warrant_gap=_warrant_absence_gap(vault, component, counts),
+        ),
         "advisories": _argument_advisories(counts, relation_count),
         "nodes": [
             {
@@ -3383,9 +3397,9 @@ def _argument_findings(counts: dict[str, int], relation_count: int) -> list[dict
         findings.append({"kind": "thin-argument", "severity": "high"})
     elif relation_count < 3:
         findings.append({"kind": "thin-argument", "severity": "medium"})
-    if counts["supports"] == 0:
+    if _support_count(counts) == 0:
         findings.append({"kind": "no-support", "severity": "high"})
-    if counts["contradicts"] == 0:
+    if _challenge_count(counts) == 0:
         findings.append({"kind": "no-refutation", "severity": "medium"})
     return findings
 
@@ -3414,8 +3428,13 @@ def _argument_confidence(counts: dict[str, int], relation_count: int) -> str:
     return "below-threshold"
 
 
-def _argument_gap_findings(counts: dict[str, int], relation_count: int) -> list[dict[str, str]]:
-    gaps: list[dict[str, str]] = []
+def _argument_gap_findings(
+    counts: dict[str, int],
+    relation_count: int,
+    *,
+    warrant_gap: dict[str, Any] | None = None,
+) -> list[dict[str, Any]]:
+    gaps: list[dict[str, Any]] = []
     if relation_count == 0:
         gaps.append(
             {
@@ -3424,15 +3443,15 @@ def _argument_gap_findings(counts: dict[str, int], relation_count: int) -> list[
                 "advice": "seed checked notes around the thesis",
             }
         )
-    if counts["supports"] == 0:
+    if _support_count(counts) == 0:
         gaps.append(
             {
-                "kind": "unstated-warrant",
+                "kind": "no-support",
                 "severity": "high",
                 "advice": "add supporting evidence notes",
             }
         )
-    elif counts["supports"] == 1 and relation_count >= 3:
+    elif _support_count(counts) == 1 and relation_count >= 3:
         gaps.append(
             {
                 "kind": "fragility",
@@ -3440,7 +3459,16 @@ def _argument_gap_findings(counts: dict[str, int], relation_count: int) -> list[
                 "advice": "add independent support",
             }
         )
-    if counts["contradicts"] > 0:
+    if warrant_gap is not None:
+        gaps.append(
+            {
+                "kind": "unstated-warrant",
+                "severity": "medium",
+                "advice": "state the warrant on a grounding edge or link a warrant note",
+                "warrant_count": warrant_gap["warrant_count"],
+            }
+        )
+    if _challenge_count(counts) > 0:
         gaps.append(
             {
                 "kind": "conflict",
@@ -3461,7 +3489,7 @@ def _argument_advisories(counts: dict[str, int], relation_count: int) -> list[di
                 "advice": "connect at least three checked notes before treating the argument as mature",
             }
         )
-    if relation_count >= 3 and counts["contradicts"] == 0:
+    if relation_count >= 3 and _challenge_count(counts) == 0:
         advisories.append(
             {
                 "kind": "refutation",
@@ -3470,6 +3498,38 @@ def _argument_advisories(counts: dict[str, int], relation_count: int) -> list[di
             }
         )
     return advisories
+
+
+def _warrant_absence_gap(
+    vault: Path, component: set[str], counts: dict[str, int]
+) -> dict[str, Any] | None:
+    """Guarded warrant-absence signal: grounded component, no warrant edge or attribute.
+
+    Three gates, in order (EDGES spec sections 4 and 8). The component must be
+    grounded at all — an unsupported claim's problem is its missing support, not
+    its unstated warrant. The vault must use warrants at least `threshold` times,
+    or the silence is the vault's and not this claim's. And the component itself
+    must state none, either as a `warrant` edge or as the `warrant` attribute on
+    a grounding edge, which is the shape section 8 names first.
+
+    Endpoints are compared in path space only: `concept_edge_path_records`
+    renders the stored ULID identities through the mirror, and `component` is a
+    set of vault paths, so a raw `concept_edges` endpoint would match nothing.
+    """
+    threshold = warrant_absence_threshold(vault)
+    if threshold is None or _support_count(counts) == 0:
+        return None
+    warrant_count = 0
+    component_has_warrant = False
+    for record in concept_edge_path_records(vault, checked_only=False):
+        if record["relation_type"] != "warrant" and not record["attributes"].get("warrant"):
+            continue
+        warrant_count += 1
+        if record["source_path"] in component or record["target_path"] in component:
+            component_has_warrant = True
+    if warrant_count < threshold or component_has_warrant:
+        return None
+    return {"warrant_count": warrant_count}
 
 
 def _note_edges(
