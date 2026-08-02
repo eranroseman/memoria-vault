@@ -715,10 +715,11 @@ def _neutralized_request_error(error: Any) -> Any:
 
     A raised operation's ``str(exc)`` can be composed from file-derived text the
     PI never authored, and ``requests.get`` carries both an HTTP and an MCP
-    binding. Neutralizing here — the one summary every read shares — covers
-    every transport in one place while the stored row keeps the raw text.
-    The run-result channel (``job["error"]`` inside ``run_operation`` output)
-    is a separate seam, tracked on #1608.
+    binding. Neutralizing here covers the column that ``request_summary`` and
+    ``request_detail`` both read; ``request_detail`` additionally neutralizes
+    the copy of that same text worker.py persists into ``job["error"]`` (see
+    ``request_detail`` below) so neither read path serves it verbatim. The
+    stored row keeps the raw text in both places.
     """
     if not isinstance(error, str) or not error:
         return error
@@ -737,6 +738,9 @@ def request_summary(row: Any) -> dict[str, Any]:
 
 
 def request_detail(row: Any) -> dict[str, Any]:
+    job = json.loads(row["job_json"])
+    if "error" in job:
+        job = {**job, "error": _neutralized_request_error(job["error"])}
     return {
         **request_summary(row),
         "args": json.loads(row["args_json"]),
@@ -750,7 +754,7 @@ def request_detail(row: Any) -> dict[str, Any]:
         "provenance": json.loads(row["provenance_json"]),
         "schedule_id": row["schedule_id"],
         "kind": row["kind"],
-        "job": json.loads(row["job_json"]),
+        "job": job,
     }
 
 
