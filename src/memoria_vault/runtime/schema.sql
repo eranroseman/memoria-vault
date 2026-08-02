@@ -60,10 +60,16 @@ CREATE TABLE IF NOT EXISTS concepts (
 );
 CREATE UNIQUE INDEX IF NOT EXISTS idx_concepts_path
     ON concepts(path) WHERE path != '';
+-- `consequence` mirrors the typed-propagation mark (EDGES section 5): its roster is
+-- `propagation.CONSEQUENCE_TYPES` plus `''` for unmarked, and tests/test_runtime_state.py
+-- reads this CHECK back out of sqlite_master to hold the two sides in parity.
 CREATE TABLE IF NOT EXISTS concept_verdicts (
     concept_id TEXT PRIMARY KEY
         REFERENCES concepts(concept_id) ON UPDATE CASCADE,
-    check_status TEXT NOT NULL CHECK (check_status IN ('unchecked', 'checked', 'quarantined'))
+    check_status TEXT NOT NULL CHECK (check_status IN ('unchecked', 'checked', 'quarantined')),
+    consequence TEXT NOT NULL DEFAULT '' CHECK (consequence IN (
+        '', 'grounds-lost', 'warrant-lost', 'qualifier-regression', 'rebuttal-strengthened'
+    ))
 );
 CREATE TABLE IF NOT EXISTS concept_flags (
     concept_id TEXT NOT NULL
@@ -436,4 +442,4 @@ CREATE TABLE IF NOT EXISTS telemetry_events (
 CREATE INDEX IF NOT EXISTS idx_telemetry_type_ts
     ON telemetry_events(event_type, ts);
 
-PRAGMA user_version = 18;
+PRAGMA user_version = 19;

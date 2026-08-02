@@ -49,7 +49,7 @@ def test_schema_creates_query_tables_and_rejects_v7(tmp_path: Path) -> None:
             ).fetchall()
         }
 
-    assert state.SCHEMA_VERSION == 18
+    assert state.SCHEMA_VERSION == 19
     assert {
         "passages",
         "passage_fts",
@@ -491,7 +491,7 @@ def test_concept_edges_fresh_schema_exposes_reader_fields(tmp_path: Path) -> Non
     with state.connect(fresh) as conn:
         columns = {row["name"] for row in conn.execute("PRAGMA table_info(concept_edges)")}
         assert {"edge_id", "target_path", "attributes_json"}.issubset(columns)
-        assert conn.execute("PRAGMA user_version").fetchone()[0] == 18
+        assert conn.execute("PRAGMA user_version").fetchone()[0] == 19
 
     # v16 edges are FK-backed and resolve targets, so seed both endpoints.
     state.rebuild_file_concept_mirror(

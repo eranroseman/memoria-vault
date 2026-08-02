@@ -55,7 +55,7 @@ if TYPE_CHECKING:
 
 DB_REL = ".memoria/memoria.sqlite"
 JOURNAL_HEAD_REL = ".memoria/journal-head"
-SCHEMA_VERSION = 18
+SCHEMA_VERSION = 19
 ACTORS = frozenset({"pi", "agent", "operation", "integrity"})
 REQUEST_STATUSES = frozenset({"pending", "running", "done", "failed", "cancelled"})
 CHECK_STATUSES = frozenset({"unchecked", "checked", "quarantined"})
@@ -1098,8 +1098,14 @@ def set_concept_verdict(vault: Path, concept_id: str, check_status: str) -> None
             (status, normalize_path(concept_id)),
         )
         if status == "checked":
+            # Re-verification wipes the propagation mark in both places it lives:
+            # the compatibility `stale` flag and the v19 verdict-row mirror.
             conn.execute(
                 "DELETE FROM concept_flags WHERE concept_id = ? AND flag = 'stale'",
+                (target,),
+            )
+            conn.execute(
+                "UPDATE concept_verdicts SET consequence = '' WHERE concept_id = ?",
                 (target,),
             )
 
@@ -1626,6 +1632,45 @@ def concept_flags(vault: Path, concept_id: str) -> dict[str, dict[str, str]]:
         }
         for row in rows
     }
+
+
+def set_concept_consequence(vault: Path, concept_id: str, consequence: str) -> None:
+    """Mirror a typed-consequence mark on the verdict row (EDGES section 5).
+
+    The mark is a statement about what fell upstream, not a re-judgment, so the
+    upsert leaves an existing ``check_status`` alone and inserts at ``unchecked``
+    when the Concept has no verdict yet. The roster lives in the column's CHECK,
+    which is where an unrostered value is refused. Identity, not path: the walk
+    that produces these marks names Concepts by their rendered path, and v16
+    keys the verdict row by the identity that path resolves to.
+    """
+    with connect(vault) as conn:
+        target = resolve_concept_id(conn, concept_id)
+        try:
+            conn.execute(
+                """
+                INSERT INTO concept_verdicts(concept_id, check_status, consequence)
+                VALUES (?, 'unchecked', ?)
+                ON CONFLICT(concept_id) DO UPDATE SET consequence = excluded.consequence
+                """,
+                (target, consequence),
+            )
+        except sqlite3.IntegrityError as exc:
+            if "FOREIGN KEY" not in str(exc):
+                raise
+            raise _concept_missing_parent(concept_id, target, "consequence") from exc
+
+
+def concept_consequence(vault: Path, concept_id: str) -> str:
+    """Return the mirrored consequence mark, ``''`` when unmarked, unknown, or DB-less."""
+    if not db_path(vault).is_file():
+        return ""
+    with connect(vault) as conn:
+        row = conn.execute(
+            "SELECT consequence FROM concept_verdicts WHERE concept_id = ?",
+            (resolve_concept_id(conn, concept_id),),
+        ).fetchone()
+    return "" if row is None else str(row["consequence"])
 
 
 def note_curation_status(vault: Path, concept_id: str) -> str:

@@ -51,6 +51,56 @@ TRIGGERS = (
 HOP_EVIDENCE = "evidence"
 HOP_DERIVED = "derived"
 
+# EDGES section 5's decision table, split into the answer every hop gives once the
+# walk is past the trigger's own neighbourhood and the few cells where being the
+# changed node's own hop overrides that. Falling triggers (`claim-retracted`,
+# `standing-changed`, `decided-wrong`) need no overrides at all: what they do to a
+# seed's dependents is what any hop further out already means.
+_TRANSITIVE_CONSEQUENCE: dict[str, str | None] = {
+    "supports": "grounds-lost",
+    "extends": "grounds-lost",
+    "warrant": "warrant-lost",
+    "qualifier": "qualifier-regression",
+    "rebuttal": None,
+    "contradicts": None,
+    "tension": None,
+    HOP_EVIDENCE: "grounds-lost",
+    HOP_DERIVED: "grounds-lost",
+}
+_SEED_OVERRIDES: dict[str, dict[str, str | None]] = {
+    "claim-changed": {"rebuttal": "rebuttal-strengthened"},
+    "edge-added": {
+        "supports": None,
+        "extends": None,
+        "warrant": None,
+        "qualifier": None,
+        "rebuttal": "rebuttal-strengthened",
+        HOP_EVIDENCE: None,
+        HOP_DERIVED: None,
+    },
+    "edge-removed": {HOP_EVIDENCE: None, HOP_DERIVED: None},
+}
+# Derived, not a second literal: the published roster and the table that answers
+# for it are the same set by construction, so a hop kind can never be in one
+# without the other. `tests/test_propagation.py` pins the members against
+# `EDGE_RELATIONS`, which is what an eighth relation verb has to fail against.
+HOP_KINDS: tuple[str, ...] = tuple(_TRANSITIVE_CONSEQUENCE)
+
+
+def hop_consequence(trigger: str, hop: str, *, seed: bool) -> str | None:
+    """EDGES section 5 decision table: which trigger+hop yields which consequence.
+
+    The standard `typer` for `consequence_closure`; `None` means no mark and no
+    traversal through that hop. `seed` is the walk's own distinction between a
+    hop out of the node the trigger named and a hop further downstream.
+    """
+    if trigger not in TRIGGERS:
+        raise ValueError(f"unknown propagation trigger: {trigger!r}")
+    if hop not in _TRANSITIVE_CONSEQUENCE:
+        raise ValueError(f"unknown hop kind: {hop!r}")
+    overrides = _SEED_OVERRIDES.get(trigger, {}) if seed else {}
+    return overrides[hop] if hop in overrides else _TRANSITIVE_CONSEQUENCE[hop]
+
 
 @dataclass(frozen=True)
 class ClosureInputs:
