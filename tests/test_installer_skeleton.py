@@ -55,6 +55,7 @@ def test_package_seed_is_runtime_minimum():
         ".obsidian/plugins/memoria-obsidian/main.js",
         ".obsidian/plugins/memoria-obsidian/manifest.json",
         ".obsidian/plugins/memoria-obsidian/pill.js",
+        ".obsidian/plugins/memoria-obsidian/relate.js",
         ".obsidian/plugins/memoria-obsidian/schema.js",
         ".obsidian/plugins/memoria-obsidian/styles.css",
         ".obsidian/plugins/memoria-obsidian/viewspec.js",

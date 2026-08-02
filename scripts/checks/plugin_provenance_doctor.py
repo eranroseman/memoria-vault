@@ -38,6 +38,7 @@ ALLOWED_SEED_OBSIDIAN_FILES = {
     Path("plugins/memoria-obsidian/main.js"),
     Path("plugins/memoria-obsidian/manifest.json"),
     Path("plugins/memoria-obsidian/pill.js"),
+    Path("plugins/memoria-obsidian/relate.js"),
     Path("plugins/memoria-obsidian/schema.js"),
     Path("plugins/memoria-obsidian/styles.css"),
     Path("plugins/memoria-obsidian/viewspec.js"),

@@ -15,34 +15,55 @@ SEED_PLUGIN = ROOT / "src/memoria_vault/product/workspace_seed/.obsidian/plugins
 # So the exit code alone cannot tell a green suite from a suite that silently
 # stopped running: rename a file out of the glob and every assertion in it
 # disappears with the gate still green. These pin what must have run.
-MIN_NODE_TESTS = 42
-NODE_SUITE_FILES = ("test.mjs", "test-handshake.mjs", "test-pill.mjs", "test-viewspec.mjs")
+MIN_NODE_TESTS = 49
+NODE_SUITE_FILES = (
+    "test.mjs",
+    "test-handshake.mjs",
+    "test-pill.mjs",
+    "test-relate.mjs",
+    "test-viewspec.mjs",
+)
 
-# Byte-identical between the release package and the seed. `relate.js` joins
-# when U3-PLUG.5 creates it.
+# Byte-identical between the release package and the seed.
 SEED_PARITY_ARTIFACTS = (
     "handshake.js",
     "main.js",
     "manifest.json",
     "pill.js",
+    "relate.js",
     "schema.js",
     "styles.css",
     "viewspec.js",
 )
 
-# Loads the plugin entrypoint for real, with `obsidian` stubbed because only
-# the host provides it. Every *other* require -- `child_process` and the
-# relative sibling modules -- resolves normally, so a module the vault did not
-# receive raises MODULE_NOT_FOUND and this exits nonzero.
+# Loads every module the vault actually received, with `obsidian` stubbed
+# because only the host provides it. Every *other* require -- `child_process`
+# and the relative sibling modules -- resolves normally, so a module the vault
+# did not receive raises MODULE_NOT_FOUND and this exits nonzero.
+#
+# It loads the whole seeded directory rather than only the entrypoint, because
+# loading only the entrypoint proves whatever `main.js` happens to require this
+# week: a module seeded one task before its consumer requires it (`relate.js`
+# between U3-PLUG.5 and .8) would sit in the vault unproven, and a module
+# dropped from `main.js`'s requires would silently take its proof with it.
 _LOAD_PROBE = """
+const fs = require("node:fs");
+const path = require("node:path");
 const Module = require("node:module");
 const original = Module._load;
 Module._load = (request, parent, isMain) =>
   request === "obsidian"
     ? new Proxy({}, { get: () => class HostStub {} })
     : original(request, parent, isMain);
-const plugin = require(process.argv[1]);
-if (typeof plugin !== "function") {
+const directory = process.argv[1];
+const modules = fs.readdirSync(directory).filter((name) => name.endsWith(".js")).sort();
+if (!modules.includes("main.js")) {
+  throw new Error(`the seeded plugin has no entrypoint: ${modules.join(", ")}`);
+}
+for (const name of modules) {
+  require(path.join(directory, name));
+}
+if (typeof require(path.join(directory, "main.js")) !== "function") {
   throw new Error("plugin entrypoint did not export a class");
 }
 """
@@ -116,7 +137,7 @@ def test_memoria_obsidian_seeded_plugin_loads_every_module_it_requires(tmp_path:
 
     Byte-equality between package and seed says nothing about whether the
     bundle writer ships the modules `main.js` requires: the seed directory can
-    hold all seven while `bundles.BUNDLE_FILES["obsidian"]` copies four, and
+    hold all eight while `bundles.BUNDLE_FILES["obsidian"]` copies four, and
     the vault then receives an entrypoint that throws MODULE_NOT_FOUND on the
     host's first load. So this runs the real writer and then really loads what
     it wrote.
@@ -124,10 +145,10 @@ def test_memoria_obsidian_seeded_plugin_loads_every_module_it_requires(tmp_path:
     workspace = tmp_path / "vault"
     workspace.mkdir()
     seed_bundles(workspace, bundle_names=["obsidian"])
-    entrypoint = workspace / ".obsidian/plugins/memoria-obsidian/main.js"
+    seeded = workspace / ".obsidian/plugins/memoria-obsidian"
 
     result = subprocess.run(
-        ["node", "-e", _LOAD_PROBE, str(entrypoint)],
+        ["node", "-e", _LOAD_PROBE, str(seeded)],
         text=True,
         capture_output=True,
         check=False,

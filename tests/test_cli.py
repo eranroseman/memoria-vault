@@ -619,6 +619,7 @@ def test_cli_init_seeds_obsidian_defaults_and_memoria_plugin(
     # `main.js` requires these by relative path; without them it cannot load.
     assert (workspace / ".obsidian/plugins/memoria-obsidian/handshake.js").is_file()
     assert (workspace / ".obsidian/plugins/memoria-obsidian/pill.js").is_file()
+    assert (workspace / ".obsidian/plugins/memoria-obsidian/relate.js").is_file()
     assert (workspace / ".obsidian/plugins/memoria-obsidian/viewspec.js").is_file()
 
 
@@ -879,6 +880,7 @@ def test_cli_init_dry_run_reports_runtime_setup_without_mutation(
         ".obsidian/plugins/memoria-obsidian/main.js",
         ".obsidian/plugins/memoria-obsidian/manifest.json",
         ".obsidian/plugins/memoria-obsidian/pill.js",
+        ".obsidian/plugins/memoria-obsidian/relate.js",
         ".obsidian/plugins/memoria-obsidian/schema.js",
         ".obsidian/plugins/memoria-obsidian/styles.css",
         ".obsidian/plugins/memoria-obsidian/viewspec.js",
