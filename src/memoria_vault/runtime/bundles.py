@@ -1,8 +1,17 @@
 """Vault bundle manifest: seeded agent/Obsidian bundles and .memoria/vault.json.
 
-``memoria init`` writes the static agent bundle (Claude/Codex perimeter config,
-the MCP wiring, and CLAUDE.md) and, unless ``--no-obsidian`` is set, the
-Obsidian plugin bundle, then records what the vault was created with.
+``memoria init`` writes the agent bundle (Claude/Codex perimeter config, the
+MCP wiring, CLAUDE.md, and the co-PI method files) and, unless
+``--no-obsidian`` is set, the Obsidian plugin bundle, then records what the
+vault was created with.
+
+**Two sources of bytes, one roster.** Most bundle files ship as templates under
+``workspace_seed``; the two co-PI method files are *rendered* by the engine and
+reach this module through the ``(relpath, content_provider)`` pairs of
+``copi_skill.copi_bundle_files()`` (cross-section contract 6). ``seed_bytes``
+is where the two meet, so every other path here — the roster, the manifest,
+the write-target preflight, the one-writer refusal — is indifferent to which
+kind a file is.
 
 **One writer, one policy.** This module is the only writer of the bundle paths
 on the init path — ``cli._seed_write_allowed`` declines them, so the seed-class
@@ -41,6 +50,7 @@ from __future__ import annotations
 
 import json
 import uuid
+from collections.abc import Callable
 from importlib.resources import files
 from pathlib import Path
 from typing import Any
@@ -53,9 +63,13 @@ MANIFEST_REL = ".memoria/vault.json"
 MANIFEST_SCHEMA = 1
 
 BUNDLE_FILES: dict[str, tuple[str, ...]] = {
+    # The two `.claude/…/session_status.py` / `…/SKILL.md` entries are the
+    # rendered half (see `_rendered_providers`); the rest ship as templates.
     "agent": (
+        ".claude/hooks/session_status.py",
         ".claude/hooks/write_perimeter.py",
         ".claude/settings.json",
+        ".claude/skills/memoria-copi/SKILL.md",
         ".codex/hooks.json",
         ".mcp.json",
         "CLAUDE.md",
@@ -78,8 +92,26 @@ BUNDLE_FILES: dict[str, tuple[str, ...]] = {
 BUNDLE_PATHS: frozenset[str] = frozenset(rel for rels in BUNDLE_FILES.values() for rel in rels)
 
 
+def _rendered_providers() -> dict[str, Callable[[], str]]:
+    """The bundle paths whose bytes the engine renders instead of packaging.
+
+    Neither co-PI method file can live under ``workspace_seed`` without
+    duplicating its own source: ``SKILL.md`` composes engine constants and
+    U4-C's conversational-ask section at render time (contract 7 forbids
+    retyping either), and ``session_status.py`` is a real linted module in
+    ``memoria_vault.product.copi_skill``. Imported lazily so the bootstrap
+    verbs stay independent of the product package's import cost.
+    """
+    from memoria_vault.product.copi_skill import copi_bundle_files
+
+    return dict(copi_bundle_files())
+
+
 def seed_bytes(rel: str) -> bytes:
-    """Return the current package template bytes for a bundle-relative path."""
+    """Return the bytes a fresh vault receives for a bundle-relative path."""
+    provider = _rendered_providers().get(rel)
+    if provider is not None:
+        return provider().encode("utf-8")
     return files(WORKSPACE_SEED_PACKAGE).joinpath(*rel.split("/")).read_bytes()
 
 

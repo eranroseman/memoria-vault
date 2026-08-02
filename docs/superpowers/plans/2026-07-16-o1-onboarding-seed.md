@@ -4100,6 +4100,32 @@ at the top of D.2 — run them again; hold if they miss).
 >    each minted a golden since it was written. The invariant it named (every
 >    golden carries `Start here.md`) still holds: `grep -l` finds it in 38 of 38.
 
+> **Branch B REVERSED, on schedule (2026-08-02, copiseam golden-token session,
+> issue #1699).** The deferral was always conditional on nothing seeding
+> `.claude/skills/memoria-copi/SKILL.md`. That condition ended in the same wave:
+> `runtime/bundles.py` now consumes `copi_bundle_files()` through a provider
+> branch in `seed_bytes`, so fresh `init` writes the file and the pointer
+> resolves. Per the obligation branch B recorded in the surfaces plan, the
+> bullet is repointed at the path and the `test_cli.py` assertion is swapped
+> back — still **two-sided**, for the reason item 2 above gives: now `assert
+> ".claude/skills/memoria-copi/SKILL.md" in text` **plus** `assert "issues/902"
+> not in text`, because a live "(deferred) … see #902" line sitting beside a
+> shipped method is the same dangling-claim failure pointing the other way. A
+> third assertion, `(workspace / ".claude/skills/memoria-copi/SKILL.md").is_file()`,
+> now checks the seeded vault rather than the seeded text, so the pointer cannot
+> go stale again without this test seeing it.
+>
+> One deviation from the exact pre-deferral wording: the restored bullet adds
+> "agents without skill support read the condensed method in the generated
+> `AGENTS.md`". U4-A.3 landed that projection after BOOT-D.6 was written, and
+> without the clause the bullet would tell a Codex or plugin-less user their
+> method loads automatically, which is only true for Claude.
+>
+> `Start here.md` returns to a *new* digest, not to the pre-deferral
+> `6096e4207fed`, because of that clause: `0dfadba42479` → `aa6e6d186c42`, one
+> of five kinds of change in this wave's 38-golden regeneration (full accounting
+> in the surfaces plan's now-closed "nothing seeds the co-PI method files" note).
+
 Spec §3, last bullet: the bootstrap-seeded `Start here.md` link to "the co-PI variant" repoints at the ADR-113 re-deferral note (the #902 comment shipped with the spec PR — already done, do not re-post) until ADR-113's preconditions close, so no seeded link dangles. BOOT-D.6 as currently planned seeds a co-PI bullet pointing at `.claude/skills/memoria-copi/SKILL.md` (`docs/superpowers/plans/2026-07-15-surfaces-bootstrap-and-plugins.md:5376-5378`) and asserts that path in its test (`:5338`) — the U4 plugin that would put a file there is designed but unimplemented.
 
 **Files:**

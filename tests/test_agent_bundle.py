@@ -12,6 +12,13 @@ import pytest
 
 from memoria_vault import cli
 from memoria_vault.cli import main
+from memoria_vault.product.copi_skill import (
+    SESSION_STATUS_HOOK_RELPATH,
+    SKILL_RELPATH,
+    copi_bundle_files,
+    render_copi_skill,
+    render_session_status_hook,
+)
 from memoria_vault.runtime import bundles
 from memoria_vault.runtime.policy.audit import sha256_file
 from tests.helpers import WORKSPACE_SEED, git
@@ -43,6 +50,24 @@ def _packaged_agent_bundle_files() -> list[str]:
     return sorted(targets)
 
 
+def _rendered_agent_bundle_files() -> list[str]:
+    """Every engine-rendered agent-bundle path, read from U4-A's own enumeration."""
+    return sorted(rel for rel, _ in copi_bundle_files())
+
+
+def _expected_bundle_bytes(rel: str) -> bytes:
+    """The bytes a fresh vault should carry, sourced without `runtime.bundles`.
+
+    Packaged paths come from the seed tree, rendered ones from their U4-A
+    provider — so the seeding assertions below compare the writer's output
+    against the two producers, never against the writer's own byte source.
+    """
+    rendered = dict(copi_bundle_files())
+    if rel in rendered:
+        return rendered[rel]().encode("utf-8")
+    return (WORKSPACE_SEED / rel).read_bytes()
+
+
 def test_seed_claude_settings_deny_rules_cover_every_protected_path():
     settings = json.loads((WORKSPACE_SEED / ".claude/settings.json").read_text("utf-8"))
     expected = {
@@ -65,6 +90,26 @@ def test_seed_claude_settings_registers_the_perimeter_hook():
             "command": 'python3 "$CLAUDE_PROJECT_DIR/.claude/hooks/write_perimeter.py"',
         }
     ]
+
+
+def test_seed_claude_settings_registers_the_session_status_hook():
+    """A seeded hook no host invokes is a file, not a behavior.
+
+    `.claude/hooks/` is not auto-discovered — only `.claude/skills/` is — so
+    the SessionStart registration is what makes the seeded `session_status.py`
+    run at all. Cross-section assumption 3 assigns it to the seeded settings.
+    """
+    settings = json.loads((WORKSPACE_SEED / ".claude/settings.json").read_text("utf-8"))
+    entries = settings["hooks"]["SessionStart"]
+    assert len(entries) == 1
+    assert entries[0]["hooks"] == [
+        {
+            "type": "command",
+            "command": f'python3 "$CLAUDE_PROJECT_DIR/{SESSION_STATUS_HOOK_RELPATH}"',
+        }
+    ]
+    # ...and the path it names is one the bundle actually delivers.
+    assert SESSION_STATUS_HOOK_RELPATH in bundles.BUNDLE_FILES["agent"]
 
 
 def test_write_perimeter_hook_denies_unconditionally_with_exit_2():
@@ -170,14 +215,23 @@ def _read_manifest(workspace: Path) -> dict:
     return json.loads((workspace / bundles.MANIFEST_REL).read_text("utf-8"))
 
 
-def test_bundle_files_registry_covers_every_packaged_bundle_file():
-    """The manifest roster is derived from the package tree, not retyped.
+def test_bundle_files_registry_covers_every_shipped_bundle_file():
+    """The manifest roster is derived from what ships, not retyped.
 
     A third hand-written roster silently under-records the manifest the first
     time a file joins `workspace_seed/.claude/` or the plugin (U3-PLUG's
-    `viewspec.js`), so both rosters are compared against what actually ships.
+    `viewspec.js`), so every roster is compared against what actually ships.
+    The agent bundle draws from two producers — the walked package tree and
+    U4-A's `copi_bundle_files()` — so it is checked against their union, and
+    the two must stay disjoint: a path claimed by both would have two sources
+    of bytes and `seed_bytes` could only honor one.
     """
-    assert sorted(bundles.BUNDLE_FILES["agent"]) == _packaged_agent_bundle_files()
+    packaged = _packaged_agent_bundle_files()
+    rendered = _rendered_agent_bundle_files()
+
+    assert rendered, "U4-A enumerates no rendered bundle file"
+    assert not set(packaged) & set(rendered)
+    assert sorted(bundles.BUNDLE_FILES["agent"]) == sorted(packaged + rendered)
     assert sorted(bundles.BUNDLE_FILES["obsidian"]) == sorted(
         cli._seed_tree_file_targets(OBSIDIAN_PLUGIN_REL, OBSIDIAN_PLUGIN_REL)
     )
@@ -190,7 +244,7 @@ def test_init_seeds_agent_and_obsidian_bundles_and_writes_the_as_created_manifes
 
     for rel in bundles.BUNDLE_FILES["agent"] + bundles.BUNDLE_FILES["obsidian"]:
         assert (workspace / rel).is_file(), rel
-        assert (workspace / rel).read_bytes() == (WORKSPACE_SEED / rel).read_bytes(), rel
+        assert (workspace / rel).read_bytes() == _expected_bundle_bytes(rel), rel
         # Durably written, so 0600 like the other engine-written control files
         # (`.memoria/vault.json`, `.memoria/overrides.jsonl`) rather than the
         # 0644 the seed-class copy leaves. This is a property of *this writer*
@@ -208,6 +262,30 @@ def test_init_seeds_agent_and_obsidian_bundles_and_writes_the_as_created_manifes
         assert sorted(recorded) == sorted(rels)
         for rel, digest in recorded.items():
             assert sha256_file(workspace / rel) == digest, rel
+
+
+def test_init_seeds_the_co_pi_method_files_from_their_content_providers(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Cross-section contract 6: `init` iterates U4-A's `(relpath, provider)` pairs.
+
+    These two paths ship no template — nothing under `workspace_seed` could
+    deliver them — so the only way the vault can hold the rendered text is
+    through the provider seam in `seed_bytes`. Asserted against the providers
+    rather than against `seed_bytes`, so the writer is never its own oracle.
+    """
+    for rel in (SKILL_RELPATH, SESSION_STATUS_HOOK_RELPATH):
+        assert not (WORKSPACE_SEED / rel).exists(), rel
+
+    workspace = _init(tmp_path, capsys)
+
+    assert (workspace / SKILL_RELPATH).read_text(encoding="utf-8") == render_copi_skill()
+    assert (workspace / SESSION_STATUS_HOOK_RELPATH).read_text(
+        encoding="utf-8"
+    ) == render_session_status_hook()
+    recorded = _read_manifest(workspace)["bundles"]["agent"]["files"]
+    for rel in (SKILL_RELPATH, SESSION_STATUS_HOOK_RELPATH):
+        assert recorded[rel] == sha256_file(workspace / rel), rel
 
 
 def test_init_no_obsidian_seeds_only_the_agent_bundle_manifest(

@@ -6595,7 +6595,61 @@ decision row only.
 > `3b0a1454`) that are not ancestors of `main`, which reads as "unlanded" to a
 > `merge-base` check.
 
-### Open, unowned: nothing seeds the co-PI method files (2026-08-02)
+### ~~Open, unowned~~ CLOSED: nothing seeds the co-PI method files (2026-08-02)
+
+> **EXECUTED 2026-08-02 (copiseam golden-token session, issue #1699).** The
+> provider seam is wired and the two method files are seeded. What shipped, and
+> the four places it deviates from the four numbered items below:
+>
+> 1. **The seam went in `seed_bytes`, not in `seed_bundles`.** `seed_bytes(rel)`
+>    now asks `_rendered_providers()` (a lazy `dict(copi_bundle_files())`) first
+>    and falls back to the package template, so the roster, the manifest, the
+>    write-target preflight, and the one-writer refusal are all indifferent to
+>    which kind of file a path is — a branch in `seed_bundles` would have had to
+>    be repeated in each. `BUNDLE_FILES["agent"]` gains the two relpaths and
+>    stays the single roster; the packaging alternative was rejected on item 1's
+>    own grounds.
+> 2. **The registry test was replaced, not deleted**, and its reason survives
+>    intact: `test_bundle_files_registry_covers_every_shipped_bundle_file`
+>    asserts `sorted(BUNDLE_FILES["agent"]) == sorted(packaged + rendered)`,
+>    where `packaged` is still the walked package tree and `rendered` is read
+>    from `copi_bundle_files()` itself. It additionally asserts the two
+>    producers are **disjoint** — a path claimed by both would have two byte
+>    sources and `seed_bytes` could only honor one. `tests/test_cli.py`'s
+>    `test_cli_init_seeds_exact_boot_c1_agent_bundle` carries a second roster of
+>    the same seven paths on purpose (it is the "nothing extra reached
+>    `.claude/`" pin) and its byte loop now splits by producer.
+> 3. **A fifth kind of golden change, deliberately added: `.claude/settings.json`.**
+>    `.claude/hooks/` is not auto-discovered by Claude Code — only
+>    `.claude/skills/` is — so seeding `session_status.py` without a
+>    `SessionStart` registration would have swapped one dead artifact
+>    (`copi_bundle_files()` with no consumer) for another (a hook file no host
+>    ever runs). U4-A cross-section assumption 3 assigns that registration to
+>    the seeded settings and BOOT-C closed without it, so it is part of this
+>    same gap and shipped here. Pinned by
+>    `test_seed_claude_settings_registers_the_session_status_hook`.
+> 4. **Accounting.** 38 goldens, each exactly +5/−3 lines: 2 added `files` keys
+>    (`.claude/hooks/session_status.py` `3c41cb6afadc`,
+>    `.claude/skills/memoria-copi/SKILL.md` `576651035618`) and 3 changed values
+>    (`.claude/settings.json` `8b01263a6e2c`→`a5730de394f6`,
+>    `.memoria/vault.json` `8ab6e7cb35b7`→`249bd016da05`, `Start here.md`
+>    `0dfadba42479`→`aa6e6d186c42`). Zero unreconciled lines under a structural
+>    (parsed, not textual) diff; no `db` count, `journal_kinds` entry, or other
+>    `files` key moved in any golden. All three "before" values were reproduced
+>    backwards from `origin/main` bytes through `floor_lib._redact` **before**
+>    regenerating. Independence was measured on four throwaway `init` vaults
+>    built from four copies of `src/`, each reverting one ingredient: reverting
+>    `Start here.md` moves only its own digest; reverting `.claude/settings.json`
+>    moves only its own and leaves `.memoria/vault.json` at the new value —
+>    the empirical proof of the redaction claim in numbered item 3 below, since
+>    the manifest's recorded sha256 for that file changed and its golden digest
+>    did not; reverting `bundles.py` drops exactly the two added keys and
+>    returns `.memoria/vault.json` to `8ab6e7cb35b7`.
+>
+> Numbered item 3 below predicted "no third kind of change should appear", and
+> item 4 then added a third. The final count is five kinds — every one of them
+> predicted and reconciled before regeneration, and the two the original note
+> did not foresee are named above with their reasons.
 
 Cross-section contract 6 promises that fresh `memoria init` iterates
 `(relpath, content_provider)` pairs and that "U4-A registers via
@@ -15450,6 +15504,17 @@ Steps:
 > new golden, and only one session per wave may move `tests/fixtures/floor/
 > goldens/`. The boxes stay unticked until it lands on `main`; do not
 > re-execute these tasks in the meantime.
+>
+> **Superseded 2026-08-02 (copiseam session): it landed.** Squash `2fe8c9ca`
+> ("U4-A + U4-B: the co-PI method bundle, the session-status hook, and
+> generate-questions", #1713) is an ancestor of `main`, and `copi_skill/`,
+> `session_status.py`, and the `generate-questions` golden are all present
+> there. The boxes above are still unticked and should be read as landed; the
+> "do not re-execute" instruction now holds for the opposite reason.
+> Cross-section assumption 3 (BOOT-C's seeded `.claude/settings.json` registers
+> the SessionStart hook) was **not** part of that squash and is closed
+> separately by issue #1699 — see the closed "nothing seeds the co-PI method
+> files" note in BOOT-C.
 
 Section of the composite implementation plan for U4
 (`docs/superpowers/specs/2026-07-15-u4-copi-agent-plugin-design.md` §1–2) plus
