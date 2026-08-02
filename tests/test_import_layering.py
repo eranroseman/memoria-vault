@@ -48,9 +48,10 @@ def _import_time_statements(body: list[ast.stmt]) -> list[ast.stmt]:
     Recurses into ``try``/``if``/``with`` blocks (and try's handlers/else/
     finally) — an import nested there still runs when the module is imported;
     it is just invisible to a direct-children-of-``tree.body`` scan. Does
-    *not* recurse into function or class bodies: a deferred import there is
-    the sanctioned idiom for breaking a layering cycle and must stay
-    uncaught. Does not recurse into an ``if TYPE_CHECKING:`` body, which never
+    *not* recurse into function or class bodies: both execute at import time,
+    but function bodies are rare at module level and class bodies do not occur
+    in the runtime modules examined here; the skip is pragmatic and
+    localized. Does not recurse into an ``if TYPE_CHECKING:`` body, which never
     executes; its ``else`` branch (if any) still does and is included.
     """
     statements: list[ast.stmt] = []
@@ -224,3 +225,110 @@ def test_type_checking_import_is_not_caught(tmp_path: Path) -> None:
         encoding="utf-8",
     )
     assert _module_level_engine_imports(probe) == []
+
+
+def test_deferred_import_in_function_body_is_not_caught(tmp_path: Path) -> None:
+    """An import inside a function body is not caught (deferred until call time).
+
+    Functions define a new scope, and their body executes only when the
+    function is called, not when the module is imported. This is the sanctioned
+    idiom for breaking a layering cycle — live usage in eval_dispatch.main()
+    and elsewhere. Must stay uncaught.
+    """
+    probe = tmp_path / "_layering_probe.py"
+    probe.write_text(
+        "def some_function():\n"
+        "    from memoria_vault.engine import api as engine_api\n"
+        "    return engine_api\n",
+        encoding="utf-8",
+    )
+    assert _module_level_engine_imports(probe) == []
+
+
+@pytest.mark.parametrize(
+    ("description", "code", "expected_line"),
+    [
+        (
+            "except_handler_body",
+            (
+                "try:\n"
+                "    pass\n"
+                "except Exception:\n"
+                "    from memoria_vault.engine import api as engine_api\n"
+            ),
+            4,
+        ),
+        (
+            "try_else_body",
+            (
+                "try:\n"
+                "    pass\n"
+                "except Exception:\n"
+                "    pass\n"
+                "else:\n"
+                "    from memoria_vault.engine import api as engine_api\n"
+            ),
+            6,
+        ),
+        (
+            "try_finally_body",
+            (
+                "try:\n"
+                "    pass\n"
+                "except Exception:\n"
+                "    pass\n"
+                "finally:\n"
+                "    from memoria_vault.engine import api as engine_api\n"
+            ),
+            6,
+        ),
+        (
+            "if_body",
+            ("if True:\n    from memoria_vault.engine import api as engine_api\n"),
+            2,
+        ),
+        (
+            "if_else_body",
+            (
+                "if False:\n"
+                "    pass\n"
+                "else:\n"
+                "    from memoria_vault.engine import api as engine_api\n"
+            ),
+            4,
+        ),
+        (
+            "with_body",
+            (
+                "from contextlib import nullcontext\n"
+                "with nullcontext():\n"
+                "    from memoria_vault.engine import api as engine_api\n"
+            ),
+            3,
+        ),
+    ],
+)
+def test_import_time_recursion_arms_are_caught(
+    tmp_path: Path, description: str, code: str, expected_line: int
+) -> None:
+    """Each recursion arm must catch an engine import at its target line.
+
+    Parametrized over all shapes that execute at import time:
+    - except-handler bodies
+    - try/else bodies
+    - try/finally bodies
+    - if bodies (when not under TYPE_CHECKING)
+    - if/else bodies
+    - with bodies
+
+    Each parameter defines a shape, the code to test it, and the expected
+    line number where the import is detected. Deleting any recursion arm
+    should cause exactly its own case to fail.
+    """
+    probe = tmp_path / f"_probe_{description}.py"
+    probe.write_text(code, encoding="utf-8")
+    result = _module_level_engine_imports(probe)
+    assert result == [expected_line], (
+        f"Failed to catch engine import in {description}. "
+        f"Expected line {expected_line}, got {result}."
+    )
