@@ -13,12 +13,9 @@ For the guarded operation ID list, see [System actions](system-actions.md).
 ## Request authority and retries
 
 Every request carries one validated actor. The worker enforces the operation
-authority matrix before payload validation or domain mutation.
-
-| Reserved for | Operations |
-| --- | --- |
-| `pi` | `acknowledge-attention`, `resolve-attention`, `record-copi-interview`, `curate-note-candidate`, `curate-note-link`, `move-concept`, `mark-checked`, `update-work`, `frame-paper`, `promote-draft-passage`, `cascade-rollback`, `capture-remote-pdf-source` — plus request controls, evidence-review dispositions, steering edits, and vocabulary mutations. |
-| `integrity` | `trace-integrity-scan`, `observe-pi-edits` |
+authority matrix before payload validation or domain mutation; the reserved-
+actor roster is published once, in the
+[Actor Authority Guard](../control-and-policy/control-plane.md#actor-authority-guard).
 
 Idempotency-key identity:
 
