@@ -11,7 +11,7 @@ import pytest
 
 from memoria_vault.cli import main
 from memoria_vault.engine.surface_contract import actions_by_id
-from memoria_vault.runtime import mcp_transport, state, worker
+from memoria_vault.runtime import mcp_transport, retrieval_pipeline, state, worker
 from memoria_vault.runtime.mcp_transport import make_mcp_app
 from tests.helpers import init_cli_workspace, write_checked_note
 
@@ -440,6 +440,94 @@ def test_mcp_rejects_idempotency_key_bound_to_pending_pi_request(workspace: Path
     assert detail["request"]["actor"] == "pi"
     assert state.request_job(workspace, request["job_id"])["status"] == "pending"
     assert "attention_status: open" in attention_path.read_text(encoding="utf-8")
+
+
+def test_mcp_answer_query_hit_sources_resolve_through_read_tools(workspace: Path) -> None:
+    """U4-C.3: every ref an `answer-query` hit returns resolves through a read tool."""
+    pytest.importorskip("mcp")
+    write_checked_note(workspace, "notes/groundterm.md", "Groundterm note")
+    content = workspace / ".memoria/blobs/source-content/source-alpha/full-text/alpha.txt"
+    content.parent.mkdir(parents=True)
+    content.write_text("groundterm full text evidence", encoding="utf-8")
+    state.upsert_catalog_record(
+        workspace,
+        work_id="source-alpha",
+        title="Alpha Work",
+        concept_path="catalog/sources/source-alpha",
+        doi="10.1000/alpha",
+        identifiers={"doi": "10.1000/alpha"},
+        citekey="alpha2026",
+        csl_json={"id": "alpha2026", "title": "Alpha Work", "DOI": "10.1000/alpha"},
+        provider_coverage="full",
+        text_status="full-text",
+        check_status="checked",
+        content_path=content.relative_to(workspace).as_posix(),
+    )
+    app = make_mcp_app(workspace, read_scope=["notes", "catalog"], agent_identity="agent")
+
+    response = _call(
+        app,
+        "operation_run",
+        operation_id="answer-query",
+        payload={"query": "groundterm"},
+        idempotency_key="ask-hit",
+    )
+
+    assert response["ok"] is True
+    result = response["result"]
+    assert result["unknowns"] == []
+    assert sorted(source["path"] for source in result["sources"]) == [
+        "fulltexts/source-alpha.md",
+        "notes/groundterm.md",
+    ]
+    for source in result["sources"]:
+        if source["type"] in {"fulltext", "graph-neighborhood"}:
+            resolved = _call(app, "work", work_id=Path(source["path"]).stem)
+            assert resolved["work"]["work_id"] == Path(source["path"]).stem
+        else:
+            resolved = _call(app, "concept", target=source["path"])
+            assert resolved["path"] == source["path"]
+            assert resolved["check_status"] == "checked"
+
+
+def test_mcp_answer_query_no_hit_payload_rides_dispatch_intact(workspace: Path) -> None:
+    """U4-C.4 (amended 2026-08-01): the honest-empty triple survives worker dispatch.
+
+    The sentence is engine-rendered per query, so the pin is structural rather
+    than a wording match: the stage rows and named strata that reach the client
+    must be the same ones `unknowns[0]` was rendered from. A stage row dropped
+    or a stratum re-keyed in transport breaks the final equality.
+    """
+    pytest.importorskip("mcp")
+    write_checked_note(workspace, "notes/present.md", "Present note")
+    app = make_mcp_app(workspace, read_scope=["notes"], agent_identity="agent")
+
+    response = _call(
+        app,
+        "operation_run",
+        operation_id="answer-query",
+        payload={"query": "absentterm"},
+        idempotency_key="ask-empty",
+    )
+
+    assert response["ok"] is True
+    result = response["result"]
+    assert result["sources"] == []
+    assert result["staleness"] == []
+    assert result["contradictions"] == []
+
+    counts = result["pipeline_counts"]
+    stages = [row["stage"] for row in counts]
+    assert stages[0] == "universe"
+    assert stages[-2:] == ["ranked", "returned"]
+    assert sorted(result["excluded_strata"]) == ["gated", "stale", "unchecked"]
+    # Not a degenerate empty: a real checked document entered the universe and
+    # reached the ranked stage, and none came back.
+    assert retrieval_pipeline.candidate_count(counts) > 0
+    assert counts[-1]["count"] == 0
+    assert result["unknowns"] == [
+        retrieval_pipeline.honest_empty(counts, result["excluded_strata"])
+    ]
 
 
 def _list_tools(app: Any) -> list[Any]:

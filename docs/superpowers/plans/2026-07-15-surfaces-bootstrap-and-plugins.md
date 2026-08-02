@@ -17098,7 +17098,7 @@ required.
 
 **Steps:**
 
-- [ ] Write the failing tests — append to `tests/test_copi_conversational_ask.py`:
+- [x] Write the failing tests — append to `tests/test_copi_conversational_ask.py`:
 
   ```python
   from memoria_vault.product.copi_conversational_ask import (
@@ -17129,11 +17129,11 @@ required.
   (Imports go at the top of the file with the existing import block; shown here
   together for readability.)
 
-- [ ] Run test to verify it fails:
+- [x] Run test to verify it fails:
   `python -m pytest tests/test_copi_conversational_ask.py -v`
   Expected: collection error — `ModuleNotFoundError: No module named 'memoria_vault.product.copi_conversational_ask'`.
 
-- [ ] Write minimal implementation — create
+- [x] Write minimal implementation — create
   `src/memoria_vault/product/copi_conversational_ask.py`:
 
   ```python
@@ -17199,7 +17199,7 @@ required.
   the actual file — no leading indentation on the markdown lines — so the
   emitted SKILL.md section is valid H2-rooted markdown.)
 
-- [ ] Run test to verify it passes:
+- [x] Run test to verify it passes:
   `python -m pytest tests/test_copi_conversational_ask.py -v` — 5 passed
   (including the U4-C.1 single-source scan: the new module imports the
   constant, so the literal count under `src/` is still exactly one file).
@@ -17231,7 +17231,7 @@ required.
 
 **Steps:**
 
-- [ ] Write the test — insert into `tests/test_mcp_transport.py` before `_call`:
+- [x] Write the test — insert into `tests/test_mcp_transport.py` before `_call`:
 
   ```python
   def test_mcp_answer_query_hit_sources_resolve_through_read_tools(workspace: Path) -> None:
@@ -17281,7 +17281,7 @@ required.
               assert resolved["check_status"] == "checked"
   ```
 
-- [ ] Run test to verify it passes:
+- [x] Run test to verify it passes:
   `python -m pytest tests/test_mcp_transport.py::test_mcp_answer_query_hit_sources_resolve_through_read_tools -v`
   This is a contract pin over already-shipped behavior — there is no
   implementation step. It must pass first run; if it fails, the U4 §4
@@ -17316,7 +17316,7 @@ required.
 
 **Steps:**
 
-- [ ] Write the test:
+- [x] Write the test:
 
   ```python
   def test_mcp_answer_query_no_hit_returns_the_honest_empty_shape(workspace: Path) -> None:
@@ -17348,7 +17348,7 @@ required.
   them: ImportError on `HONEST_EMPTY_PREFIX` — confirming the test binds to
   the shared constant, not to a retyped string.
 
-- [ ] Run the whole file: `python -m pytest tests/test_mcp_transport.py -v` — all pass.
+- [x] Run the whole file: `python -m pytest tests/test_mcp_transport.py -v` — all pass.
 
 - [ ] Commit:
 
