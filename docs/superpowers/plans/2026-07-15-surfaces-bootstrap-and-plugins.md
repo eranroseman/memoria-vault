@@ -15437,6 +15437,15 @@ new vaults and writing their current hashes to `.memoria/vault.json`.
    (`tests/floor_lib.py:375` only asserts `check_tracked_projections` stays
    ok, which regenerated deterministic content satisfies).
 
+   > **WRONG — amended 2026-08-02 (BINDING).** "No journal-event changes"
+   > holds; "no floor-golden regeneration is expected" does not follow from it.
+   > `vault_digest` hashes **every file in the vault**, not only journal shape
+   > (`tests/floor_lib.py:275-289`), and `AGENTS.md` is a seeded tracked
+   > projection whose content hash sits in the `files` map of **every** golden.
+   > U4-A.3 therefore moved all 37 goldens by one line each. The rule this
+   > assumption should have stated: *any change to seeded or generated vault
+   > content is a golden-token task, whether or not journal events change.*
+
 ### Clean-slate U4-A override (2026-07-30, BINDING)
 
 The active U4-A path is fresh `memoria init` only. It seeds the two current
@@ -15468,10 +15477,12 @@ message.
 
 ### Execution amendment — U4-A as built (2026-08-02, BINDING)
 
-U4-A.1 and U4-A.2 landed; **U4-A.3 did not** (see its section for the blocker).
-One mutation run covers this section and U4-B together: 52 mutants, 52 killed,
-0 survivors (three pass-1 survivors were fixed, not waived — see the U4-B
-amendment, item 7; two more were harness anchor misses, re-anchored and killed).
+U4-A.1 and U4-A.2 landed. **U4-A.3 landed on 2026-08-02** in the golden-token
+session that followed (see its section note for the accounting); the section is
+complete. One mutation run covers U4-A.1/A.2 and U4-B together: 52 mutants, 52
+killed, 0 survivors (three pass-1 survivors were fixed, not waived — see the
+U4-B amendment, item 7; two more were harness anchor misses, re-anchored and
+killed). U4-A.3 adds 6 more mutants, 6 killed, 0 survivors.
 Deviations from the printed bodies, each with its reason:
 
 1. **The 2026-08-01 strikes are applied, not re-litigated.** `HONEST_EMPTY_WORDING`,
@@ -15499,7 +15510,7 @@ Deviations from the printed bodies, each with its reason:
 5. **The operation vocabulary names `generate-questions`.** U4-B ships it in the
    same wave, and a method that omitted it would be stale on arrival.
    `test_skill_text_names_only_operations_the_engine_actually_ships` pins every
-   named id against `iter_capability_manifests("operation")`, so the method text
+   named id against `iter_capability_manifests()`, so the method text
    can never teach an unrunnable move.
 6. **The hook runs `memoria doctor --json`, not `--json --quick`.** `--quick` does
    not exist: the doctor parser (`src/memoria_vault/cli.py`, `doctor` subparser)
@@ -16166,27 +16177,42 @@ EOF
 
 ### Task U4-A.3: Codex condensed method in the generated AGENTS.md projection
 
-> **BLOCKED, not attempted (2026-08-02).** R1NG.4 has landed —
-> `_vault_agents_md` is at `src/memoria_vault/runtime/projections.py:432` — so
-> the ordering dependency is satisfied and the edit itself is the one-line
-> append this section describes. What blocks it is **section-top assumption 5,
-> which is wrong**: "no floor-golden regeneration is expected" does not hold.
-> `AGENTS.md` is a seeded tracked projection, and **all 36 goldens** carry its
-> content hash in their `files` map (`"AGENTS.md": "1c9b0bdfe5c1"` at
-> `tests/fixtures/floor/goldens/*.json`). Appending the condensed method changes
-> that hash in every one of them, which makes this a golden-token task under
-> cross-section contract 10, exactly like BOOT-D.6 and U3-CANVAS.5.
+> **LANDED 2026-08-02 by the golden-token holder** (was: BLOCKED, not
+> attempted — the blocker was the token, not the code; R1NG.4 had already
+> landed `_vault_agents_md`). Deviations from the printed body:
 >
-> To land it, the session holding the golden token must: apply the append,
-> regenerate the 36 goldens, and reconcile the diff to **one** changed line per
-> golden (the `AGENTS.md` hash) with an untouched non-golden file as the control.
-> The renderer it consumes, `render_codex_condensed_method()`, is landed and
-> tested (`tests/test_copi_bundle.py`), so no other work precedes it.
->
-> Note also that the printed test below asserts `HONEST_EMPTY_WORDING in
-> generated`; that constant was struck by the 2026-08-01 amendment. Assert
-> `GROUNDING_MAXIM`, `render_codex_condensed_method() in generated`, and the
-> section ordering instead.
+> - **The printed implementation snippet is not used.** It reprints R1NG.4's
+>   body from R1NG.4's *plan*, and the landed body differs (its note reads
+>   "`memoria init` writes this file and upgrades regenerate it", not the
+>   planned wording). The section's own parenthetical fallback is what was
+>   followed: keep the landed "How to read this vault safely" body verbatim and
+>   append `"\n" + render_codex_condensed_method()` after its final line, plus
+>   the local `from memoria_vault.product.copi_skill import
+>   render_codex_condensed_method`. That is the whole change — two lines.
+> - **The printed test asserts `HONEST_EMPTY_WORDING`**, struck by the
+>   2026-08-01 amendment. The landed test
+>   (`test_vault_agents_md_carries_the_condensed_copi_method`) asserts the H2
+>   heading, `GROUNDING_MAXIM`, `render_codex_condensed_method() in generated`,
+>   and that the read contract precedes the method section.
+> - **Section-top assumption 5 is wrong and is amended above.** This task moved
+>   every floor golden. Accounting: **37 goldens modified, one line each**,
+>   `"AGENTS.md": "1c9b0bdfe5c1"` → `"d04f09f9b6b6"`, zero unreconciled diff
+>   lines. The new hash was **predicted before regenerating** as
+>   `sha256(_redact(_vault_agents_md()))[:12]`, and the same recipe applied to
+>   the rendered text with the appended section removed reproduces the prior
+>   `1c9b0bdfe5c1` exactly — so the delta is provably the append and nothing
+>   else. Controls: `.obsidian/plugins/memoria-obsidian/main.js`,
+>   `.claude/settings.json` and `index.md` each still hold exactly one hash
+>   across all goldens, unchanged; and the one golden that also carries
+>   `.memoria/index/capability-index.json` took the *same* `AGENTS.md` hash as
+>   the 36 that carry no capability index — the two moving values are
+>   independent.
+> - **Mutation:** 6 mutants over the two changed lines, 6 killed, 0 survivors.
+>   Worth recording: the two whitespace-only mutants (drop the blank-line
+>   separator; double it) are killed **only** by the floor goldens — no
+>   assertion in `tests/test_projections.py` observes the separator. That is the
+>   goldens earning their keep, not a coverage gap to paper over with a
+>   byte-equality assertion.
 
 Requires Plan 23 R1NG.4 merged (see assumption 4). R1NG.4's Produces consumed
 here: `_vault_agents_md() -> str` (private renderer, projections.py, added
@@ -16220,7 +16246,7 @@ next to `_workspace_index` at projections.py:391-404),
 
 **Steps:**
 
-- [ ] Write the failing test — append to `tests/test_projections.py`:
+- [x] Write the failing test — append to `tests/test_projections.py`:
 
 ```python
 def test_vault_agents_md_carries_the_condensed_copi_method(tmp_path: Path) -> None:
@@ -16244,13 +16270,13 @@ def test_vault_agents_md_carries_the_condensed_copi_method(tmp_path: Path) -> No
     )
 ```
 
-- [ ] Run test to verify it fails:
+- [x] Run test to verify it fails:
       `python -m pytest tests/test_projections.py::test_vault_agents_md_carries_the_condensed_copi_method -v`
       — expected: `AssertionError` on
       `assert "## Co-PI method (condensed)" in generated`
       (R1NG.4's AGENTS.md exists but has no method section).
 
-- [ ] Write minimal implementation — in
+- [x] Write minimal implementation — in
       `src/memoria_vault/runtime/projections.py`, replace R1NG.4's
       `_vault_agents_md` (its exact landed body, quoted from Plan 23
       R1NG.4's implementation step) with the version that appends the
@@ -16289,17 +16315,17 @@ def _vault_agents_md() -> str:
       append `"\n" + render_codex_condensed_method()` after its final line —
       the append is this task's whole change.)
 
-- [ ] Run tests to verify they pass:
+- [x] Run tests to verify they pass:
       `python -m pytest tests/test_projections.py -v`
       — expected: all pass, including R1NG.4's
       `test_vault_agents_md_is_a_regenerated_read_contract` (its drift check
       regenerates from the same renderer, so the appended section is
       drift-neutral).
 
-- [ ] Run the projection-consuming surfaces:
+- [x] Run the projection-consuming surfaces:
       `python -m pytest tests/test_installer_skeleton.py tests/test_cli.py tests/test_seed_lifecycle.py tests/test_cli_doctor_eval.py tests/test_copi_bundle.py -v`
 
-- [ ] Run the full gate: `python scripts/verify` — expected: pass (floor
+- [x] Run the full gate: `python scripts/verify` — expected: pass (floor
       suites regenerate projections in-run; no golden regeneration — see
       section-top assumption 5).
 
@@ -16459,6 +16485,42 @@ Tasks U4-B.1 through U4-B.5 landed complete. U4-B.6's registry entry landed;
    U4-B.6, a golden-token task under cross-section contract 10 — the sequencing
    note that only names U4-B.6 understates it. Nothing about this depends on the
    operation's behaviour: it is the capability index reacting to a new manifest.
+
+### Rebase amendment — U4-A/U4-B forward-ported to main (2026-08-02, BINDING)
+
+U4-A.1/A.2 and U4-B.1–B.5 were built on `a1d815c9` and rebased 23 commits onto
+`cc55c40f` before U4-A.3 and U4-B.6 were attempted. Four landed changes needed
+adaptation; all four are the kind of drift a stale branch hides until it lands:
+
+1. **`inbox.write_proposal` now returns `Path | None`** (I1 §6.4 producer
+   throttle). The U4-B.1 `extra_frontmatter` parameter and the throttle merge
+   cleanly, but `generate_questions` was appending `card.relative_to(vault)`
+   unconditionally and would have crashed on a paused producer. It now follows
+   the `propagation.write_finding` precedent — skip the `None`, keep the run's
+   `question_count` honest — and
+   `test_a_paused_producer_writes_no_cards_and_still_reports_its_counts`
+   pins it (4 mutants over the guard, 4 killed).
+2. **`read_capability_manifest(capability_id)` lost its `"operation"` first
+   argument**, and `iter_capability_manifests()` lost it too. Both were called
+   with it here.
+3. **`_sha256_text` now delegates to `policy.audit.sha256_bytes`**; the U4-B
+   branch had reprinted the old `hashlib` body, which no longer has an import to
+   stand on.
+4. **`tests/conftest.py`'s `TEST_LEVELS` registry is gone** (#1671): each module
+   declares its own level with a module-level `pytestmark`. The branch's two
+   `TEST_LEVELS` rows are dropped in favour of `pytestmark = pytest.mark.contract`
+   in `tests/test_copi_bundle.py` and `pytestmark = pytest.mark.runtime` in
+   `tests/test_generate_questions.py`. **`test_copi_bundle.py` had no `import
+   pytest`** — a `pytestmark` line without it raises `NameError` at collection and
+   the module's tests then vanish from every selection *silently*, with
+   `test_each_pytest_file_declares_exactly_one_testing_level` still green (the
+   file does declare a level). Only a collected-node-ID check catches it, so one
+   was run: under the gate's own `-m "static or unit or contract or runtime or
+   package or floor"` expression the three touched files contribute 16 / 23 / 25
+   node ids, matching their standalone collection counts.
+
+Nothing about U4's contracts changed; the deltas are three call sites, one
+guard, and two test-level declarations.
 
 ---
 
@@ -17373,7 +17435,30 @@ Tasks U4-B.1 through U4-B.5 landed complete. U4-B.6's registry entry landed;
 
 ### Task U4-B.6: floor registry entry, new golden, full gate
 
-> **Half-landed (2026-08-02).** The `OPERATION_REGISTRY["generate-questions"]`
+> **COMPLETE 2026-08-02.** The golden-token holder generated
+> `tests/fixtures/floor/goldens/generate-questions.json` and moved the one
+> `regenerate-capability-index.json` line. Accounting for this task's half of
+> the wave: **1 new golden, 1 changed line in 1 existing golden**,
+> `".memoria/index/capability-index.json": "ea84e13bf465"` → `"46a8924e1f16"`,
+> zero unreconciled diff lines. The new hash was predicted before regenerating
+> as `sha256(_redact(render_capability_index()))[:12]`; deleting the single new
+> `generate-questions` catalog row from the rendered index and re-rendering
+> reproduces the prior `ea84e13bf465` exactly, so the delta is provably the one
+> new manifest row. Control: `.memoria/index/capability-index.json` appears in
+> exactly **1** of the 38 goldens (the other 37 never write it), and that
+> golden's `AGENTS.md` hash moved to the same value as the 36 goldens with no
+> capability index at all — the two moving values are independent.
+>
+> **The step below is over-strict on one point.** "`files` must contain no
+> `inbox/` entries" is wrong: the floor **seed** ships one attention card,
+> `inbox/flag-gap-full-text-floor-gap-work.md`, and it is present in all 38
+> goldens including this one. The shadow-run claim is proved by the *absence of
+> any additional* inbox entry — verified by comparing the new golden's file set
+> against `answer-query.json`'s: the only difference is
+> `.memoria/journal/floor.jsonl` (this operation journals; `answer-query` does
+> not), with every shared file at an identical hash.
+>
+> Historical note — **Half-landed (2026-08-02).** The `OPERATION_REGISTRY["generate-questions"]`
 > entry is in `tests/floor_lib.py` and
 > `tests/test_floor_coverage.py::test_every_operation_has_a_floor_entry` is
 > green. The sweep case runs the operation to `done` — it reaches the golden
@@ -17451,17 +17536,17 @@ Tasks U4-B.1 through U4-B.5 landed complete. U4-B.6's registry entry landed;
   `python -m pytest "tests/test_floor_sweep_operations.py::test_operation[generate-questions]" -v`
   — expected failure: `missing golden generate-questions.json; run once with MEMORIA_FLOOR_UPDATE_GOLDENS=1 and review the diff`.
 
-- [ ] Generate the golden, then review it:
+- [x] Generate the golden, then review it:
   ```
   MEMORIA_FLOOR_UPDATE_GOLDENS=1 python -m pytest "tests/test_floor_sweep_operations.py::test_operation[generate-questions]" -v
   git status --short tests/fixtures/floor/goldens/
   ```
   Confirm exactly ONE new file (`generate-questions.json`) and zero modified goldens; inspect it — `files` must contain no `inbox/` entries (shadow run) and `journal_kinds` must include the run/model_call events.
 
-- [ ] Run the sweep case again WITHOUT the env var to verify it passes against the committed golden:
+- [x] Run the sweep case again WITHOUT the env var to verify it passes against the committed golden:
   `python -m pytest "tests/test_floor_sweep_operations.py::test_operation[generate-questions]" tests/test_floor_coverage.py -v`
 
-- [ ] Run the full gate: `python scripts/verify` — must pass end to end (this also proves the U4-B.2→U4-B.6 mid-branch red is resolved).
+- [x] Run the full gate: `python scripts/verify` — must pass end to end (this also proves the U4-B.2→U4-B.6 mid-branch red is resolved).
 
 - [ ] Commit:
   ```
@@ -17953,6 +18038,13 @@ required.
 > `SELECT payload_json FROM event_log` queries the wrong table and would assert
 > nothing. Narrow the pin to "the answer-query path emits no `read-observed.v1`",
 > read `telemetry_events`, and drop the "emission is deferred" rationale.
+>
+> **This is the only U4 task still open.** A.1–A.3, B.1–B.6 and C.2–C.4 have
+> landed; C.1 was removed as satisfied. Also note the rebase amendment in the
+> U4-B section: `tests/conftest.py`'s `TEST_LEVELS` registry no longer exists
+> (#1671), so any new test module needs a `pytestmark` level and an
+> `import pytest` to go with it — this task modifies an existing, already-marked
+> file, so it needs neither.
 
 **Re-specification 2026-08-02 (BINDING) — done; the printed body below is
 superseded and must not be executed.**

@@ -1432,7 +1432,7 @@ def generate_questions(
         {"event": "run", "workflow": operation_id, "status": "started"},
         context=context,
     )
-    manifest = read_capability_manifest("operation", operation_id)
+    manifest = read_capability_manifest(operation_id)
     _frontmatter, pattern = split_frontmatter(manifest["text"])
     prompt = _prompt_text(vault, policy, pattern, scope_text)
     call = run_operation_model_text(

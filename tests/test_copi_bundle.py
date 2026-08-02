@@ -109,8 +109,7 @@ def test_skill_text_names_only_operations_the_engine_actually_ships() -> None:
     """A method that names a nonexistent operation teaches an unrunnable move."""
     text = render_copi_skill()
     catalog = {
-        str(manifest["frontmatter"]["operation_id"])
-        for manifest in iter_capability_manifests("operation")
+        str(manifest["frontmatter"]["operation_id"]) for manifest in iter_capability_manifests()
     }
 
     assert set(METHOD_OPERATION_IDS) <= catalog

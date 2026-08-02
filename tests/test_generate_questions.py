@@ -266,6 +266,40 @@ def test_fixture_run_writes_proposal_cards_with_taxonomy_tags(
     assert set(result["proposal_paths"]) <= committed
 
 
+def test_a_paused_producer_writes_no_cards_and_still_reports_its_counts(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A pause withholds the cards, never the count of what was withheld.
+
+    `write_proposal` returns None for a paused producer (I1 §6.4), so production
+    mode has a second no-card path besides the shadow flag. Without this the run
+    would crash on `None.relative_to`, and a run that instead swallowed the pause
+    into `question_count` would hide the withheld work.
+    """
+    vault = workspace(tmp_path)
+    write_note(vault, "alpha", "checked", "Alpha claims a causal effect.")
+    config = vault / ".memoria/config/attention.yaml"
+    config.parent.mkdir(parents=True, exist_ok=True)
+    config.write_text("producers:\n  generate-questions: paused\n", encoding="utf-8")
+    enable_production(monkeypatch)
+
+    result = generate_questions(
+        vault, "notes/alpha.md", machine="questions-machine", run_id="questions-paused"
+    )
+
+    assert result["production_enabled"] is True
+    assert result["question_count"] == 4
+    assert result["proposal_paths"] == []
+    assert not list((vault / "inbox").glob("*.md"))
+    finished = [
+        event
+        for event in iter_jsonl(vault / ".memoria/journal/questions-machine.jsonl")
+        if event.get("event") == "run" and event.get("status") == "done"
+    ]
+    assert finished[0]["question_count"] == 4
+    assert finished[0]["outputs"] == []
+
+
 def test_structural_rejections_are_counted_honestly(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
