@@ -32,7 +32,7 @@ import pytest
 
 from memoria_vault.cli import main
 from memoria_vault.engine import api as engine_api
-from memoria_vault.runtime import evidence_review, state
+from memoria_vault.runtime import evidence_review, knowledge, state
 from memoria_vault.runtime.knowledge import compose_project_draft as _compose
 from memoria_vault.runtime.knowledge import resolve_evidence_review as _resolve
 from memoria_vault.runtime.knowledge import review_dwell_seconds
@@ -237,6 +237,21 @@ def review_vault(tmp_path: Path, _review_template) -> tuple[Path, dict[str, str]
     vault = tmp_path / "vault"
     shutil.copytree(template, vault, symlinks=True)
     return vault, dict(ids)
+
+
+def _clock_pinned_at(instant: datetime) -> type[datetime]:
+    """A `datetime` whose `now` is `instant`, for code that reads the wall clock.
+
+    `knowledge` calls `datetime.now` in exactly one place -- the dwell
+    subtraction -- so this pins that one input and nothing else.
+    """
+
+    class _Pinned(datetime):
+        @classmethod
+        def now(cls, tz: Any = None) -> datetime:
+            return instant
+
+    return _Pinned
 
 
 def _payload(capsys: pytest.CaptureFixture[str]) -> dict[str, Any]:
@@ -1086,13 +1101,37 @@ def test_review_action_dwell_rides_the_client_event(
     assert payload["telemetry"]["duration_s"] == client["duration_s"]
 
 
-def test_review_action_omits_a_sub_second_dwell(
-    review_vault, capsys: pytest.CaptureFixture[str]
+@pytest.mark.parametrize(
+    ("dwell_seconds", "reported"),
+    [(0.4, False), (0.999, False), (1.0, True), (1.6, True)],
+)
+def test_review_action_reports_a_dwell_only_from_one_whole_second(
+    review_vault,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+    dwell_seconds: float,
+    reported: bool,
 ) -> None:
     """A look shorter than a second is not a look: the schema would accept the
-    fraction, and reporting it would put noise in the dwell distribution."""
+    fraction, and reporting it would put noise in the dwell distribution.
+
+    The clock the reader consults is pinned, so the dwell is a function of the
+    fixture rather than of how long the run took. `seconds_ago=0` against a live
+    clock was a race, not a sub-second dwell -- under CI load the read landed
+    almost two seconds after the write and the fraction became a 1.9. Pinning it
+    also makes the boundary itself testable, which the wall-clock form could not
+    do at all: 0.999 is withheld and 1.0 is reported by the same code path.
+    """
     vault, ids = review_vault
-    _record_client_event(vault, seconds_ago=0, item_id=ids["thesis"])
+    _record_client_event(vault, seconds_ago=600, item_id=ids["thesis"])
+    # Pin the clock against the timestamp the door actually stored, not against a
+    # separately computed one: `utc_z` truncates to whole seconds, so recomputing
+    # it here lands up to a second away and reintroduces the race by other means.
+    (opened,) = _client_events(vault, "view.opened")
+    opened_at = datetime.fromisoformat(str(opened["timestamp"]).replace("Z", "+00:00"))
+    monkeypatch.setattr(
+        knowledge, "datetime", _clock_pinned_at(opened_at + timedelta(seconds=dwell_seconds))
+    )
 
     rc = main(["review", "defer", ids["thesis"], "--workspace", str(vault), "--json"])
     payload = _payload(capsys)
@@ -1100,8 +1139,8 @@ def test_review_action_omits_a_sub_second_dwell(
     assert rc == 0
     assert review_dwell_seconds(vault, ids["thesis"]) is not None  # there *was* a dwell
     (client,) = _client_events(vault, "disposition.recorded")
-    assert "duration_s" not in client
-    assert "duration_s" not in payload["telemetry"]
+    assert ("duration_s" in client) is reported
+    assert ("duration_s" in payload["telemetry"]) is reported
 
 
 def test_review_dwell_measures_the_latest_open_not_the_first(review_vault) -> None:
