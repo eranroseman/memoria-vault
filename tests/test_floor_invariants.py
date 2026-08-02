@@ -41,6 +41,40 @@ def test_digest_is_stable_and_redacted(tmp_path: Path) -> None:
     assert not re.search(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}", text)
 
 
+def test_golden_drift_failure_prints_the_diff(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A drifted golden must say *what* moved, not only that something did.
+
+    #1691: three CI drifts, on three operations, none reproducible; each
+    investigation had to start by reproducing because the message carried no
+    content (one of them burned 22 gate runs). The drift below is produced —
+    a real file written into a real seeded vault, re-digested through the
+    real `vault_digest` — rather than hand-written, so an `assert_golden`
+    that dropped the diff again cannot pass this.
+    """
+    from tests import floor_lib
+
+    vault, _ = seed_vault(tmp_path)
+    monkeypatch.setattr(floor_lib, "GOLDENS_DIR", tmp_path / "goldens")
+    monkeypatch.setenv("MEMORIA_FLOOR_UPDATE_GOLDENS", "1")
+    monkeypatch.delenv("CI", raising=False)
+    floor_lib.assert_golden("drift-probe", vault_digest(vault))
+    monkeypatch.delenv("MEMORIA_FLOOR_UPDATE_GOLDENS")
+
+    (vault / "notes/floor-drift-probe.md").write_text("drifted\n", encoding="utf-8")
+    with pytest.raises(AssertionError) as excinfo:
+        floor_lib.assert_golden("drift-probe", vault_digest(vault))
+
+    message = str(excinfo.value)
+    assert "golden drift for drift-probe" in message
+    added = [
+        line for line in message.splitlines() if line.startswith("+") and not line.startswith("+++")
+    ]
+    assert any("notes/floor-drift-probe.md" in line for line in added), message
+    assert "--- golden/drift-probe.json" in message, message
+
+
 def test_foreign_key_breakage_is_detected(tmp_path: Path) -> None:
     vault, _ = seed_vault(tmp_path)
     db = vault / ".memoria/memoria.sqlite"
