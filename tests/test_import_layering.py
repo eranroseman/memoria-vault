@@ -47,12 +47,20 @@ def _import_time_statements(body: list[ast.stmt]) -> list[ast.stmt]:
 
     Recurses into ``try``/``if``/``with`` blocks (and try's handlers/else/
     finally) — an import nested there still runs when the module is imported;
-    it is just invisible to a direct-children-of-``tree.body`` scan. Does
-    *not* recurse into function or class bodies: both execute at import time,
-    but function bodies are rare at module level and class bodies do not occur
-    in the runtime modules examined here; the skip is pragmatic and
-    localized. Does not recurse into an ``if TYPE_CHECKING:`` body, which never
-    executes; its ``else`` branch (if any) still does and is included.
+    it is just invisible to a direct-children-of-``tree.body`` scan.
+
+    Does *not* recurse into a **function** body: that is the deferred idiom
+    this whole file exists to bless, and it genuinely does not run at import
+    time. Does not recurse into a **class** body either — but for a different
+    reason, worth stating plainly because the two look alike and are not: a
+    class body *does* execute at import time, so an engine import there would
+    be a real inversion this scan would miss. No such import exists under
+    ``runtime/``, so the omission is a pragmatic bound rather than a claim of
+    safety. The same holds for ``match``/``for``/``while``/``try*``, which are
+    likewise unvisited and likewise unused for module-level imports here.
+
+    Does not recurse into an ``if TYPE_CHECKING:`` body, which never executes;
+    its ``else`` branch (if any) still does and is included.
     """
     statements: list[ast.stmt] = []
     for node in body:
