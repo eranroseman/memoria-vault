@@ -6,7 +6,7 @@ import json
 import os
 import re
 import time
-from collections.abc import Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from datetime import date
 from pathlib import Path
 from typing import Any
@@ -23,6 +23,7 @@ from memoria_vault.runtime.hub_candidates import candidate_entry, write_hub_cand
 from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.audit import sha256_bytes, sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path, require_policy_path
+from memoria_vault.runtime.subsystems.lib import inbox
 from memoria_vault.runtime.trusted_writer import (
     OperationContext,
     append_explicit_journal_event,
@@ -573,10 +574,17 @@ def run_operation_model_text(
     call_id: str,
     route: str,
     purpose: str,
+    fixture: Callable[[], str] | None = None,
 ) -> dict[str, Any]:
-    """Run a policy-scoped text model call and record the model-call event."""
+    """Run a policy-scoped text model call and record the model-call event.
+
+    `fixture` replaces the generic markdown fixture body on the
+    deterministic-fixture branch, for operations whose output contract is not
+    prose. Routing both branches through here is what keeps one operation's
+    fixture-mode `model_call` event the same shape as its live-mode one.
+    """
     validate_operation_context(vault, context)
-    result = _run_prompt_model(policy, runner, prompt, input_text)
+    result = _run_prompt_model(policy, runner, prompt, input_text, fixture)
     output = result["text"]
     model_call = append_journal_event(
         Path(vault),
@@ -1054,11 +1062,15 @@ def _prompt_text(vault: Path, policy: dict[str, Any], pattern: str, input_text: 
 
 
 def _run_prompt_model(
-    policy: dict[str, Any], runner: dict[str, Any], prompt: str, input_text: str
+    policy: dict[str, Any],
+    runner: dict[str, Any],
+    prompt: str,
+    input_text: str,
+    fixture: Callable[[], str] | None = None,
 ) -> dict[str, Any]:
     if runner["model"] == "deterministic-fixture":
         return {
-            "text": _prompt_fixture_body(policy, input_text),
+            "text": fixture() if fixture is not None else _prompt_fixture_body(policy, input_text),
             "usage": None,
             "cost_usd": None,
             "elapsed_s": 0.0,
@@ -1382,3 +1394,197 @@ def _network_target(target_url: str) -> str:
 
 def _sha256_text(text: str) -> str:
     return sha256_bytes(text.encode())
+
+
+GENERATE_QUESTIONS_CALL_ID = "generate-questions.v1"
+QUESTION_TAXONOMY_ROLES = (
+    "grounds-seeking",
+    "warrant-challenging",
+    "rebuttal-probing",
+    "qualifier-testing",
+)
+
+
+def generate_questions(
+    vault: Path,
+    scope: str,
+    *,
+    context: OperationContext,
+    operation_id: str = "generate-questions",
+    mode: str | None = None,
+) -> dict[str, Any]:
+    """Generate Toulmin-taxonomy questions over one checked scope as proposal cards.
+
+    Shadow-first: the manifest's `production_enabled` gates card writing only.
+    Journal events and the returned questions are recorded in every mode, so a
+    call-site promotion is a manifest flip rather than a code change.
+    """
+    validate_operation_context(vault, context)
+    vault = Path(vault)
+    policy = load_operation_policy(vault, operation_id)
+    runner = resolve_operation_runner(vault, policy, mode)
+    _require_tool(policy, "trusted_writer")
+    scope_rel = require_policy_path(policy, scope)
+    scope_text, _scope_input = _checked_prompt_input(vault, scope_rel)
+
+    started = append_journal_event(
+        vault,
+        {"event": "run", "workflow": operation_id, "status": "started"},
+        context=context,
+    )
+    manifest = read_capability_manifest("operation", operation_id)
+    _frontmatter, pattern = split_frontmatter(manifest["text"])
+    prompt = _prompt_text(vault, policy, pattern, scope_text)
+    call = run_operation_model_text(
+        vault,
+        policy,
+        runner,
+        prompt,
+        context=context,
+        input_text=scope_text,
+        call_id=GENERATE_QUESTIONS_CALL_ID,
+        route="generate-questions",
+        purpose=operation_id,
+        fixture=lambda: _generate_questions_fixture(scope_rel),
+    )
+
+    questions, rejected_count = _validated_questions(vault, str(call["output"]))
+    production_enabled = policy.get("production_enabled") is True
+    proposal_rels: list[str] = []
+    if production_enabled:
+        for item in questions:
+            card = inbox.write_proposal(
+                vault,
+                "gap",
+                f"Question ({item['role']}): {item['question'][:80]}",
+                item["question"],
+                f"A {item['role']} question against {item['target']} "
+                "strengthens the argument graph.",
+                "The question may already be answered by checked content the model did not weigh.",
+                f"generate-questions run over {scope_rel} via {runner['model']}.",
+                "unsure",
+                operation_id,
+                loudness="notice",
+                extra_frontmatter={
+                    "taxonomy_role": item["role"],
+                    "target": item["target"],
+                },
+            )
+            # None when the PI has paused this producer (I1 §6.4); the run still
+            # journals its question count, so a paused producer is a visible skip
+            # rather than a silent hole.
+            if card is not None:
+                proposal_rels.append(card.relative_to(vault).as_posix())
+    finished = append_journal_event(
+        vault,
+        {
+            "event": "run",
+            "workflow": operation_id,
+            "status": "done",
+            "outputs": proposal_rels,
+            "question_count": len(questions),
+            "rejected_count": rejected_count,
+            "production_enabled": production_enabled,
+        },
+        context=context,
+    )
+    commit = commit_writer_changes(
+        vault,
+        f"generate questions for {scope_rel}",
+        proposal_rels,
+        context=context,
+    )
+    return {
+        "run_id": context.run_id,
+        "operation_id": operation_id,
+        "scope": scope_rel,
+        "questions": questions,
+        "proposal_paths": proposal_rels,
+        "question_count": len(questions),
+        "rejected_count": rejected_count,
+        "production_enabled": production_enabled,
+        "started": started,
+        "model_call": call["model_call"],
+        "finished": finished,
+        "commit": commit,
+    }
+
+
+def _generate_questions_fixture(scope_rel: str) -> str:
+    items = [
+        {
+            "question": f"What checked evidence grounds the main claim of {scope_rel}?",
+            "role": "grounds-seeking",
+            "target": scope_rel,
+        },
+        {
+            "question": f"Why does the cited evidence license the conclusion drawn in {scope_rel}?",
+            "role": "warrant-challenging",
+            "target": scope_rel,
+        },
+        {
+            "question": f"What finding, if checked into the vault, would rebut {scope_rel}?",
+            "role": "rebuttal-probing",
+            "target": scope_rel,
+        },
+        {
+            "question": f"Under what conditions does the claim in {scope_rel} stop holding?",
+            "role": "qualifier-testing",
+            "target": scope_rel,
+        },
+    ]
+    return json.dumps(items)
+
+
+def _validated_questions(vault: Path, output: str) -> tuple[list[dict[str, str]], int]:
+    """Split model output into structurally valid questions and an honest reject count."""
+    try:
+        raw = json.loads(output)
+    except ValueError as exc:
+        raise ValueError("generate-questions output must be a JSON list") from exc
+    if not isinstance(raw, list):
+        raise ValueError("generate-questions output must be a JSON list")
+    valid: list[dict[str, str]] = []
+    rejected = 0
+    for item in raw:
+        normalized = _question_item(vault, item)
+        if normalized is None:
+            rejected += 1
+        else:
+            valid.append(normalized)
+    return valid, rejected
+
+
+def _question_item(vault: Path, item: Any) -> dict[str, str] | None:
+    if not isinstance(item, dict):
+        return None
+    question = " ".join(str(item.get("question") or "").split())
+    role = str(item.get("role") or "").strip()
+    target = str(item.get("target") or "").strip()
+    if not question.endswith("?"):
+        return None
+    if role not in QUESTION_TAXONOMY_ROLES:
+        return None
+    if not _resolvable_question_target(vault, target):
+        return None
+    return {
+        "question": neutralize_untrusted_markdown_fragment(question),
+        "role": role,
+        "target": normalize_path(target),
+    }
+
+
+def _resolvable_question_target(vault: Path, target: str) -> bool:
+    # No empty-string guard: "" normalizes to "", which no catalog work id
+    # matches and which resolves to the vault directory rather than a file, so
+    # both arms below already reject it. A guard here would be dead code.
+    try:
+        rel = normalize_path(target)
+    except ValueError:
+        return False
+    try:
+        if state.catalog_source(vault, rel) is not None:
+            return True
+    except ValueError:
+        pass
+    return (Path(vault) / rel).is_file()

@@ -734,3 +734,84 @@ def test_invalid_enums_rejected(tmp_path):
         )
     with pytest.raises(ValueError):
         inbox.write_finding(tmp_path, "alert", "T", "f", "linter", agent_recommendation="fine")
+
+
+def test_proposal_card_carries_extra_frontmatter(tmp_path):
+    p = inbox.write_proposal(
+        tmp_path,
+        "gap",
+        "Question (grounds-seeking): What grounds the thesis?",
+        "What checked evidence grounds the thesis?",
+        "a grounds-seeking question strengthens the argument graph",
+        "may already be answered by checked content",
+        "generate-questions run over notes/thesis.md",
+        "unsure",
+        "generate-questions",
+        extra_frontmatter={"taxonomy_role": "grounds-seeking", "target": "notes/thesis.md"},
+    )
+    fm = _frontmatter(p)
+    assert fm["taxonomy_role"] == "grounds-seeking"
+    assert fm["target"] == "notes/thesis.md"
+    assert fm["attention_kind"] == "gap"
+    assert fm["loudness"] == "notice"
+
+
+def test_proposal_extra_frontmatter_cannot_override_reserved_keys(tmp_path):
+    p = inbox.write_proposal(
+        tmp_path,
+        "gap",
+        "Reserved key probe",
+        "action",
+        "for",
+        "against",
+        "tipped",
+        "unsure",
+        "probe",
+        extra_frontmatter={
+            "attention_kind": "flag",
+            "attention_status": "resolved",
+            "certainty": "confident",
+            "raised_by": "impostor",
+            "loudness": "block",
+            "created": "1999-01-01",
+        },
+    )
+    fm = _frontmatter(p)
+    assert fm["attention_kind"] == "gap"
+    assert fm["attention_status"] == "open"
+    assert fm["certainty"] == "unsure"
+    assert fm["raised_by"] == "probe"
+    assert fm["loudness"] == "notice"
+    assert fm["created"] == _today()
+
+
+def test_proposal_extra_frontmatter_order_does_not_change_the_card_bytes(tmp_path):
+    """Card bytes are content-addressed by git and the floor digests; key order is not caller-owned."""
+    forward = inbox.write_proposal(
+        tmp_path,
+        "gap",
+        "Order probe",
+        "action",
+        "for",
+        "against",
+        "tipped",
+        "unsure",
+        "probe",
+        extra_frontmatter={"alpha": "1", "omega": "2"},
+    )
+    text = forward.read_text(encoding="utf-8")
+    forward.unlink()
+    reverse = inbox.write_proposal(
+        tmp_path,
+        "gap",
+        "Order probe",
+        "action",
+        "for",
+        "against",
+        "tipped",
+        "unsure",
+        "probe",
+        extra_frontmatter={"omega": "2", "alpha": "1"},
+    )
+
+    assert reverse.read_text(encoding="utf-8") == text
