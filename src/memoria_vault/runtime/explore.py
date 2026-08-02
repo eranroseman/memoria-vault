@@ -5,9 +5,9 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from memoria_vault.runtime import graph_sql, retrieval_pipeline, state
+from memoria_vault.runtime import graph_sql, propagation, retrieval_pipeline, state
 from memoria_vault.runtime.search_index import _bm25, _tokens, checked_search_universe
-from memoria_vault.runtime.subsystems.lib.edges import concept_edge_path_pairs, thesis_rel
+from memoria_vault.runtime.subsystems.lib.edges import concept_edge_path_pairs
 
 SEED_K = 5
 DEPTH_CAP = 2
@@ -298,51 +298,32 @@ def _complete_grounds_by_claim(vault: Path) -> dict[str, int]:
 def _vetted_project_slice_ids(
     vault: Path, project: str, documents: list[dict[str, Any]]
 ) -> set[str]:
-    """Use active slices or traverse links using only vetted frontmatter."""
-    by_path = {str(document["path"]): document for document in documents}
+    """One project's active slice, over vetted topology only.
+
+    Path space throughout: `active_project_slices` answers there, and so do the
+    `_concept_id` values this set is intersected against upstream.
+
+    ``checked_only=True`` is what makes this reader *vetted*. The provider's
+    default walks unchecked edges deliberately — propagation must know a
+    cascade's reach before the graph is settled — but a retrieval gate that
+    admitted unconfirmed topology would put a Concept in front of the
+    researcher on the strength of an edge nobody has confirmed. The project
+    document is subtracted for the same reason `graph_sql.project_slice`
+    subtracts it: membership means *in* the project, not *is* it.
+
+    The universe gate still comes first: a project whose own document is gated,
+    stale, or unchecked is absent from ``documents`` and slices to nothing,
+    rather than falling through to some other project's answer.
+    """
     project_rel = _vetted_project_rel(vault, project)
-    project_document = by_path.get(project_rel)
-    if project_document is None:
+    if project_rel not in {str(document["path"]) for document in documents}:
         return set()
-
-    active_slices = graph_sql._active_project_slices(vault)
-    if active_slices is not None:
-        return {
-            _active_member_id(member)
-            for member in active_slices.get(project_rel, set())
-            if _active_member_id(member)
-        }
-
-    seen: set[str] = set()
-    queue = sorted(_link_targets(_frontmatter(project_document)))
-    thesis = thesis_rel(_frontmatter(project_document))
-    if thesis:
-        queue.append(thesis)
-    while queue:
-        relpath = queue.pop(0)
-        if relpath in seen:
-            continue
-        seen.add(relpath)
-        document = by_path.get(relpath)
-        if document is not None:
-            queue.extend(sorted(_link_targets(_frontmatter(document)) - seen))
-    return seen
+    slices = propagation.active_project_slices(vault, checked_only=True)
+    return slices.get(project_rel, set()) - {project_rel}
 
 
-def _active_member_id(member: object) -> str:
-    """`graph_sql`'s member unwrap, made total: an unnormalizable member is dropped."""
-    try:
-        return graph_sql._member_id(member)
-    except ValueError:
-        return ""
-
-
-# The links closure resolves targets exactly as `graph_sql`'s does — same
-# namespace, same rejections. It was a byte-identical copy; `_active_project_slices`
-# above already reaches for that module's private closure helpers.
-_link_targets = graph_sql._link_targets
-_link_target = graph_sql._link_target
-# Project path resolution was that same byte-identical copy.
+# Project path resolution was a byte-identical copy of `graph_sql`'s. The other
+# de-duplicated aliases went with the links closure they wrapped (R2 task G).
 _vetted_project_rel = graph_sql._project_rel
 
 

@@ -872,6 +872,7 @@ def _run_operation_job(
             ),
             routing_class=str(payload.get("routing_class") or "ask"),
             reason=str(payload.get("reason") or operation_id),
+            item_type=str(payload.get("item_type") or "attention"),
         )
         return {"commit": result["commit"], "resolution": result["event"]}
     if operation_id == "resolve-evidence":

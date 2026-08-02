@@ -7,7 +7,7 @@ import json
 import re
 import shutil
 import subprocess
-from collections import deque
+from collections import Counter, deque
 from collections.abc import Callable, Iterable, Iterator
 from pathlib import Path
 from typing import Any
@@ -1293,17 +1293,27 @@ def resolve_attention(
     outcome: str | None = None,
     routing_class: str = "ask",
     reason: str = "",
+    item_type: str = "attention",
 ) -> dict[str, Any]:
-    """Record a PI attention disposition through the worker-owned journal."""
+    """Record a PI attention disposition through the worker-owned journal.
+
+    ``item_type`` is a closed roster here even though the disposition event
+    schema takes it as a free string: this is the seam that decides it, and
+    ``decided-wrong`` is legal only for a claim, because a card is not something
+    the PI can be wrong about — it is something they accept, reject or defer.
+    """
     validate_operation_context(vault, context)
     if resolution not in {"acknowledged", "resolved"}:
         raise ValueError(f"unsupported attention resolution: {resolution!r}")
+    if item_type not in {"attention", "claim"}:
+        raise ValueError(f"unsupported attention item_type: {item_type!r}")
     outcome = outcome or resolution
-    supported_outcomes = (
-        {"acknowledged"}
-        if resolution == "acknowledged"
-        else {"apply", "reject", "defer", "confirm-tension"}
-    )
+    if resolution == "acknowledged":
+        supported_outcomes = {"acknowledged"}
+    else:
+        supported_outcomes = {"apply", "reject", "defer", "confirm-tension"}
+        if item_type == "claim":
+            supported_outcomes = supported_outcomes | {"decided-wrong"}
     if outcome not in supported_outcomes:
         raise ValueError(f"unsupported attention outcome for {resolution}: {outcome!r}")
     if routing_class not in {"act", "ask", "log"}:
@@ -1340,12 +1350,15 @@ def resolve_attention(
                 "reject": "reject",
                 "defer": "defer",
                 "confirm-tension": "accept",
+                "decided-wrong": "override",
             }[outcome],
-            item_type="attention",
+            item_type=item_type,
             item_id=target,
             context=context,
         )
     touched: list[str] = []
+    if resolution == "resolved" and outcome == "decided-wrong":
+        touched.append(_write_blast_radius_report(vault, target))
     target_path = vault / target
     if resolution == "resolved" and target_path.is_file():
         frontmatter, body = split_frontmatter(target_path.read_text(encoding="utf-8"))
@@ -1372,6 +1385,46 @@ def resolve_attention(
     if tension_edge is not None:
         result["tension_edge"] = tension_edge
     return result
+
+
+def _write_blast_radius_report(vault: Path, target: str) -> str:
+    """Report, not act: count the typed closure and raise one flag card over it.
+
+    `compute_consequences` is a pure read — no label, no verdict, no flag and no
+    journal event lands on anything it reached, which is the whole distinction
+    this path draws against `cascade_rollback`. The PI deciding a claim is wrong
+    is a judgment about the claim; demoting what stood on it is a separate,
+    explicitly invoked destruction, and the card says so.
+
+    No `dedupe_slug` and no `fingerprint`, so `write_finding` always returns a
+    path: a second `decided-wrong` on the same claim is a second decision, taken
+    over a blast radius that may have moved since the first.
+    """
+    from memoria_vault.runtime.subsystems.lib import inbox
+
+    marks = propagation.compute_consequences(vault, target, trigger="decided-wrong")
+    counts = Counter(str(mark["consequence"]) for mark in marks.values())
+    count_text = ", ".join(f"{kind}: {n}" for kind, n in sorted(counts.items())) or "none"
+    finding = (
+        f"PI decided {target} is wrong. Blast radius: {len(marks)} affected "
+        f"note(s) by typed consequence ({count_text}). This is a report, not an action; "
+        "no note was demoted or quarantined. Escalation: the destructive path is the "
+        f"explicitly invoked cascade-rollback operation on {target}."
+    )
+    card = inbox.write_finding(
+        vault,
+        "flag",
+        f"Blast radius: {Path(target).stem}",
+        finding,
+        "resolve-attention",
+        agent_recommendation="issues-found",
+        target=target,
+        loudness="alert",
+        evidence="\n".join(
+            f"- [[{rel}]] — {mark['consequence']}" for rel, mark in sorted(marks.items())
+        ),
+    )
+    return Path(card).relative_to(vault).as_posix()
 
 
 def _confirm_tension_edge(vault: Path, target: str, *, context: OperationContext) -> dict[str, Any]:

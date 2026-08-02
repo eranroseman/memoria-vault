@@ -6,9 +6,7 @@ import re
 from importlib.resources import files
 from pathlib import Path
 
-import pytest
-
-from memoria_vault.runtime import graph_sql, state
+from memoria_vault.runtime import graph_sql, propagation, state
 
 SHIPPED_RELATIONS = {"supports", "contradicts", "extends", "tension"}
 
@@ -447,46 +445,123 @@ def test_degree_centrality_returns_zero_for_isolated_ids(tmp_path: Path) -> None
     assert graph_sql.degree_centrality(tmp_path, []) == {}
 
 
-def _seed_project_files(vault: Path) -> None:
-    (vault / "projects").mkdir(exist_ok=True)
-    (vault / "notes").mkdir(exist_ok=True)
+def _write_note(vault: Path, rel: str, body: str) -> None:
+    path = vault / rel
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(f"---\ntype: note\n---\n{body}\n", encoding="utf-8")
+
+
+def _seed_project_slice_graph(
+    vault: Path,
+    *,
+    extra_concepts: tuple[str, ...] = (),
+    extra_edges: tuple[dict[str, str], ...] = (),
+) -> None:
+    """One active project whose slice lives in the `concept_edges` mirror.
+
+    The `links:` block on the project is deliberately kept and deliberately a
+    lie: it names `notes/orphan.md`, which no mirror row connects. The slice is
+    the propagation provider's closure now, so an orphan in the answer would
+    mean retrieval had gone back to parsing frontmatter.
+
+    Not a degenerate graph. `notes/b.md` is two hops out **and** points the
+    other way, so a directed or one-hop walk fails here; `notes/pending.md`
+    hangs off an unchecked edge, which separates this reader's unvetted default
+    from `explore`'s vetted one.
+    """
+    (vault / "projects").mkdir(parents=True, exist_ok=True)
     (vault / "projects/p1.md").write_text(
-        "---\ntype: project\nlinks:\n  supports:\n    - notes/a.md\n"
-        "    - archive/legacy.md\n    - '../../outside.md'\n---\nbody\n",
+        "---\ntype: project\nlinks:\n  supports:\n    - notes/orphan.md\n---\nbody\n",
         encoding="utf-8",
     )
-    (vault / "notes/a.md").write_text(
-        "---\ntype: note\nlinks:\n  extends:\n    - '[[b]]'\n---\nalpha\n",
-        encoding="utf-8",
+    for name in ("a", "b", "pending", "orphan"):
+        _write_note(vault, f"notes/{name}.md", name)
+    for rel in extra_concepts:
+        _write_note(vault, rel, Path(rel).stem)
+    state.rebuild_file_concept_mirror(
+        vault,
+        [
+            {"concept_id": "projects/p1.md", "concept_type": "project"},
+            *(
+                {"concept_id": rel, "concept_type": "note"}
+                for rel in (
+                    "notes/a.md",
+                    "notes/b.md",
+                    "notes/pending.md",
+                    "notes/orphan.md",
+                    *extra_concepts,
+                )
+            ),
+        ],
     )
-    (vault / "notes/b.md").write_text("---\ntype: note\n---\nbeta\n", encoding="utf-8")
-    (vault / "notes/orphan.md").write_text("---\ntype: note\n---\norphan\n", encoding="utf-8")
+    state.replace_concept_edges(
+        vault,
+        [
+            {
+                "source_concept_id": "projects/p1.md",
+                "relation_type": "supports",
+                "target_concept_id": "notes/a.md",
+                "check_status": "checked",
+            },
+            {
+                "source_concept_id": "notes/b.md",
+                "relation_type": "extends",
+                "target_concept_id": "notes/a.md",
+                "check_status": "checked",
+            },
+            {
+                "source_concept_id": "notes/a.md",
+                "relation_type": "supports",
+                "target_concept_id": "notes/pending.md",
+                "check_status": "unchecked",
+            },
+            *extra_edges,
+        ],
+    )
 
 
-def test_project_slice_falls_back_to_links_closure(tmp_path: Path) -> None:
-    _seed_project_files(tmp_path)
+def test_project_slice_is_the_mirror_closure_minus_the_project_file(tmp_path: Path) -> None:
+    """The sole provider is `propagation.active_project_slices` (graph contract 4).
+
+    Two claims, and the second is the retrieval ruling this adapter owns. The
+    membership answer is the mirror's undirected, transitive closure — not the
+    project's `links:` frontmatter, which names an orphan no edge connects. And
+    the project document, which the producer keeps in its closure by contract,
+    is subtracted here: asking what is *in* p1 and being told "p1" is noise.
+    """
+    _seed_project_slice_graph(tmp_path)
 
     result = graph_sql.project_slice(tmp_path, "p1")
 
-    # [[b]] resolves to notes/b.md. Unsupported and escaping targets are ignored,
-    # and the unlinked orphan note stays outside the project's links closure.
-    assert result["ids"] == ["notes/a.md", "notes/b.md"]
-    assert result["counts"] == {"members": 2}
-    assert result["source"] == "links-closure"
+    # `notes/pending.md` rides an unchecked edge and is still a member: this
+    # primitive is the unvetted read (`checked_only=False`, propagation's
+    # default). `explore._vetted_project_slice_ids` is the one that passes True.
+    assert result["ids"] == ["notes/a.md", "notes/b.md", "notes/pending.md"]
+    assert result["counts"] == {"members": 3}
+    assert result["source"] == "active-project-slices"
+    # Both halves of the subtraction, so it cannot pass by the producer having
+    # quietly dropped the container instead.
+    assert propagation.active_project_slices(tmp_path)["projects/p1.md"] == {
+        "projects/p1.md",
+        *result["ids"],
+    }
 
 
 def test_project_slice_seeds_the_thesis_through_the_one_path_space_normalizer(
     tmp_path: Path,
 ) -> None:
-    """`thesis:` is path space with one normalizer (issue #1623).
+    """`thesis:` is path space with one normalizer (issue #1623), observed at retrieval.
 
-    The thesis note is reachable only through `thesis:` here, so this closure is
-    the sole observer of that seed. A bare stem completes under `notes/`; a
-    title does not resolve at all; and `.` no longer completes to `notes/.md`,
-    the absorbing sink every junk value used to be admitted as.
+    `edges.thesis_rel` owns the rule and `test_query_substrate` pins its table;
+    this is the retrieval-side observer of the seed reaching the answer. The
+    thesis note is connected to nothing else, so `thesis:` is the only way in.
+
+    A title and a bare `.` resolve to nothing, and the answer is then `[]` — not
+    `["projects/title.md"]`. That is the project-file subtraction and the
+    normalizer meeting: without the subtraction a junk thesis would still return
+    a one-member slice, which reads as a hit.
     """
-    (tmp_path / "projects").mkdir(exist_ok=True)
-    (tmp_path / "notes").mkdir(exist_ok=True)
+    (tmp_path / "projects").mkdir(parents=True, exist_ok=True)
     for name, thesis in (
         ("bare", "thesis"),
         ("wikilink", "'[[notes/thesis]]'"),
@@ -496,11 +571,26 @@ def test_project_slice_seeds_the_thesis_through_the_one_path_space_normalizer(
         (tmp_path / f"projects/{name}.md").write_text(
             f"---\ntype: project\nthesis: {thesis}\n---\nbody\n", encoding="utf-8"
         )
-    (tmp_path / "notes/thesis.md").write_text(
-        "---\ntype: note\nlinks:\n  extends:\n    - '[[support]]'\n---\nthesis\n",
-        encoding="utf-8",
+    _write_note(tmp_path, "notes/thesis.md", "thesis")
+    _write_note(tmp_path, "notes/support.md", "support")
+    state.rebuild_file_concept_mirror(
+        tmp_path,
+        [
+            {"concept_id": "notes/thesis.md", "concept_type": "note"},
+            {"concept_id": "notes/support.md", "concept_type": "note"},
+        ],
     )
-    (tmp_path / "notes/support.md").write_text("---\ntype: note\n---\nsupport\n", encoding="utf-8")
+    state.replace_concept_edges(
+        tmp_path,
+        [
+            {
+                "source_concept_id": "notes/thesis.md",
+                "relation_type": "extends",
+                "target_concept_id": "notes/support.md",
+                "check_status": "checked",
+            }
+        ],
+    )
 
     assert graph_sql.project_slice(tmp_path, "bare")["ids"] == [
         "notes/support.md",
@@ -512,23 +602,6 @@ def test_project_slice_seeds_the_thesis_through_the_one_path_space_normalizer(
     ]
     assert graph_sql.project_slice(tmp_path, "title")["ids"] == []
     assert graph_sql.project_slice(tmp_path, "dot")["ids"] == []
-
-
-def test_project_slice_prefers_active_project_slices_seam(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    _seed_project_files(tmp_path)
-    monkeypatch.setattr(
-        graph_sql,
-        "_active_project_slices",
-        lambda vault: {"projects/p1.md": {"notes/z.md"}},
-    )
-
-    result = graph_sql.project_slice(tmp_path, "p1")
-
-    assert result["ids"] == ["notes/z.md"]
-    assert result["counts"] == {"members": 1}
-    assert result["source"] == "active-project-slices"
 
 
 def test_filter_ids_prunes_by_type_and_check_status(tmp_path: Path) -> None:
@@ -561,46 +634,40 @@ def test_filter_ids_prunes_by_type_and_check_status(tmp_path: Path) -> None:
 
 
 def test_primitives_compose_neighborhood_slice_filter(tmp_path: Path) -> None:
-    _seed_concept_edges(tmp_path)
-    _seed_project_files(tmp_path)
-    state.rebuild_file_concept_mirror(
+    """Each of the three stages removes something no other stage would.
+
+    `notes/z.md` and `notes/w.md` are a second component, seeded so the slice
+    has real work to do: with one component the neighborhood is always a subset
+    of its own project's closure and the intersection is a no-op that any
+    mutant survives. The neighborhood drops `notes/pending.md` (unchecked
+    edge), the slice drops the second component, and the filter drops the
+    unchecked Concept.
+    """
+    _seed_project_slice_graph(
         tmp_path,
-        [
-            {"concept_id": "notes/a.md", "concept_type": "note"},
-            {"concept_id": "notes/b.md", "concept_type": "note"},
-            {"concept_id": "notes/c.md", "concept_type": "note"},
-        ],
+        extra_concepts=("notes/z.md", "notes/w.md"),
+        extra_edges=(
+            {
+                "source_concept_id": "notes/z.md",
+                "relation_type": "supports",
+                "target_concept_id": "notes/w.md",
+                "check_status": "checked",
+            },
+        ),
     )
     state.set_concept_verdict(tmp_path, "notes/a.md", "checked")
 
-    hood = graph_sql.neighborhood(tmp_path, ["notes/a.md"], depth=2)
+    hood = graph_sql.neighborhood(tmp_path, ["notes/a.md", "notes/z.md"], depth=2)
     sliced = sorted(set(hood["ids"]) & set(graph_sql.project_slice(tmp_path, "p1")["ids"]))
     final = graph_sql.filter_ids(tmp_path, sliced, check_status={"checked"})
 
-    assert hood["counts"]["returned"] == 3
+    assert hood["ids"] == [
+        "notes/a.md",
+        "notes/b.md",
+        "notes/w.md",
+        "notes/z.md",
+        "projects/p1.md",
+    ]
     assert sliced == ["notes/a.md", "notes/b.md"]
     assert final["ids"] == ["notes/a.md"]
     assert final["counts"] == {"before": 2, "after": 1}
-
-
-def test_links_closure_ignores_targets_the_validator_rejects(tmp_path: Path) -> None:
-    """The reader and the validator must agree on what a link target is.
-
-    `notes/../secret.md` and `notes/a[1]` both fail `links` validation, yet the
-    closure used to follow the first into a real note (path normalization
-    collapses the `..` while staying inside the vault) and invent the second.
-    """
-    (tmp_path / "projects").mkdir(exist_ok=True)
-    (tmp_path / "notes").mkdir(exist_ok=True)
-    (tmp_path / "projects/p2.md").write_text(
-        "---\ntype: project\nlinks:\n  supports:\n    - notes/../secret.md\n"
-        "    - notes/a[1]\n    - notes/plain.md\n---\nbody\n",
-        encoding="utf-8",
-    )
-    (tmp_path / "notes/secret.md").write_text("---\ntype: note\n---\nsecret\n", encoding="utf-8")
-    (tmp_path / "notes/plain.md").write_text("---\ntype: note\n---\nplain\n", encoding="utf-8")
-
-    result = graph_sql.project_slice(tmp_path, "p2")
-
-    assert result["ids"] == ["notes/plain.md"]
-    assert result["source"] == "links-closure"

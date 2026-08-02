@@ -19,7 +19,7 @@ own boundary — stored endpoints by the projection, journal references by
 
 from __future__ import annotations
 
-from collections import deque
+from collections import Counter, deque
 from collections.abc import Callable, Collection, Iterable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
@@ -29,7 +29,8 @@ from memoria_vault.runtime import state
 from memoria_vault.runtime.evidence import evidence_ref_kind, parse_source_span_ref
 from memoria_vault.runtime.policy.audit import EMPTY_SHA256, sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path
-from memoria_vault.runtime.subsystems.lib.edges import concept_edge_path_pairs
+from memoria_vault.runtime.subsystems.lib.edges import concept_edge_path_pairs, thesis_rel
+from memoria_vault.runtime.subsystems.lib.inbox import write_finding
 from memoria_vault.runtime.trusted_writer import (
     EVENT_CHECK_FIRED,
     EVENT_DERIVED,
@@ -41,7 +42,12 @@ from memoria_vault.runtime.trusted_writer import (
     commit_writer_changes,
     validate_operation_context,
 )
-from memoria_vault.runtime.vaultio import split_frontmatter, write_frontmatter_doc
+from memoria_vault.runtime.vaultio import (
+    iter_markdown,
+    read_frontmatter,
+    split_frontmatter,
+    write_frontmatter_doc,
+)
 
 CONSEQUENCE_TYPES = (
     "grounds-lost",
@@ -385,6 +391,109 @@ def compute_consequences(vault: Path, target_id: str, *, trigger: str) -> dict[s
     )
 
 
+def active_project_slices(vault: Path, *, checked_only: bool = False) -> dict[str, set[str]]:
+    """Per active (non-archived) project: its undirected thesis neighbourhood.
+
+    Path space, like the rest of this module and like the ``marked`` map the
+    router intersects against. `concept_edge_path_pairs` is the projection that
+    answers there; `concept_edges` answers in identity space, where a file
+    Concept is a ULID and an unresolved target is NULL, so an adjacency built
+    from its endpoint columns would miss every Concept that authored an id and
+    would give every pending edge in the vault one shared blank node to join
+    through — one slice absorbing another's members. `thesis_rel` is the same
+    boundary for the seed: `thesis:` is path space, and it owns the completion
+    rules (bare stem under ``notes/``, `.md` tail, roster check).
+
+    Active is the schema-declared ``archived: bool`` on the project document
+    (`schemas/types/project.yaml`); ``lifecycle`` is retired and no checked
+    Concept can carry it.
+
+    ``checked_only`` selects which topology the closure walks, and the default
+    is this module's own need: a cascade's reach must be known *before* the
+    graph is settled, so an unchecked edge still says which Concepts the blast
+    would land on. A retrieval caller whose surface promises a vetted answer —
+    `explore._vetted_project_slice_ids` — passes ``True`` instead and gets the
+    closure over confirmed topology only. The returned member set always
+    contains the project document itself; a caller that wants members-not-self
+    subtracts it, because the container is a real node of the closure and
+    dropping it here would hide a project reached through another project.
+    """
+    vault = Path(vault)
+    adjacency: dict[str, set[str]] = {}
+    for row in concept_edge_path_pairs(vault, checked_only=checked_only):
+        source = row["source_path"]
+        target = row["target_path"]
+        adjacency.setdefault(source, set()).add(target)
+        adjacency.setdefault(target, set()).add(source)
+    slices: dict[str, set[str]] = {}
+    for path in iter_markdown(vault):
+        frontmatter = read_frontmatter(path)
+        if frontmatter.get("type") != "project" or frontmatter.get("archived") is True:
+            continue
+        rel = path.relative_to(vault).as_posix()
+        members = {rel}
+        if thesis := thesis_rel(frontmatter):
+            members.add(thesis)
+        queue = deque(members)
+        while queue:
+            for neighbour in adjacency.get(queue.popleft(), ()):
+                if neighbour not in members:
+                    members.add(neighbour)
+                    queue.append(neighbour)
+        slices[rel] = members
+    return slices
+
+
+def route_consequence_cards(
+    vault: Path,
+    marked: Mapping[str, str],
+    *,
+    trigger_id: str,
+    reason: str,
+) -> list[str]:
+    """Raise one alert card per active project whose slice this run's marks touched.
+
+    The loudness rule (EDGES section 9): a cascade the researcher's own project
+    depends on is worth interrupting for, and one that lands nowhere near it is
+    not. Marks outside every active slice route nothing at all — the quiet tier
+    is labels and journal, which the caller has already written. A flood is
+    bounded by the projects it reached, never by the number of marks: one card
+    per (trigger, project), deduped by slug so a re-run of a settled sweep adds
+    none. ``block`` is never emitted here; flood mechanics past this routing rule
+    are out of scope.
+
+    Returns the vault-relative card paths, for the caller's own commit.
+    """
+    vault = Path(vault)
+    cards: list[str] = []
+    for project_rel, members in sorted(active_project_slices(vault).items()):
+        hits = {rel: consequence for rel, consequence in marked.items() if rel in members}
+        if not hits:
+            continue
+        summary = ", ".join(
+            f"{name}: {count}" for name, count in sorted(Counter(hits.values()).items())
+        )
+        card = write_finding(
+            vault,
+            "flag",
+            f"Consequence cascade touches {Path(project_rel).stem}",
+            (
+                f"{len(hits)} concept(s) in this project's slice were marked stale "
+                f"({summary}) after: {reason}"
+            ),
+            "consequence-propagation",
+            target=project_rel,
+            loudness="alert",
+            evidence="\n".join(
+                f"- `{rel}` — {consequence}" for rel, consequence in sorted(hits.items())
+            ),
+            dedupe_slug=f"consequence-{trigger_id}-{project_rel}",
+        )
+        if card is not None:
+            cards.append(card.relative_to(vault).as_posix())
+    return cards
+
+
 def _propagate(
     vault: Path,
     target_id: str,
@@ -433,11 +542,10 @@ def _propagate(
         consequences[concept_id] = consequence
         if result["path"]:
             changed_paths.append(str(result["path"]))
-    # Loudness routing is ERP-C.6: it turns this mapping into at most one alert
-    # card per touched active project. Until it lands every run stays at the
-    # quiet tier the routing rule already gives marks outside every slice —
-    # labels and journal, no card.
-    cards: list[str] = []
+    # Routing reads closure membership, not the write receipts: a dependent the
+    # mirror has never seen is still inside the project's slice and still part of
+    # what fell. It is the labels that are conditional, never the loudness.
+    cards = route_consequence_cards(vault, consequences, trigger_id=target, reason=reason)
     commit_paths = [*changed_paths, *cards]
     commit_hash = (
         commit(f"propagate typed consequences from {target}", commit_paths) if commit_paths else ""

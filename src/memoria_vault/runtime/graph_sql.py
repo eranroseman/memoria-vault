@@ -12,21 +12,17 @@ normal mirror writer intentionally leaves untouched.
 
 from __future__ import annotations
 
-import importlib
 import json
 import re
 from pathlib import Path
 from typing import Any
 
-from memoria_vault.runtime import state
+from memoria_vault.runtime import propagation, state
 from memoria_vault.runtime.policy.paths import normalize_path
 from memoria_vault.runtime.subsystems.lib.edges import (
     concept_edge_path_pairs,
-    normalize_link_target,
     projected_edge_endpoints,
-    thesis_rel,
 )
-from memoria_vault.runtime.vaultio import read_frontmatter
 
 DEPTH_CAP = 2
 
@@ -246,40 +242,22 @@ def degree_centrality(vault: Path, ids: list[str]) -> dict[str, int]:
 def project_slice(vault: Path, project: str) -> dict[str, Any]:
     """Return concept ids in one project's slice without emitting a rank signal.
 
-    Once graph propagation supplies active project slices, that authoritative
-    mapping wins. Until then, use the project's own links closure.
+    `propagation.active_project_slices` is the sole provider (graph contract 4):
+    path space on both sides, so the project key this resolves and the member
+    paths it returns are the same namespace `neighborhood` and `filter_ids`
+    answer in. The project document is subtracted because retrieval asks *what
+    is in* the project — the producer keeps the container in its closure, which
+    is right for a cascade's reach and noise in an answer.
     """
     vault = Path(vault)
     project_rel = _project_rel(vault, project)
-    slices = _active_project_slices(vault)
-    if slices is not None:
-        ids = sorted({_member_id(row) for row in slices.get(project_rel, set())} - {""})
-        return {
-            "ids": ids,
-            "counts": {"members": len(ids)},
-            "source": "active-project-slices",
-        }
-    ids = _links_closure(vault, project_rel)
-    return {"ids": ids, "counts": {"members": len(ids)}, "source": "links-closure"}
-
-
-def _active_project_slices(vault: Path) -> dict[str, set[str]] | None:
-    """Load the graph-owned active-slice producer only once it exists."""
-    try:
-        propagation = importlib.import_module("memoria_vault.runtime.propagation")
-    except ModuleNotFoundError as exc:
-        if exc.name == "memoria_vault.runtime.propagation":
-            return None
-        raise
-    provider = getattr(propagation, "active_project_slices", None)
-    return provider(vault) if callable(provider) else None
-
-
-def _member_id(row: Any) -> str:
-    if isinstance(row, dict):
-        row = row.get("concept_id") or row.get("path") or row.get("id") or ""
-    value = str(row).strip()
-    return normalize_path(value) if value else ""
+    members = propagation.active_project_slices(vault).get(project_rel, set())
+    ids = sorted(members - {project_rel})
+    return {
+        "ids": ids,
+        "counts": {"members": len(ids)},
+        "source": "active-project-slices",
+    }
 
 
 def _project_rel(vault: Path, project: str) -> str:
@@ -291,70 +269,6 @@ def _project_rel(vault: Path, project: str) -> str:
         rel += ".md"
     if not rel.startswith("projects/"):
         raise ValueError(f"project must live under projects: {rel}")
-    return rel
-
-
-def _links_closure(vault: Path, project_rel: str) -> list[str]:
-    frontmatter = read_frontmatter(vault / project_rel)
-    seeds = _link_targets(frontmatter)
-    thesis = thesis_rel(frontmatter)
-    if thesis:
-        seeds.add(thesis)
-    seen: set[str] = set()
-    queue = sorted(seeds)
-    while queue:
-        rel = queue.pop(0)
-        if rel in seen:
-            continue
-        seen.add(rel)
-        path = vault / rel
-        if not path.is_file():
-            continue
-        queue.extend(sorted(_link_targets(read_frontmatter(path)) - seen))
-    return sorted(seen)
-
-
-def _link_targets(frontmatter: dict[str, Any]) -> set[str]:
-    links = frontmatter.get("links")
-    if not isinstance(links, dict):
-        return set()
-    targets: set[str] = set()
-    for values in links.values():
-        for value in values if isinstance(values, list) else [values]:
-            target = _link_target(value)
-            if target:
-                targets.add(target)
-    return targets
-
-
-def _link_target(value: Any) -> str:
-    """Resolve one link value to a vault-relative Concept path, or `""`.
-
-    Path space (`lib.edges.normalize_link_target`), so this reader rejects exactly
-    what `links` validation rejects. The empty check is load-bearing: `notes/`
-    plus the `.md` default renders `notes/.md`, a file `iter_markdown` can yield.
-    """
-    if isinstance(value, dict):
-        value = value.get("target") or value.get("path") or value.get("id") or value.get("note")
-    if not isinstance(value, str) or not value.strip():
-        return ""
-    raw = normalize_link_target(value)
-    if not raw:
-        return ""
-    try:
-        rel = normalize_path(raw)
-    except ValueError:
-        return ""
-    if "/" not in rel:
-        rel = f"notes/{rel}"
-    if rel.startswith("catalog/sources/"):
-        rel = rel.rstrip("/")
-        if rel.count("/") != 2:
-            return ""
-    elif not rel.endswith(".md"):
-        rel += ".md"
-    if not rel.startswith(("catalog/sources/", "notes/", "hubs/", "digests/", "fulltexts/")):
-        return ""
     return rel
 
 

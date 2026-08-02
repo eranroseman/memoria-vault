@@ -12,7 +12,14 @@ import pytest
 from memoria_vault.runtime import state, worker
 from memoria_vault.runtime.feedback import feedback_production_enabled
 from memoria_vault.runtime.operations import record_empirical_event
-from tests.helpers import call_with_context, git, init_cli_workspace, operation_context
+from memoria_vault.runtime.vaultio import read_frontmatter
+from tests.helpers import (
+    call_with_context,
+    git,
+    init_cli_workspace,
+    operation_context,
+    write_note,
+)
 
 
 def _events_with_schema(vault: Path, schema: str) -> list[dict]:
@@ -57,6 +64,159 @@ def test_resolve_attention_emits_disposition(
     assert dispositions[0]["actor"] == "pi"
     # request_id is the join key beta.1 client events will reconcile against.
     assert dispositions[0]["request_id"] == request["job_id"]
+
+
+# --- ERP-D.1: `decided-wrong` claim disposition ----------------------------
+
+
+def _edge(source: str, relation: str, target: str) -> dict[str, str]:
+    return {
+        "source_concept_id": source,
+        "source_path": source,
+        "relation_type": relation,
+        "target_path": target,
+        "check_status": "checked",
+    }
+
+
+def _seed_decided_wrong_graph(vault: Path) -> None:
+    """Produce the closure the report counts; nothing stands in for the walk.
+
+    Three hops the EDGES section 5 table types and one it does not: `rebuttal`
+    out of a fallen claim is a `None` cell, so `notes/rebutted.md` is reachable
+    and must still be absent from the counts and from the evidence list. Two of
+    one type and one of another, because a single-type radius cannot tell a
+    typed count from a total.
+    """
+    for name in ("claim", "dependent", "other", "license", "rebutted"):
+        write_note(vault, name, "checked", f"Body of {name}.")
+    state.replace_concept_edges(
+        vault,
+        [
+            _edge("notes/claim.md", "supports", "notes/dependent.md"),
+            _edge("notes/claim.md", "supports", "notes/other.md"),
+            _edge("notes/claim.md", "warrant", "notes/license.md"),
+            _edge("notes/claim.md", "rebuttal", "notes/rebutted.md"),
+        ],
+    )
+
+
+def _resolve_attention_job(vault: Path, key: str, **payload: str) -> dict:
+    request = worker.enqueue_operation(
+        vault,
+        "resolve-attention",
+        actor="pi",
+        idempotency_key=key,
+        payload=dict(payload),
+    )
+    return worker.run_request(vault, request["job_id"], machine="PI laptop")
+
+
+def test_decided_wrong_claim_emits_override_and_a_blast_radius_report(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = init_cli_workspace(tmp_path, capsys)
+    _seed_decided_wrong_graph(workspace)
+
+    result = _resolve_attention_job(
+        workspace,
+        "pi-decided-wrong",
+        target_id="notes/claim.md",
+        item_type="claim",
+        outcome="decided-wrong",
+        reason="PI decided the claim is wrong",
+    )
+
+    assert result["status"] == "done"
+    [disposition] = _events_with_schema(workspace, "disposition.v1")
+    assert disposition["decision"] == "override"
+    assert disposition["item_type"] == "claim"
+    assert disposition["item_id"] == "notes/claim.md"
+    [card] = sorted((workspace / "inbox").glob("flag-blast-radius-*.md"))
+    text = card.read_text(encoding="utf-8")
+    assert "3 affected note(s)" in text
+    assert "grounds-lost: 2" in text
+    assert "warrant-lost: 1" in text
+    # The honesty half of the card is load-bearing prose, not decoration: it is
+    # the only thing telling the PI that nothing downstream moved.
+    assert "This is a report, not an action; no note was demoted or quarantined." in text
+    assert "cascade-rollback" in text
+    # Evidence is typed per note, not a bare list of what was reached.
+    assert "- [[notes/dependent.md]] — grounds-lost" in text
+    assert "- [[notes/other.md]] — grounds-lost" in text
+    assert "- [[notes/license.md]] — warrant-lost" in text
+    # The rebuttal hop types nothing, so it is not blast radius.
+    assert "rebutted" not in text
+    # Report, not act: the closure is a pure read, so nothing it reached carries
+    # a label, a verdict or a stale flag from this path.
+    for rel in ("notes/dependent.md", "notes/other.md", "notes/license.md"):
+        assert state.concept_consequence(workspace, rel) == ""
+        assert state.concept_flags(workspace, rel) == {}
+        assert read_frontmatter(workspace / rel).get("stale") is None
+    # The card is the one file this disposition wrote, and it is committed.
+    assert git(workspace, "ls-files", card.relative_to(workspace).as_posix())
+
+
+def test_a_claim_resolved_any_other_way_writes_no_blast_radius_report(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """`item_type="claim"` is not the trigger; the `decided-wrong` outcome is."""
+    workspace = init_cli_workspace(tmp_path, capsys)
+    _seed_decided_wrong_graph(workspace)
+
+    result = _resolve_attention_job(
+        workspace,
+        "pi-claim-apply",
+        target_id="notes/claim.md",
+        item_type="claim",
+        outcome="apply",
+        reason="PI accepted the card",
+    )
+
+    assert result["status"] == "done"
+    [disposition] = _events_with_schema(workspace, "disposition.v1")
+    assert disposition["decision"] == "accept"
+    assert disposition["item_type"] == "claim"
+    assert not list((workspace / "inbox").glob("flag-blast-radius-*.md"))
+
+
+def test_decided_wrong_is_refused_for_an_attention_item_type(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = init_cli_workspace(tmp_path, capsys)
+
+    result = _resolve_attention_job(
+        workspace,
+        "pi-decided-wrong-attention",
+        target_id="inbox/attention/pi.md",
+        outcome="decided-wrong",
+        reason="wrong item_type",
+    )
+
+    assert result["status"] == "failed"
+    assert "decided-wrong" in result["error"]
+    assert _events_with_schema(workspace, "disposition.v1") == []
+    assert not list((workspace / "inbox").glob("flag-blast-radius-*.md"))
+
+
+def test_an_item_type_outside_the_roster_is_refused(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """The roster is closed: a free-string `item_type` would reach the event schema."""
+    workspace = init_cli_workspace(tmp_path, capsys)
+
+    result = _resolve_attention_job(
+        workspace,
+        "pi-item-type-hunch",
+        target_id="inbox/attention/pi.md",
+        item_type="hunch",
+        outcome="apply",
+        reason="not a roster member",
+    )
+
+    assert result["status"] == "failed"
+    assert "hunch" in result["error"]
+    assert _events_with_schema(workspace, "disposition.v1") == []
 
 
 def test_acknowledge_attention_emits_no_disposition(

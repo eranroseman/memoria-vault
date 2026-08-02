@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from memoria_vault.runtime import explore, graph_sql, state
+from memoria_vault.runtime import explore, propagation, state
 from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.search_index import checked_search_universe
 from tests.floor_lib import read_only_guard
@@ -130,6 +130,62 @@ def _insert_tensions(vault: Path) -> None:
     )
 
 
+_MIRROR_EDGES: list[dict[str, str]] = [
+    # `projects/memory.md` joins the graph here, not through its `links:` block:
+    # `active_project_slices` walks the `concept_edges` mirror, and this fixture
+    # never reindexes, so frontmatter alone would slice every project to itself.
+    {
+        "source_concept_id": "projects/memory.md",
+        "relation_type": "supports",
+        "target_concept_id": "notes/claim-spacing.md",
+        "check_status": "checked",
+    },
+    {
+        "source_concept_id": "notes/claim-spacing.md",
+        "relation_type": "supports",
+        "target_concept_id": "catalog/sources/settles-2016",
+        "check_status": "checked",
+    },
+    {
+        "source_concept_id": "notes/claim-massed.md",
+        "relation_type": "supports",
+        "target_concept_id": "catalog/sources/settles-2016",
+        "check_status": "checked",
+    },
+    {
+        "source_concept_id": "notes/claim-spacing.md",
+        "relation_type": "extends",
+        "target_concept_id": "hubs/memory.md",
+        "check_status": "checked",
+    },
+    {
+        "source_concept_id": "hubs/memory.md",
+        "relation_type": "extends",
+        "target_concept_id": "hubs/consolidation.md",
+        "check_status": "checked",
+    },
+    # Unchecked topology between two displayed Concepts: it must never reach the
+    # payload, which only ever shows safe edges, and it must never carry
+    # `notes/question-spacing.md` into a *vetted* project slice.
+    {
+        "source_concept_id": "notes/question-spacing.md",
+        "relation_type": "extends",
+        "target_concept_id": "notes/claim-spacing.md",
+        "check_status": "unchecked",
+    },
+]
+
+
+def _replace_mirror_edges(vault: Path, *extra: dict[str, str]) -> None:
+    """Rewrite the links mirror as the fixture's rows plus ``extra``.
+
+    ``replace_concept_edges`` is a full reconcile, so a test that wants one more
+    edge has to re-state the fixture's. PI-owned tension rows are exempt from
+    that pass and survive.
+    """
+    state.replace_concept_edges(vault, [*_MIRROR_EDGES, *extra])
+
+
 def _fixture_vault(tmp_path: Path, *, ulid_keyed: bool = False) -> Path:
     vault = _vault(tmp_path)
     concept = functools.partial(_concept, vault, ulid_keyed=ulid_keyed)
@@ -176,43 +232,7 @@ def _fixture_vault(tmp_path: Path, *, ulid_keyed: bool = False) -> Path:
         "A spaced repetition model",
         "A spacing study of retention schedules.",
     )
-    state.replace_concept_edges(
-        vault,
-        [
-            {
-                "source_concept_id": "notes/claim-spacing.md",
-                "relation_type": "supports",
-                "target_concept_id": "catalog/sources/settles-2016",
-                "check_status": "checked",
-            },
-            {
-                "source_concept_id": "notes/claim-massed.md",
-                "relation_type": "supports",
-                "target_concept_id": "catalog/sources/settles-2016",
-                "check_status": "checked",
-            },
-            {
-                "source_concept_id": "notes/claim-spacing.md",
-                "relation_type": "extends",
-                "target_concept_id": "hubs/memory.md",
-                "check_status": "checked",
-            },
-            {
-                "source_concept_id": "hubs/memory.md",
-                "relation_type": "extends",
-                "target_concept_id": "hubs/consolidation.md",
-                "check_status": "checked",
-            },
-            # Unchecked topology between two displayed Concepts: it must never
-            # reach the payload, which only ever shows safe edges.
-            {
-                "source_concept_id": "notes/question-spacing.md",
-                "relation_type": "extends",
-                "target_concept_id": "notes/claim-spacing.md",
-                "check_status": "unchecked",
-            },
-        ],
-    )
+    _replace_mirror_edges(vault)
     _insert_tensions(vault)
     state.replace_evidence_sets(
         vault,
@@ -414,17 +434,25 @@ def test_explore_project_filter_depth_and_versus_share_one_universe(
     assert versus["trace"]["b"]["rerank"] == "off"
 
     project = explore.explore_topic(vault, "spacing", project="memory")
-    assert _stages(project)["project-slice"] == 2
-    assert _returned_ids(project) == {"notes/claim-spacing.md", "hubs/memory.md"}
-    assert project["tensions"] == []
+    # The vetted gate is what narrows this, not a smaller corpus:
+    # `notes/question-spacing.md` is a strong match for "spacing" and reaches the
+    # project only over an *unchecked* edge, so `checked_only=True` is the single
+    # thing keeping it out of a slice that otherwise spans the whole component.
+    assert _stages(project)["project-slice"] == 5
+    assert "notes/question-spacing.md" in _returned_ids(explore.explore_topic(vault, "spacing"))
+    assert _returned_ids(project) == {
+        "catalog/sources/settles-2016",
+        "hubs/memory.md",
+        "notes/claim-massed.md",
+        "notes/claim-spacing.md",
+    }
 
-    monkeypatch.setattr(
-        explore.graph_sql,
-        "_active_project_slices",
-        lambda _vault: {"projects/memory.md": {"hubs/consolidation.md"}},
-    )
-    active = explore.explore_topic(vault, "consolidation", project="memory")
-    assert _returned_ids(active) == {"hubs/consolidation.md"}
+    # A second project, so the filter is provably *this project's* slice and not
+    # a constant or the whole universe: `projects/lonely.md` is an active project
+    # the provider answers for, and its closure is the container alone.
+    _concept(vault, "projects/lonely.md", "Lonely project", "Lonely body.")
+    lonely = explore.explore_topic(vault, "spacing", project="lonely")
+    assert _stages(lonely)["project-slice"] == 0
 
     one_hop = explore.explore_topic(vault, "massed", depth=1)
     two_hop = explore.explore_topic(vault, "massed", depth=2)
@@ -495,7 +523,15 @@ def test_explore_honest_empty_and_gated_neighbor_are_pure_reads(tmp_path: Path) 
     assert after == before
 
 
-def test_explore_project_slice_never_traverses_gated_link_closures(tmp_path: Path) -> None:
+def test_explore_project_slice_never_readmits_a_gated_member(tmp_path: Path) -> None:
+    """Slice membership does not put a gated Concept back in front of the researcher.
+
+    The slice comes from the mirror now, and the mirror still lists a Concept
+    whose file has drifted from its checked record — so the ordering is
+    load-bearing: the universe gate runs first and the slice intersects what
+    survives it. A reader that filtered the universe *by* the slice, or that
+    took the slice as the candidate set, would serve the tampered bytes.
+    """
     vault = _fixture_vault(tmp_path)
     claim = vault / "notes/claim-spacing.md"
     claim.write_text(
@@ -504,12 +540,12 @@ def test_explore_project_slice_never_traverses_gated_link_closures(tmp_path: Pat
         "check_status: checked\n"
         "title: Spacing beats cramming\n"
         "mode: claim\n"
-        "links:\n"
-        "  related:\n"
-        "    - hubs/consolidation.md\n"
         "---\n"
         "TAMPERED PROJECT-LINK CANARY\n",
         encoding="utf-8",
+    )
+    slice_ids = explore._vetted_project_slice_ids(
+        vault, "memory", checked_search_universe(vault, enqueue_scan=False)["documents"]
     )
     with state.connect(vault) as conn:
         before = conn.execute("SELECT COUNT(*) FROM operation_requests").fetchone()[0]
@@ -519,12 +555,11 @@ def test_explore_project_slice_never_traverses_gated_link_closures(tmp_path: Pat
 
     serialized = json.dumps(payload, sort_keys=True)
     assert payload["excluded_strata"]["gated"] == 1
-    assert (
-        payload["honest_empty"]
-        == "0 of 1 candidates matched; 1 unchecked documents were not searched"
-    )
-    assert _stages(payload)["project-slice"] == 1
-    assert "hubs/consolidation.md" not in serialized
+    # The gated Concept is a member — the exclusion is the gate's doing, not an
+    # empty slice, which is what makes the two assertions below non-vacuous.
+    assert "notes/claim-spacing.md" in slice_ids
+    assert _stages(payload)["project-slice"] == 4
+    assert "notes/claim-spacing.md" not in _returned_ids(payload)
     assert "TAMPERED PROJECT-LINK CANARY" not in serialized
     with state.connect(vault) as conn:
         after = conn.execute("SELECT COUNT(*) FROM operation_requests").fetchone()[0]
@@ -538,15 +573,31 @@ def test_explore_refuses_a_gated_nested_project_without_flat_fallback(tmp_path: 
         "projects/collision/project.md",
         "Nested project",
         "Nested project content.",
-        links=["hubs/consolidation.md"],
     )
-    _concept(
+    _concept(vault, "projects/collision.md", "Flat project", "Flat project content.")
+    # Both collision projects are given *real* mirror topology, and both must be
+    # non-empty for this test to say anything. The gated nested project needs a
+    # slice so that "a gated project slices to nothing" is the universe gate's
+    # doing and not an empty graph; the flat one needs a slice so that the
+    # refused fallback would have had something to leak.
+    _replace_mirror_edges(
         vault,
-        "projects/collision.md",
-        "Flat project",
-        "Flat project content.",
-        links=["hubs/memory.md"],
+        {
+            "source_concept_id": "projects/collision.md",
+            "relation_type": "supports",
+            "target_concept_id": "hubs/memory.md",
+            "check_status": "checked",
+        },
+        {
+            "source_concept_id": "projects/collision/project.md",
+            "relation_type": "supports",
+            "target_concept_id": "hubs/consolidation.md",
+            "check_status": "checked",
+        },
     )
+    assert propagation.active_project_slices(vault, checked_only=True)[
+        "projects/collision/project.md"
+    ] > {"projects/collision/project.md"}
     nested.write_text(
         nested.read_text(encoding="utf-8") + "TAMPERED NESTED PROJECT CANARY\n",
         encoding="utf-8",
@@ -566,38 +617,20 @@ def test_explore_refuses_a_gated_nested_project_without_flat_fallback(tmp_path: 
     assert "TAMPERED NESTED PROJECT CANARY" not in serialized
 
 
-def test_project_slice_shares_one_links_resolver_with_graph_sql(tmp_path: Path) -> None:
-    """One resolver, not a second copy — and it rejects what `links` validation rejects.
-
-    `notes/../claim-spacing.md` normalizes back inside the vault, so the duplicated
-    resolver these modules used to carry followed it into a real note that the
-    validator refuses to accept as a target.
-    """
-    assert explore._link_target is graph_sql._link_target
-    assert explore._link_targets is graph_sql._link_targets
-
-    vault = _fixture_vault(tmp_path)
-    _concept(
-        vault,
-        "projects/escape.md",
-        "Escape project",
-        "Escape project body.",
-        links=["notes/../claim-spacing.md"],
-    )
-
-    payload = explore.explore_topic(vault, "spacing", project="escape")
-
-    assert _stages(payload)["project-slice"] == 0
-
-
 def test_vetted_project_slice_seeds_the_thesis_through_the_shared_normalizer(
     tmp_path: Path,
 ) -> None:
-    """The vetted closure reads `thesis:` in path space too (issue #1623).
+    """The vetted slice takes its `thesis:` seed in path space (issue #1623).
 
-    This is its own convergence site, not `graph_sql`'s: the two closures share
-    `_link_target` for `links:` but each call `thesis_rel` for the thesis seed.
-    `notes/claim-spacing.md` is reachable here only through `thesis:`.
+    `edges.thesis_rel` owns the rule and `test_query_substrate` pins its table;
+    this is the retrieval-side observer that the seed reaches an answer here.
+    `projects/bare.md` touches the graph only through `thesis:`, so a bare stem
+    that failed to complete under `notes/` would slice it to nothing.
+
+    It is also where the project-file subtraction is visible: `title` and `dot`
+    resolve to no seed and answer `set()`, not `{"projects/title.md"}` — a slice
+    of one that reads like a hit. The subtraction drops *the project asked for*,
+    which is why `projects/memory.md` stays in `bare`'s answer.
     """
     vault = _fixture_vault(tmp_path)
     _concept(vault, "projects/bare.md", "Bare thesis", "Body.", thesis="claim-spacing")
@@ -610,11 +643,18 @@ def test_vetted_project_slice_seeds_the_thesis_through_the_shared_normalizer(
     title = explore.explore_topic(vault, "spacing", project="title")
 
     assert "notes/claim-spacing.md" in _returned_ids(bare)
-    assert _stages(bare)["project-slice"] == 1
+    assert _stages(bare)["project-slice"] == 5
     assert _stages(title)["project-slice"] == 0
     # The membership filter above cannot see a seed no document carries, so the
     # closure itself is the only observer of `notes/.md` — the absorbing sink a
     # `notes/` + `.md` completion over an empty path used to admit.
     documents = checked_search_universe(vault)["documents"]
     assert explore._vetted_project_slice_ids(vault, "dot", documents) == set()
-    assert explore._vetted_project_slice_ids(vault, "bare", documents) == {"notes/claim-spacing.md"}
+    assert explore._vetted_project_slice_ids(vault, "bare", documents) == {
+        "catalog/sources/settles-2016",
+        "hubs/consolidation.md",
+        "hubs/memory.md",
+        "notes/claim-massed.md",
+        "notes/claim-spacing.md",
+        "projects/memory.md",
+    }
