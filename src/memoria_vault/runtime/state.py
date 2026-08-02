@@ -720,6 +720,11 @@ def _neutralized_request_error(error: Any) -> Any:
     the copy of that same text worker.py persists into ``job["error"]`` (see
     ``request_detail`` below) so neither read path serves it verbatim. The
     stored row keeps the raw text in both places.
+
+    Still open, and deliberately out of this seam: ``run_operation`` returns the
+    failed job dict inline, so ``POST /operation/run`` and the MCP ``operation``
+    tool serve the same raw text on the *run-result* path rather than a stored-
+    request read. Same class, different seam; tracked on #1608.
     """
     if not isinstance(error, str) or not error:
         return error
