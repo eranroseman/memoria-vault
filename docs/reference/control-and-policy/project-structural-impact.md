@@ -25,7 +25,9 @@ python3 -m memoria_vault.runtime.subsystems.processing.project.structural_impact
 
 ## Inputs
 
-The operation scans markdown notes, resolves the selected Project and active Thesis, then follows every authored `links` relationship — `supports`, `contradicts`, `extends`, `warrant`, `qualifier`, and `rebuttal`. Scope terms and relation values come from the same note frontmatter fields documented in [Frontmatter fields](../data-model/frontmatter.md).
+The operation scans markdown notes for their titles, types, and scope terms, resolves the selected Project and active Thesis, then reads its relations from the indexed concept-edge substrate instead of from note text. That substrate is the concept-edge mirror the indexing pass builds out of authored `links` frontmatter, so the traversed relations remain `supports`, `contradicts`, `extends`, `warrant`, `qualifier`, and `rebuttal`. Two consequences follow. A `links` block that has not been indexed yet contributes no relation. A claim linked to a checked catalog work carries that work as a graph node with no note of its own, counted in relations but never listed among the nodes.
+
+Unchecked and pending relations are traversed as well, so the graph shows the topology the vault actually holds. Scope terms come from the note frontmatter fields documented in [Frontmatter fields](../data-model/frontmatter.md).
 
 ## Output note
 

@@ -52,8 +52,21 @@ def read_notes(vault: Path) -> dict[str, Note]:
     return notes
 
 
-def normalize_target(raw: Any) -> tuple[str, bool] | None:
-    addressed = True
+def normalize_link(raw: Any) -> str:
+    """Return one **alias-space** reference from a `thesis:` or `project:` value.
+
+    `build_resolver` keys on title, slug and stem as well as path, so the result
+    is not required to look like a vault-relative path — and must never be
+    produced by `edges.normalize_link_target`, the path-space validator, which
+    refuses the colons and dotted tails real research titles carry. That exact
+    delegation shipped a Critical: every such reference normalized to `''` and a
+    live project read as brand-new with the validator raising nothing.
+
+    The dict form is reachable through a note's undeclared `project:` key.
+    `thesis:` cannot take it — `project.yaml` types that field `link`, which
+    accepts a string only — and its resolution belongs to `edges.thesis_rel`
+    (issue #1623); this reader is the one place still holding an alias.
+    """
     value: Any = raw
     if isinstance(raw, dict):
         value = (
@@ -64,18 +77,14 @@ def normalize_target(raw: Any) -> tuple[str, bool] | None:
             or raw.get("link")
             or raw.get("id")
         )
-        if "addressed" in raw:
-            addressed = bool(raw["addressed"])
-        elif "status" in raw:
-            addressed = str(raw["status"]).lower() in {"addressed", "closed", "current", "done"}
-    if not isinstance(value, str) or not value.strip():
-        return None
-    # Alias space: `build_resolver` keys on title and slug as well as path, so the
-    # value here is not required to look like a vault-relative path.
+    # `strip_wikilink` is total over non-strings and strips whitespace, which is
+    # this function's whole junk guard: an absent dict key, a blank string and a
+    # YAML integer all arrive here and all leave as `""`. A separate pre-check
+    # was a second copy of that rule, and mutation-testing found it unkillable.
     value = strip_wikilink(value)
     if value.endswith(".md"):
         value = value[:-3]
-    return value.strip("/"), addressed
+    return value.strip("/")
 
 
 def build_resolver(notes: dict[str, Note]) -> dict[str, str]:
@@ -95,40 +104,55 @@ def build_resolver(notes: dict[str, Note]) -> dict[str, str]:
     return resolver
 
 
-def build_edges(notes: dict[str, Note], resolver: dict[str, str]) -> list[Edge]:
-    return [edge for edge in build_descriptive_edges(notes, resolver) if edge.relation in RELATIONS]
+def substrate_edges(vault: Path, resolver: dict[str, str]) -> list[Edge]:
+    """Return the structural graph's edges from the `concept_edges` substrate.
 
+    The only edge source for structural impact: no frontmatter `links:` text is
+    parsed here. This is the namespace boundary the rewire crosses, and it
+    crosses it in the safe direction. `edges.concept_edge_path_records` answers
+    in **path space** — both endpoints already rendered through `concepts.path`
+    and normalized — while `resolver` is an **alias table** whose key domain is
+    a strict superset of path space: `build_resolver` keys every note by its
+    `.md` path, by that path without the suffix, and by its stem, title and
+    slug. So a projected path lands without a second normalization on this side,
+    and a durable target parked at a bare stem still finds its note.
 
-def build_descriptive_edges(notes: dict[str, Note], resolver: dict[str, str]) -> list[Edge]:
+    The reverse direction is the one that shipped a Critical: handing an alias —
+    a title carrying a colon, a stem with a dotted tail — to the path-space
+    validator `edges.normalize_link_target` empties it, and a live project reads
+    as brand-new with no error raised. `normalize_link` above is alias space
+    and stays out of this function for exactly that reason.
+
+    `checked_only=False` is deliberate: this graph shows the PI the topology
+    they have, including the unchecked and pending parts.
+
+    A target that renders in no note but sits under `catalog/sources/` is ERP-B's
+    claim→work bridge. It stays in the graph as a virtual node carrying
+    connectivity; every note-keyed read in `structural_impact` skips it, and it
+    is never published as a node row. Any other unrenderable endpoint — a
+    dangling link's pending row — is dropped, as the frontmatter resolver
+    dropped it before.
+    """
+    from memoria_vault.runtime.subsystems.lib.edges import concept_edge_path_records
+
     edges: list[Edge] = []
-    for source, note in notes.items():
-        links = note.frontmatter.get("links")
-        if not isinstance(links, dict):
+    for record in concept_edge_path_records(vault, checked_only=False):
+        source = resolver.get(record["source_path"])
+        target_path = record["target_path"]
+        target = resolver.get(target_path)
+        if target is None and target_path.startswith("catalog/sources/"):
+            target = target_path
+        if not source or not target or source == target:
             continue
-        for relation, values in links.items():
-            if not isinstance(values, list):
-                values = [values]
-            for raw in values:
-                normalized = normalize_target(raw)
-                if normalized is None:
-                    continue
-                target_raw, addressed = normalized
-                target = resolver.get(target_raw)
-                if target and target != source:
-                    edges.append(
-                        Edge(
-                            source=source,
-                            target=target,
-                            relation=str(relation),
-                            addressed=addressed,
-                        )
-                    )
+        edges.append(
+            Edge(
+                source=source,
+                target=target,
+                relation=record["relation_type"],
+                addressed=bool(record["attributes"].get("addressed", True)),
+            )
+        )
     return edges
-
-
-def normalize_link(raw: Any) -> str:
-    normalized = normalize_target(raw)
-    return normalized[0] if normalized else ""
 
 
 def find_project(notes: dict[str, Note], project_arg: str) -> Note:

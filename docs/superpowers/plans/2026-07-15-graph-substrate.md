@@ -10638,6 +10638,79 @@ def _warrant_absence_gap(
 > projection is required here because `attributes["addressed"]` must survive
 > the rewire; the strict three-field pair API cannot carry it.
 
+> **Execution amendment (2026-08-02) — what ERP-D.4 landed.** Nine deviations
+> from the step text below, none of them contract changes.
+> **(1) `substrate_edges(vault, resolver)`, not `(vault, notes, resolver)`.** The
+> drafted body never reads `notes` and neither does this one — the resolver is
+> the whole map. A parameter no branch depends on cannot be mutated, so it is
+> gone; `analyze`/`analyze_survey` still hold `notes` for their own reads.
+> **(2) No `_edge_key`.** `build_resolver` already keys every note by its `.md`
+> path *and* by that path with the suffix stripped, so the helper is a no-op on
+> every value the projection can emit. Measured, not asserted: a mutant that
+> applies a strict superset of `_edge_key` (`normalize_target`, i.e. wikilink
+> strip + `.md` strip) to the projected target survives the whole file. Deleting
+> it is the only way that line is pinned at all; the coupling it leaves behind is
+> pinned instead, by a mutant that drops the `.md` alias from `build_resolver`.
+> **(3) A bridge target reaches three note-keyed reads, not one.** The drafted
+> guard covers `gap_taxonomy`'s `on_path_nodes` loop. `analyze`'s `scope_overlap`
+> sum (`scope_terms(notes[key])`) and `gap_taxonomy`'s `contradicts` loop
+> (`notes[edge.source]`/`notes[edge.target]`) index `notes` by a graph node too,
+> and both raise `KeyError` on a `catalog/sources/*` node that reaches the thesis
+> component — a crash the rewire introduces, since `build_edges` could only ever
+> produce note-keyed nodes. All three are guarded and each is pinned separately.
+> **(4) No `_EDGE_ROWS` accumulator.** `state.replace_concept_edges(...,
+> paths=[source_path])` scopes each seed to the one note that authored it, so the
+> fixtures are additive without module-level state that outlives a test.
+> **(5) The fixture writes no `addressed` attribute by default.** The drafted
+> `link_row` always wrote one, which leaves the projection's `True` default
+> unfixtured. One test carries all four shapes — absent, `true`, `false`, and a
+> non-bool — the last of which is what pins the `bool()` coercion.
+> **(6) No `target_concept_id` in fixture rows.** `replace_concept_edges` reads
+> it only as a fallback spelling for `target_path`, so a row carrying both has a
+> dead field. The unresolved case is a `target_path` with no mirror row, which is
+> what parks the pending row the step text asks for.
+> **(7) Docs.** `docs/reference/control-and-policy/project-structural-impact.md`
+> claimed the operation "follows every authored `links` relationship"; its Inputs
+> section now names the substrate, the un-indexed-`links` consequence, the
+> catalog bridge node and the unchecked traversal.
+> **(8) Two live decisions this rewire exposes, neither taken here.**
+> `find_thesis`'s `normalize_link` was excluded from the `thesis_rel`
+> convergence (#1623) because it was shared with the alias-space `links:`
+> traversal. That traversal is now deleted, so the tolerance's remaining
+> co-tenant is the `project:` back-reference scan — genuinely alias space, so the
+> exclusion still stands, but its stated reason no longer does and converging
+> `thesis:` alone is now a strictly smaller change than it was. Separately,
+> `RELATIONS` (`= LINK_RELATIONS`) now filters a *substrate* that may legally
+> hold `tension` — `insert_concept_edge` writes it and `replace_concept_edges`
+> preserves it — so the filter is a semantic choice about what counts as an
+> argument relation, not the syntactic roster of what frontmatter may author.
+> Kept as drafted and pinned by
+> `test_a_confirmed_tension_row_is_outside_the_structural_roster`; roster
+> convergence remains ERP-A's.
+> **(9) `normalize_target` does not stay — it collapses into `normalize_link`.**
+> The step text's closing note says it stays "for thesis/link resolution", and
+> the reference half does. Its `addressed`/`status` half had exactly one reader,
+> `build_descriptive_edges`; `normalize_link`, the only other caller, discards
+> element `[1]`. Deleting the reader without it leaves dead producer state whose
+> test (`test_normalize_target_extracts_dict_wikilink_and_status`) reads as
+> coverage of live behavior — the escape this task was told to look for. The two
+> functions are now one `normalize_link(raw) -> str`, and the substrate's
+> `attributes["addressed"]` is the only addressed signal. Its blank/non-`str`
+> pre-check went too: mutation-testing shows `strip_wikilink`'s documented
+> totality over non-strings and whitespace already covers every arm of it, so the
+> pre-check was a second copy of that rule and unkillable. Two adjacent dead
+> reads are left alone because this task did not orphan them and removing them is
+> not its call: `find_thesis`'s `active_thesis:` fallback (a field `project.yaml`
+> now forbids) and `normalize_link`'s six-key dict chain, of which only the
+> undeclared `project:` key can still deliver a dict at all.
+> **Mutation proof:** 28 mutants across both files, 27 killed. The one survivor
+> is provably equivalent: path-validating the projected *source* before the alias
+> table. Every value `concept_edges` can render a source at is either an `.md`
+> rel — which `normalize_link_target` returns unchanged, since it judges only the
+> last segment's suffix — or a `catalog/sources/*` rel, which has no source-side
+> bridge rescue and is dropped by the `not source` arm either way. It becomes
+> killable only if the bridge is ever made symmetric.
+
 **Files:**
 - Modify: `src/memoria_vault/runtime/subsystems/processing/project/structural_impact_graph.py` (add `substrate_edges`; delete `build_edges`/`build_descriptive_edges`, lines 105-133)
 - Modify: `src/memoria_vault/runtime/subsystems/processing/project/structural_impact.py` (imports lines 13-29; `analyze_survey` edge read line 79; `analyze` edge read line 262; `gap_taxonomy` non-note guard lines 166-167)
@@ -10649,7 +10722,7 @@ def _warrant_absence_gap(
 
 **Steps:**
 
-- [ ] Update the test fixtures to seed the substrate. In `tests/test_project_structural_impact.py` add after the imports (line 8):
+- [x] Update the test fixtures to seed the substrate. In `tests/test_project_structural_impact.py` add after the imports (line 8):
 
 ```python
 import json
@@ -10691,7 +10764,7 @@ def link_row(
 
   and append `link_row(vault, name, relation, target)` as the last line of both the `claim()` helper (after line 63) and the `gap()` helper (after line 80). Every existing test seeds edges only through these two helpers, so no per-test edits are needed; the frontmatter `links:` blocks stay (they remain the PI-authored source of the substrate fill, and `find_thesis`/`normalize_target` still read frontmatter).
 
-- [ ] Add the failing rewire test — append to `tests/test_project_structural_impact.py`:
+- [x] Add the failing rewire test — append to `tests/test_project_structural_impact.py`:
 
 ```python
 def test_structural_impact_reads_substrate_not_file_text(tmp_path):
@@ -10733,11 +10806,11 @@ def test_substrate_edges_skips_unresolved_and_bridge_targets_survive(tmp_path):
     assert payload["relation_count"] == 5
 ```
 
-- [ ] Run to verify failure:
+- [x] Run to verify failure:
   `python -m pytest tests/test_project_structural_impact.py::test_structural_impact_reads_substrate_not_file_text -v`
   Expected: `AssertionError` on `relation_count == 5` (text path sees 4 after the corruption).
 
-- [ ] Write minimal implementation. (1) In `structural_impact_graph.py` replace `build_edges`/`build_descriptive_edges` (lines 105-133) with:
+- [x] Write minimal implementation. (1) In `structural_impact_graph.py` replace `build_edges`/`build_descriptive_edges` (lines 105-133) with:
 
 ```python
 def substrate_edges(
@@ -10783,7 +10856,7 @@ def _edge_key(path: str) -> str:
             continue
 ```
 
-- [ ] Run the whole file to verify all pass:
+- [x] Run the whole file to verify all pass:
   `python -m pytest tests/test_project_structural_impact.py -v`
   (`test_normalize_target_extracts_dict_wikilink_and_status` still passes — `normalize_target` stays for thesis/link resolution.)
 
