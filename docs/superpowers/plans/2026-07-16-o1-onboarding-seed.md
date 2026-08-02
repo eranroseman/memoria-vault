@@ -929,9 +929,45 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 - Consumes: `stage_pdf_source(...)` (exact signature in M.2's header; runtime/capture.py:461-476); `state.catalog_source(vault: Path, source_ref: str) -> dict[str, Any] | None` (runtime/state.py:1603-1612); `load_seed_manifest() -> list[dict[str, Any]]` (M.1); `resolve_fetch(row, *, opener=None, authorize_url) -> bytes` (M.2); `require_allowed_network(policy, url)` (operations.py — the worker turns this into the mandatory callback); `iter_markdown(vault, skip_dirs=None) -> Iterator[Path]` (runtime/vaultio.py:217-226) and `read_frontmatter(path) -> dict[str, Any]` (runtime/vaultio.py:66-67); `validate_operation_context(vault, context)` / `OperationContext` (runtime/trusted_writer.py, as used at capture.py:94); `engine_api.run_operation(...)` via `cli._enqueue_and_run(args, operation_id, payload)` (cli.py:2087-2098); `_csl_json` shape (cli.py:2544-2550, mirrored); **section T seam (required):** `emit_onboarding_step(vault: Path, step: str) -> str | None` from `memoria_vault.runtime.onboarding_steps`; run `grep -rn "def emit_onboarding_step" src/memoria_vault/` first and re-anchor if T placed it elsewhere; empty grep ⇒ STOP and land T.1 first.
 - Produces: `seed_install(vault: Path, rows: list[dict[str, Any]] | None = None, *, opener: Callable[[str], Any] | None = None, authorize_url: Callable[[str], None], context: OperationContext) -> dict[str, Any]` returning `{"admitted": list[str], "skipped": list[str], "failed": list[dict[str, str]] (each {"id", "error"}), "notices": list[str], "telemetry": {"status": "emitted", "event_id": str} | {"status": "unavailable"}}` — raises `ValueError` (⇒ failed job ⇒ CLI exit 1) iff `admitted + skipped` is empty; worker operation id `"seed-install"` (PI-only, payload `{}`) supplies the policy authorizer; CLI `memoria seed install --workspace <path> [--json|--quiet] [--actor pi|agent]` — the tutorial section (chapter 02 rewiring) and LOOP.13's amended time-to-first-answer block cite this exact CLI path, so this task must merge before any docs task backticks it (doc-claims gate sequencing).
 
-- [ ] **Step 1: Grep-first hard precondition** — run `grep -rn "def emit_onboarding_step" src/memoria_vault/`. If it hits, note the module and use it below. If empty, STOP: land I1 T.1–T.2 and this plan's T.1 before M.3; do not implement a guarded missing-helper path.
+> **Execution amendment (2026-08-02, BINDING).** Four corrections measured while
+> executing this task; each is a repo-fact resolution, none changes a spec
+> mechanism.
+>
+> 1. **Payload is `{"install": true}`, not `{}`.** The Produces line's `payload
+>    {}` cannot ship: `tests/test_parity_fixture.py::test_operation_parity_is_
+>    manifest_derived_and_dispatchable` runs **every** cataloged operation through
+>    `memoria operation run <id> --payload-json {}` as the default `actor=pi`, and
+>    a `seed-install` that treats an empty payload as "install everything"
+>    performs eight real third-party fetches on every `scripts/verify` run
+>    (measured: 8 requests, ~5s, on a networked box). Every other network-touching
+>    operation validates its payload before reaching a resolver — the floor
+>    registry's `enrich-source` note records that convention explicitly. The
+>    worker branch therefore raises `seed-install requires install: true` before
+>    the resolver, and `_cmd_seed_install` always sends the key. The floor entry's
+>    `{}` payload is unaffected (the actor check fires first).
+> 2. **A fourth shipped gate co-changes:** `tests/test_surface_contract.py::
+>    test_surface_contract_cli_parity_is_equality_with_named_exemptions` asserts
+>    `registered | CLI_ONLY_COMMANDS == _cli_command_surface()`, so
+>    `"memoria seed install"` must join `CLI_ONLY_COMMANDS` (PI-only onboarding
+>    command, no registry row for a transport to bind).
+> 3. **One golden moves, and only one:** adding the capability manifest changes
+>    `.memoria/index/capability-index.json`, which is hashed by
+>    `tests/fixtures/floor/goldens/regenerate-capability-index.json` (the single
+>    golden containing that path). Regenerated; the diff is exactly that one hash.
+> 4. **Step 2's import block is extended, not replaced.** M.2 shipped
+>    `tests/test_seed_install.py` importing the *module* (`from
+>    memoria_vault.runtime import seed_install`) and calling
+>    `seed_install.resolve_fetch(...)` ~40 times; the sketched `from
+>    ...seed_install import resolve_fetch, seed_install` would shadow that name.
+>    The M.3 rows also use M.2's shipped helper names (`_pmc_xml`, and
+>    manifest-shaped row builders) rather than the sketch's `_pmc_record_xml` /
+>    `_pdf_url_row`. The `seed-installed` emit is proved against the **real**
+>    helper and the real sink (a row lands in `telemetry_events`), not a fake
+>    module injected into `sys.modules`.
 
-- [ ] **Step 2: Write the failing tests** — extend `tests/test_seed_install.py`. Replace the import block with:
+- [x] **Step 1: Grep-first hard precondition** — run `grep -rn "def emit_onboarding_step" src/memoria_vault/`. If it hits, note the module and use it below. If empty, STOP: land I1 T.1–T.2 and this plan's T.1 before M.3; do not implement a guarded missing-helper path.
+
+- [x] **Step 2: Write the failing tests** — extend `tests/test_seed_install.py`. Replace the import block with:
 
 ```python
 from __future__ import annotations
@@ -1170,9 +1206,9 @@ def test_seed_install_requires_pi_actor(tmp_path, capsys) -> None:
 
 Also edit `tests/test_cli.py`: in `test_cli_command_surface_is_exact` (:73-146), add `"memoria seed install",` after `"memoria work export",` (:94).
 
-- [ ] **Step 3: Run and watch it fail** — `python -m pytest tests/test_seed_install.py tests/test_cli.py::test_cli_command_surface_is_exact -v` → `ImportError: cannot import name 'seed_install' from 'memoria_vault.runtime.seed_install'` (collection), and the surface test fails on the missing `memoria seed install` once collection is fixed.
+- [x] **Step 3: Run and watch it fail** — `python -m pytest tests/test_seed_install.py tests/test_cli.py::test_cli_command_surface_is_exact -v` → `ImportError: cannot import name 'seed_install' from 'memoria_vault.runtime.seed_install'` (collection), and the surface test fails on the missing `memoria seed install` once collection is fixed.
 
-- [ ] **Step 4: Minimal implementation.**
+- [x] **Step 4: Minimal implementation.**
 
 **(a)** Append to `src/memoria_vault/runtime/seed_install.py` (extend the M.2 import block with `from pathlib import Path`, `from memoria_vault.product.seed_corpus import load_seed_manifest`, `from memoria_vault.runtime import state`, `from memoria_vault.runtime.capture import stage_pdf_source`, `from memoria_vault.runtime.trusted_writer import OperationContext, validate_operation_context`, `from memoria_vault.runtime.vaultio import iter_markdown, read_frontmatter`):
 
@@ -1400,9 +1436,9 @@ def _cmd_seed_install(args: argparse.Namespace) -> int:
     },
 ```
 
-- [ ] **Step 5: Run to pass** — `python -m pytest tests/test_seed_install.py tests/test_seed_manifest.py tests/test_cli.py tests/test_capabilities.py tests/test_floor_coverage.py -v` → all pass (test_capabilities.py:61-79 proves the manifest/dispatch two-way parity; test_floor_coverage.py:37-42 proves the floor entry).
+- [x] **Step 5: Run to pass** — `python -m pytest tests/test_seed_install.py tests/test_seed_manifest.py tests/test_cli.py tests/test_capabilities.py tests/test_floor_coverage.py -v` → all pass (test_capabilities.py:61-79 proves the manifest/dispatch two-way parity; test_floor_coverage.py:37-42 proves the floor entry).
 
-- [ ] **Step 6: Section gate** — run `python scripts/verify` and confirm a clean exit (lint incl. cspell/yamllint on the new files, contract + floor suites, offline e2e smoke, syntax checks).
+- [x] **Step 6: Section gate** — run `python scripts/verify` and confirm a clean exit (lint incl. cspell/yamllint on the new files, contract + floor suites, offline e2e smoke, syntax checks).
 
 - [ ] **Step 7: Commit**
 
@@ -2359,7 +2395,7 @@ Other cross-plan seams, all order-tolerant: `memoria onboard` is owned by the su
   - `has_onboarding_step(vault: Path, step: str) -> bool`
   - `NATIVE_EVENT_FIELDS["onboarding-step"] == frozenset({"step"})`
 
-- [ ] **Step 0: Grep-first dependency check (hard block).** Run:
+- [x] **Step 0: Grep-first dependency check (hard block).** Run:
 
 > **Schema-rung amendment (2026-08-01, BINDING).** This gate previously required
 > `SCHEMA_VERSION >= 19`. The integer was never the precondition: what T.1 consumes is
@@ -2386,7 +2422,24 @@ PY
 
 Required: `src/memoria_vault/runtime/telemetry.py` exists and defines both `NATIVE_EVENT_FIELDS` and `record_telemetry_event`, and a **fresh** database created by `state.connect` carries a `telemetry_events` table (prints `True`). The schema *version* is not checked and must not be: I1 T.1 records its own rung, and this task neither reads nor writes any other schema task's storage. At `07bedc74` both checks fail (the module is absent and no fresh install carries the table). **If either fails, STOP: this task blocks on I1 plan Tasks T.1–T.2 (I1 slices 1–2). Do not create a stub `runtime/telemetry.py` and do not renumber schema versions — report the block and land I1 T.1–T.2 first.** If I1 landed with drifted line numbers, re-anchor by symbol (`NATIVE_EVENT_FIELDS`, `record_telemetry_event`).
 
-- [ ] **Step 1: Write the failing tests.** Create `tests/test_onboarding_steps.py`:
+> **Sink-failure amendment (2026-08-02, BINDING).** Step 1's `DROP TABLE
+> telemetry_events` arrangement does not work and its stated reason is wrong.
+> `state._init` (`state.py:3052-3059`) checks `PRAGMA user_version` only to
+> *reject* an unsupported rung — it then runs `conn.executescript(_schema_sql())`
+> on **every** `state.connect`, and `schema.sql` is all `CREATE ... IF NOT
+> EXISTS`, so the next connection puts the dropped table straight back and the
+> emit succeeds (measured). The sink is instead disabled with a `BEFORE INSERT`
+> trigger that raises: it survives the schema re-run, fails only writes to this
+> one table, and leaves reads and the rest of the vault working. A second test
+> covers the read-side guard by corrupting the vault DB file. Both produce the
+> failure rather than mocking it. Trust order: code over plan text.
+>
+> **Also amended:** T.1 must extend `tests/test_telemetry_events.py`'s literal
+> `NATIVE_EVENT_FIELDS` pin (`set(NATIVE_EVENT_FIELDS) == {...}`), which I1 wrote
+> to be extended by exactly this task ("Later plans extend this dict; they extend
+> these literals"). Add that file to T.1's Files list.
+
+- [x] **Step 1: Write the failing tests.** Create `tests/test_onboarding_steps.py`:
 
 ```python
 """Contract tests for onboarding-step telemetry (O1 spec §5): an observer, never a gate."""
@@ -2486,12 +2539,12 @@ Register the new file in `tests/conftest.py` `TEST_LEVELS` (this is a **new** te
 
 The drop-table arrangement is a real environmental failure: `state._init` (`state.py:2406-2411`) migrates by `PRAGMA user_version`, so a reconnect after `DROP TABLE telemetry_events` does not recreate the table.
 
-- [ ] **Step 2: Run to verify failure**
+- [x] **Step 2: Run to verify failure**
 
 Run: `python -m pytest tests/test_onboarding_steps.py -v`
 Expected: FAIL — `ModuleNotFoundError: No module named 'memoria_vault.runtime.onboarding_steps'` at collection.
 
-- [ ] **Step 3: Minimal implementation.** In `src/memoria_vault/runtime/telemetry.py`, extend `NATIVE_EVENT_FIELDS` (alphabetical position, between the existing two entries planned at I1 :233-236):
+- [x] **Step 3: Minimal implementation.** In `src/memoria_vault/runtime/telemetry.py`, extend `NATIVE_EVENT_FIELDS` (alphabetical position, between the existing two entries planned at I1 :233-236):
 
 ```python
 NATIVE_EVENT_FIELDS = {
@@ -2566,7 +2619,7 @@ def emit_onboarding_step_once(vault: Path, step: str) -> str | None:
 
 Unknown steps raise `ValueError` deliberately: a bad step name is a programmer error at a call site, not an environmental sink failure — only the latter no-ops.
 
-- [ ] **Step 4: Run to verify pass**
+- [x] **Step 4: Run to verify pass**
 
 Run: `python -m pytest tests/test_onboarding_steps.py tests/test_telemetry_events.py -v`
 Expected: PASS (including I1's `test_telemetry_events.py` — the new native row must not disturb its unknown-type/missing-field error contracts).

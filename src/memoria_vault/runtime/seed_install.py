@@ -7,10 +7,17 @@ import io
 import tarfile
 from collections.abc import Callable
 from http.client import HTTPException
+from pathlib import Path
 from typing import Any
 from urllib.parse import unquote, urlsplit, urlunsplit
 from urllib.request import HTTPRedirectHandler, build_opener
 from xml.parsers import expat
+
+from memoria_vault.product.seed_corpus import load_seed_manifest
+from memoria_vault.runtime import state
+from memoria_vault.runtime.capture import stage_pdf_source
+from memoria_vault.runtime.trusted_writer import OperationContext, validate_operation_context
+from memoria_vault.runtime.vaultio import iter_markdown, read_frontmatter
 
 MAX_FETCH_BYTES = 32 * 1024 * 1024
 MAX_TAR_MEMBERS = 128
@@ -241,3 +248,128 @@ def _pdf_from_tarball(package: bytes, package_url: str) -> bytes:
     if pdf_bytes is None:
         raise ValueError(f"PMC OA package at {package_url} contains no PDF member")
     return pdf_bytes
+
+
+def seed_install(
+    vault: Path,
+    rows: list[dict[str, Any]] | None = None,
+    *,
+    opener: Callable[[str], Any] | None = None,
+    authorize_url: Callable[[str], None],
+    context: OperationContext,
+) -> dict[str, Any]:
+    """Install the seed corpus through the shipped local-PDF capture seam.
+
+    Idempotency and honesty (O1 spec section 2): each row pre-checks
+    state.catalog_source and skips on a hit - no fetch, no journal event,
+    no commit; failures are per-row and named; the failure exit fires only
+    when zero rows are present (admitted + skipped both empty).
+    """
+    validate_operation_context(vault, context)
+    vault = Path(vault)
+    if rows is None:
+        rows = load_seed_manifest()
+    admitted: list[str] = []
+    skipped: list[str] = []
+    failed: list[dict[str, str]] = []
+    for row in rows:
+        work_id = str(row["id"])
+        if state.catalog_source(vault, work_id) is not None:
+            skipped.append(work_id)
+            continue
+        try:
+            raw = resolve_fetch(row, opener=opener, authorize_url=authorize_url)
+            stage_pdf_source(
+                vault,
+                work_id,
+                str(row["title"]),
+                f"Seed corpus source: {row['title']}",
+                raw,
+                context=context,
+                raw_filename=f"{work_id}.pdf",
+                resource=_row_resource(row),
+                identifiers=_row_identifiers(row),
+                csl_json=_row_csl(row),
+            )
+        except Exception as exc:  # noqa: BLE001 -- per-row honesty: name the row, keep going.
+            failed.append({"id": work_id, "error": str(exc)})
+            continue
+        admitted.append(work_id)
+    if not admitted and not skipped:
+        names = ", ".join(entry["id"] for entry in failed) or "<no rows>"
+        raise ValueError(f"seed install left zero rows present; failed rows: {names}")
+    notices: list[str] = []
+    if not _has_active_project(vault):
+        notices.append(
+            "no active project found - frame your tutorial project first "
+            "(docs/tutorials/01) or discovery ranking starts empty"
+        )
+    return {
+        "admitted": admitted,
+        "skipped": skipped,
+        "failed": failed,
+        "notices": notices,
+        "telemetry": _emit_seed_installed(vault),
+    }
+
+
+def _row_identifiers(row: dict[str, Any]) -> dict[str, Any]:
+    identifier = str(row.get("identifier") or "")
+    if identifier.startswith("doi:"):
+        return {"doi": identifier.removeprefix("doi:")}
+    if identifier.startswith("arxiv:"):
+        return {"arxiv": identifier.removeprefix("arxiv:")}
+    return {}
+
+
+def _row_resource(row: dict[str, Any]) -> str:
+    identifier = str(row.get("identifier") or "")
+    if identifier.startswith("doi:"):
+        return f"https://doi.org/{identifier.removeprefix('doi:')}"
+    if identifier.startswith("arxiv:"):
+        return f"https://arxiv.org/abs/{identifier.removeprefix('arxiv:')}"
+    return str(row.get("license_evidence") or "")
+
+
+def _row_csl(row: dict[str, Any]) -> dict[str, Any]:
+    # Mirrors cli._csl_json so seed rows carry the same catalog metadata shape
+    # as `memoria work add`.
+    csl: dict[str, Any] = {
+        "id": str(row["id"]),
+        "type": "article-journal",
+        "title": str(row["title"]),
+    }
+    identifiers = _row_identifiers(row)
+    if "doi" in identifiers:
+        csl["DOI"] = identifiers["doi"]
+    resource = _row_resource(row)
+    if resource:
+        csl["URL"] = resource
+    return csl
+
+
+def _has_active_project(vault: Path) -> bool:
+    # Active = type: project and not lifecycle archived/retracted - the repo's
+    # concept-file convention (knowledge.py _is_current_frontmatter); covers
+    # projects/<slug>.md and projects/<slug>/project.md homes.
+    projects_root = vault / "projects"
+    if not projects_root.is_dir():
+        return False
+    for path in iter_markdown(projects_root):
+        frontmatter = read_frontmatter(path)
+        if frontmatter.get("type") != "project":
+            continue
+        if frontmatter.get("lifecycle") in {"retracted", "archived"}:
+            continue
+        return True
+    return False
+
+
+def _emit_seed_installed(vault: Path) -> dict[str, str]:
+    """Record the required first-install observer; section T owns the helper."""
+    from memoria_vault.runtime.onboarding_steps import emit_onboarding_step
+
+    event_id = emit_onboarding_step(vault, "seed-installed")
+    if event_id is None:
+        return {"status": "unavailable"}
+    return {"status": "emitted", "event_id": event_id}

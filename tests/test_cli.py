@@ -157,6 +157,7 @@ def test_cli_command_surface_is_exact() -> None:
         "memoria work interview",
         "memoria work update",
         "memoria work export",
+        "memoria seed install",
         "memoria link",
         "memoria mv",
         "memoria check",

@@ -147,10 +147,17 @@ def test_native_event_fields_pins_both_registered_types_and_their_fields() -> No
     # Literals first, and no iteration over the registry anywhere in this test: a test
     # that derives its expectations from NATIVE_EVENT_FIELDS still passes when the
     # registry loses an entry. Later plans extend this dict; they extend these literals.
-    assert set(NATIVE_EVENT_FIELDS) == {"attention-admitted", "producer-run-skipped"}
+    assert set(NATIVE_EVENT_FIELDS) == {
+        "attention-admitted",
+        "onboarding-step",
+        "producer-run-skipped",
+    }
     assert NATIVE_EVENT_FIELDS["attention-admitted"] == frozenset(
         {"card_path", "kind", "loudness", "raised_by"}
     )
+    # O1 T.1 extends this dict rather than starting a second registry; its own
+    # field pin lives beside the helper in tests/test_onboarding_steps.py.
+    assert NATIVE_EVENT_FIELDS["onboarding-step"] == frozenset({"step"})
     assert NATIVE_EVENT_FIELDS["producer-run-skipped"] == frozenset({"producer", "reason"})
 
 
