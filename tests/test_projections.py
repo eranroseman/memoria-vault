@@ -12,6 +12,7 @@ from memoria_vault.runtime.projections import (
     TRACKED_PROJECTION_PATHS,
     check_tracked_projections,
     check_workspace_indexes,
+    render_tracked_projection,
     render_workspace_index,
 )
 from memoria_vault.runtime.projections import (
@@ -176,6 +177,16 @@ def test_vault_agents_md_symlink_is_a_redirected_projection(tmp_path: Path) -> N
     assert check_tracked_projections(vault)["findings"] == [
         {"path": "AGENTS.md", "status": "redirected"}
     ]
+
+
+def test_vault_agents_md_describes_okf_trust_fields(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    content = render_tracked_projection(vault, "AGENTS.md")
+
+    assert "check_status" not in content.split("engine surfaces")[0], (
+        "detached-reader guidance must describe fields that exist in files"
+    )
+    assert "generated" in content and "verified" in content
 
 
 def test_workspace_index_projection_drift_check(tmp_path: Path) -> None:
