@@ -1397,13 +1397,21 @@ def _confirm_tension_edge(vault: Path, target: str, *, context: OperationContext
     # `insert_concept_edge` owns the v16 key functions for both endpoints — the
     # source resolver and `_concept_edge_target_path`'s catalog fold. This writer
     # supplies paths and derives no key of its own.
-    return state.insert_concept_edge(
+    edge = state.insert_concept_edge(
         vault,
         source=source,
         relation_type="tension",
         target=edge_target,
         context=context,
     )
+    # The insert is an unconditional upsert, so the counter is unconditional too —
+    # `tension` reaches the graph through no other seam (`LINK_RELATIONS` excludes it).
+    from memoria_vault.runtime.operations import emit_edge_write_event
+
+    emit_edge_write_event(
+        vault, relation_type="tension", write_path="insert-concept-edge", context=context
+    )
+    return edge
 
 
 def _flag_descendant(

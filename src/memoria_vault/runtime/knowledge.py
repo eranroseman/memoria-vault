@@ -428,6 +428,16 @@ def curate_note_link(
         },
         context=context,
     )
+    if changed or warrant:
+        # One counter per edge write, at the seam the PI used. `changed` alone is
+        # not the trigger: new warrant text on an already-linked target upserts the
+        # edge row without touching frontmatter, and that is still an edge write.
+        from memoria_vault.runtime.operations import emit_edge_write_event
+
+        emit_edge_write_event(
+            vault, relation_type=link_type, write_path="curate-note-link", context=context
+        )
+
     commit = commit_writer_changes(
         vault, f"link note {Path(source_rel).stem}", [source_rel], context=context
     )

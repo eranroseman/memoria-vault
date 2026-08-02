@@ -417,6 +417,52 @@ def test_confirm_tension_outcome_is_idempotent_across_two_confirmations(tmp_path
     assert _tension_edges(vault) == [("notes/aaa/x.md", "tension", "notes/zzz.md")]
 
 
+def test_confirm_tension_counts_its_edge_write_against_the_insert_concept_edge_path(
+    tmp_path: Path,
+) -> None:
+    """The other half of the I1 touch budget: `tension` only ever arrives this way.
+
+    `curate_note_link` cannot write it (`LINK_RELATIONS` excludes `tension`), so a
+    counter wired to the curate seam alone reports zero for this relation forever.
+    """
+    from memoria_vault.runtime.operations import edge_write_counts
+
+    vault = _unsorted_pair_vault(tmp_path)
+    surfaced = surface_tensions(vault, commit=True, tier2=False, machine="integrity-machine")
+    [prompt_rel] = surfaced["tension_prompts"]
+
+    resolve_attention(
+        vault, prompt_rel, resolution="resolved", outcome="confirm-tension", actor="pi"
+    )
+
+    assert edge_write_counts(vault) == {"tension": 1}
+    with state.connect(vault) as conn:
+        rows = conn.execute(
+            "SELECT payload_json FROM telemetry_events WHERE event_type = 'edge-write.v1'"
+        ).fetchall()
+    # `edge_write_counts` projects `write_path` away, so assert it where it is written:
+    # this seam and the curate seam must stay distinguishable in the raw stream.
+    assert [json.loads(str(row["payload_json"])) for row in rows] == [
+        {"relation_type": "tension", "write_path": "insert-concept-edge"}
+    ]
+
+
+def test_resolving_an_attention_without_confirming_a_tension_writes_no_edge_counter(
+    tmp_path: Path,
+) -> None:
+    """The counter hangs on the edge mint, not on `resolve_attention` returning."""
+    from memoria_vault.runtime.operations import edge_write_counts
+
+    vault = _unsorted_pair_vault(tmp_path)
+    surfaced = surface_tensions(vault, commit=True, tier2=False, machine="integrity-machine")
+    [prompt_rel] = surfaced["tension_prompts"]
+
+    resolve_attention(vault, prompt_rel, resolution="acknowledged", actor="pi")
+
+    assert _tension_row_count(vault) == 0
+    assert edge_write_counts(vault) == {}
+
+
 def _write_card(vault: Path, rel: str, frontmatter: str) -> str:
     (vault / rel).parent.mkdir(parents=True, exist_ok=True)
     (vault / rel).write_text(f"---\n{frontmatter}---\nBody.\n", encoding="utf-8")

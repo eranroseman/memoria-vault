@@ -38,11 +38,11 @@
 1. **Edge-table shape:** NID-B's v16 redefines `concept_edges` (adds `target_path`, target nullable ON DELETE SET NULL, PK `(source_concept_id, relation_type, target_path)`). ERP-A.2's v17 CREATE/INSERT column lists extend mechanically to this shape; ERP-B/C/D SQL is written against it.
 2. **Roster ownership:** ERP-A resolves the Plan-22 handoff as MOVE — `parse_links`/`normalize_link_target` relocate to `edges.py`, `schema.py` re-exports for one release. New code imports from `lib.edges`; a repo-wide guard test forbids roster literals outside it.
 3. **Consequence-engine symbols:** ERP-D consumes ERP-C's real names — `propagation.compute_consequences(vault, target_id, *, trigger) -> dict[str, dict]` for the report card and `propagate_consequences(..., trigger="decided-wrong")` for marks. ERP-D's assumed `derive_consequences`/`claim_work_edges` names are superseded: the structural-impact rewire reads the identity-safe `edges.concept_edge_path_records(vault, checked_only=False)` projection, whose `catalog/sources/*` targets are the ERP-B bridge at this boundary.
-4. **Insert hooks, no circularity:** ERP-B.2 lands `insert_concept_edge` bare; ERP-C.5 retrofits the `propagate_edge_change(..., added=True)` call; ERP-D.6 retrofits `emit_edge_write_event(..., write_path="insert-concept-edge")`. Final call order inside the function: insert → propagate → emit. **Its `target_path` key function is binding too** — `state._concept_edge_target_path`, never a bare `normalize_path`; see the NID-B.7 (2026-08-01) blockquote in the ERP-B.2 task section for why a second key function rolls back the whole mirror pass.
+4. **Insert hooks, no circularity:** ERP-B.2 lands `insert_concept_edge` bare; ERP-C.5 retrofits the `propagate_edge_change(..., added=True)` call; ERP-D.6 retrofits `emit_edge_write_event(..., write_path="insert-concept-edge")`. ~~Final call order inside the function: insert → propagate → emit.~~ **Superseded as built (2026-08-02): both hooks hang on the callers, not inside `insert_concept_edge`.** ERP-C.5 put `propagate_edge_change` in `knowledge.curate_note_link`, and ERP-D.6 put its emission in `curate_note_link` and `integrity._confirm_tension_edge` — because `curate_note_link` *calls* `insert_concept_edge` to hang a warrant, so a hook inside the storage function counts one warranted curate twice, invisibly to a counter grouped by `relation_type` alone. `state.py` depends on neither `propagation` nor `operations`. See the ERP-D.6 amendment. **Its `target_path` key function is binding too** — `state._concept_edge_target_path`, never a bare `normalize_path`; see the NID-B.7 (2026-08-01) blockquote in the ERP-B.2 task section for why a second key function rolls back the whole mirror pass.
 5. **Outcome→decision dict** (`integrity.py:1169`): ERP-B adds `"confirm-tension": "accept"`, ERP-D adds `"decided-wrong": "override"` — merge, never overwrite.
 6. **Tension rows** store endpoints lexicographically sorted; ERP-C propagation and ERP-D counters must not assume direction.
 7. **Consequence-mark fields** (`stale: bool`, `consequence:` enum) are registered in the type yamls by NID-A's closed-validation task; ERP-C writes them, never touches yamls.
-8. **Floor-golden serialization:** NID-B.6, NID-C.2/.5/.6, ERP-D.1/.5/.6 regenerate goldens — land sequentially, never in parallel worktrees, and not concurrently with other plans' golden tasks. **Outstanding (2026-08-02):** NID-C.6 landed its runtime change without the golden token, so one golden-moving edit it owns is still unapplied — the `compile-source-digest.md` manifest text plus the `regenerate-capability-index` golden. The next holder of this plan's token should clear it; the exact edit and expected one-line diff are in NID-C.6's 2026-08-02 execution amendment.
+8. **Floor-golden serialization:** NID-B.6, NID-C.2/.5/.6, ERP-D.1/.5 regenerate goldens — land sequentially, never in parallel worktrees, and not concurrently with other plans' golden tasks. **ERP-D.6 is off this list as built (2026-08-02):** `edge-write.v1` writes only the non-chained `telemetry_events` table, so it moved no golden and needs no serialization slot. **Outstanding (2026-08-02):** NID-C.6 landed its runtime change without the golden token, so one golden-moving edit it owns is still unapplied — the `compile-source-digest.md` manifest text plus the `regenerate-capability-index` golden. The next holder of this plan's token should clear it; the exact edit and expected one-line diff are in NID-C.6's 2026-08-02 execution amendment.
 9. **Execution order:** NID-A → NID-B → ERP-A → ERP-B → ERP-C → ERP-D → NID-C (NID-C.1/.2 may run any time; its golden tasks obey contract 8).
 10. **Catalog↔Concept FK (v16):** `catalog_sources.work_id` is the sole
     catalog↔Concept join and references `concepts.concept_id` immediately as the
@@ -11209,11 +11209,86 @@ task requires the I1 full-wiring plan's slice 1 (schema v19
 it first; check before starting:
 `grep -n "telemetry_events" src/memoria_vault/runtime/state.py` must hit.
 
+> **Execution amendment (2026-08-02) — what ERP-D.6 landed.**
+>
+> **The dependency check as printed is wrong and always will be.** The table is
+> declared in `src/memoria_vault/runtime/schema.sql:434-443`, not in `state.py`,
+> so the `grep` above misses on a repo that has fully satisfied the dependency.
+> The honest check is `grep -n "telemetry_events" src/memoria_vault/runtime/schema.sql`
+> plus `test -f src/memoria_vault/runtime/telemetry.py`. Both hold at v19; slice 1
+> shipped in #7dc4718a (rung 18) and #8d432921. No schema change here.
+>
+> **Two seams, not one, and the emission is at the caller — not inside
+> `insert_concept_edge`.** Contract 4's "final call order inside the function:
+> insert → propagate → emit" is superseded, the same way ERP-C.5 already
+> superseded its own half of it: the landed `propagate_edge_change` call sits in
+> `knowledge.curate_note_link` (`knowledge.py:441-450`), not in
+> `state.insert_concept_edge`. D.6 follows that precedent for a load-bearing
+> reason, not for symmetry. `curate_note_link` *calls* `insert_concept_edge`
+> whenever it hangs a warrant, so an emission inside the storage function counts
+> one warranted curate twice — and `edge_write_counts` groups by `relation_type`
+> alone, so the double would be invisible in the touch-budget number the beta.2
+> gate reads. The counters therefore hang on the two *seams a PI can reach*:
+> `knowledge.curate_note_link` emits `write_path="curate-note-link"`, and
+> `integrity._confirm_tension_edge` — the ERP-B `confirm-tension` path, which is
+> the only way `tension` ever enters the graph — emits
+> `write_path="insert-concept-edge"`. `state.py` gains no dependency on
+> `runtime.operations`. `write_path` names the seam the PI used, never the
+> storage call underneath it; that sentence is now in the emitter's docstring.
+>
+> **Two deviations inside the printed snippets.** (1) `emit_edge_write_event`
+> opens with `validate_operation_context(vault, context)`. As printed it accepted
+> a `context` it never read, which is an unused parameter dressed as an authority
+> gate; the sibling analytics emitter `operations.record_empirical_event` does
+> validate, and a counter is a write. (2) `edge_write_counts` drops the printed
+> `ORDER BY relation_type`. The function returns a `dict[str, int]`, and dict
+> equality ignores order, so that clause was an unkillable mutant by
+> construction — no test could ever distinguish it. `WHERE event_type = ?` is
+> parameterized off `EDGE_WRITE_EVENT_SCHEMA` rather than repeating the literal.
+>
+> **Namespace (escape class 9).** `edge_write_counts` answers in **relation-type
+> space** — the `EDGE_RELATIONS` roster — and in no other. It reads
+> `telemetry_events.payload_json`, never `concept_edges`, so no path, no alias,
+> and no Concept identity passes through it, and the `"None"`-fusion hazard
+> ERP-C.6 measured cannot reach it. The counter payload is deliberately two
+> closed enums and nothing else: no endpoint, no warrant text, no note path.
+>
+> **Obligations discharged for other tasks.** `runtime/telemetry.py:52` carried
+> a `hasattr(schemas, "validate_edge_write_event")` guard and
+> `tests/test_telemetry_events.py:294` pinned `not hasattr(...)`, both naming
+> ERP-D.6 as their owner; the guard is now a plain dispatch on
+> `EDGE_WRITE_EVENT_SCHEMA` and the test asserts the live routing.
+> `engine/dashboard.py:68` already read this stream
+> (`_telemetry_group_counts(vault, "edge-write.v1", "relation_type")`) against
+> hand-inserted rows — it now has a real producer, and its query is unchanged.
+> It and `edge_write_counts` are two readers of one stream (escape class 10);
+> they are tested against different producers, hand-inserted rows there and
+> `curate_note_link`/`confirm-tension` here, so neither inherits the other's
+> claim.
+>
+> **Goldens did not move** — as the manifest note predicted, `edge-write.v1`
+> writes only `telemetry_events`, which is not hash-chained and not hashed by
+> the floor goldens. `git status tests/fixtures/floor/goldens` is empty.
+>
+> **Mutation testing: 37 mutants, 37 killed, 0 survivors.** Both directions at
+> every roster and enum boundary (invert, delete, narrow to `LINK_RELATIONS`,
+> narrow to `SUPPORT_RELATIONS`), the closed-field-set and required-field gates,
+> both `_string_field` normalizations, the returned event's shape (drop a field,
+> swap the two), the schema id spelling, both telemetry dispatch arms, the
+> authority gate, all four clauses of the counter query (`WHERE`, `GROUP BY`,
+> the `json_extract` path, `COUNT(*)`), all three forms of the
+> `if changed or warrant:` trigger, and both seams' `relation_type`/`write_path`
+> arguments including cross-mislabelling. The `changed or warrant` mutants are
+> the ones the printed test could not have killed: it exercised only
+> `changed=True, warrant=""`, so `if changed:` would have survived it.
+
 **Files:**
-- Modify: `src/memoria_vault/engine/empirical_events.py` (append after `validate_read_event`, line 185; new constants beside `READ_EVENT_SCHEMA`, line 14)
-- Modify: `src/memoria_vault/runtime/operations.py` (append after `emit_disposition_event`, line 164)
+- Modify: `src/memoria_vault/engine/empirical_events.py` (`EDGE_WRITE_EVENT_SCHEMA` beside `READ_EVENT_SCHEMA`, the two constants beside `READ_REQUIRED_FIELDS`, `validate_edge_write_event` after `validate_read_event`)
+- Modify: `src/memoria_vault/runtime/operations.py` (`emit_edge_write_event` + `edge_write_counts` after `emit_disposition_event`)
+- Modify: `src/memoria_vault/runtime/telemetry.py` (`_validated`: the `hasattr` guard becomes a plain dispatch arm)
 - Modify: `src/memoria_vault/runtime/knowledge.py` (`curate_note_link`, emission after the journal event)
-- Modify: `tests/test_empirical_events.py` (append after line 85), `tests/test_knowledge.py` (append)
+- Modify: `src/memoria_vault/runtime/integrity.py` (`_confirm_tension_edge`, emission after the insert)
+- Modify: `tests/test_empirical_events.py`, `tests/test_knowledge.py`, `tests/test_telemetry_events.py`, `tests/test_integrity_surface_tensions.py` (append)
 
 **Interfaces:**
 - Consumes: the I1 skeleton server-side event shape (`validate_disposition_event` / `validate_read_event`, `engine/empirical_events.py:148-184`: closed field set, `schema` stamped by the emitter); **I1 full-wiring slice 1:** `record_telemetry_event(vault, event_type, payload) -> str` (`runtime/telemetry.py`) + the `telemetry_events` table (v19); **ERP-A:** `edges.EDGE_RELATIONS` (the seven-relation roster) as the `relation_type` enum; Task ERP-D.5's `warrant` param (emission point).
@@ -11221,7 +11296,7 @@ it first; check before starting:
 
 **Steps:**
 
-- [ ] Write the failing validator tests — append to `tests/test_empirical_events.py`:
+- [x] Write the failing validator tests — append to `tests/test_empirical_events.py`:
 
 ```python
 def test_edge_write_event_accepts_roster_relation() -> None:
@@ -11268,11 +11343,11 @@ def test_curate_note_link_counts_edge_writes_per_relation_type(tmp_path: Path) -
     assert edge_write_counts(vault) == {"supports": 1}
 ```
 
-- [ ] Run to verify they fail:
+- [x] Run to verify they fail:
   `python -m pytest tests/test_empirical_events.py::test_edge_write_event_accepts_roster_relation tests/test_empirical_events.py::test_edge_write_event_rejects_off_roster_relation_and_unknown_path tests/test_knowledge.py::test_curate_note_link_counts_edge_writes_per_relation_type -v`
   Expected: `ImportError: cannot import name 'validate_edge_write_event'` / `cannot import name 'edge_write_counts'`.
 
-- [ ] Write minimal implementation. (1) `engine/empirical_events.py` — beside line 14 add:
+- [x] Write minimal implementation. (1) `engine/empirical_events.py` — beside line 14 add:
 
 ```python
 EDGE_WRITE_EVENT_SCHEMA = "edge-write.v1"
@@ -11360,10 +11435,10 @@ def edge_write_counts(vault: Path) -> dict[str, int]:
         )
 ```
 
-- [ ] Run to verify all pass:
+- [x] Run to verify all pass:
   `python -m pytest tests/test_empirical_events.py tests/test_knowledge.py -v`
 
-- [ ] Regenerate floor goldens if drifted (manifest note at top), run the full gate once for the section (`python scripts/verify`), and commit:
+- [ ] Regenerate floor goldens if drifted (manifest note at top), run the full gate once for the section (`python scripts/verify`), and commit. *Gate run green 2026-08-02; goldens did not drift, so drop them from the `git add` and add `src/memoria_vault/runtime/telemetry.py`, `src/memoria_vault/runtime/integrity.py`, `tests/test_telemetry_events.py` and `tests/test_integrity_surface_tensions.py` per the amendment's Files list. Commit step left for the orchestrator.*
   `git add src/memoria_vault/engine/empirical_events.py src/memoria_vault/runtime/operations.py src/memoria_vault/runtime/knowledge.py tests/test_empirical_events.py tests/test_knowledge.py tests/fixtures/floor/goldens`
   Message: `feat(instrumentation): edge-write.v1 per-relation-type counters on curate/insert paths (EDGES section 4 instrumentation)` ending with
   `Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>`

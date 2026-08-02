@@ -291,12 +291,65 @@ def test_record_telemetry_event_keeps_client_session_and_surface_for_empirical_e
     assert row["surface"] == "obsidian"
 
 
-def test_edge_write_events_are_rejected_until_their_validator_lands(tmp_path: Path) -> None:
-    from memoria_vault.engine import empirical_events
+def test_edge_write_events_route_to_their_own_validator_not_the_native_roster(
+    tmp_path: Path,
+) -> None:
+    """ERP-D.6 flipped this: `edge-write.v1` is now a schema'd type, not an unknown one.
+
+    The dispatch must reach `validate_edge_write_event` — the native fallback would
+    accept the row under `NATIVE_EVENT_FIELDS`-style checks that know no roster.
+    """
     from memoria_vault.runtime.telemetry import record_telemetry_event
 
-    # The graph plan's ERP-D.6 adds `validate_edge_write_event` and owns flipping this
-    # test; until then the hasattr guard must produce the honest error, not AttributeError.
-    assert not hasattr(empirical_events, "validate_edge_write_event")
-    with pytest.raises(ValueError, match="unknown telemetry event type"):
-        record_telemetry_event(tmp_path, "edge-write.v1", {"edge_id": "e1"})
+    event_id = record_telemetry_event(
+        tmp_path,
+        "edge-write.v1",
+        {"relation_type": "tension", "write_path": "insert-concept-edge"},
+    )
+
+    (row,) = _rows(tmp_path)
+    assert row["event_id"] == event_id
+    assert row["event_type"] == "edge-write.v1"
+    assert json.loads(row["payload_json"]) == {
+        "relation_type": "tension",
+        "write_path": "insert-concept-edge",
+    }
+    with pytest.raises(ValueError, match="relation_type must be one of"):
+        record_telemetry_event(
+            tmp_path, "edge-write.v1", {"relation_type": "backing", "write_path": "vim"}
+        )
+    assert len(_rows(tmp_path)) == 1
+
+
+def test_emit_edge_write_event_normalizes_and_needs_a_bound_operation_context(
+    tmp_path: Path,
+) -> None:
+    """The counter is a write: it carries the same authority gate as every other one."""
+    from memoria_vault.runtime.operations import emit_edge_write_event
+    from memoria_vault.runtime.trusted_writer import OperationContext
+    from tests.helpers import operation_context
+
+    context = operation_context(tmp_path, actor="pi", operation_id="curate-note-link")
+
+    emitted = emit_edge_write_event(
+        tmp_path, relation_type=" supports ", write_path="curate-note-link", context=context
+    )
+
+    (row,) = _rows(tmp_path)
+    # The emitter returns the *normalized* event, not the arguments it was handed.
+    assert emitted == {
+        "event_id": row["event_id"],
+        "relation_type": "supports",
+        "write_path": "curate-note-link",
+    }
+    assert json.loads(row["payload_json"]) == {
+        "relation_type": "supports",
+        "write_path": "curate-note-link",
+    }
+
+    unbound = OperationContext("pi", "test-run", "no-such-request", "curate-note-link", "m")
+    with pytest.raises(ValueError, match="request does not exist"):
+        emit_edge_write_event(
+            tmp_path, relation_type="supports", write_path="curate-note-link", context=unbound
+        )
+    assert len(_rows(tmp_path)) == 1
