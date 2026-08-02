@@ -7,6 +7,7 @@ import pytest
 import yaml
 
 from memoria_vault.runtime.subsystems.lib import schema
+from tests.helpers import WORKSPACE_SEED
 
 pytestmark = pytest.mark.contract
 
@@ -37,6 +38,19 @@ def _empty_workspace(root: Path) -> Path:
     for bundle in schema.bundle_roots(schema.load_folders()):
         (root / bundle).mkdir(parents=True)
         (root / bundle / "index.md").write_text("# Index\n", encoding="utf-8")
+    return root
+
+
+def _seeded_workspace(root: Path) -> Path:
+    """Copy the shipped workspace seed and stand up empty bundle-root dirs.
+
+    Bundle roots (notes/, hubs/, ...) are created by `memoria init`'s
+    skeleton, not shipped inside `workspace_seed/`, so a raw copy needs them
+    added for `validate_okf_core_workspace`'s bundle-root presence check.
+    """
+    shutil.copytree(WORKSPACE_SEED, root, dirs_exist_ok=True)
+    for bundle in schema.bundle_roots(schema.load_folders()):
+        (root / bundle).mkdir(parents=True, exist_ok=True)
     return root
 
 
@@ -448,3 +462,28 @@ def test_timestamp_is_retired_frontmatter() -> None:
     from memoria_vault.runtime.vaultio import RETIRED_FRONTMATTER_FIELDS
 
     assert "timestamp" in RETIRED_FRONTMATTER_FIELDS
+
+
+def test_okf_core_covers_files_outside_bundle_roots(tmp_path):
+    root = _empty_workspace(tmp_path)
+    (root / "orphan.md").write_text("no frontmatter here\n", encoding="utf-8")
+
+    errors = schema.validate_okf_core_workspace(root)
+
+    assert any("orphan.md" in err and "frontmatter" in err for err in errors)
+
+
+def test_okf_core_checks_reserved_file_structure(tmp_path):
+    root = _empty_workspace(tmp_path)
+    (root / "index.md").write_text("---\ntype: system\n---\n# Index\n", encoding="utf-8")
+    (root / "log.md").write_text("---\ntype: system\n---\n# Log\n", encoding="utf-8")
+
+    errors = schema.validate_okf_core_workspace(root)
+
+    assert any("index.md" in err and "okf_version" in err for err in errors)
+    assert any("log.md" in err and "frontmatter" in err for err in errors)
+
+
+def test_seeded_workspace_is_okf_core_clean(tmp_path):
+    root = _seeded_workspace(tmp_path)
+    assert schema.validate_okf_core_workspace(root) == []
