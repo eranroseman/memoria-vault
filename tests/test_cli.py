@@ -6,6 +6,7 @@ import tomllib
 from pathlib import Path
 
 import pytest
+import yaml
 
 from memoria_vault import __version__
 from memoria_vault.cli import _build_parser, main
@@ -212,6 +213,7 @@ def test_cli_command_surface_is_exact() -> None:
         "memoria review stats",
         "memoria operation list",
         "memoria operation run",
+        "memoria decision-rule set",
         "memoria steering show",
         "memoria steering edit",
         "memoria vocab list",
@@ -532,6 +534,114 @@ def test_memoria_new_defaults_include_description_key(
     assert rc == 0
     assert "description" in frontmatter
     assert frontmatter["description"] == ""
+
+
+def test_decision_rule_set_materializes_the_whole_registry_and_commits_it(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Issue #1715: the command exists because the hand-edit workaround loses rules.
+
+    `.memoria/config/decision-rules.yaml` is absent by default and *replaces* the
+    shipped registry when present, so the file the command writes must carry every
+    rule. Pinned against the raw file rather than through `load_decision_rules`,
+    which would fall back to the shipped constant and hide a truncated write.
+    """
+    from memoria_vault.runtime.decision_rules import DEFAULT_RULES_YAML, RULES_CONFIG
+
+    workspace = tmp_path / "workspace"
+    main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    capsys.readouterr()
+    shipped = [entry["id"] for entry in yaml.safe_load(DEFAULT_RULES_YAML)]
+
+    rc = main(
+        ["decision-rule", "set", "staged-import", "fired", "--workspace", str(workspace), "--json"]
+    )
+    payload = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    assert payload["ok"] is True
+    assert (payload["rule_id"], payload["status"], payload["path"]) == (
+        "staged-import",
+        "fired",
+        RULES_CONFIG,
+    )
+    written = yaml.safe_load((workspace / RULES_CONFIG).read_text(encoding="utf-8"))
+    assert [entry["id"] for entry in written] == shipped
+    assert {entry["id"] for entry in written if entry["status"] == "fired"} == {"staged-import"}
+    committed = git(workspace, "show", "--name-only", "--format=", payload["commit"]).splitlines()
+    assert RULES_CONFIG in committed
+
+    # Every status in the vocabulary, not only the interesting one: a rule the PI
+    # retires must be retirable, and a rule fired in error must be re-armable.
+    for status in ("retired", "armed"):
+        assert (
+            main(
+                [
+                    "decision-rule",
+                    "set",
+                    "staged-import",
+                    status,
+                    "--workspace",
+                    str(workspace),
+                    "--json",
+                ]
+            )
+            == 0
+        )
+        assert json.loads(capsys.readouterr().out)["status"] == status
+        rows = yaml.safe_load((workspace / RULES_CONFIG).read_text(encoding="utf-8"))
+        assert {row["id"]: row["status"] for row in rows}["staged-import"] == status
+        assert [row["id"] for row in rows] == shipped
+
+
+def test_decision_rule_set_rejects_an_unknown_rule_without_writing(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """A typo must not materialize a registry, and must not report success."""
+    from memoria_vault.runtime.decision_rules import RULES_CONFIG
+
+    workspace = tmp_path / "workspace"
+    main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    capsys.readouterr()
+
+    rc = main(
+        ["decision-rule", "set", "no-such-rule", "fired", "--workspace", str(workspace), "--json"]
+    )
+    payload = json.loads(capsys.readouterr().out)
+
+    assert rc != 0
+    assert payload["ok"] is False
+    assert "no such decision rule: no-such-rule" in json.dumps(payload)
+    assert not (workspace / RULES_CONFIG).exists()
+
+
+def test_decision_rule_set_requires_pi_actor(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    from memoria_vault.runtime.decision_rules import RULES_CONFIG
+
+    workspace = tmp_path / "workspace"
+    main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    capsys.readouterr()
+
+    rc = main(
+        [
+            "decision-rule",
+            "set",
+            "staged-import",
+            "fired",
+            "--workspace",
+            str(workspace),
+            "--actor",
+            "agent",
+            "--json",
+        ]
+    )
+    payload = json.loads(capsys.readouterr().out)
+
+    assert rc != 0
+    assert "requires PI actor authority" in json.dumps(payload)
+    assert not (workspace / RULES_CONFIG).exists()
 
 
 def test_steering_show_renders_effective_steering_provenance(
@@ -955,7 +1065,14 @@ def test_cli_init_seeds_start_here_front_door(
     assert "type: system" in text
     assert "tutorials/01-system-tour" in text
     assert "tutorials/07-customize" in text
-    assert ".claude/skills/memoria-copi/SKILL.md" in text
+    # O1 spec §3: no seeded link dangles. Nothing writes
+    # `.claude/skills/memoria-copi/SKILL.md` into a vault yet (the bundle-seeding
+    # task is open and unowned, surfaces plan "Open, unowned: nothing seeds the
+    # co-PI method files"), so the bullet points at the ADR-113 re-deferral
+    # instead. Pinned in both directions — asserting only the replacement would
+    # stay green if the dead path were left beside it.
+    assert ".claude/skills/memoria-copi/SKILL.md" not in text
+    assert "issues/902" in text
     assert "memoria status --workspace ." in text
 
 

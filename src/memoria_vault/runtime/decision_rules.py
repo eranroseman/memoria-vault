@@ -17,9 +17,9 @@ threshold, retire a rule, or carry a per-vault `fired` status.
 **Assessment is not application.** `assess_decision_rules` is pure: it reads the
 assembled dashboard panels and reports which armed `auto` rules *would* fire, with
 the numbers that crossed and the producer to act on. Minting a notice card and
-flipping `armed` to `fired` is the separate PI-protected
-`apply-decision-rule-notices` operation (plan amendment 2026-07-29 §1), never a
-read. A rule recommends; it never acts.
+flipping `armed` to `fired` is `apply_decision_rule_notices`, reached only through
+the PI-protected `apply-decision-rule-notices` operation (plan amendment
+2026-07-29 §1), never a read. A rule recommends; it never acts.
 
 **The four auto thresholds are pre-registered constants, right here.** The spec
 records them as free text ("routine alert", "sustained staleness"); the constants
@@ -35,11 +35,14 @@ from __future__ import annotations
 import datetime
 from collections.abc import Callable, Iterable
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import yaml
 
 from memoria_vault.runtime.vaultio import write_text_durable
+
+if TYPE_CHECKING:  # pragma: no cover -- import cycle: trusted_writer is loaded lazily.
+    from memoria_vault.runtime.trusted_writer import OperationContext
 
 RULES_CONFIG = ".memoria/config/decision-rules.yaml"
 
@@ -285,6 +288,77 @@ def assess_decision_rules(
             }
         )
     return assessed
+
+
+def apply_decision_rule_notices(vault: Path, *, context: OperationContext) -> dict[str, Any]:
+    """Record every crossing: one deduped notice card and one `armed` -> `fired` flip.
+
+    The one write path for a decision rule (plan amendment 2026-07-29 §1). The
+    panels and the assessment are **recomputed here from the workspace** and never
+    accepted from a caller: a caller-supplied panel dict would let the caller
+    decide which rules fired, which is exactly the judgment the pre-registration
+    exists to take away from whoever is holding the numbers.
+
+    Idempotent twice over. The status flip is the record, so a second run finds the
+    rule `fired`, `assess_decision_rules` drops it, and nothing happens; the
+    `dedupe_slug` additionally suppresses a duplicate card if the PI re-arms a rule
+    whose first card is still open.
+
+    A paused or quieted `decision-rules` producer can swallow the *card* --
+    `write_finding` returns None -- but never the flip, so the registry still
+    records what the PI throttled the notification for. `notices` reports the cards
+    actually written and `applied` the statuses actually flipped; they are separate
+    keys because they can legitimately differ.
+    """
+    from memoria_vault.engine.dashboard import assemble_dashboard
+    from memoria_vault.runtime.subsystems.lib.inbox import write_finding
+    from memoria_vault.runtime.trusted_writer import (
+        append_journal_event,
+        commit_writer_changes,
+        validate_operation_context,
+    )
+
+    validate_operation_context(vault, context)
+    vault = Path(vault)
+    applied: list[str] = []
+    notices: list[str] = []
+    for crossing in assemble_dashboard(vault)["decision_rules"]["would_fire"]:
+        rule_id = str(crossing["id"])
+        card = write_finding(
+            vault,
+            "flag",
+            f"Decision rule crossed its threshold: {rule_id}",
+            f"{crossing['threshold']} - recommendation: {crossing['recommendation']}",
+            "decision-rules",
+            target=RULES_CONFIG,
+            loudness="notice",
+            dedupe_slug=f"decision-rule-{rule_id}",
+            evidence=yaml.safe_dump(crossing["observed"], sort_keys=True),
+        )
+        update_rule_status(vault, rule_id, "fired")
+        applied.append(rule_id)
+        if card is not None:
+            notices.append(card.relative_to(vault).as_posix())
+    outputs = [RULES_CONFIG, *notices] if applied else []
+    event = append_journal_event(
+        vault,
+        {
+            "event": "run",
+            "workflow": "apply_decision_rule_notices",
+            "status": "done",
+            "outputs": outputs,
+            "applied": applied,
+        },
+        context=context,
+    )
+    commit = commit_writer_changes(vault, "apply decision-rule notices", outputs, context=context)
+    return {
+        "commit": commit,
+        "applied": applied,
+        "notices": notices,
+        "outputs": outputs,
+        "event": event,
+    }
 
 
 def _raw_entries(path: Path) -> list[Any]:

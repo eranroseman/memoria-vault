@@ -269,6 +269,11 @@ CLI_ONLY_COMMANDS: set[str] = {
     "memoria review edit",
     "memoria review defer",
     "memoria review stats",
+    # I1 H.4 / issue #1715: `memoria decision-rule set` is the PI recording a
+    # pre-registered stop rule's status. PI-only judgment over a config file, with
+    # no agent-reachable transport to bind, so it carries no registry row — the
+    # same reasoning as `memoria seed install` above.
+    "memoria decision-rule set",
     "memoria steering show",
     "memoria steering edit",
     "memoria vocab list",

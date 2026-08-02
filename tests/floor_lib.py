@@ -458,6 +458,19 @@ OPERATION_REGISTRY: dict[str, dict] = {
         "expect": "refused",
         "reason": "requires PI actor authority",
     },
+    # apply-decision-rule-notices takes no payload; it recomputes the dashboard
+    # panels and the assessment from the workspace itself. It is a
+    # PROTECTED_OPERATION_ACTORS "pi"-only op (worker.py) — the only path allowed
+    # to mint a decision-rule notice or flip `armed` to `fired` — so the sweep's
+    # fixed actor="agent" is refused on actor authority before
+    # `apply_decision_rule_notices` runs, exactly like acknowledge-attention.
+    # That refusal is why this operation mints no golden file: the sweep writes a
+    # golden only on the `done` branch (test_floor_sweep_operations.py).
+    "apply-decision-rule-notices": {
+        "payload": {},
+        "expect": "refused",
+        "reason": "requires PI actor authority",
+    },
     # worker.py:516-527 pops project_path.
     "analyze-gaps": {"payload": {"project_path": "{project}"}, "expect": "done"},
     # generate-questions ships production_enabled: false (U4 §3 shadow-first),

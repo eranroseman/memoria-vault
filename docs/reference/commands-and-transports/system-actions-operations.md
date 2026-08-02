@@ -116,6 +116,7 @@ export, or egress policy.
 | Regenerate tracked projections | runtime projection helper (`write_tracked_projections`) / worker operation `regenerate-tracked-projections` | Rebuilds `index.md`, `bibliography.bib`, `AGENTS.md`, and owned `projects/<project>/argument.canvas` files in one worker-owned projection run. An orphan Canvas has no project owner, so scan quarantines it without regeneration. |
 | Regenerate workspace indexes | runtime projection helper (`write_workspace_indexes`) / worker operation `regenerate-indexes` | Rebuilds the root and bundle `index.md` projections from checked Concept files. |
 | Regenerate capability index | runtime capability helper (`write_capability_index`) / worker operation `regenerate-capability-index` | Rebuilds ignored `.memoria/index/capability-index.json` from packaged capability manifests and records product SHA-256 trust hashes. |
+| Apply decision-rule notices | PI-only worker operation `apply-decision-rule-notices` + runtime helper (`apply_decision_rule_notices`) | Recomputes the dashboard panels and the decision-rule assessment from the workspace, then records each crossing as one deduped `notice` card and one `armed`-to-`fired` flip in `.memoria/config/decision-rules.yaml`. The only path that applies a rule; assembling the dashboard never does. A paused `decision-rules` producer suppresses the card but never the status flip. |
 
 ## Search input and query (`memoria_vault.runtime.search_index`)
 

@@ -23,6 +23,7 @@ notes, draft, verify, and close the loop.
 
 - **CLI or any plain editor** (always first-class): every tutorial step
   runs with the `memoria` command. Try `memoria status --workspace .` now.
-- **Co-PI agent**: open an agent session in this vault. The method is
-  vault-embedded at `.claude/skills/memoria-copi/SKILL.md` and loads
-  automatically; ask the agent to walk the tutorial with you.
+- **Co-PI agent** (deferred): a guided co-PI walk-through is designed but
+  re-deferred until its preconditions close — see the ADR-113 status note on
+  [issue #902](https://github.com/eranroseman/memoria-vault/issues/902). The
+  tutorial arc above is the script it will dramatize.

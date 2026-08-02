@@ -28,6 +28,7 @@ from memoria_vault.engine import cockpit as engine_cockpit
 from memoria_vault.engine.empirical_events import REASON_CODES
 from memoria_vault.engine.surface_contract import SURFACE_ACTIONS, SURFACE_JOBS, actions_by_id
 from memoria_vault.runtime import evidence_review, onboarding_steps, state
+from memoria_vault.runtime.decision_rules import RULES_CONFIG, STATUSES, update_rule_status
 from memoria_vault.runtime.evidence_review import EVIDENCE_REVIEW_ROUTING_TYPES
 from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.subsystems.lib.edges import LINK_RELATIONS
@@ -252,6 +253,7 @@ def _build_parser() -> argparse.ArgumentParser:
     _attention_commands(sub)
     _operation_commands(sub)
     _review_commands(sub)
+    _simple_resource(sub, "decision-rule", {"set"})
     _simple_resource(sub, "steering", {"show", "edit"})
     _simple_resource(sub, "vocab", {"list", "add", "merge", "rename"})
     _simple_resource(sub, "journal", {"revert-preview", "show", "tail", "verify"})
@@ -701,7 +703,15 @@ def _simple_resource(
         parser_help = _resource_action_help(name, action)
         cmd = resource_sub.add_parser(action, **parser_help)
         _common(cmd)
-        if name == "steering" and action == "show":
+        if name == "decision-rule" and action == "set":
+            cmd.description = (
+                "Record a pre-registered decision rule's status "
+                f"({', '.join(sorted(STATUSES))}) in {RULES_CONFIG}."
+            )
+            cmd.add_argument("rule_id")
+            cmd.add_argument("status", choices=sorted(STATUSES))
+            cmd.set_defaults(handler=_cmd_decision_rule_set)
+        elif name == "steering" and action == "show":
             cmd.set_defaults(handler=_cmd_steering_show)
         elif name == "steering" and action == "edit":
             body = cmd.add_mutually_exclusive_group(required=True)
@@ -3194,6 +3204,59 @@ def _cmd_steering_show(args: argparse.Namespace) -> int:
             print(f"muted: {', '.join(payload['muted'])}")
         return 0
     return _emit(payload, args)
+
+
+def _cmd_decision_rule_set(args: argparse.Namespace) -> int:
+    """Record one decision rule's status (issue #1715).
+
+    `update_rule_status` materializes the whole shipped registry on its first
+    write, which is the reason this command exists: the documented workaround was
+    to hand-edit `.memoria/config/decision-rules.yaml`, and a hand-written
+    one-entry file *replaces* the shipped registry rather than overriding one row
+    of it, silently dropping the other sixteen pre-registrations.
+
+    Journaled and committed like `steering edit`, its nearest neighbour: the
+    registry is a tracked vault file, so a durable write with no journal event and
+    no commit would surface as a foreign edit on the next workspace scan.
+    """
+    from memoria_vault.runtime.trusted_writer import (
+        append_explicit_journal_event,
+        commit_explicit_writer_changes,
+    )
+
+    _require_pi_actor(args, "decision-rule set")
+    workspace = _workspace(args)
+    update_rule_status(workspace, args.rule_id, args.status)
+    event = append_explicit_journal_event(
+        workspace,
+        {
+            "event": "decision_rule_status_set",
+            "operation": "decision-rule-set",
+            "output_id": RULES_CONFIG,
+            "rule_id": args.rule_id,
+            "status": args.status,
+        },
+        actor=args.actor,
+        machine="memoria-cli",
+    )
+    commit = commit_explicit_writer_changes(
+        workspace,
+        f"set decision rule {args.rule_id} {args.status}",
+        [RULES_CONFIG],
+        actor=args.actor,
+        machine="memoria-cli",
+    )
+    return _emit(
+        {
+            "ok": True,
+            "path": RULES_CONFIG,
+            "rule_id": args.rule_id,
+            "status": args.status,
+            "event": event,
+            "commit": commit,
+        },
+        args,
+    )
 
 
 def _cmd_steering_edit(args: argparse.Namespace) -> int:

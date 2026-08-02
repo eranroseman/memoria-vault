@@ -4052,6 +4052,36 @@ at the top of D.2 — run them again; hold if they miss).
 > The section gate below (`python scripts/verify`) was still run, and passes, over
 > D.1-D.3 as landed.
 
+> **Branch B EXECUTED (2026-08-02, gold4 golden-token session).** The three coupled
+> edits landed in one tree: the seeded co-PI bullet, the `test_cli.py` assertion,
+> and the regeneration. Four things worth having on the record.
+>
+> 1. **The premise re-verified at execution time, not assumed.** `find . -name
+>    SKILL.md` → still zero repo-wide, and `grep -rn copi_bundle_files src/` → the
+>    function has **no production caller**. U4-A.1/.2 landed the *content* of
+>    `.claude/skills/memoria-copi/SKILL.md` at `2fe8c9ca` but nothing writes it into
+>    a vault, so the seeded pointer was genuinely dangling and the repoint is right
+>    today. That is recorded as "Open, unowned: nothing seeds the co-PI method
+>    files" in the surfaces plan, which now carries the obligation to repoint this
+>    bullet back when the seeding lands.
+> 2. **The `test_cli.py` assertion is pinned in both directions**, not the plan's
+>    single `assert "issues/902" in text`. Shipped as `assert
+>    ".claude/skills/memoria-copi/SKILL.md" not in text` **plus** `assert
+>    "issues/902" in text`. The spec §3 claim is "no seeded link dangles" — a
+>    one-sided `in` assertion stays green with the dead path left beside the new
+>    one, which is exactly the state this task exists to end. Measured: reverting
+>    the seed bullet is a killed mutant against `tests/test_cli.py -k start_here`
+>    *and* against the floor sweep, independently.
+> 3. **The golden accounting matched the prediction made before regenerating.** 38
+>    files, one line each: `"Start here.md"` `6096e4207fed` → `0dfadba42479`. Zero
+>    unreconciled diff lines; no `db` count, no `journal_kinds` entry, and no
+>    `files` key roster changed in any golden. Both values were also reproduced
+>    backwards — hashing the `origin/main` bytes of `Start here.md` through
+>    `floor_lib._redact` returns the committed `6096e4207fed` exactly.
+> 4. **The count is 38, not the 36 this amendment predicted** — U3-CANVAS and U4-B
+>    each minted a golden since it was written. The invariant it named (every
+>    golden carries `Start here.md`) still holds: `grep -l` finds it in 38 of 38.
+
 Spec §3, last bullet: the bootstrap-seeded `Start here.md` link to "the co-PI variant" repoints at the ADR-113 re-deferral note (the #902 comment shipped with the spec PR — already done, do not re-post) until ADR-113's preconditions close, so no seeded link dangles. BOOT-D.6 as currently planned seeds a co-PI bullet pointing at `.claude/skills/memoria-copi/SKILL.md` (`docs/superpowers/plans/2026-07-15-surfaces-bootstrap-and-plugins.md:5376-5378`) and asserts that path in its test (`:5338`) — the U4 plugin that would put a file there is designed but unimplemented.
 
 **Files:**
@@ -4092,7 +4122,7 @@ Spec §3, last bullet: the bootstrap-seeded `Start here.md` link to "the co-PI v
 
   Green: the red grep now hits. `docs/superpowers/` is excluded from the doc-claims gate (`scripts/checks/doc_claims_gate.py:23`) and from cspell (`cspell.json` ignorePaths), so no gate interaction.
 
-- [ ] **Branch B** — red state: `grep -n "memoria-copi" "src/memoria_vault/product/workspace_seed/Start here.md"` → 1 hit (the dangling pointer is present). Replace the seeded co-PI bullet:
+- [x] **Branch B** — red state: `grep -n "memoria-copi" "src/memoria_vault/product/workspace_seed/Start here.md"` → 1 hit (the dangling pointer is present). Replace the seeded co-PI bullet:
 
   old:
 
