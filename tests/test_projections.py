@@ -195,6 +195,18 @@ def test_workspace_index_projection_drift_check(tmp_path: Path) -> None:
     assert not check_workspace_indexes(vault)
 
 
+def test_workspace_index_is_okf_reserved_shape(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    content = render_workspace_index(vault, "index.md")
+
+    frontmatter = content.split("---\n")[1]
+    assert frontmatter == 'okf_version: "0.2"\n'
+    assert "type:" not in frontmatter
+    for line in content.splitlines():
+        if line.startswith("- ["):
+            assert ") - " in line, f"index entry missing description: {line}"
+
+
 def test_projection_inventory_does_not_duplicate_changed_fixed_paths(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
     (vault / "index.md").write_text("stale\n", encoding="utf-8")
