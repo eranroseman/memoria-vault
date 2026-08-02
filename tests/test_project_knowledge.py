@@ -24,7 +24,10 @@ from memoria_vault.runtime.knowledge import (
 from memoria_vault.runtime.knowledge import (
     write_project_outline as _write_project_outline,
 )
-from memoria_vault.runtime.trusted_writer import append_explicit_journal_event
+from memoria_vault.runtime.trusted_writer import (
+    append_explicit_journal_event,
+    rebuild_concept_mirror_from_files,
+)
 from memoria_vault.runtime.vaultio import read_frontmatter
 from tests.helpers import (
     _md,
@@ -34,6 +37,11 @@ from tests.helpers import (
     init_git,
     mark_file_status,
 )
+
+ULID_THESIS = "01JXTTTTTTTTTTTTTTTTTTTTTT"
+ULID_SUPPORT = "01JXPPPPPPPPPPPPPPPPPPPPPP"
+ULID_ELSEWHERE_LICENSE = "01JXLLLLLLLLLLLLLLLLLLLLLL"
+ULID_ELSEWHERE_CLAIM = "01JXCCCCCCCCCCCCCCCCCCCCCC"
 
 
 def frame_project_paper(vault: Path, *args, **kwargs):
@@ -788,6 +796,547 @@ def test_support_and_a_rebuttal_coexist_as_contested_without_masking_the_support
         "has_refutation": True,
     }
     assert result["evidence_saturation"] == "saturated"
+
+
+def test_a_rebuttal_only_component_reports_conflict_and_never_no_refutation(
+    tmp_path: Path,
+) -> None:
+    """The finding family reads the challenge roster, not `contradicts` alone (Graph-R11).
+
+    ERP-D.3a staged this component `contested` with `has_refutation: True` while
+    the same payload still carried `no-refutation` in `findings`, no `conflict`
+    row in `gap_findings`, and the "seek a counterargument" advisory. All three
+    are asserted whole here rather than by count: a `relation_count` assertion
+    reaches the producer and projects away every kind it emits.
+    """
+    vault = _staged_argument_vault(tmp_path, ["rebuttal", "rebuttal", "rebuttal"])
+
+    result = analyze_project_argument(vault, "project-alpha")
+
+    assert result["findings"] == [{"kind": "no-support", "severity": "high"}]
+    assert result["gap_findings"] == [
+        {
+            "kind": "no-support",
+            "severity": "high",
+            "advice": "add supporting evidence notes",
+        },
+        {
+            "kind": "conflict",
+            "severity": "medium",
+            "advice": "resolve or preserve the contradiction",
+        },
+    ]
+    assert result["advisories"] == []
+    assert result["saturation_conditions"] == {
+        "mature_graph": True,
+        "has_support": False,
+        "has_refutation": True,
+    }
+
+
+def test_a_qualifier_only_component_keeps_the_no_refutation_finding_and_advisory(
+    tmp_path: Path,
+) -> None:
+    """The other direction: structure is not challenge, so the ask still stands.
+
+    Widening `no-refutation` to every non-`supports` verb would silence this
+    component too. `qualifier` bounds a claim's scope (EDGES section 4), so a
+    thesis holding only qualifiers genuinely has no counterpoint yet — the
+    finding, the missing `conflict` row and the advisory all stay.
+    """
+    vault = _staged_argument_vault(tmp_path, ["qualifier", "qualifier", "qualifier"])
+
+    result = analyze_project_argument(vault, "project-alpha")
+
+    assert result["findings"] == [
+        {"kind": "no-support", "severity": "high"},
+        {"kind": "no-refutation", "severity": "medium"},
+    ]
+    assert result["gap_findings"] == [
+        {
+            "kind": "no-support",
+            "severity": "high",
+            "advice": "add supporting evidence notes",
+        }
+    ]
+    assert result["advisories"] == [
+        {
+            "kind": "refutation",
+            "severity": "medium",
+            "advice": "seek a counterargument before treating the thesis as saturated",
+        }
+    ]
+
+
+def test_a_supports_only_component_keeps_the_no_refutation_finding_and_advisory(
+    tmp_path: Path,
+) -> None:
+    """`supports` is the support roster and nothing else — the third arm, alone.
+
+    Three supports is a mature, uncountered thesis: no `no-support` finding, no
+    `conflict` row, and the counterargument ask is exactly what it should raise.
+    A challenge roster that swallowed `supports` would empty all three.
+    """
+    vault = _staged_argument_vault(tmp_path, ["supports", "supports", "supports"])
+
+    result = analyze_project_argument(vault, "project-alpha")
+
+    assert result["findings"] == [{"kind": "no-refutation", "severity": "medium"}]
+    assert result["gap_findings"] == []
+    assert result["advisories"] == [
+        {
+            "kind": "refutation",
+            "severity": "medium",
+            "advice": "seek a counterargument before treating the thesis as saturated",
+        }
+    ]
+
+
+def test_no_support_gap_replaces_the_unstated_warrant_alias(tmp_path: Path) -> None:
+    """`supports == 0` is a support gap, not an unstated warrant (EDGES section 8).
+
+    The alias pair the audit found: one condition emitting `no-support` in
+    `findings` and `unstated-warrant` in `gap_findings`. `unstated-warrant` is
+    now reserved for genuine warrant absence, so it may not appear here at all.
+    """
+    vault = _staged_argument_vault(tmp_path, ["contradicts", "contradicts", "contradicts"])
+
+    result = analyze_project_argument(vault, "project-alpha")
+
+    assert result["gap_findings"] == [
+        {
+            "kind": "no-support",
+            "severity": "high",
+            "advice": "add supporting evidence notes",
+        },
+        {
+            "kind": "conflict",
+            "severity": "medium",
+            "advice": "resolve or preserve the contradiction",
+        },
+    ]
+
+
+def _warrant_argument_vault(tmp_path: Path) -> Path:
+    """A grounded thesis component with an id-bearing v16 mirror behind it.
+
+    `supports` is present on purpose: the warrant-absence guard asks about a
+    *grounded* claim, so a component with no support edge is out of its scope
+    before any threshold is read.
+    """
+    copy_memoria_dirs(tmp_path, "schemas")
+    _md(
+        tmp_path / "projects/project-alpha/project.md",
+        "type: project\ncheck_status: checked\ntitle: Alpha project\n"
+        "description: Project\nthesis: notes/thesis.md\n",
+    )
+    _md(
+        tmp_path / "notes/thesis.md",
+        f"type: note\nid: {ULID_THESIS}\ncheck_status: checked\ntitle: Thesis\n",
+    )
+    _md(
+        tmp_path / "notes/support.md",
+        f"type: note\nid: {ULID_SUPPORT}\ncheck_status: checked\ntitle: Support\n"
+        "links:\n  supports:\n    - notes/thesis.md\n",
+    )
+    _md(
+        tmp_path / "notes/elsewhere-license.md",
+        f"type: note\nid: {ULID_ELSEWHERE_LICENSE}\ncheck_status: checked\ntitle: License\n",
+    )
+    _md(
+        tmp_path / "notes/elsewhere-claim.md",
+        f"type: note\nid: {ULID_ELSEWHERE_CLAIM}\ncheck_status: checked\ntitle: Claim\n",
+    )
+    rebuild_concept_mirror_from_files(tmp_path)
+    return tmp_path
+
+
+def _register_warrant_threshold(vault: Path, value: str) -> None:
+    config = vault / ".memoria/config"
+    config.mkdir(parents=True, exist_ok=True)
+    (config / "edges.yaml").write_text(f"warrant_absence_threshold: {value}\n", encoding="utf-8")
+
+
+def _warrant_edge(source_id: str, source_path: str, target_id: str, target_path: str) -> dict:
+    return {
+        "source_concept_id": source_id,
+        "relation_type": "warrant",
+        "target_concept_id": target_id,
+        "target_path": target_path,
+        "check_status": "checked",
+        "source_path": source_path,
+    }
+
+
+def test_warrant_absence_finding_is_disabled_until_a_threshold_is_registered(
+    tmp_path: Path,
+) -> None:
+    """A warrant elsewhere and none here, but no registered threshold: still silence.
+
+    The absence-honesty guard (EDGES section 4 and its acceptance criterion). The
+    elsewhere warrant is seeded on purpose: a fixture with zero warrant edges
+    vault-wide is silent under a default-on threshold too, so it could not tell
+    "disabled" from "enabled and below count".
+    """
+    vault = _warrant_argument_vault(tmp_path)
+    state.replace_concept_edges(
+        vault,
+        [
+            _warrant_edge(
+                ULID_ELSEWHERE_LICENSE,
+                "notes/elsewhere-license.md",
+                ULID_ELSEWHERE_CLAIM,
+                "notes/elsewhere-claim.md",
+            )
+        ],
+    )
+
+    result = analyze_project_argument(vault, "project-alpha")
+
+    assert result["gap_findings"] == []
+
+
+def test_warrant_absence_finding_fires_above_threshold_with_its_denominator(
+    tmp_path: Path,
+) -> None:
+    """One warrant elsewhere, threshold met, none in this component — the finding fires.
+
+    `warrant_count` rides the row as the denominator so the reader can see the
+    silence is measured, and the two endpoints of the elsewhere edge are stored
+    as ULIDs: the guard compares the mirror's *projected* paths, never an id.
+    """
+    vault = _warrant_argument_vault(tmp_path)
+    _register_warrant_threshold(vault, "1")
+    state.replace_concept_edges(
+        vault,
+        [
+            _warrant_edge(
+                ULID_ELSEWHERE_LICENSE,
+                "notes/elsewhere-license.md",
+                ULID_ELSEWHERE_CLAIM,
+                "notes/elsewhere-claim.md",
+            )
+        ],
+    )
+    with state.connect(vault) as conn:
+        stored = conn.execute("SELECT source_concept_id FROM concept_edges").fetchone()
+    assert str(stored["source_concept_id"]) == ULID_ELSEWHERE_LICENSE
+
+    result = analyze_project_argument(vault, "project-alpha")
+
+    assert result["gap_findings"] == [
+        {
+            "kind": "unstated-warrant",
+            "severity": "medium",
+            "advice": "state the warrant on a grounding edge or link a warrant note",
+            "warrant_count": 1,
+        }
+    ]
+
+
+def test_an_unchecked_warrant_elsewhere_still_counts_toward_the_denominator(
+    tmp_path: Path,
+) -> None:
+    """The denominator measures vault-wide *usage*, so it walks unchecked topology too.
+
+    `concept_edge_path_records(..., checked_only=False)` is the deliberate call:
+    a vault whose warrants are all still pending is using warrants, and reading
+    only the checked ones would report that usage as non-use and re-open the
+    silence this guard exists to prevent.
+    """
+    vault = _warrant_argument_vault(tmp_path)
+    _register_warrant_threshold(vault, "1")
+    state.replace_concept_edges(
+        vault,
+        [
+            _warrant_edge(
+                ULID_ELSEWHERE_LICENSE,
+                "notes/elsewhere-license.md",
+                ULID_ELSEWHERE_CLAIM,
+                "notes/elsewhere-claim.md",
+            )
+            | {"check_status": "unchecked"}
+        ],
+    )
+
+    result = analyze_project_argument(vault, "project-alpha")
+
+    assert result["gap_findings"] == [
+        {
+            "kind": "unstated-warrant",
+            "severity": "medium",
+            "advice": "state the warrant on a grounding edge or link a warrant note",
+            "warrant_count": 1,
+        }
+    ]
+
+
+def test_a_warrant_inside_the_component_suppresses_the_absence_finding(
+    tmp_path: Path,
+) -> None:
+    """Same threshold, same count — but this component states its warrant.
+
+    The complementary case to the one above, and the reason the guard projects
+    endpoints to paths: the component is a set of vault paths, so an edge stored
+    under ULIDs only meets it after `concept_edge_path_records` renders it.
+    """
+    vault = _warrant_argument_vault(tmp_path)
+    _register_warrant_threshold(vault, "1")
+    state.replace_concept_edges(
+        vault,
+        [
+            _warrant_edge(
+                ULID_ELSEWHERE_LICENSE,
+                "notes/elsewhere-license.md",
+                ULID_THESIS,
+                "notes/thesis.md",
+            )
+        ],
+    )
+
+    result = analyze_project_argument(vault, "project-alpha")
+
+    assert result["gap_findings"] == []
+
+
+def test_a_warrant_whose_source_is_in_the_component_suppresses_the_finding_too(
+    tmp_path: Path,
+) -> None:
+    """Membership is symmetric: either endpoint inside the component states the warrant.
+
+    The mirror image of the case above, which puts the component endpoint on the
+    *target* side. Only one of the two directions is exercised by that test, so
+    a guard that dropped either arm would still pass it.
+    """
+    vault = _warrant_argument_vault(tmp_path)
+    _register_warrant_threshold(vault, "1")
+    state.replace_concept_edges(
+        vault,
+        [
+            _warrant_edge(
+                ULID_SUPPORT,
+                "notes/support.md",
+                ULID_ELSEWHERE_CLAIM,
+                "notes/elsewhere-claim.md",
+            )
+        ],
+    )
+
+    result = analyze_project_argument(vault, "project-alpha")
+
+    assert result["gap_findings"] == []
+
+
+def test_a_warrant_edge_attribute_counts_as_a_stated_warrant(tmp_path: Path) -> None:
+    """ "No warrant edge **or edge-attribute**" — the attribute arm of the retarget.
+
+    A `supports` edge carrying `attributes_json` `{"warrant": ...}` states the
+    warrant on the grounding edge itself, which is the shape EDGES section 8
+    names first. The elsewhere `warrant` row is what makes the attribute arm
+    *observable*: without it, dropping the arm would take `warrant_count` to
+    zero and the finding would stay silent for the threshold reason instead —
+    the same empty answer for the opposite reason. With it, the threshold is met
+    either way and only the suppression differs.
+    """
+    vault = _warrant_argument_vault(tmp_path)
+    _register_warrant_threshold(vault, "1")
+    state.replace_concept_edges(
+        vault,
+        [
+            _warrant_edge(
+                ULID_ELSEWHERE_LICENSE,
+                "notes/elsewhere-license.md",
+                ULID_ELSEWHERE_CLAIM,
+                "notes/elsewhere-claim.md",
+            ),
+            _warrant_edge(ULID_SUPPORT, "notes/support.md", ULID_THESIS, "notes/thesis.md")
+            | {
+                "relation_type": "supports",
+                "attributes_json": '{"warrant": "licensed by method"}',
+            },
+        ],
+    )
+
+    result = analyze_project_argument(vault, "project-alpha")
+
+    assert result["gap_findings"] == []
+
+
+def test_warrant_absence_stays_silent_below_the_registered_threshold(
+    tmp_path: Path,
+) -> None:
+    """One warrant vault-wide against a threshold of two: still non-use, still silent.
+
+    The threshold is read as a number, not as an on/off flag — a fixture that
+    registered `1` against a count of `1` cannot tell the two apart.
+    """
+    vault = _warrant_argument_vault(tmp_path)
+    _register_warrant_threshold(vault, "2")
+    state.replace_concept_edges(
+        vault,
+        [
+            _warrant_edge(
+                ULID_ELSEWHERE_LICENSE,
+                "notes/elsewhere-license.md",
+                ULID_ELSEWHERE_CLAIM,
+                "notes/elsewhere-claim.md",
+            )
+        ],
+    )
+
+    result = analyze_project_argument(vault, "project-alpha")
+
+    assert result["gap_findings"] == []
+
+
+def test_warrant_absence_is_not_asked_of_an_ungrounded_component(tmp_path: Path) -> None:
+    """No `supports` edge: the component's problem is `no-support`, not its warrant.
+
+    Ordering matters for the reader — an unsupported claim must not be told to
+    state a warrant for support it does not have.
+    """
+    vault = _warrant_argument_vault(tmp_path)
+    # Same path and same id, so the mirror built above still renders it — only
+    # the verb changes, from the support roster to the structure roster.
+    _md(
+        vault / "notes/support.md",
+        f"type: note\nid: {ULID_SUPPORT}\ncheck_status: checked\ntitle: Support\n"
+        "links:\n  extends:\n    - notes/thesis.md\n",
+    )
+    _register_warrant_threshold(vault, "1")
+    state.replace_concept_edges(
+        vault,
+        [
+            _warrant_edge(
+                ULID_ELSEWHERE_LICENSE,
+                "notes/elsewhere-license.md",
+                ULID_ELSEWHERE_CLAIM,
+                "notes/elsewhere-claim.md",
+            )
+        ],
+    )
+
+    result = analyze_project_argument(vault, "project-alpha")
+
+    assert result["gap_findings"] == [
+        {
+            "kind": "no-support",
+            "severity": "high",
+            "advice": "add supporting evidence notes",
+        }
+    ]
+
+
+def test_saturation_block_reads_the_challenge_side_of_its_own_conditions(
+    tmp_path: Path,
+) -> None:
+    """The gap block may not contradict the payload it summarizes (Graph-R11).
+
+    ERP-D.3a left `_saturation_block` deriving `has_counterpoint` from
+    `contradicts_count`, so a rebuttal-only thesis published `uncountered: 1` and
+    `has_counterpoint: False` beside its own `conditions.has_refutation: True`.
+    The payload exports no per-role count for `rebuttal`/`tension`, so the
+    conditions dict is the only honest source — asserted whole, both halves in
+    one equality.
+    """
+    vault = _staged_argument_vault(tmp_path, ["supports", "rebuttal", "rebuttal"])
+
+    argument = analyze_project_argument(vault, "project-alpha")
+
+    assert argument["contradicts_count"] == 0
+    assert knowledge._saturation_block(argument) == {
+        "claims": 1,
+        "saturated": 1,
+        "unsupported": 0,
+        "uncountered": 0,
+        "ready": True,
+        "claim_saturation": [
+            {
+                "claim": "notes/thesis.md",
+                "has_support": True,
+                "has_counterpoint": True,
+                "saturated": True,
+            }
+        ],
+        "conditions": {
+            "mature_graph": True,
+            "has_support": True,
+            "has_refutation": True,
+        },
+        "evidence_saturation": "saturated",
+    }
+
+
+def test_saturation_block_still_counts_an_unsupported_claim_as_unsupported(
+    tmp_path: Path,
+) -> None:
+    """The support side keeps its own answer while the challenge side flips.
+
+    Rebuttal-only: `unsupported: 1` and `has_support: False` next to
+    `has_counterpoint: True`. Reading both sides off one conditions dict must not
+    collapse them into one value, and every other `_saturation_block` fixture
+    here has support, so this is the only case that can catch that.
+    """
+    vault = _staged_argument_vault(tmp_path, ["rebuttal", "rebuttal", "rebuttal"])
+
+    argument = analyze_project_argument(vault, "project-alpha")
+
+    assert knowledge._saturation_block(argument) == {
+        "claims": 1,
+        "saturated": 0,
+        "unsupported": 1,
+        "uncountered": 0,
+        "ready": False,
+        "claim_saturation": [
+            {
+                "claim": "notes/thesis.md",
+                "has_support": False,
+                "has_counterpoint": True,
+                "saturated": False,
+            }
+        ],
+        "conditions": {
+            "mature_graph": True,
+            "has_support": False,
+            "has_refutation": True,
+        },
+        "evidence_saturation": "unsaturated",
+    }
+
+
+def test_saturation_block_still_counts_an_uncountered_claim_as_uncountered(
+    tmp_path: Path,
+) -> None:
+    """The other direction: reading the conditions must not answer True for everything.
+
+    Three supports and no challenge verb of any kind — `uncountered: 1`,
+    `has_counterpoint: False`, `ready: False`, and the conditions agree.
+    """
+    vault = _staged_argument_vault(tmp_path, ["supports", "supports", "supports"])
+
+    argument = analyze_project_argument(vault, "project-alpha")
+
+    assert knowledge._saturation_block(argument) == {
+        "claims": 1,
+        "saturated": 0,
+        "unsupported": 0,
+        "uncountered": 1,
+        "ready": False,
+        "claim_saturation": [
+            {
+                "claim": "notes/thesis.md",
+                "has_support": True,
+                "has_counterpoint": False,
+                "saturated": False,
+            }
+        ],
+        "conditions": {
+            "mature_graph": True,
+            "has_support": True,
+            "has_refutation": False,
+        },
+        "evidence_saturation": "unsaturated",
+    }
 
 
 def test_analyze_project_argument_ignores_a_link_target_that_escapes_its_folder(

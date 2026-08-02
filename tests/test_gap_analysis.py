@@ -648,6 +648,100 @@ def test_analyze_gaps_adds_project_argument_health(tmp_path: Path) -> None:
     }
 
 
+def test_analyze_gaps_counts_a_rebuttal_as_the_claim_counterpoint(tmp_path: Path) -> None:
+    """The whole gap report agrees with Graph-R11, not just the argument lens.
+
+    Same shape as the test above with `rebuttal` in place of `contradicts` — the
+    verb issue #1624 was filed about. Before ERP-D.3 this vault produced a
+    `no-refutation` gap card, no `conflict` card, and a saturation block reading
+    `uncountered: 1` beside its own `has_refutation: True`.
+    """
+    _md(
+        tmp_path / "projects/project-alpha/project.md",
+        "type: project\ncheck_status: checked\ntitle: Alpha project\n"
+        "description: Project\nthesis: notes/thesis.md\n",
+    )
+    _md(
+        tmp_path / "notes/thesis.md",
+        "type: note\ncheck_status: checked\ntitle: Thesis\nstatus: accepted\n",
+    )
+    _md(
+        tmp_path / "notes/support.md",
+        "type: note\ncheck_status: checked\ntitle: Support\nstatus: accepted\n"
+        "links:\n  supports:\n    - notes/thesis.md\n",
+    )
+    _md(
+        tmp_path / "notes/rebut.md",
+        "type: note\ncheck_status: checked\ntitle: Rebut\nstatus: accepted\n"
+        "links:\n  rebuttal:\n    - notes/thesis.md\n",
+    )
+
+    result = analyze_gaps(tmp_path, project_path="project-alpha")
+
+    gaps = {gap["finding_kind"]: gap for gap in result["gaps"] if "finding_kind" in gap}
+    assert set(gaps) == {"thin-argument", "conflict"}
+    _assert_gap_contract(gaps["conflict"], "argument-fragile")
+    assert result["saturation"] == {
+        "claims": 1,
+        "saturated": 1,
+        "unsupported": 0,
+        "uncountered": 0,
+        "ready": True,
+        "claim_saturation": [
+            {
+                "claim": "notes/thesis.md",
+                "has_support": True,
+                "has_counterpoint": True,
+                "saturated": True,
+            }
+        ],
+        "conditions": {
+            "mature_graph": False,
+            "has_support": True,
+            "has_refutation": True,
+        },
+        "evidence_saturation": "unsaturated",
+    }
+
+
+def test_the_no_support_gap_card_seeds_the_support_action_from_both_sources(
+    tmp_path: Path,
+) -> None:
+    """`no-support` reaches the card twice, and both arrivals must seed the same action.
+
+    `_project_argument_gaps` reads `findings` and `gap_findings`. The gap row
+    carries its own `advice`; the finding row carries none, so its seed comes
+    from `_argument_next_action`, which used to fall through to the generic
+    "curate checked notes" line. Asserting by `finding_kind` alone would collapse
+    the two cards and see only the row that already carried advice.
+    """
+    _md(
+        tmp_path / "projects/project-alpha/project.md",
+        "type: project\ncheck_status: checked\ntitle: Alpha project\n"
+        "description: Project\nthesis: notes/thesis.md\n",
+    )
+    _md(
+        tmp_path / "notes/thesis.md",
+        "type: note\ncheck_status: checked\ntitle: Thesis\nstatus: accepted\n",
+    )
+    _md(
+        tmp_path / "notes/rebut.md",
+        "type: note\ncheck_status: checked\ntitle: Rebut\nstatus: accepted\n"
+        "links:\n  rebuttal:\n    - notes/thesis.md\n",
+    )
+
+    result = analyze_gaps(tmp_path, project_path="project-alpha")
+
+    assert {
+        (gap["finding_source"], gap["proposed_seed"], tuple(gap["next_actions"]))
+        for gap in result["gaps"]
+        if gap.get("finding_kind") == "no-support"
+    } == {
+        ("argument-finding", "add supporting evidence notes", ("add supporting evidence notes",)),
+        ("argument-gap", "add supporting evidence notes", ("add supporting evidence notes",)),
+    }
+
+
 def test_analyze_gaps_seeds_project_scope_and_thesis_terms(tmp_path: Path) -> None:
     _md(
         tmp_path / "projects/project-alpha/project.md",
