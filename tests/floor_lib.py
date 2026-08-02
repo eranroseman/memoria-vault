@@ -6,6 +6,7 @@ Spec: docs/superpowers/specs/2026-07-13-development-pipeline-spec.md §3.4.
 from __future__ import annotations
 
 import contextlib
+import difflib
 import hashlib
 import io
 import json
@@ -303,6 +304,18 @@ def vault_digest(vault: Path) -> dict:
 GOLDENS_DIR = ROOT / "tests/fixtures/floor/goldens"
 
 
+def _golden_diff(name: str, expected: str, rendered: str) -> str:
+    """Unified diff of a drifted golden, for the failure message."""
+    return "".join(
+        difflib.unified_diff(
+            expected.splitlines(keepends=True),
+            rendered.splitlines(keepends=True),
+            fromfile=f"golden/{name}.json",
+            tofile=f"rendered/{name}.json",
+        )
+    )
+
+
 def assert_golden(name: str, digest: dict) -> None:
     """Compare `digest` against the checked-in golden for `name`.
 
@@ -325,8 +338,17 @@ def assert_golden(name: str, digest: dict) -> None:
         f"missing golden {path.name}; run once with MEMORIA_FLOOR_UPDATE_GOLDENS=1 "
         "and review the diff"
     )
-    assert path.read_text(encoding="utf-8") == rendered, (
-        f"golden drift for {name}; review with git diff after MEMORIA_FLOOR_UPDATE_GOLDENS=1"
+    expected = path.read_text(encoding="utf-8")
+    # Print the drift itself, not just its name. `floor_lib` is a helper
+    # module, so pytest never rewrites this assert, and the custom message
+    # replaces any explanation pytest would otherwise produce — a bare
+    # "golden drift for X" made every past investigation start by trying to
+    # reproduce the failure instead of by reading it (#1691: three sightings
+    # on three operations, one of them costing 22 gate runs). Goldens are
+    # ~90 lines, so an unabridged unified diff is bounded and cheap.
+    assert expected == rendered, (
+        f"golden drift for {name}; review with git diff after "
+        f"MEMORIA_FLOOR_UPDATE_GOLDENS=1\n{_golden_diff(name, expected, rendered)}"
     )
 
 
