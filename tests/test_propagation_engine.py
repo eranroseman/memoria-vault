@@ -11,11 +11,13 @@ from memoria_vault.runtime.jsonl import iter_jsonl
 from memoria_vault.runtime.policy.audit import EMPTY_SHA256, sha256_file
 from memoria_vault.runtime.propagation import (
     _target_aliases,
+    active_project_slices,
     compute_consequences,
     mark_consequence,
     propagate_consequences,
     propagate_consequences_explicit,
     propagate_edge_change,
+    route_consequence_cards,
 )
 from memoria_vault.runtime.vaultio import read_frontmatter
 from tests.helpers import call_with_context, git, write_note
@@ -672,7 +674,8 @@ def test_retraction_sweep_labels_every_reached_claim_and_commits_them(tmp_path: 
         if row.get("check") == "typed-consequence"
     ]
     assert [row["target_id"] for row in journal] == sorted(_RETRACTION_CLOSURE)
-    # Loudness routing is ERP-C.6 and has not landed: the engine is quiet-tier.
+    # Quiet tier (ERP-C.6): this vault holds no project, so nothing the sweep
+    # marked lands in an active slice and the whole run is labels plus journal.
     assert result["cards"] == []
 
 
@@ -863,3 +866,234 @@ def test_scan_demotion_wrappers_attach_grounding_consequences(tmp_path: Path) ->
         "notes/second.md": "warrant-lost",
     }
     assert read_frontmatter(vault / "notes/second.md")["consequence"] == "warrant-lost"
+
+
+# --- ERP-C.6: active-project slices + loudness routing ---------------------
+#
+# Both functions answer in **path space** — the space `marked` is keyed in and
+# the space `edges.concept_edge_path_pairs` publishes. The fixtures below keep
+# that distinguishable from identity space on purpose: `_N1_ULID` is a file
+# Concept whose `concepts.path` is not its id, and `notes/pending.md` is a
+# target the mirror has never resolved, so `concept_edges.target_concept_id` is
+# NULL for it. An adjacency built from those two columns instead would drop the
+# first member and give every pending edge in the vault the same blank node to
+# join through.
+_N1_ULID = "01JXAAAAAAAAAAAAAAAAAAAAA1"
+
+
+def _project(vault: Path, slug: str, *, thesis: str, archived: bool = False) -> str:
+    """Write one `type: project` file; return its vault-relative path."""
+    rel = f"projects/{slug}.md"
+    path = vault / rel
+    path.parent.mkdir(parents=True, exist_ok=True)
+    shelved = "archived: true\n" if archived else ""
+    path.write_text(
+        f"---\ntype: project\ntitle: {slug}\ntags: []\nlinks: {{}}\n"
+        f"thesis: {thesis}\n{shelved}---\nBody.\n",
+        encoding="utf-8",
+    )
+    return rel
+
+
+def _slice_rows() -> list[dict[str, str]]:
+    """The thesis neighbourhood: one ULID-keyed source, one unresolved target.
+
+    The second row is deliberately **unchecked**. A project's slice is its
+    topology, not its verified topology: an edge the PI has not confirmed still
+    says which work the cascade would reach, and the loudness question is where
+    the blast lands, not whether the graph is settled.
+    """
+    return [
+        {
+            "source_concept_id": _N1_ULID,
+            "source_path": "notes/n1.md",
+            "relation_type": "supports",
+            "target_path": "notes/thesis.md",
+            "check_status": "checked",
+        },
+        {
+            **_edge_row("notes/thesis.md", "supports", "notes/pending.md"),
+            "check_status": "unchecked",
+        },
+    ]
+
+
+def _seed_active_project(vault: Path) -> str:
+    """One active project over a thesis reached undirected from both sides."""
+    write_note(vault, "thesis", "checked", "Thesis body.")
+    (vault / "notes/n1.md").write_text(
+        "---\ntype: note\ntitle: n1\ntags: []\nlinks: {}\n---\nBody of n1.\n", encoding="utf-8"
+    )
+    # A verdict-bearing row survives this rebuild's prune, so the thesis keeps
+    # its own path-keyed identity while `n1` takes a ULID.
+    state.rebuild_file_concept_mirror(
+        vault, [{"concept_id": _N1_ULID, "concept_type": "note", "path": "notes/n1.md"}]
+    )
+    state.replace_concept_edges(vault, _slice_rows())
+    return _project(vault, "thesis-a", thesis="notes/thesis.md")
+
+
+def _seed_second_project(vault: Path) -> str:
+    """A second active project whose slice shares nothing with the first.
+
+    Its home is the nested `projects/<slug>/project.md` shape, and its slug
+    sorts *before* the flat project's while `iter_markdown` yields it *after* —
+    a directory walk hands back a directory's own files ahead of its subtrees.
+    So the two orders disagree here, which is what makes the router's project
+    order observable at all.
+    """
+    write_note(vault, "thesis-b", "checked", "Second thesis body.")
+    state.replace_concept_edges(
+        vault,
+        [*_slice_rows(), _edge_row("notes/thesis-b.md", "supports", "notes/pending-b.md")],
+    )
+    return _project(vault, "a-nested/project", thesis="notes/thesis-b.md")
+
+
+def test_active_project_slice_reaches_the_thesis_neighbourhood_in_path_space(
+    tmp_path: Path,
+) -> None:
+    """Exact membership, both directions, and neither endpoint read as an identity."""
+    vault = workspace(tmp_path)
+    project_rel = _seed_active_project(vault)
+
+    assert active_project_slices(vault) == {
+        project_rel: {project_rel, "notes/thesis.md", "notes/n1.md", "notes/pending.md"}
+    }
+
+
+def test_two_active_projects_slice_separately(tmp_path: Path) -> None:
+    """One entry each, and an unresolved target on both sides does not fuse them."""
+    vault = workspace(tmp_path)
+    first = _seed_active_project(vault)
+    second = _seed_second_project(vault)
+
+    slices = active_project_slices(vault)
+
+    assert set(slices) == {first, second}
+    assert slices[first] == {first, "notes/thesis.md", "notes/n1.md", "notes/pending.md"}
+    assert slices[second] == {second, "notes/thesis-b.md", "notes/pending-b.md"}
+
+
+def test_an_archived_project_is_not_an_active_slice(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    _seed_active_project(vault)
+    _project(vault, "thesis-a", thesis="notes/thesis.md", archived=True)
+
+    assert active_project_slices(vault) == {}
+
+
+def test_a_thesis_that_is_not_path_space_seeds_nothing(tmp_path: Path) -> None:
+    """`thesis:` has one normalizer and it is `edges.thesis_rel` (issue #1623).
+
+    A title is alias space: completing it here by hand would mint
+    `notes/Toulmin: the warrant.md`, a node no graph contains, and the project
+    would slice to a neighbourhood of one either way — silently, and for the
+    wrong reason.
+    """
+    vault = workspace(tmp_path)
+    _seed_active_project(vault)
+    titled = _project(vault, "titled", thesis="'Toulmin: the warrant'")
+
+    assert active_project_slices(vault)[titled] == {titled}
+
+
+def test_a_flood_of_marks_routes_one_alert_card_for_the_project_it_touched(
+    tmp_path: Path,
+) -> None:
+    vault = workspace(tmp_path)
+    project_rel = _seed_active_project(vault)
+    marked = {
+        "notes/n1.md": "grounds-lost",
+        "notes/pending.md": "grounds-lost",
+        "notes/thesis.md": "warrant-lost",
+    }
+    marked.update({f"notes/off-slice-{index}.md": "grounds-lost" for index in range(5)})
+
+    cards = route_consequence_cards(
+        vault, marked, trigger_id="catalog/sources/w1", reason="work w1 retracted"
+    )
+
+    assert len(cards) == 1
+    frontmatter = read_frontmatter(vault / cards[0])
+    assert frontmatter["loudness"] == "alert"
+    assert frontmatter["attention_kind"] == "flag"
+    assert frontmatter["target"] == project_rel
+    # Counted over the slice, not over the flood: eight marks, three of them here,
+    # and the whole sentence, because the counts are the deliverable.
+    assert frontmatter["finding"] == (
+        "3 concept(s) in this project's slice were marked stale "
+        "(grounds-lost: 2, warrant-lost: 1) after: work w1 retracted"
+    )
+    assert "off-slice" not in (vault / cards[0]).read_text(encoding="utf-8")
+    # Re-run: the dedupe slug keeps it to the same single card.
+    again = route_consequence_cards(
+        vault, marked, trigger_id="catalog/sources/w1", reason="work w1 retracted"
+    )
+    assert again == []
+    assert len(list((vault / "inbox").glob("flag-*.md"))) == 1
+
+
+def test_every_touched_active_project_gets_its_own_card(tmp_path: Path) -> None:
+    """One card per (trigger, project) is a bound, not a total: two here, not one."""
+    vault = workspace(tmp_path)
+    first = _seed_active_project(vault)
+    second = _seed_second_project(vault)
+
+    cards = route_consequence_cards(
+        vault,
+        {"notes/thesis.md": "grounds-lost", "notes/thesis-b.md": "warrant-lost"},
+        trigger_id="catalog/sources/w1",
+        reason="work w1 retracted",
+    )
+
+    # By project, not by whatever order the vault walk happened to yield: the
+    # nested home sorts first and walks last (see `_seed_second_project`).
+    assert [read_frontmatter(vault / card)["target"] for card in cards] == [second, first]
+
+
+def test_marks_outside_every_active_slice_route_no_card(tmp_path: Path) -> None:
+    """The quiet tier: labels and journal, and the inbox is never touched."""
+    vault = workspace(tmp_path)
+    _seed_active_project(vault)
+
+    cards = route_consequence_cards(
+        vault,
+        {"notes/elsewhere.md": "grounds-lost"},
+        trigger_id="catalog/sources/w1",
+        reason="work w1 retracted",
+    )
+
+    assert cards == []
+    assert not list((vault / "inbox").glob("*.md"))
+
+
+def test_a_sweep_that_reaches_an_active_project_commits_its_alert_card(tmp_path: Path) -> None:
+    """The engine seam C.5 left empty: the card rides the same trusted-writer commit."""
+    vault = workspace(tmp_path)
+    _seed_retraction_graph(vault)
+    project_rel = _project(vault, "thesis-a", thesis="notes/thesis.md")
+    arguments = {
+        "trigger": "standing-changed",
+        "reason": "work settles-2016 retracted",
+        "actor": "integrity",
+        "machine": "test-machine",
+    }
+
+    result = propagate_consequences_explicit(vault, "catalog/sources/settles-2016", **arguments)
+
+    [card] = result["cards"]
+    # The dedupe key is per (trigger, project), so the trigger the engine passes
+    # is the fallen target and not the trigger *type* every sweep shares.
+    assert "settles-2016" in card
+    frontmatter = read_frontmatter(vault / card)
+    assert frontmatter["target"] == project_rel
+    assert frontmatter["loudness"] == "alert"
+    assert "grounds-lost: 2" in frontmatter["finding"]
+    assert "qualifier-regression: 1" in frontmatter["finding"]
+    committed = set(git(vault, "show", "--name-only", "--format=", result["commit"]).splitlines())
+    assert committed == {state.JOURNAL_HEAD_REL, card, *_RETRACTION_CLOSURE}
+
+    again = propagate_consequences_explicit(vault, "catalog/sources/settles-2016", **arguments)
+
+    assert again["cards"] == [] and again["commit"] == ""

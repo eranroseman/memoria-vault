@@ -15,13 +15,11 @@ target, the only thing `links:` frontmatter may hold), while `strip_wikilink`
 strips `[[…]]` syntax in *alias space*, where the value may equally be a title,
 slug, or stem. `thesis_rel` is the third boundary this module names: a
 project's `thesis:` is path space too, and it is the only reference whose
-resolution five separate readers used to own. Retrieval closures (`graph_sql`/`explore`) normalize each target
-through the path-space function but walk the raw `links:` map without a roster
-filter, deliberately: `neighborhood` admits every relation the live CHECK holds
-so that tensions stay first-class retrievable, and a fallback closure narrower
-than the substrate traversal it stands in for would be a worse reader, not a
-stricter one. If one were ever wanted it would be EDGE_RELATIONS, never
-LINK_RELATIONS.
+resolution five separate readers used to own. Retrieval no longer parses
+`links:` for itself: `graph_sql.project_slice` and `explore` both read
+`propagation.active_project_slices`, whose closure walks the `concept_edges`
+mirror this module projects, so the roster question is settled once at the
+mirror writer rather than re-answered by each reader.
 
 No first-party imports at module scope, by design, so state.py, cli.py, and
 structural_impact_graph.py can import it without a cycle. The path projections

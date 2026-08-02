@@ -9224,6 +9224,72 @@ fresh schema; do not transform an older database.
 > `result["cards"] == []` — that assertion is this task's to flip, and it is the
 > one place the deferral is visible from outside.
 
+> **Landing amendment (2026-08-02, ERP-C.6 as built).**
+>
+> 1. **The printed `active_project_slices` carried two Criticals, both of the
+>    namespace-conflation class, and neither is in the code that landed.** The
+>    snippet builds its adjacency from `state.concept_edges` and normalizes
+>    `source_concept_id` / `target_concept_id`. Those columns are **identity
+>    space**: a file Concept that authored a ULID is keyed by that ULID, so
+>    `normalize_path` returns the ULID and the member never joins the
+>    path-space `marked` map the router intersects — the slice silently loses
+>    it. And an unresolved target is SQL `NULL`, so `str(row[...])` is the
+>    literal `"None"`, which every pending edge in the vault shares: one blank
+>    hub fusing unrelated projects into each other's slices. Measured on the
+>    landed fixture, the printed version returns
+>    `{'projects/thesis-a.md': {'notes/thesis.md', '01JXAAA…1', 'None',
+>    'notes/thesis-b.md', …}}` for *both* projects. The landed version consumes
+>    `edges.concept_edge_path_pairs(vault, checked_only=False)` — cross-section
+>    contract 3's strict projection, which is what that contract already told
+>    this task to use.
+> 2. **`thesis:` is normalized by `edges.thesis_rel`, not by hand.** The
+>    snippet's `thesis if thesis.endswith(".md") else f"{thesis}.md"` is a
+>    fourth copy of the rule issue #1623 collapsed into one function: it admits
+>    a *title* (alias space) as `notes/Toulmin: the warrant.md`, a node no graph
+>    contains, and skips the `CONCEPT_ROOTS` check. Pinned by
+>    `test_a_thesis_that_is_not_path_space_seeds_nothing`.
+> 3. **The slice is unchecked-inclusive, and that is now pinned.**
+>    `checked_only=False`: a project's slice is its topology, not its verified
+>    topology — an unconfirmed edge still says where a cascade would land, and
+>    loudness asks where the blast is, not whether the graph is settled. The
+>    fixture's second edge row is `check_status="unchecked"` for exactly this.
+> 4. **The C.5 assertion was not flipped, because flipping it would have made
+>    it false.** `test_retraction_sweep_labels_every_reached_claim_and_commits_them`
+>    seeds no project, so `active_project_slices` is `{}` and `cards == []` is
+>    now the *quiet-tier* assertion (marks outside every active slice route
+>    nothing), not a deferral marker. Its comment says so. The alert tier is
+>    carried by a new engine test,
+>    `test_a_sweep_that_reaches_an_active_project_commits_its_alert_card`, which
+>    also pins that the card rides the same trusted-writer commit as the labels
+>    and that a settled re-run commits nothing.
+> 5. **The printed fixtures do not run.** `_seed_active_project`'s
+>    `replace_concept_edges` rows use `target_concept_id` and carry no
+>    `source_path`; the landed shape is C.5's own `_edge_row`. The landed
+>    fixture is also deliberately non-degenerate in three ways the printed one
+>    was not: a ULID-keyed source, an unresolved target, and a second project
+>    at the nested `projects/<slug>/project.md` home whose sort order and walk
+>    order disagree (which is what makes the router's per-project ordering
+>    observable at all).
+> 6. **Handover consequence — `graph_sql.project_slice` and
+>    `explore._vetted_project_slice_ids` switch providers the moment this task
+>    lands, and 7 R2 tests fail on it.** Both duck-type
+>    `getattr(propagation, "active_project_slices", None)` and prefer it over
+>    their `links:`-frontmatter fallback, exactly as cross-section contract 4
+>    ("the sole project-slice provider once ERP-C.6 lands") intends. The
+>    failures are all one root cause: the R2 fixtures are hand-written
+>    frontmatter that was never reindexed, so the edge mirror the new provider
+>    reads is empty, and the slice now also contains the project file itself.
+>    **This task did not converge them** — see the obligation written into R2
+>    task G's section in `2026-07-17-r2-retrieval-modes.md`, which is where the
+>    two rulings it needs belong (whether the project file is a slice member for
+>    retrieval, and whether `explore`'s vetted-frontmatter traversal may be
+>    replaced by a `checked_only=False` mirror read).
+> 7. **Mutation:** 33 mutants over both new functions, the `_propagate` routing
+>    line and ERP-D.1's helper; 33 killed, 0 survivors. Three survivors on the
+>    first run were all real gaps and all fixed by strengthening assertions, not
+>    by justification: an unasserted honesty sentence, an untyped evidence line,
+>    and an unobservable project ordering.
+
 **Files:**
 - Modify: `src/memoria_vault/runtime/propagation.py` (add `active_project_slices` + `route_consequence_cards`)
 - Modify: `tests/test_propagation_engine.py` (append)
@@ -9236,7 +9302,7 @@ fresh schema; do not transform an older database.
 
 **Steps:**
 
-- [ ] Write the failing tests. Append to `tests/test_propagation_engine.py` (extend the import block with `from memoria_vault.runtime.propagation import active_project_slices, route_consequence_cards`):
+- [x] Write the failing tests. Append to `tests/test_propagation_engine.py` (extend the import block with `from memoria_vault.runtime.propagation import active_project_slices, route_consequence_cards`):
 
   ```python
   def _seed_active_project(vault: Path) -> None:
@@ -9334,9 +9400,10 @@ fresh schema; do not transform an older database.
       assert active_project_slices(vault) == {}
   ```
 
-- [ ] Run to verify failure: `python -m pytest tests/test_propagation_engine.py::test_flood_of_marks_routes_at_most_one_card_per_project -v` — expected: `ImportError: cannot import name 'route_consequence_cards'`.
+- [x] Run to verify failure: `python -m pytest tests/test_propagation_engine.py::test_flood_of_marks_routes_at_most_one_card_per_project -v` — expected: `ImportError: cannot import name 'route_consequence_cards'`.
+  *Measured: `ImportError: cannot import name 'active_project_slices'` at the module import.*
 
-- [ ] Write the minimal implementation. In `src/memoria_vault/runtime/propagation.py`, extend imports with `from collections import Counter, deque` (Counter joins the existing deque import), `from memoria_vault.runtime.subsystems.lib.inbox import write_finding`, `from memoria_vault.runtime.vaultio import iter_markdown, read_frontmatter`, then add:
+- [x] Write the minimal implementation. In `src/memoria_vault/runtime/propagation.py`, extend imports with `from collections import Counter, deque` (Counter joins the existing deque import), `from memoria_vault.runtime.subsystems.lib.inbox import write_finding`, `from memoria_vault.runtime.vaultio import iter_markdown, read_frontmatter`, then add:
 
   ```python
   def active_project_slices(vault: Path) -> dict[str, set[str]]:
@@ -9419,7 +9486,8 @@ fresh schema; do not transform an older database.
       return cards
   ```
 
-- [ ] Run to verify pass: `python -m pytest tests/test_propagation_engine.py -v`.
+- [x] Run to verify pass: `python -m pytest tests/test_propagation_engine.py -v`.
+  *Measured: 38 passed.*
 - [ ] Commit:
 
   ```
@@ -10058,6 +10126,44 @@ tests/fixtures/floor/goldens`, and include the regenerated goldens in that task'
 > drafted tests onto `propagation.compute_consequences` at that point.** No file
 > was touched; the checkboxes below stay unchecked.
 
+> **Landing amendment (2026-08-02, ERP-D.1 as built, unblocked by ERP-C.5).**
+> The rewrite the block above asked for, done.
+>
+> 1. **Report input is `propagation.compute_consequences(vault, target_id, *,
+>    trigger) -> dict[str, dict[str, Any]]`.** It takes **no `context`** — it is
+>    a pure read, which is the whole point of "report, not act" — and it is
+>    keyed concept **path** → `{"consequence", "via", "depth"}`, not a list of
+>    `{"type", "target_id"}` rows. So the count is
+>    `Counter(str(mark["consequence"]) for mark in marks.values())` and the
+>    evidence iterates `sorted(marks.items())`. There is no
+>    `runtime/subsystems/integrity/consequences` module and there never will be;
+>    `integrity` already imports `propagation` at module scope (ERP-C.5
+>    amendment 4), so the helper calls it directly with no local import and no
+>    second copy of the decision table.
+> 2. **No monkeypatch.** The drafted test stubs the very derivation whose typed
+>    count is the deliverable — escape class 4, a test that proves the card can
+>    format a dict someone handed it. The landed test **produces** the closure:
+>    four real edges out of `notes/claim.md` (two `supports`, one `warrant`, one
+>    `rebuttal`), and it asserts the `rebuttal` dependent is absent, because
+>    `hop_consequence("decided-wrong", "rebuttal", …)` is a `None` cell. That
+>    assertion is what kills a mutant swapping the trigger, which no stub could.
+> 3. **"Report, not act" is asserted, not just printed.** For every note the
+>    closure reached the test pins `concept_consequence == ""`, `concept_flags
+>    == {}` and no `stale:` frontmatter — the observable difference from
+>    `propagate_consequences`, which reaches the same set and labels all of it.
+> 4. **`confirm-tension` was already in the outcome set** (ERP-B landed first),
+>    so this task added only `"decided-wrong": "override"` to the decision map,
+>    as the Interfaces block anticipated. The `item_type` roster is closed here
+>    (`{"attention", "claim"}`) even though the disposition event schema takes
+>    `item_type` as a free string: this seam is where it is decided, and a
+>    third test pins that an off-roster value is refused before it can reach the
+>    event.
+> 5. **No golden drift, and none was regenerated.** The `disposition.v1` row
+>    with `item_type="claim"` only exists on a path no floor fixture takes; the
+>    floor suite passes against the committed goldens unchanged (63 passed).
+>    The manifest note at the top of ERP-D listed this task as golden-touching —
+>    it is not.
+
 **Files:**
 - Modify: `src/memoria_vault/runtime/integrity.py` (`resolve_attention`, lines 1127-1191; new private helper below it)
 - Modify: `src/memoria_vault/runtime/worker.py` (attention operation handler, lines 813-831)
@@ -10069,7 +10175,7 @@ tests/fixtures/floor/goldens`, and include the regenerated goldens in that task'
 
 **Steps:**
 
-- [ ] Write the failing test — append to `tests/test_feedback_instrumentation.py`:
+- [x] Write the failing test — append to `tests/test_feedback_instrumentation.py`:
 
 ```python
 def test_decided_wrong_claim_emits_override_and_report_card(
@@ -10148,7 +10254,7 @@ def test_decided_wrong_rejected_for_attention_item_type(
     assert _events_with_schema(workspace, "disposition.v1") == []
 ```
 
-- [ ] Run to verify both fail:
+- [x] Run to verify both fail:
   `python -m pytest tests/test_feedback_instrumentation.py::test_decided_wrong_claim_emits_override_and_report_card tests/test_feedback_instrumentation.py::test_decided_wrong_rejected_for_attention_item_type -v`
   Expected: first fails with `assert result["status"] == "done"` (worker job failed:
   `unsupported attention outcome for resolved: 'decided-wrong'`); second fails because the
@@ -10156,7 +10262,7 @@ def test_decided_wrong_rejected_for_attention_item_type(
   before implementing (the second may already pass on the error text; if it passes as-is,
   keep it as a pin).
 
-- [ ] Write minimal implementation in `src/memoria_vault/runtime/integrity.py`. Replace the signature and validation block at lines 1127-1148:
+- [x] Write minimal implementation in `src/memoria_vault/runtime/integrity.py`. Replace the signature and validation block at lines 1127-1148:
 
 ```python
 def resolve_attention(
@@ -10256,15 +10362,16 @@ def _write_blast_radius_report(
     return path.relative_to(vault).as_posix()
 ```
 
-- [ ] Wire the worker payload in `src/memoria_vault/runtime/worker.py` — inside the `resolve_attention(...)` call at lines 819-830 add one argument:
+- [x] Wire the worker payload in `src/memoria_vault/runtime/worker.py` — inside the `resolve_attention(...)` call at lines 819-830 add one argument:
 
 ```python
             item_type=str(payload.get("item_type") or "attention"),
 ```
 
-- [ ] Run to verify both pass:
+- [x] Run to verify both pass:
   `python -m pytest tests/test_feedback_instrumentation.py -v`
   (the three pre-existing parametrized `apply/reject/defer` cases must still pass — `item_type` defaults to `"attention"`).
+  *Measured: 18 passed. Four new tests, not two: the drafted pair plus one pinning that a claim resolved any other way writes no report, and one pinning the closed `item_type` roster.*
 
 - [ ] Regenerate floor goldens if drifted (see manifest note at top) and commit:
   `git add src/memoria_vault/runtime/integrity.py src/memoria_vault/runtime/worker.py tests/test_feedback_instrumentation.py tests/fixtures/floor/goldens`

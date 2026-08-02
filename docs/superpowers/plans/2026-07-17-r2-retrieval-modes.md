@@ -60,6 +60,13 @@
 5. **Execution order:** P.1 → P.2 → P.3 → F.1 → F.2 is the no-prose/fixture path; F.3 additionally requires E.1/E.2, graph ERP-A.6, the implemented `explore_topic`, and the O1 seed corpus. Graph endpoint/path activation → G → P → E remains the structural/explore path, but F.1/F.2 do not import graph or explore. P.2 rebases on LOOP.1's checked-search refresh seam, and F.2 precedes LOOP.13's Shape-2 protocol.
 6. **TEST_LEVELS:** `test_graph_sql.py`, `test_explore.py`, `test_retrieval_fixtures.py` — `"contract"`; P extends registered files (exact registrations named in-section).
 
+> **Superseded 2026-08-02 (issue #1695), contract 1 and amendment item 2
+> below:** the `links:` fallback is deleted. `propagation.active_project_slices`
+> is the sole provider for both `graph_sql.project_slice` and
+> `explore._vetted_project_slice_ids`; both subtract the project document, and
+> `explore` passes `checked_only=True`. `source` is now the constant
+> `"active-project-slices"`. Full disposition in task G.2's amendment.
+
 ---
 
 ## Plan-reconciliation amendment — identity-safe graph traversal and shared retrieval stages (2026-07-29)
@@ -676,6 +683,119 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 > while the links closure is only the pre-propagation fallback. The local link
 > parser now matches `knowledge._link_target`: escaping and unsupported
 > targets are ignored.
+
+> **Obligation from graph ERP-C.6 (2026-08-02) — the producer has landed and
+> this task's fallback is now unreachable.** `propagation.active_project_slices`
+> exists, so `_active_project_slices` never returns `None` again and the
+> `links-closure` branch here, plus the matching branch in
+> `explore._vetted_project_slice_ids`, are dead code with live tests over them.
+> Seven tests fail on the handover and they are this task's to resolve, not
+> ERP-C.6's — it deliberately stopped at its own two functions rather than
+> delete another section's shipped reader:
+>
+> - `test_graph_sql.py`: `test_project_slice_falls_back_to_links_closure`,
+>   `test_project_slice_seeds_the_thesis_through_the_one_path_space_normalizer`,
+>   `test_primitives_compose_neighborhood_slice_filter`,
+>   `test_links_closure_ignores_targets_the_validator_rejects`
+> - `test_explore.py`: `test_explore_project_filter_depth_and_versus_share_one_universe`,
+>   `test_explore_project_slice_never_traverses_gated_link_closures`,
+>   `test_vetted_project_slice_seeds_the_thesis_through_the_shared_normalizer`
+>
+> All seven have one root cause: the new provider reads the **`concept_edges`
+> mirror**, while every fixture above hand-writes `links:` frontmatter and never
+> reindexes, so the graph it walks is empty. Reseeding the fixtures through
+> `state.replace_concept_edges` is most of the fix. Two rulings have to be made
+> first, and they are retrieval decisions, which is why they are recorded here:
+>
+> 1. **Is the project file itself a slice member?** `active_project_slices`
+>    returns `{project rel} ∪ {thesis} ∪ reachable` by contract, so
+>    `project_slice("p1")["ids"]` now contains `projects/p1.md`. The links
+>    closure never returned it. If retrieval wants members-not-self, the
+>    adapter here should subtract `project_rel`; the producer should not change.
+> 2. **May `explore`'s slice come from the mirror?** `_vetted_project_slice_ids`
+>    exists to "traverse links using only vetted frontmatter", and
+>    `active_project_slices` reads with `checked_only=False` — deliberately, so
+>    a cascade's reach is known before the graph is settled. That is the right
+>    posture for propagation and an open question for a *retrieval* gate. If the
+>    answer is no, `explore` needs its own filter over the returned member set
+>    rather than a reinstated fallback.
+>
+> `test_project_slice_prefers_active_project_slices_seam` still passes: it
+> monkeypatches the private loader and is unaffected. `thesis_rel` remains the
+> one path-space normalizer on both sides — ERP-C.6 consumes it too — so the
+> issue #1623 pin should be retargeted, never dropped.
+
+> **Amendment — R2 convergence, discharged (2026-08-02, issue #1695).** Both
+> rulings implemented as recommended, both fallbacks deleted, gate green at
+> `verify: OK` (3614 passed / 21 skipped / 0 failed; goldens untouched).
+>
+> **Ruling 1 — retrieval subtracts the project file.** The producer's contract
+> is unchanged: `active_project_slices` still returns the container. Both
+> adapters subtract `project_rel` — *the project asked for*, not "every
+> project", so a project reached through another project stays a member.
+> **Ruling 2 — `explore` reads the vetted mirror.** `active_project_slices`
+> gained `checked_only: bool = False` (propagation's need, documented in its
+> docstring) and `explore._vetted_project_slice_ids` passes `True`.
+>
+> **Deletions.** `graph_sql._active_project_slices` (the duck-typed
+> `getattr`/`importlib` loader), `graph_sql._links_closure`, `_link_targets`,
+> `_link_target`, `_member_id`; `explore._active_member_id` and its
+> `_link_targets`/`_link_target` aliases. `graph_sql` and `explore` now import
+> `propagation` directly — no cycle, checked at import. `project_slice`'s
+> `source` is the constant `"active-project-slices"`; `"links-closure"` is
+> unreachable and no longer produced.
+>
+> **Test disposition** (the seven, plus three the deletion reached):
+> - `test_project_slice_falls_back_to_links_closure` → renamed
+>   `test_project_slice_is_the_mirror_closure_minus_the_project_file`; asserts
+>   both halves of the subtraction (the producer keeps the container, the
+>   adapter drops it) and that a `links:` target with no mirror row is absent.
+> - `test_project_slice_seeds_the_thesis_through_the_one_path_space_normalizer`
+>   → kept, reseeded through `state.replace_concept_edges`. Retargeted per the
+>   note above: `edges.thesis_rel` owns the rule, `test_query_substrate` pins
+>   its table, and this is the retrieval-side observer — where an unresolvable
+>   thesis answers `[]` rather than a one-member slice that reads like a hit.
+> - `test_primitives_compose_neighborhood_slice_filter` → kept; a **second
+>   graph component** was added because with one component the neighborhood is
+>   always a subset of its own project's closure and the intersection is a
+>   no-op no mutant fails.
+> - `test_links_closure_ignores_targets_the_validator_rejects` → **deleted**.
+>   Its subject (`graph_sql._link_target`) no longer exists; the rejections it
+>   named (`notes/../secret.md`, `notes/a[1]`) are owned and pinned at
+>   `edges.normalize_link_target` by
+>   `test_thesis_rel_normalizes_every_thesis_shape_in_one_path_space`.
+> - `test_project_slice_prefers_active_project_slices_seam` → **deleted**. Its
+>   claim was "prefer the provider over the fallback"; with no fallback it is
+>   vacuous, and it proved it by monkeypatching the loader it claimed to test
+>   (escape class 4). Its live half moved into the renamed test above.
+> - `test_project_slice_shares_one_links_resolver_with_graph_sql` → **deleted**
+>   with the aliases it asserted identity on.
+> - `test_explore_project_filter_depth_and_versus_share_one_universe` → kept;
+>   the monkeypatched-provider block was replaced by a **second project** whose
+>   real closure differs, so the filter is provably this project's slice.
+> - `test_explore_project_slice_never_traverses_gated_link_closures` → renamed
+>   `test_explore_project_slice_never_readmits_a_gated_member`. The old claim
+>   is now structural (the closure reads no files), so the test asserts the
+>   claim that survives: the gated Concept **is** a slice member and the
+>   universe gate is what removes it.
+> - `test_vetted_project_slice_seeds_the_thesis_through_the_shared_normalizer`
+>   → kept, reseeded; carries ruling 1 at this adapter.
+> - `test_explore_refuses_a_gated_nested_project_without_flat_fallback` → not
+>   in the seven and passing throughout, but **vacuous** after the migration:
+>   neither collision project had mirror topology, so "a gated project slices
+>   to nothing" held on an empty graph. Both now get real slices, and the test
+>   asserts the gated project's slice is non-empty before asserting it is
+>   filtered out. Removing the universe gate was the one mutant that survived
+>   the first run; this is what killed it.
+>
+> **Mutation:** 12 mutants, 12 killed (first run 11/12, survivor above). Both
+> `- {project_rel}` sites were mutated independently (escape class 10) and both
+> were also mutated to subtract the caller's alias-space token instead of the
+> resolved path (escape class 9) — killed at both sites.
+>
+> Not done: `graph_sql.project_slice` still returns a `source` field that can
+> only hold one value. It is part of the published return shape and no consumer
+> reads it, so removing it is a surface decision, not this task's.
 
 - [x] **G.2.1 — failing tests.** Append to `tests/test_graph_sql.py`:
 
