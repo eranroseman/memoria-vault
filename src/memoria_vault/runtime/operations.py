@@ -71,6 +71,18 @@ _USAGE_FIELDS = (
 )
 
 
+class TokenCeilingReached(RuntimeError):
+    """The process token ceiling is spent; raised before any dispatch.
+
+    A `RuntimeError` subclass so the documented breaker contract (a
+    `RuntimeError` whose message contains "model token ceiling reached") still
+    holds, while callers that need to tell a refusal-before-dispatch apart from
+    an adapter failure can catch this type. The message is built only from our
+    own constants and integers, so surfacing it verbatim reflects no
+    credential, endpoint, or SDK detail.
+    """
+
+
 def record_copi_interview_turn(
     vault: Path,
     work_id: str,
@@ -1216,7 +1228,7 @@ def _require_token_budget(operation_id: str) -> None:
     ceiling = _token_ceiling()
     spent = _TOKEN_LEDGER["total_tokens"]
     if ceiling and spent >= ceiling:
-        raise RuntimeError(
+        raise TokenCeilingReached(
             f"{operation_id} refused: model token ceiling reached "
             f"({spent} of {ceiling} tokens spent this process; "
             f"raise or unset {TOKEN_CEILING_ENV} to continue)"
@@ -1231,18 +1243,25 @@ def _record_token_usage(result: Any, settings: dict[str, Any]) -> dict[str, int]
     one call so a completed dispatch is never charged or reported twice.
     """
     usage: dict[str, int] = {}
+    reported_total: int | None = None
     try:
         usage_fn = getattr(result, "usage", None)
         run_usage = usage_fn() if callable(usage_fn) else None
         for field in _USAGE_FIELDS:
             value = getattr(run_usage, field, None)
-            usage[field] = value if type(value) is int else 0
+            # `bool` is an `int` subclass, so `type(...) is int` is what keeps
+            # `total_tokens=True` from undercharging the ledger as one token.
+            reported = value if type(value) is int else None
+            usage[field] = reported if reported is not None else 0
+            if field == "total_tokens" and reported is not None and reported >= 0:
+                reported_total = reported
     except Exception:  # noqa: BLE001 -- completed calls must still be charged.
         usage = dict.fromkeys(_USAGE_FIELDS, 0)
-    total = usage["total_tokens"]
-    if total <= 0:
-        total = int(settings.get("max_tokens") or 0)
-    _TOKEN_LEDGER["total_tokens"] += total
+        reported_total = None
+    # A reported total is authoritative even when it is zero; max_tokens is the
+    # fallback only for absent or malformed usage.
+    charge = int(settings.get("max_tokens") or 0) if reported_total is None else reported_total
+    _TOKEN_LEDGER["total_tokens"] += charge
     return usage
 
 

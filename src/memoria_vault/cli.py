@@ -4105,6 +4105,7 @@ def _search_status(workspace: Path) -> dict[str, Any]:
 
 def _runner_status(workspace: Path, provider: str | None, *, live: bool = False) -> dict[str, Any]:
     from memoria_vault.runtime.operations import (
+        TokenCeilingReached,
         _load_pydantic_ai_openai,
         _pydantic_ai_chat,
         _resolve_runner_api_key,
@@ -4159,6 +4160,10 @@ def _runner_status(workspace: Path, provider: str | None, *, live: bool = False)
                     "Reply with a short confirmation that the Memoria runner is reachable.",
                 )
                 checks["runner_live_dispatch"] = True
+        except TokenCeilingReached as exc:
+            # Refused before any dispatch, from our own constants and integers:
+            # the diagnostic is actionable and reflects no adapter state.
+            error = str(exc)
         except Exception:  # noqa: BLE001 -- adapter failures must not reflect credentials.
             error = "pydantic-ai model request failed"
     return {

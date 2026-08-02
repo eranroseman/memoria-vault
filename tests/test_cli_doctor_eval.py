@@ -11,9 +11,9 @@ import pytest
 
 import memoria_vault.cli as cli_module
 from memoria_vault.cli import main
-from memoria_vault.runtime import backup, state
+from memoria_vault.runtime import backup, operations, state
 from tests.cli_test_helpers import write_runner_provider_config
-from tests.helpers import WORKSPACE_SEED, git, patch_pydantic_ai
+from tests.helpers import LIVE_USAGE, WORKSPACE_SEED, git, patch_pydantic_ai
 
 
 def test_cli_doctor_reports_backup_contract(
@@ -1011,6 +1011,52 @@ def test_cli_doctor_runner_live_dispatches_through_pydantic_ai(
     assert len(seen["models"]) == 2
     assert "Memoria runner is reachable" in seen["prompt"]
     assert seen["model_settings"]["temperature"] == 0
+
+
+def test_cli_doctor_live_spends_the_token_ceiling_and_then_reports_the_breaker(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Doctor is a live resource consumer, not durable model-call provenance."""
+    workspace = tmp_path / "workspace"
+    main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    capsys.readouterr()
+    write_runner_provider_config(workspace)
+    monkeypatch.setitem(operations._TOKEN_LEDGER, "total_tokens", 0)
+    monkeypatch.setenv(operations.TOKEN_CEILING_ENV, str(LIVE_USAGE["total_tokens"]))
+    seen = patch_pydantic_ai(monkeypatch, output="runner ok")
+    command = [
+        "doctor",
+        "--workspace",
+        str(workspace),
+        "--check",
+        "runner",
+        "--provider",
+        "local",
+        "--live",
+        "--json",
+    ]
+
+    assert main(command) == 0
+    first = json.loads(capsys.readouterr().out)
+
+    assert first["checks"]["runner_live_dispatch"] is True
+    assert first["error"] == ""
+    assert operations._TOKEN_LEDGER["total_tokens"] == LIVE_USAGE["total_tokens"]
+    assert seen["usage_calls"] == 1
+
+    assert main(command) == 1
+    second = json.loads(capsys.readouterr().out)
+
+    # runner_agent_constructed stays True: the refusal came from the breaker
+    # inside the dispatch seam, not from an earlier adapter or key failure.
+    assert second["checks"]["runner_agent_constructed"] is True
+    assert second["checks"]["runner_live_dispatch"] is False
+    assert "model token ceiling reached" in second["error"]
+    assert operations.TOKEN_CEILING_ENV in second["error"]
+    # Nothing past the breaker ran: no second harvest, no second charge.
+    assert seen["usage_calls"] == 1
+    assert operations._TOKEN_LEDGER["total_tokens"] == LIVE_USAGE["total_tokens"]
+    assert state.read_event_log(workspace, event_types=("model_call",)) == []
 
 
 def test_cli_doctor_gateway_refuses_missing_key_before_adapter_construction(
