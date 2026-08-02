@@ -116,6 +116,21 @@
 }
 .memoria-block-unknown-raw { font-size: 10px; overflow-x: auto; }
 
+/* Evidence-review pane (V2 spec section 3): evidence first, machine analysis
+   collapsed by default behind an explicit disclosure. Theme vars only. */
+.memoria-evidence-review { font-size: 13px; }
+.memoria-analysis-toggle {
+  margin-top: 6px;
+  padding: 2px 8px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 4px;
+  background-color: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 11px;
+}
+.memoria-analysis.is-collapsed { display: none; }
+
 /* Relate modal (U3 section 4). */
 .memoria-relate-modal textarea { min-height: 5rem; width: 100%; }
 .memoria-relation-segment { display: flex; margin: 8px 0; }

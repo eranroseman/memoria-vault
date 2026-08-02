@@ -141,6 +141,47 @@ function sortCards(cards) {
   });
 }
 
+// V2 spec section 3: evidence first, machine analysis behind an explicit
+// disclosure. Structural, not stylistic — the analysis nodes move to the
+// position after every semantic child, so no stylesheet decides reading order.
+const ANALYSIS_CLASSES = ["memoria-card-arguments", "memoria-card-tipped"];
+
+function collapseAnalysis(tree, open) {
+  const isAnalysis = (child) => ANALYSIS_CLASSES.includes(child.cls);
+  const moved = tree.children.filter(isAnalysis);
+  // A read-only cure card records no analysis, so it gets no control: a toggle
+  // over an empty container offers a machine opinion that was never written.
+  if (!moved.length) {
+    return tree;
+  }
+  const children = [];
+  let disclosed = false;
+  for (const child of tree.children) {
+    if (!isAnalysis(child)) {
+      children.push(child);
+      continue;
+    }
+    // Every analysis child collapses into the one container, which takes the
+    // place of the first of them — so a trailing `memoria-card-meta` stays
+    // last, and the disclosure never floats above the evidence.
+    if (disclosed) {
+      continue;
+    }
+    disclosed = true;
+    children.push(
+      node(
+        "button",
+        "memoria-analysis-toggle",
+        open ? "Hide analysis" : "Show analysis (machine)",
+        [],
+        { "data-toggle-analysis": "1" },
+      ),
+      node("div", open ? "memoria-analysis" : "memoria-analysis is-collapsed", "", moved),
+    );
+  }
+  return { ...tree, children };
+}
+
 function moveSelection(count, index, key) {
   if (!count) {
     return 0;
@@ -172,6 +213,7 @@ module.exports = {
   KNOWN_BLOCK_KINDS,
   LOUDNESS_RANK,
   VIEW_SPEC_VERSION,
+  collapseAnalysis,
   materialize,
   moveSelection,
   renderBlock,

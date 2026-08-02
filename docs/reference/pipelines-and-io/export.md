@@ -19,7 +19,12 @@ Pandoc citekeys and block anchors are stripped from the exported artifact.
 Draft export verifies and renders one draft snapshot. It refuses text that has
 drifted from its evidence ID's stored block hash, lacks that binding, or has an
 unresolvable block anchor.
-`.docx`, `.pdf`, and `.odt` remain available when Pandoc is installed. The
+Markdown plus the vault-wide `bibliography.bib` projection is the
+**acceptance-tested** export target: the verify gate proves every exported
+citation resolves against the inlined bibtex fence, that refused exports name
+their blocking findings, and that the projection parses cleanly for reference
+managers. `.docx`, `.pdf`, and `.odt` remain available when Pandoc is
+installed, as **best-effort** routes — exercised, not gate-tested. The
 export fails closed unless the project has required paper framing and checked
 support; add `--allow-not-ready` to export a review packet anyway. For
 citation-rich manuscript drafts, live

@@ -6,6 +6,7 @@ const require = createRequire(import.meta.url);
 const {
   KNOWN_BLOCK_KINDS,
   VIEW_SPEC_VERSION,
+  collapseAnalysis,
   materialize,
   moveSelection,
   renderBlock,
@@ -538,4 +539,178 @@ test("materialize descends into children and sets their attributes", () => {
     ],
   );
   assert.deepEqual(root.children, [made[0]]);
+});
+
+// V2 spec section 3, structural not stylistic: the PI reads the grounds, the
+// routing reason, and the four actions before the machine's opinion. These
+// pin the *order* the disclosure leaves behind, because a transform that
+// merely hides analysis while floating it above the evidence would satisfy
+// "collapsed by default" and still lead with the machine.
+test("collapseAnalysis preserves ordered semantic children before disclosure", () => {
+  const card = renderBlock({
+    kind: "card",
+    id: "ev-0011aabb",
+    ref: "projects/project-alpha/draft.md#^blk-a1b2",
+    title: "Implicit synthesis claim",
+    kind_line: "evidence-review",
+    review_kind: "evidence-set",
+    certainty: "possible",
+    argument_for: "Both grounds items support the claim text.",
+    argument_against: "The set is implicit; no span was cited.",
+    tipped_by: "implicit derivation",
+    blocks: [
+      { kind: "evidence-list", id: "ev-0011aabb-grounds", items: [{ ref: "notes/a.md" }] },
+      { kind: "text", id: "ev-0011aabb-routing", text: "Routing: implicit" },
+      {
+        kind: "action-row",
+        id: "ev-0011aabb-actions",
+        actions: [
+          { label: "Accept", operation_id: "resolve-evidence", payload: { evidence_id: "ev-0011aabb", decision: "accept" } },
+          { label: "Reject", operation_id: "resolve-evidence", payload: { evidence_id: "ev-0011aabb", decision: "reject" } },
+          { label: "Edit", operation_id: "resolve-evidence", payload: { evidence_id: "ev-0011aabb", decision: "edit" } },
+          { label: "Defer", operation_id: "resolve-evidence", payload: { evidence_id: "ev-0011aabb", decision: "defer" } },
+        ],
+      },
+    ],
+  });
+
+  const collapsed = collapseAnalysis(card, false);
+  const classes = collapsed.children.map((child) => child.cls);
+  assert.deepEqual(classes, [
+    "memoria-card-kind",
+    "memoria-card-title",
+    "memoria-evidence",
+    "memoria-block-text",
+    "memoria-action-row",
+    "memoria-analysis-toggle",
+    "memoria-analysis is-collapsed",
+  ]);
+  const toggle = collapsed.children[classes.indexOf("memoria-analysis-toggle")];
+  assert.equal(toggle.tag, "button");
+  assert.equal(toggle.text, "Show analysis (machine)");
+  assert.deepEqual(toggle.attrs, { "data-toggle-analysis": "1" });
+  const container = collapsed.children[classes.indexOf("memoria-analysis is-collapsed")];
+  assert.deepEqual(
+    container.children.map((child) => child.cls),
+    ["memoria-card-arguments", "memoria-card-tipped"],
+    "both analysis groups move, in their rendered order",
+  );
+  // The moved nodes are the rendered ones, not re-derived text: the argument
+  // pair and the tipping factor still read exactly as the card said them.
+  assert.deepEqual(
+    container.children.flatMap((child) => child.children.map((leaf) => leaf.text)),
+    [
+      "Both grounds items support the claim text.",
+      "The set is implicit; no span was cited.",
+      "tipped by: implicit derivation",
+      "possible",
+    ],
+  );
+
+  // The same card, opened. Re-using the input is the purity proof: an
+  // in-place transform would have emptied it on the first call.
+  const open = collapseAnalysis(card, true);
+  const openClasses = open.children.map((child) => child.cls);
+  assert.deepEqual(openClasses, [
+    "memoria-card-kind",
+    "memoria-card-title",
+    "memoria-evidence",
+    "memoria-block-text",
+    "memoria-action-row",
+    "memoria-analysis-toggle",
+    "memoria-analysis",
+  ]);
+  assert.equal(open.children[openClasses.indexOf("memoria-analysis-toggle")].text, "Hide analysis");
+  assert.equal(card.children.at(-1).cls, "memoria-card-tipped", "the input card is untouched");
+});
+
+// The producer state that actually ships: `analysis_fields` writes `tipped_by`
+// on every reviewable held row but `argument_for`/`argument_against` have no
+// writer yet (V2R-B's declared SPEC GAP), so today's real card has exactly one
+// analysis group. A transform fixtured only on the two-group card would pass
+// while collapsing nothing on every card the endpoint emits.
+test("collapseAnalysis collapses a card whose only analysis is the tipping factor", () => {
+  const card = renderBlock({
+    kind: "card",
+    id: "ev-0022ccdd",
+    ref: "projects/project-alpha/draft.md#^blk-c3d4",
+    title: "Multi-hop claim",
+    kind_line: "evidence-review",
+    tipped_by: "multi-hop chain",
+    blocks: [
+      { kind: "evidence-list", id: "ev-0022ccdd-grounds", items: [] },
+      { kind: "text", id: "ev-0022ccdd-routing", text: "Routing: multi-hop" },
+    ],
+  });
+
+  const collapsed = collapseAnalysis(card, false);
+  assert.deepEqual(
+    collapsed.children.map((child) => child.cls),
+    [
+      "memoria-card-kind",
+      "memoria-card-title",
+      "memoria-evidence",
+      "memoria-block-text",
+      "memoria-analysis-toggle",
+      "memoria-analysis is-collapsed",
+    ],
+  );
+  assert.deepEqual(
+    collapsed.children.at(-1).children.map((child) => child.cls),
+    ["memoria-card-tipped"],
+  );
+});
+
+// A permanently blocked row is read-only: no action row, no analysis, and so
+// no disclosure control either. A toggle over an empty container would invite
+// the PI to open a machine opinion that was never recorded.
+test("collapseAnalysis is a no-op for cure cards without analysis", () => {
+  const card = renderBlock({
+    kind: "card",
+    id: "ev-0033eeff",
+    ref: "projects/project-alpha/draft.md#^blk-e5f6",
+    title: "Drifted claim text",
+    kind_line: "evidence-review",
+    cure: "repair the draft marker, then re-verify",
+    blocks: [
+      { kind: "evidence-list", id: "ev-0033eeff-grounds", items: [] },
+      { kind: "text", id: "ev-0033eeff-routing", text: "Repair the marker." },
+    ],
+  });
+
+  assert.deepEqual(
+    card.children.map((child) => child.cls),
+    ["memoria-card-kind", "memoria-card-title", "memoria-evidence", "memoria-block-text"],
+  );
+  assert.equal(collapseAnalysis(card, false), card);
+  assert.equal(collapseAnalysis(card, true), card);
+});
+
+// `memoria-card-meta` is rendered after analysis, so a transform that appends
+// the disclosure instead of inserting it at the analysis position would push
+// the machine's opinion past the card's own provenance line.
+test("collapseAnalysis keeps trailing card meta after the disclosure", () => {
+  const card = renderBlock({
+    kind: "card",
+    id: "ev-0044aabb",
+    ref: "projects/project-alpha/draft.md#^blk-a7b8",
+    title: "Dated claim",
+    kind_line: "evidence-review",
+    tipped_by: "implicit derivation",
+    raised_by: "verify-project-draft",
+    raised_at: "2026-07-16",
+    blocks: [{ kind: "text", id: "ev-0044aabb-routing", text: "Routing: implicit" }],
+  });
+
+  assert.deepEqual(
+    collapseAnalysis(card, false).children.map((child) => child.cls),
+    [
+      "memoria-card-kind",
+      "memoria-card-title",
+      "memoria-block-text",
+      "memoria-analysis-toggle",
+      "memoria-analysis is-collapsed",
+      "memoria-card-meta",
+    ],
+  );
 });

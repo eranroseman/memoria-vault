@@ -938,6 +938,140 @@ snippet that contradicts them is drafting history.
     over a baseline verified green eight times, with and without
     `-p no:randomly`.
 
+## Execution amendment — V2R-D.2/.3/.7 as built; V2R-B confirmed landed (2026-08-02)
+
+Recorded by the executor of V2R-D.2, D.3 and D.7, against `origin/main` @
+`8c198ee7`. The 2026-07-29 amendment stack and every later execution amendment
+are unchanged and were followed as written; every D body snippet that
+contradicts them is drafting history.
+
+1. **V2R-B needed no work: B.1–.5 are on `main` and their boxes are already
+   ticked.** Verified by reading the code, not the checkboxes:
+   `runtime/evidence_review.py` (assembler, facets, filter, card projection,
+   the four vault-reading helpers), `engine_api.evidence_review_queue` /
+   `read_evidence_review_view` over one private
+   `_collect_evidence_review_queue`, the `views.evidence_review` registry row,
+   and `http_transport._nonnegative_int_query`. Only the `Commit:` steps stay
+   unticked, per the plan convention.
+
+2. **`isEvidenceCard` reads `review_kind` alone.** The nested-collector
+   amendment §4 prints `(block.review_kind === "evidence-set" ||
+   block.kind_line === "evidence-review")`. Both disjuncts have exactly one
+   producer — `evidence_review.evidence_review_card` writes `"kind": "card"`,
+   `"kind_line": "evidence-review"` and `"review_kind": "evidence-set"` in one
+   dict literal, unconditionally — and nothing else in the tree writes
+   `review_kind` at all. The disjunction therefore has no distinguishing
+   fixture, and two mutants (each disjunct alone) were indistinguishable.
+   Narrowed to `review_kind === "evidence-set"`: it is the card's own claim
+   about what it is, while `kind_line` is a display string that a later
+   presentation change could reword. Dropping the discriminator entirely is
+   killed, so it stays load-bearing.
+
+3. **SRD-gap cards render after the queue, not before it.** The D.3 body copies
+   `AttentionView.render()`, which draws `extras` first. The B payload contract
+   states SRD cards "remain whole top-level cards **after** evidence rows", and
+   the collector appends them last, so drawing them first would invert the
+   contract at the last hop. `extras` is rendered after the row loop here; the
+   attention pane is unchanged.
+
+4. **No loudness dot on an evidence row.** The D.3 body copies the attention
+   row's `memoria-loudness-dot` span. `evidence_review_card` emits no
+   `loudness` key, so the dot could only ever render as an invisible 7px
+   spacer. Dropped: a band that no producer writes is not a band.
+
+5. **`activateView(viewType)` is factored; `activateAttentionView` and
+   `activateEvidenceReviewView` are its two callers.** The body said "copy its
+   body verbatim, substituting `VIEW_TYPE_EVIDENCE_REVIEW`". Two copies of the
+   same eleven lines is where the second pane's view type goes wrong, and the
+   mutation run confirmed it: the pre-existing harness stubs both activators,
+   so *neither* body was proven until this task added a test that opens both
+   through a real workspace stub. Mutants swapping either activator's view type
+   are now killed.
+
+6. **The `expandedRef` guard on the Edit deep link is removed.** The body has
+   `if (payload.decision === "edit" && this.expandedRef)`. An action button
+   only exists inside the expanded card, so `expandedRef` is necessarily the
+   ref that card was rendered under — the guard has no reachable false branch.
+
+7. **Two drafting-history defects in the D.2 snippet.**
+
+   - Its fixture supplies `argument_for` **and** `argument_against`, which no
+     producer writes: `analysis_fields` sets `tipped_by` unconditionally for a
+     reviewable held row and the argument pair is a declared SPEC GAP with no
+     writer. So the shipped card has exactly *one* analysis group, and a
+     transform fixtured only on the two-group card would collapse nothing on
+     every card the endpoint actually emits. The landed tests cover both, plus
+     a card with trailing `memoria-card-meta` — analysis is rendered *before*
+     meta, so a transform that appended the disclosure instead of inserting it
+     at the analysis position would push the machine's opinion past the card's
+     own provenance line.
+   - Its `collapseAnalysis` guards `Boolean(child)` and `tree.children || []`.
+     `node()` always builds a `children` array and `renderBlock` never emits a
+     null child, so both guards are unreachable; they are dropped rather than
+     fixtured.
+
+8. **D.7 corrections against what shipped.** The printed page cites
+   `read_evidence_review_queue` (never built — B.4/.5 amendment §1) and links
+   `../../reference/pipelines-and-io/export.md` from inside
+   `docs/reference/analysis-and-surfaces/`, which resolves to
+   `docs/reference/reference/...` and 404s. The landed page names
+   `engine_api.evidence_review_queue` and uses `../pipelines-and-io/export.md`.
+   `memoria review` has merged, so the CLI cockpit is cited in backticks as the
+   plan's conditional instructed; `doc-claims-gate` confirms it.
+
+   Two additions beyond the printed file list, both because V2R-C landing made
+   an existing page false rather than merely incomplete:
+   `docs/reference/commands-and-transports/cli.md`'s "Complete command roster"
+   claims to mirror the live argparse tree and was missing all seven `memoria
+   review` verbs, and its PI-only list did not name the four disposition verbs.
+   `docs/reference/analysis-and-surfaces/README.md` gains the new page per
+   CONTRIBUTING's indexing rule.
+
+9. **Mutation: 67 mutants, 66 killed, 1 survivor.** The survivor drops
+   `block.kind === "card"` from `isEvidenceCard`, leaving
+   `Boolean(block) && block.review_kind === "evidence-set"`. Provably
+   equivalent: `review_kind` has one producer, which writes it in the same
+   literal as `"kind": "card"`, so no producible block can carry one without
+   the other. Kept anyway — it is the shape check that stops a future non-card
+   block bearing `review_kind` from being materialized as a card.
+
+   Four tests exist only because a mutant survived without them, and each is a
+   claim the attention pane already makes that a copied render loop inherits
+   untested (escape class 10): a real open of both view types, `j`/`k`
+   preventing the host default, `Enter` on an empty queue *not* preventing it,
+   and a `view`-less payload normalizing to the labeled `null` box. A fifth
+   ordering bug was found the same way — the added `j`/`k` assertions had moved
+   the selection back to row 0, which made the queue-shrink clamp test
+   degenerate and let the clamp mutant live.
+
+10. **Goldens move and were NOT regenerated** (this session did not hold the
+    golden token). The seed sync changes three files, so all 36
+    `tests/fixtures/floor/goldens/*.json` need exactly three `files` entries
+    rewritten:
+
+    | path | from | to |
+    | --- | --- | --- |
+    | `.obsidian/plugins/memoria-obsidian/main.js` | `888a8a8ce199` | `7b5c0e04e92b` |
+    | `.obsidian/plugins/memoria-obsidian/styles.css` | `3ff03bec2d1f` | `1ea44a1e4820` |
+    | `.obsidian/plugins/memoria-obsidian/viewspec.js` | `90892d9d8fe8` | `f66ce9be6e0e` |
+
+    108 lines, three distinct substitutions, nothing else. Verified by
+    computing `sha256(floor_lib._redact(bytes))[:12]` over the bytes
+    `bundles.seed_bundles` actually writes (confirmed byte-identical to the
+    repo seed), and by a control: the other five seeded plugin artifacts
+    (`handshake.js`, `manifest.json`, `pill.js`, `relate.js`, `schema.js`) hold
+    one unchanged hash each across all 36 goldens. No journal event and no
+    operation id was added, so `regenerate-capability-index.json` moves only on
+    those same three lines.
+
+11. **Gate status: `python scripts/verify` is green except that drift.**
+    `36 failed, 3728 passed, 25 skipped` — every failure is
+    `test_floor_sweep_operations.py::test_operation[...]` reporting
+    `golden drift for <name>`, one per golden, and nothing else. Lint, the five
+    product checks, the e2e smoke, and the whole non-floor suite pass. The gate
+    goes green the moment the golden owner applies item 10's substitution.
+
+
 ---
 
 # V2R-A — The disposition seam: reject flip, defer/edit, warrant, disposition.v1
@@ -6063,7 +6197,7 @@ a `git diff --stat tests/fixtures/floor/goldens/` review, and an explicit-path c
 
 **Steps:**
 
-- [ ] Write the failing tests — append to
+- [x] Write the failing tests — append to
   `packages/memoria-obsidian/scripts/test-viewspec.mjs` (add `collapseAnalysis`
   to the destructured require at the top):
 
@@ -6141,11 +6275,11 @@ a `git diff --stat tests/fixtures/floor/goldens/` review, and an explicit-path c
   });
   ```
 
-- [ ] Run to verify failure:
+- [x] Run to verify failure:
   `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test`
   — expected: `TypeError: collapseAnalysis is not a function`.
 
-- [ ] Write the minimal implementation — in `packages/memoria-obsidian/viewspec.js`,
+- [x] Write the minimal implementation — in `packages/memoria-obsidian/viewspec.js`,
   before the `module.exports` block:
 
   ```js
@@ -6189,7 +6323,7 @@ a `git diff --stat tests/fixtures/floor/goldens/` review, and an explicit-path c
 
   Add `collapseAnalysis,` to `module.exports`.
 
-- [ ] Run to verify pass:
+- [x] Run to verify pass:
   `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test` — all green.
 
 - [ ] Commit (seed copy travels with V2R-D.3's sync; the shipped module alone here):
@@ -6247,7 +6381,7 @@ a `git diff --stat tests/fixtures/floor/goldens/` review, and an explicit-path c
 
 **Steps:**
 
-- [ ] Write the failing test — append to the `try` block of
+- [x] Write the failing test — append to the `try` block of
   `packages/memoria-obsidian/scripts/test.mjs` (after U3-PLUG.7's block 6),
   and extend the mock `requestUrl` router: when `options.url` ends with
   `/v1/views/evidence-review` (with or without query), return
@@ -6270,11 +6404,11 @@ a `git diff --stat tests/fixtures/floor/goldens/` review, and an explicit-path c
     assert.ok(rejected);
   ```
 
-- [ ] Run to verify failure:
+- [x] Run to verify failure:
   `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test`
   — expected: `evidence review view registered` assertion failure.
 
-- [ ] Write the minimal implementation — in `packages/memoria-obsidian/main.js`:
+- [x] Write the minimal implementation — in `packages/memoria-obsidian/main.js`:
 
   1. Constants next to `VIEW_TYPE_ATTENTION`:
 
@@ -6512,14 +6646,16 @@ a `git diff --stat tests/fixtures/floor/goldens/` review, and an explicit-path c
   add `"open-evidence-review",` to the command tuple (after U3-PLUG.7's
   `"open-attention",`).
 
-- [ ] Run tests:
+- [x] Run tests:
   `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test`
   (all pass) then `python -m pytest tests/test_memoria_obsidian_package.py -v`
   — expected: green except `test_memoria_obsidian_seed_matches_release_artifacts`
   (seed stale) — fixed next step.
 
-- [ ] Sync the seed and regenerate goldens (U3-PLUG.6's discipline; `viewspec.js`
-  from V2R-D.2 rides along):
+- [x] Sync the seed (U3-PLUG.6's discipline; `viewspec.js` from V2R-D.2 rides
+  along). **Goldens were deliberately NOT regenerated** — this session did not
+  hold the golden token; the exact expected diff is in the 2026-08-02 execution
+  amendment, item 10:
 
   ```bash
   cp packages/memoria-obsidian/main.js packages/memoria-obsidian/styles.css \
@@ -6532,7 +6668,7 @@ a `git diff --stat tests/fixtures/floor/goldens/` review, and an explicit-path c
   Review the diff: only `files` hash entries under
   `.obsidian/plugins/memoria-obsidian/` may change.
 
-- [ ] Run `python -m pytest tests/test_memoria_obsidian_package.py -v` — all green.
+- [x] Run `python -m pytest tests/test_memoria_obsidian_package.py -v` — all green.
 
 - [ ] Commit:
 
@@ -7075,7 +7211,7 @@ export acceptance file passed (227 passed); independent review found no issues.
 
 **Steps:**
 
-- [ ] Edit `docs/reference/pipelines-and-io/export.md` — replace the sentence at
+- [x] Edit `docs/reference/pipelines-and-io/export.md` — replace the sentence at
   line 22 (`` `.docx`, `.pdf`, and `.odt` remain available when Pandoc is
   installed. ``) with:
 
@@ -7088,7 +7224,7 @@ export acceptance file passed (227 passed); independent review found no issues.
   installed, as **best-effort** routes — exercised, not gate-tested.
   ```
 
-- [ ] Edit `docs/how-to-guides/project/export-a-draft.md` — in step 2 (line 47),
+- [x] Edit `docs/how-to-guides/project/export-a-draft.md` — in step 2 (line 47),
   after "change `--format` and `--output`;" insert:
 
   ```markdown
@@ -7103,7 +7239,7 @@ export acceptance file passed (227 passed); independent review found no issues.
     (File → Import) — every entry lands with type, title, and citekey intact
   ```
 
-- [ ] Create `docs/reference/analysis-and-surfaces/evidence-review.md`:
+- [x] Create `docs/reference/analysis-and-surfaces/evidence-review.md`:
 
   ```markdown
   ---
@@ -7168,7 +7304,7 @@ export acceptance file passed (227 passed); independent review found no issues.
   executes, replace "the CLI review cockpit" with `` `memoria review` `` — the
   doc-claims gate confirms which form is legal.
 
-- [ ] Run to verify: `python3 scripts/checks/doc_claims_gate.py` — expected
+- [x] Run to verify: `python3 scripts/checks/doc_claims_gate.py` — expected
   `doc-claims-gate: clean` (it walks the real argparse tree and the manifest
   roster, so a premature `memoria review` citation fails here).
 

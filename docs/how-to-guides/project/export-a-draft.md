@@ -45,7 +45,9 @@ memoria project export \
 ```
 
 For `.docx`, `.pdf`, or `.odt`, keep the same command and change `--format` and
-`--output`; Memoria fails clearly if Pandoc is not installed. The export refuses
+`--output`; these Pandoc formats are best-effort (Markdown plus
+`bibliography.bib` is the acceptance-tested target); Memoria fails clearly if
+Pandoc is not installed. The export refuses
 by default until the paper plan and checked support are complete; pass
 `--allow-not-ready` for a review packet before then. Add
 `--draft` to export the composed `draft.md`; Memoria refuses drafts with
@@ -101,6 +103,8 @@ pandoc projects/<project>/<draft>.md \
 - All `[@citekey]` citations resolved — none appear as bare `[@...]` in the output
 - Draft verification reports no `evidence-text-drift` or `evidence-text-unbound`
   finding
+- For a reference-manager round-trip, import `bibliography.bib` into Zotero
+  (File → Import) — every entry lands with type, title, and citekey intact
 - The export landed where you pointed it; the draft `.md` under
   `projects/<project>/` remains the source of truth
 
