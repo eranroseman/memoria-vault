@@ -27,12 +27,21 @@ from typing import Any
 
 from memoria_vault.runtime import state
 from memoria_vault.runtime.evidence import evidence_ref_kind, parse_source_span_ref
+from memoria_vault.runtime.policy.audit import EMPTY_SHA256, sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path
 from memoria_vault.runtime.subsystems.lib.edges import concept_edge_path_pairs
 from memoria_vault.runtime.trusted_writer import (
+    EVENT_CHECK_FIRED,
     EVENT_DERIVED,
     EVENT_OBSERVED_EXTERNAL_EDIT,
+    OperationContext,
+    append_explicit_journal_event,
+    append_journal_event,
+    commit_explicit_writer_changes,
+    commit_writer_changes,
+    validate_operation_context,
 )
+from memoria_vault.runtime.vaultio import split_frontmatter, write_frontmatter_doc
 
 CONSEQUENCE_TYPES = (
     "grounds-lost",
@@ -240,3 +249,291 @@ def _frozen_dependents(dependents: dict[str, set[str]]) -> dict[str, tuple[str, 
     the sets are the only part of this shape that needs an order imposed.
     """
     return {key: tuple(sorted(values)) for key, values in dependents.items()}
+
+
+def _target_aliases(vault: Path, target: str) -> set[str]:
+    """Return every path space rendering of one fallen target.
+
+    A copy of `integrity._trace_aliases`, and it stays a copy: C.5 wires
+    integrity to call this module, so the import back is the one direction that
+    is now closed. Twelve duplicated lines is the price of that edge running one
+    way.
+    """
+    aliases = {target}
+    row = state.catalog_source(vault, target)
+    if row is None:
+        return aliases
+    work_id = str(row.get("work_id") or "").strip()
+    concept_path = str(row.get("concept_path") or "").strip()
+    if work_id:
+        aliases.add(f"catalog/sources/{work_id}")
+    if concept_path:
+        aliases.add(normalize_path(concept_path))
+    return aliases
+
+
+def mark_consequence(
+    vault: Path,
+    concept_id: str,
+    *,
+    consequence: str,
+    trigger_id: str,
+    reason: str,
+    append_event: Callable[[dict[str, Any]], Any],
+) -> dict[str, Any]:
+    """Apply one typed-consequence mark: label, verdict mirror, compat flag.
+
+    A file Concept is labelled in its own frontmatter and mirrored; a Concept the
+    vault holds only in the database — a catalog work — is mirrored alone. A
+    Concept the mirror has never seen is neither: the walk reaches a pending
+    edge's target legally, and every write below is FK-backed onto ``concepts``,
+    so one dangling forward link would otherwise abort a whole propagation run.
+
+    Re-marking with the consequence already recorded is a full no-op: no write,
+    no event, ``changed=False``. Clearing a label is deliberately absent — re-
+    verification is lazy (EDGES section 5), ``set_concept_verdict`` clears the DB
+    mirror, and the PI removing the two fields is an observed PI edit.
+    """
+    if consequence not in CONSEQUENCE_TYPES:
+        raise ValueError(f"unknown consequence type: {consequence!r}")
+    vault = Path(vault)
+    target = normalize_path(concept_id)
+    trigger = normalize_path(trigger_id)
+    path = vault / target
+    unchanged = {
+        "concept_id": target,
+        "consequence": consequence,
+        "changed": False,
+        "path": "",
+    }
+    if not state.concept_exists(vault, target):
+        return unchanged
+    is_markdown = target.endswith(".md") and path.is_file()
+    if is_markdown:
+        frontmatter, body = split_frontmatter(path.read_text(encoding="utf-8"))
+        if frontmatter.get("stale") is True and frontmatter.get("consequence") == consequence:
+            return unchanged
+        frontmatter["stale"] = True
+        frontmatter["consequence"] = consequence
+        write_frontmatter_doc(path, frontmatter, body)
+    elif state.concept_consequence(vault, target) == consequence and "stale" in state.concept_flags(
+        vault, target
+    ):
+        return unchanged
+    state.set_concept_consequence(vault, target, consequence)
+    state.set_concept_flag(vault, target, "stale", reason=reason, trigger_id=trigger)
+    target_sha = sha256_file(path) if path.is_file() else EMPTY_SHA256
+    # The event shape mirrors `integrity._flag_descendant` so `rebuild_trace_state`
+    # keeps `_known_current_hashes` current: without `output_sha256` the next scan
+    # reads this mark as a foreign edit on a file the writer itself just wrote.
+    append_event(
+        {
+            "event": EVENT_CHECK_FIRED,
+            "check": "typed-consequence",
+            "status": "failed",
+            "reason": reason,
+            "consequence": consequence,
+            "target_id": target,
+            "target_sha256": target_sha,
+            "output_sha256": target_sha,
+            "trigger_id": trigger,
+            "shadow": False,
+            "route": "log",
+        }
+    )
+    if is_markdown:
+        # Three readers hold a hash for this file and all three have to move with
+        # it, or the writer's own write reads back as somebody else's edit: the
+        # journal event above keeps `rebuild_trace_state`'s known hashes current
+        # (the scan), the output row keeps the file consumable as checked (the
+        # read barrier), and the PI baseline keeps the reconcile quiet.
+        state.refresh_output_sha256(vault, target, target_sha)
+        baseline = state.file_baseline(vault, target)
+        if baseline is not None:
+            state.upsert_file_baseline(
+                vault,
+                target,
+                human_sha256=target_sha,
+                restriction_keys=list(baseline["restriction_keys"]),
+            )
+    return {
+        "concept_id": target,
+        "consequence": consequence,
+        "changed": True,
+        "path": target if is_markdown else "",
+    }
+
+
+def compute_consequences(vault: Path, target_id: str, *, trigger: str) -> dict[str, dict[str, Any]]:
+    """Return the typed closure one fallen target implies, writing nothing.
+
+    The blast radius on its own, which is what ERP-D.1's `decided-wrong` report
+    card counts before any label exists. Starts are alias-expanded because a
+    catalog work is named three ways — bare ``work_id``, ``catalog/sources/<id>``,
+    and its read-scope ``concept_path`` — and only the rendered forms are nodes
+    the path-space graph contains.
+    """
+    vault = Path(vault)
+    inputs = closure_inputs(vault)
+    return consequence_closure(
+        sorted(_target_aliases(vault, normalize_path(target_id))),
+        trigger=trigger,
+        grounding_edges=inputs.grounding_edges,
+        evidence_dependents=inputs.evidence_dependents,
+        derivation_children=inputs.derivation_children,
+        typer=hop_consequence,
+    )
+
+
+def _propagate(
+    vault: Path,
+    target_id: str,
+    *,
+    trigger: str,
+    reason: str,
+    append_event: Callable[[dict[str, Any]], Any],
+    commit: Callable[[str, list[str]], str],
+    initial_marks: Mapping[str, str] | None = None,
+) -> dict[str, Any]:
+    """Compute, mark, and commit one propagation run.
+
+    ``marked`` is what the closure decided, which is not the same as what was
+    written: a dependent the mirror has never seen is in the answer and has
+    nowhere to carry a label, and a dependent already carrying this consequence
+    is a no-op. Only the rels `mark_consequence` actually rewrote reach the
+    commit, so a re-run of a settled sweep commits nothing at all.
+    """
+    vault = Path(vault)
+    target = normalize_path(target_id)
+    if initial_marks is None:
+        marked = compute_consequences(vault, target, trigger=trigger)
+    else:
+        inputs = closure_inputs(vault)
+        marked = consequence_closure(
+            (),
+            trigger=trigger,
+            grounding_edges=inputs.grounding_edges,
+            evidence_dependents=inputs.evidence_dependents,
+            derivation_children=inputs.derivation_children,
+            typer=hop_consequence,
+            initial_marks=initial_marks,
+        )
+    consequences: dict[str, str] = {}
+    changed_paths: list[str] = []
+    for concept_id in sorted(marked):
+        consequence = str(marked[concept_id]["consequence"])
+        result = mark_consequence(
+            vault,
+            concept_id,
+            consequence=consequence,
+            trigger_id=target,
+            reason=reason,
+            append_event=append_event,
+        )
+        consequences[concept_id] = consequence
+        if result["path"]:
+            changed_paths.append(str(result["path"]))
+    # Loudness routing is ERP-C.6: it turns this mapping into at most one alert
+    # card per touched active project. Until it lands every run stays at the
+    # quiet tier the routing rule already gives marks outside every slice —
+    # labels and journal, no card.
+    cards: list[str] = []
+    commit_paths = [*changed_paths, *cards]
+    commit_hash = (
+        commit(f"propagate typed consequences from {target}", commit_paths) if commit_paths else ""
+    )
+    return {
+        "target_id": target,
+        "trigger": trigger,
+        "marked": consequences,
+        "cards": cards,
+        "commit": commit_hash,
+    }
+
+
+def propagate_consequences(
+    vault: Path,
+    target_id: str,
+    *,
+    trigger: str,
+    reason: str,
+    context: OperationContext,
+) -> dict[str, Any]:
+    """Propagate typed consequences inside an operation envelope."""
+    validate_operation_context(vault, context)
+    return _propagate(
+        vault,
+        target_id,
+        trigger=trigger,
+        reason=reason,
+        append_event=lambda event: append_journal_event(vault, event, context=context),
+        commit=lambda message, paths: commit_writer_changes(vault, message, paths, context=context),
+    )
+
+
+def propagate_consequences_explicit(
+    vault: Path,
+    target_id: str,
+    *,
+    trigger: str,
+    reason: str,
+    actor: str,
+    machine: str,
+) -> dict[str, Any]:
+    """Propagate typed consequences outside an operation envelope."""
+    return _propagate(
+        vault,
+        target_id,
+        trigger=trigger,
+        reason=reason,
+        append_event=lambda event: append_explicit_journal_event(
+            vault, event, actor=actor, machine=machine
+        ),
+        commit=lambda message, paths: commit_explicit_writer_changes(
+            vault, message, paths, actor=actor, machine=machine
+        ),
+    )
+
+
+def propagate_edge_change(
+    vault: Path,
+    *,
+    source: str,
+    relation_type: str,
+    target: str,
+    added: bool,
+    reason: str,
+    context: OperationContext,
+) -> dict[str, Any]:
+    """Edge add/remove trigger seam for the curate and insert write paths.
+
+    The changed edge names its own dependent — the source for ``extends`` (the
+    extender depends on the base it extends), the target for every other
+    relation — and that endpoint is seeded with the decision table's *seed*
+    answer for this relation before the walk expands from it transitively. A
+    seed row that types nothing is the whole event: an added ``supports`` is a
+    grounds gain, and gaining grounds marks nobody.
+    """
+    validate_operation_context(vault, context)
+    trigger = "edge-added" if added else "edge-removed"
+    source_rel = normalize_path(source)
+    target_rel = normalize_path(target)
+    dependent = source_rel if relation_type == "extends" else target_rel
+    seed = hop_consequence(trigger, relation_type, seed=True)
+    if seed is None:
+        return {
+            "target_id": dependent,
+            "trigger": trigger,
+            "marked": {},
+            "cards": [],
+            "commit": "",
+        }
+    return _propagate(
+        vault,
+        dependent,
+        trigger=trigger,
+        reason=reason,
+        append_event=lambda event: append_journal_event(vault, event, context=context),
+        commit=lambda message, paths: commit_writer_changes(vault, message, paths, context=context),
+        initial_marks={dependent: seed},
+    )

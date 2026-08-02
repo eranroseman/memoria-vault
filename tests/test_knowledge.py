@@ -458,6 +458,68 @@ def test_curate_note_link_records_typed_link_on_checked_note(tmp_path: Path) -> 
     assert committed == {state.JOURNAL_HEAD_REL, "notes/source.md"}
 
 
+def test_curate_note_link_fires_edge_added_propagation(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    checked_note(vault, "source", "Source", "01KBN6V6KX0000000000000001")
+    checked_note(vault, "target", "Target", "01KBN6V6KX0000000000000002")
+
+    result = curate_note_link(
+        vault,
+        "source",
+        "supports",
+        "target",
+        actor="pi",
+        reason="PI linked claims",
+        machine="curator",
+    )
+
+    # A `supports` edge-added is a grounds *gain*: the seam reports, marks nobody.
+    assert result["propagation"]["trigger"] == "edge-added"
+    assert result["propagation"]["marked"] == {}
+    assert read_frontmatter(vault / "notes/target.md").get("stale") is None
+
+
+def test_curate_note_link_rebuttal_marks_the_claim_it_rebuts(tmp_path: Path) -> None:
+    """The decision table's one seed-positive edge-added row, at the seam."""
+    vault = workspace(tmp_path)
+    checked_note(vault, "source", "Source", "01KBN6V6KX0000000000000001")
+    checked_note(vault, "target", "Target", "01KBN6V6KX0000000000000002")
+
+    result = curate_note_link(
+        vault,
+        "source",
+        "rebuttal",
+        "target",
+        actor="pi",
+        reason="PI recorded a rebuttal",
+        machine="curator",
+    )
+
+    assert result["propagation"]["marked"] == {"notes/target.md": "rebuttal-strengthened"}
+    target_fm = read_frontmatter(vault / "notes/target.md")
+    assert target_fm["stale"] is True
+    assert target_fm["consequence"] == "rebuttal-strengthened"
+    assert state.concept_consequence(vault, "notes/target.md") == "rebuttal-strengthened"
+
+
+def test_curate_note_link_re_curating_an_existing_link_is_not_an_edge_event(
+    tmp_path: Path,
+) -> None:
+    """No edge changed, so no trigger fires -- not `edge-removed`, which would mark."""
+    vault = workspace(tmp_path)
+    checked_note(vault, "source", "Source", "01KBN6V6KX0000000000000001")
+    checked_note(vault, "target", "Target", "01KBN6V6KX0000000000000002")
+    arguments = {"actor": "pi", "reason": "PI recorded a rebuttal", "machine": "curator"}
+    curate_note_link(vault, "source", "rebuttal", "target", **arguments)
+    before = read_frontmatter(vault / "notes/target.md")
+
+    again = curate_note_link(vault, "source", "rebuttal", "target", **arguments)
+
+    assert again["changed"] is False
+    assert again["propagation"] == {}
+    assert read_frontmatter(vault / "notes/target.md") == before
+
+
 def test_curate_note_link_without_warrant_writes_no_edge_row(tmp_path: Path) -> None:
     """No warrant text, no attribute edge: the frontmatter link is the whole write."""
     vault = workspace(tmp_path)

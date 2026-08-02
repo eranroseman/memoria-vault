@@ -1003,6 +1003,7 @@ def _run_operation_job(
             csl_json["URL"] = str(payload.get("resource") or "")
 
         memoria = dict(csl_json["memoria"]) if isinstance(csl_json.get("memoria"), dict) else {}
+        prior_standing = str(memoria.get("standing") or "current")
         if standing := str(payload.get("standing") or "").strip():
             if standing not in {"current", "archived", "retracted", "superseded"}:
                 raise ValueError(f"update-work standing is invalid: {standing}")
@@ -1084,11 +1085,27 @@ def _run_operation_job(
             [OVERRIDE_LOG_REL],
             context=context,
         )
+        # The catalog standing seam (EDGES section 5). Only a transition *into*
+        # falsity sweeps: `archived` is shelving, and restating a standing the
+        # work already carries is not a second fall.
+        propagation_result: dict[str, Any] = {}
+        new_standing = str(memoria.get("standing") or "current")
+        if new_standing in {"retracted", "superseded"} and new_standing != prior_standing:
+            from memoria_vault.runtime.propagation import propagate_consequences
+
+            propagation_result = propagate_consequences(
+                vault,
+                f"catalog/sources/{source['work_id']}",
+                trigger="standing-changed",
+                reason=f"work standing changed to {new_standing}: {source['work_id']}",
+                context=context,
+            )
         return {
             "work_id": source["work_id"],
             "work": updated,
             "override_log": OVERRIDE_LOG_REL,
             "commit": commit,
+            "propagation": propagation_result,
         }
     if operation_id == "capture-source":
         return _run_capture_source_operation(vault, payload, context)

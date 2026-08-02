@@ -430,6 +430,24 @@ def curate_note_link(
     commit = commit_writer_changes(
         vault, f"link note {Path(source_rel).stem}", [source_rel], context=context
     )
+
+    # Lazy import to keep this module's import graph flat, matching the other
+    # cross-runtime calls here. Only a link that was actually added is an edge
+    # event: `added=False` is the *removal* trigger, and firing it on an
+    # idempotent re-curate would mark the target as having lost its grounds.
+    propagation_result: dict[str, Any] = {}
+    if changed:
+        from memoria_vault.runtime.propagation import propagate_edge_change
+
+        propagation_result = propagate_edge_change(
+            vault,
+            source=source_rel,
+            relation_type=link_type,
+            target=target_rel,
+            added=True,
+            reason=reason.strip() or f"edge curated: {source_rel} {link_type} {target_rel}",
+            context=context,
+        )
     return {
         "source_note_path": source_rel,
         "target_path": target_rel,
@@ -438,6 +456,7 @@ def curate_note_link(
         "edge_id": edge_id,
         "event": event,
         "commit": commit,
+        "propagation": propagation_result,
     }
 
 
