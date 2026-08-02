@@ -143,6 +143,7 @@ TEST_LEVELS = {
     "test_surface_contract.py": "contract",
     "test_sweeps_retraction.py": "contract",
     "test_telemetry_events.py": "contract",
+    "test_telemetry_read_paths.py": "runtime",
     "test_test_env_harness.py": "package",
     "test_testing_levels.py": "static",
     "test_tmpfs_tmpdir.py": "static",

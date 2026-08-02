@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import uuid
 from pathlib import Path
 
@@ -222,13 +223,25 @@ def test_empirical_event_operation_manifest_uses_schema_ids() -> None:
     assert policy["operation_id"] == "empirical-event-record"
     assert policy["io_schema"] == {
         "input": "empirical_event.v1",
-        "output": "journal_event_ref.v1",
+        "output": "telemetry_event_ref.v1",
     }
     assert policy["allowed_tools"] == ["trusted_writer"]
-    assert ".memoria/journal/" in policy["allowed_paths"]
+    # The sink moved to `telemetry_events` (T.3), so the manifest no longer grants
+    # this operation the journal write scope it stopped using. A stale grant here is
+    # not inert: `require_policy_path` reads `allowed_paths` as the permission list.
+    assert ".memoria/journal/" not in policy["allowed_paths"]
 
 
-def test_empirical_event_operation_records_journal_event_once(tmp_path: Path) -> None:
+def test_empirical_event_operation_records_one_telemetry_row_and_no_journal_row(
+    tmp_path: Path,
+) -> None:
+    """T.3: the door contract is unchanged; the sink is `telemetry_events`.
+
+    This is the same coverage the journal-sink version carried — replay idempotency,
+    the echoed client `event_id`, and the privacy allowlist on what is actually
+    stored — re-pointed at the surviving producer, plus the writer-side proof that
+    the journal gained nothing (no `event_log` row, no JSONL line, no commit).
+    """
     vault = _workspace(tmp_path)
     event = _event()
     key = f"empirical-event:{event['event_id']}"
@@ -254,28 +267,29 @@ def test_empirical_event_operation_records_journal_event_once(tmp_path: Path) ->
     assert second["ok"] is True
     assert second["job"]["status"] == "done"
     assert first["result"]["event_id"] == event["event_id"]
-    assert first["result"]["schema"] == "journal_event_ref.v1"
-    rows = list(iter_jsonl(vault / ".memoria/journal/test-machine.jsonl"))
-    assert len(rows) == 1
-    assert rows[0]["operation"] == "empirical-event-record"
-    assert rows[0]["schema"] == "empirical_event.v1"
-    assert rows[0]["event_id"] == event["event_id"]
-    assert rows[0]["actor"] == "agent"
-    assert {"body", "content", "text", "path", "uri"}.isdisjoint(rows[0])
-    listed = engine_api.read_journal(vault, operation="empirical-event-record")
-    assert len(listed["events"]) == 1
-    assert listed["events"][0]["event_id"] == first["result"]["journal_event_id"]
-    assert listed["events"][0]["payload"]["event_id"] == event["event_id"]
-    assert listed["events"][0]["payload"]["request_id"] == first["job"]["job_id"]
+    assert first["result"]["telemetry_id"]
+    assert {"journal_event_id", "commit", "schema"}.isdisjoint(first["result"])
     with state.connect(vault) as conn:
-        count = conn.execute(
-            "SELECT COUNT(*) AS count FROM event_log WHERE event_type = 'empirical-event'"
-        ).fetchone()["count"]
-    assert count == 1
-    committed = set(
-        git(vault, "show", "--name-only", "--format=", first["result"]["commit"]).splitlines()
-    )
-    assert committed == {state.JOURNAL_HEAD_REL}
+        rows = conn.execute(
+            "SELECT event_id, event_type, session_id, surface, payload_json FROM telemetry_events"
+        ).fetchall()
+        journal_rows = conn.execute("SELECT COUNT(*) AS count FROM event_log").fetchone()["count"]
+    assert len(rows) == 1
+    assert rows[0]["event_id"] == first["result"]["telemetry_id"]
+    assert rows[0]["event_type"] == "empirical_event.v1"
+    assert rows[0]["session_id"] == event["session_id"]
+    assert rows[0]["surface"] == event["surface"]
+    stored = json.loads(rows[0]["payload_json"])
+    assert stored["event_id"] == event["event_id"]
+    assert {"body", "content", "text", "path", "uri"}.isdisjoint(stored)
+    # Writer-side journal proof. The old sink built the whole journal apparatus from
+    # nothing in this bare vault, so its total absence is the assertion: not one
+    # `event_log` row of any type, no per-machine JSONL, no tracked anchor, no commit.
+    assert journal_rows == 0
+    assert not (vault / ".memoria/journal").exists()
+    assert not (vault / state.JOURNAL_HEAD_REL).exists()
+    assert engine_api.read_journal(vault, operation="empirical-event-record")["events"] == []
+    assert git(vault, "rev-list", "--all", "--count") == "0"
 
 
 @pytest.mark.parametrize("idempotency_key", [None, "wrong-key"])

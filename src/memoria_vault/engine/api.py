@@ -207,6 +207,7 @@ def read_attention_card(
         raise FileNotFoundError(f"attention projection not found: {rel}")
     if not _attention_in_scope(card, read_scope):
         raise FileNotFoundError(f"attention projection not found: {rel}")
+    _record_attention_read(Path(workspace), card)
     return _read_payload(attention=card, view=_attention_card_view(card))
 
 
@@ -907,6 +908,36 @@ def _attention_card(path: Path, workspace: Path) -> dict[str, Any] | None:
         "body": body,
         "body_data": _untrusted_text(body),
     }
+
+
+def _record_attention_read(workspace: Path, card: dict[str, Any]) -> None:
+    """One `read-observed.v1` telemetry row per attention detail read (I1 spec §1).
+
+    Never raises: recording is an observer, never a gate, so a telemetry failure must
+    not turn a working read into an error. The row is analytics-only — it goes to
+    `telemetry_events`, so a read still never rewrites the tracked
+    `.memoria/journal-head` anchor or dirties the git tree.
+
+    `session_id` stays NULL here: this is server-side, and the honesty rule is never to
+    fabricate a client field. Staleness comes from the card's own `stale:` mark until
+    the graph plan's ERP-C lands `state.concept_consequence` (the stale verdict mirror);
+    the `hasattr` guard is what lets the two land in either order.
+    """
+    from memoria_vault.runtime.telemetry import record_telemetry_event
+
+    stale = card["frontmatter"].get("stale") is True
+    target = str(card.get("target") or "")
+    if not stale and target and hasattr(state, "concept_consequence"):
+        try:
+            stale = bool(state.concept_consequence(workspace, target))
+        except Exception:  # noqa: BLE001 -- an unavailable mirror is not a staleness hit.
+            stale = False
+    try:
+        record_telemetry_event(
+            workspace, "read-observed.v1", {"workflow": "attention", "staleness_hit": stale}
+        )
+    except Exception:  # noqa: BLE001 -- an observer must never break the read it observes.
+        return
 
 
 def _attention_in_scope(card: dict[str, Any], read_scope: list[str] | None) -> bool:
