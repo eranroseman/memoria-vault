@@ -9,6 +9,7 @@ from pathlib import Path
 
 import pytest
 
+from memoria_vault.cli import main
 from memoria_vault.runtime import explore, propagation, state
 from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.search_index import checked_search_universe
@@ -270,6 +271,14 @@ def _returned_ids(payload: dict) -> set[str]:
         for group in ("claims", "questions", "works", "hubs")
         for entry in payload[group]
     }
+
+
+def _cli_explore_json(
+    capsys: pytest.CaptureFixture[str], vault: Path, *argv: str
+) -> tuple[int, dict]:
+    """Run the shipped command on the JSON front and return its exit code + envelope."""
+    rc = main(["explore", *argv, "--workspace", str(vault), "--json"])
+    return rc, json.loads(capsys.readouterr().out)
 
 
 def test_explore_topic_rejects_depth_outside_hard_cap(tmp_path: Path) -> None:
@@ -658,3 +667,155 @@ def test_vetted_project_slice_seeds_the_thesis_through_the_shared_normalizer(
         "notes/claim-spacing.md",
         "projects/memory.md",
     }
+
+
+def test_cli_explore_honest_empty_names_its_denominator_on_both_fronts(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """The §4 sentence reaches both shipped fronts, and it says *why* it is empty.
+
+    An empty answer is an absorbing state: a swallowed crash, an index that was
+    never built, and a filter that removed everything all render as "nothing
+    found". So the pin is never `honest_empty == <string>` alone. Three
+    observations separate an honest empty from a broken one:
+
+    * the stage row shows the corpus *was* read (`universe` 8) and the kind
+      filter *did* leave candidates (`displayable-kind` 6) — the zero enters at
+      `ranked`, which is where "this topic has no answer" is supposed to enter;
+    * the denominator moves with the last filter stage — 6 with no project, 5
+      under `--project memory` — so it is the candidate set the query actually
+      faced, not `universe`, not a constant;
+    * the same vault, same command, a different topic returns five entries and
+      carries **no** `honest_empty` key at all.
+    """
+    vault = _fixture_vault(tmp_path)
+    sentence = "0 of 6 candidates matched; 1 unchecked documents were not searched"
+
+    rc, output = _cli_explore_json(capsys, vault, "zeppelin")
+
+    assert rc == 0
+    assert output["ok"] is True
+    empty = output["explore"]
+    assert empty["honest_empty"] == sentence
+    assert _stages(empty) == {
+        "universe": 8,
+        "displayable-kind": 6,
+        "ranked": 0,
+        "seed": 0,
+        "neighborhood": 0,
+        "returned": 0,
+    }
+    assert empty["excluded_strata"] == {"unchecked": 1, "stale": 0, "gated": 0}
+    for group in ("claims", "questions", "tensions", "works", "hubs"):
+        assert empty[group] == []
+
+    # The text front prints the sentence and nothing else — never a bare
+    # summary, never an empty page.
+    rc = main(["explore", "zeppelin", "--workspace", str(vault)])
+    assert rc == 0
+    assert capsys.readouterr().out.strip() == sentence
+
+    # Same corpus, one more filter stage: the denominator follows it.
+    rc, output = _cli_explore_json(capsys, vault, "zeppelin", "--project", "memory")
+    assert rc == 0
+    sliced = output["explore"]
+    assert _stages(sliced)["project-slice"] == 5
+    assert (
+        sliced["honest_empty"]
+        == "0 of 5 candidates matched; 1 unchecked documents were not searched"
+    )
+
+    # The control that makes all of the above non-vacuous: this vault answers.
+    rc, output = _cli_explore_json(capsys, vault, "spacing")
+    answered = output["explore"]
+    assert rc == 0
+    assert _stages(answered)["returned"] == 5
+    assert "honest_empty" not in answered
+
+
+def test_cli_explore_acceptance_five_groups_versus_counts_and_depth_cap(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """R2 §9's acceptance criteria, restated once against the shipped command.
+
+    Deliberately end-to-end and deliberately overlapping the engine pins above:
+    §9 states its criteria about `memoria explore`, so the acceptance record is
+    only worth what the *command* produces — the read envelope, the exit codes,
+    a payload that survives JSON, and the refusal front. The counts below are
+    measured, not copied from the plan; see the 2026-08-02 amendment in
+    `docs/superpowers/plans/2026-07-17-r2-retrieval-modes.md` task E.3.
+    """
+    vault = _fixture_vault(tmp_path)
+    ordered_a = [
+        {"stage": "universe", "count": 8},
+        {"stage": "displayable-kind", "count": 6},
+        {"stage": "ranked", "count": 3},
+        {"stage": "seed", "count": 3},
+        {"stage": "neighborhood", "count": 5},
+        {"stage": "returned", "count": 5},
+    ]
+
+    rc, output = _cli_explore_json(capsys, vault, "spacing")
+
+    assert rc == 0
+    assert output["ok"] is True
+    assert output["api_version"] == "engine-read-api.v1"
+    surfaced = output["explore"]
+    for group in ("claims", "questions", "tensions", "works", "hubs"):
+        assert surfaced[group], f"empty group: {group}"
+    assert surfaced["pipeline_counts"] == ordered_a
+    assert surfaced["excluded_strata"] == {"unchecked": 1, "stale": 0, "gated": 0}
+    assert surfaced["tensions"][0]["pair"] == [
+        "notes/claim-massed.md",
+        "notes/claim-spacing.md",
+    ]
+    thin = next(entry for entry in surfaced["claims"] if entry["id"] == "notes/claim-spacing.md")
+    assert thin["grounds_count"] == 0
+    assert thin["zero_grounds"] is True
+    grounded = next(entry for entry in surfaced["claims"] if entry["id"] == "notes/claim-massed.md")
+    assert grounded["grounds_count"] == 1
+    assert grounded["zero_grounds"] is False
+
+    rc, output = _cli_explore_json(capsys, vault, "spacing", "--versus", "massed")
+
+    assert rc == 0
+    versus = output["explore"]
+    assert versus["a"]["pipeline_counts"] == ordered_a
+    assert versus["b"]["pipeline_counts"] == [
+        {"stage": "universe", "count": 8},
+        {"stage": "displayable-kind", "count": 6},
+        {"stage": "ranked", "count": 1},
+        {"stage": "seed", "count": 1},
+        {"stage": "neighborhood", "count": 3},
+        {"stage": "returned", "count": 3},
+    ]
+    assert versus["a"]["excluded_strata"] == {"unchecked": 1, "stale": 0, "gated": 0}
+    assert versus["b"]["excluded_strata"] == versus["a"]["excluded_strata"]
+    assert versus["intersection"] == {
+        "ids": [
+            "catalog/sources/settles-2016",
+            "notes/claim-massed.md",
+            "notes/claim-spacing.md",
+        ],
+        "count": 3,
+        "a_count": 5,
+        "b_count": 3,
+    }
+    assert versus["crossing_tensions"]["count"] == 1
+    assert versus["crossing_tensions"]["pairs"][0]["pair"] == [
+        "notes/claim-massed.md",
+        "notes/claim-spacing.md",
+    ]
+
+    # The cap is a refusal, not a clamp: no payload, nonzero exit, and the
+    # limit is named where the operator reads errors.
+    rc = main(["explore", "spacing", "--depth", "3", "--workspace", str(vault)])
+    captured = capsys.readouterr()
+    assert rc == 2
+    assert captured.out == ""
+    assert "hard cap of 2" in captured.err
+
+    rc, refusal = _cli_explore_json(capsys, vault, "spacing", "--depth", "3")
+    assert rc == 2
+    assert refusal["ok"] is False
+    assert "hard cap of 2" in refusal["error"]

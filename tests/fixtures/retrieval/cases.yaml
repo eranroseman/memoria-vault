@@ -13,20 +13,27 @@
 #   memoria explore grouped payload (depth cap 2).
 # - Gold anchors on unfrozen rows are preregistration bets over the O1
 #   seed corpus and may be corrected until freeze.
+# FROZEN 2026-08-02 (R2 F.3): every row below was evaluated green over the
+# disposable corpus tests/test_retrieval_fixtures.py builds, then frozen.
+# From here no row may be added, dropped, or edited - not the query, not a
+# gold id, not the metric, not the registration date. A correction needs a
+# fresh preregistration decision, not an edit.
 - id: shape1-spacing-effect-lookup
   shape: 1
   query: "what did the spaced-repetition model find about lag effects"
   gold: ["settles-2016-spaced-repetition#^p0007"]
   metric: hit@5
   registered: 2026-07-17
-  frozen: false
+  frozen: true
+  frozen_on: 2026-08-02
 - id: shape1-undesirable-difficulty-boundary
   shape: 1
   query: "when do desirable difficulties reverse for high element interactivity material"
   gold: ["chen-2018-undesirable-difficulty#^p0004"]
   metric: hit@5
   registered: 2026-07-17
-  frozen: false
+  frozen: true
+  frozen_on: 2026-08-02
 - id: shape2-testing-effect-tension
   shape: 2
   query: "testing effect boundary conditions"
@@ -35,4 +42,5 @@
     - catalog/sources/moreira-2019-retrieval-practice
   metric: present@1
   registered: 2026-07-17
-  frozen: false
+  frozen: true
+  frozen_on: 2026-08-02
