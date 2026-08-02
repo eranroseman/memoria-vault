@@ -12,7 +12,7 @@ from collections.abc import Callable, Iterable, Iterator
 from pathlib import Path
 from typing import Any
 
-from memoria_vault.runtime import capture, state
+from memoria_vault.runtime import capture, propagation, state
 from memoria_vault.runtime.backup import local_backup_status
 from memoria_vault.runtime.policy.audit import EMPTY_SHA256, sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path
@@ -958,12 +958,16 @@ def propagate_scan_demotion(
 ) -> dict[str, Any]:
     """Propagate a scan-side demotion through checked downstream Concepts."""
     validate_operation_context(vault, context)
-    return _propagate_scan_demotion(
+    result = _propagate_scan_demotion(
         vault,
         target_id,
         reason=reason,
         append_event=lambda event: append_journal_event(vault, event, context=context),
     )
+    result["consequences"] = propagation.propagate_consequences(
+        vault, target_id, trigger="claim-changed", reason=reason, context=context
+    )
+    return result
 
 
 def propagate_scan_demotion_explicit(
@@ -979,7 +983,7 @@ def propagate_scan_demotion_explicit(
         raise ValueError("explicit scan propagation actor must be integrity")
     if not isinstance(machine, str) or not machine.strip():
         raise ValueError("explicit scan propagation machine must be a nonblank string")
-    return _propagate_scan_demotion(
+    result = _propagate_scan_demotion(
         vault,
         target_id,
         reason=reason,
@@ -987,6 +991,15 @@ def propagate_scan_demotion_explicit(
             vault, event, actor=actor, machine=machine
         ),
     )
+    result["consequences"] = propagation.propagate_consequences_explicit(
+        vault,
+        target_id,
+        trigger="claim-changed",
+        reason=reason,
+        actor=actor,
+        machine=machine,
+    )
+    return result
 
 
 def _propagate_scan_demotion(

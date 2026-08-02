@@ -1476,6 +1476,25 @@ def mark_checked(vault: Path, output_id: str, output_sha256: str, payload_text: 
             )
 
 
+def refresh_output_sha256(vault: Path, output_id: str, output_sha256: str) -> None:
+    """Record new bytes for an existing output without re-judging it.
+
+    A machine write that only *labels* a Concept — the typed-consequence mark —
+    moves the file's hash without changing what the PI checked, and ``outputs``
+    holds the hash ``read_barrier.is_consumable_checked_file`` compares the file
+    against. Leaving it behind makes the labelling writer's own write read as a
+    foreign edit, so the note it labelled stops being consumable as checked and
+    every reader enqueues a scan for it. Only the hash moves: ``check_status``,
+    ``materialization_status`` and the verdict all stay as they were, because a
+    label is not a verdict (the same rule ``set_concept_consequence`` follows).
+    """
+    with connect(vault) as conn:
+        conn.execute(
+            "UPDATE outputs SET output_sha256 = ? WHERE output_id = ?",
+            (output_sha256, normalize_path(output_id)),
+        )
+
+
 def record_observed_file_edit(
     vault: Path,
     *,
@@ -1671,6 +1690,24 @@ def concept_consequence(vault: Path, concept_id: str) -> str:
             (resolve_concept_id(conn, concept_id),),
         ).fetchone()
     return "" if row is None else str(row["consequence"])
+
+
+def concept_exists(vault: Path, concept_id: str) -> bool:
+    """Return whether the mirror already holds this Concept, minting nothing.
+
+    ``resolve_concept_id`` answers with the normalized reference itself when
+    nothing is mirrored, so it cannot tell a known Concept from an unknown one.
+    Every FK-backed writer above — ``set_concept_flag``,
+    ``set_concept_consequence`` — refuses a reference with no ``concepts`` row,
+    and the graph legally names nodes the mirror has never seen: a forward link
+    to a note that does not exist yet parks as a pending edge whose
+    ``target_path`` still projects into path space. A caller walking that graph
+    has to be able to ask before it writes.
+    """
+    if not db_path(vault).is_file():
+        return False
+    with connect(vault) as conn:
+        return _lookup_concept_id(conn, concept_id) is not None
 
 
 def note_curation_status(vault: Path, concept_id: str) -> str:

@@ -8850,6 +8850,44 @@ fresh schema; do not transform an older database.
 
 ### Task ERP-C.4: The mark writer — `stale: true` + `consequence:` frontmatter, DB mirror, compat flag, idempotent
 
+> **Landing amendment (2026-08-02, ERP-C.4 as built).** Four deviations from the
+> printed body and tests, each because the printed line could not run or could
+> not fail:
+>
+> 1. **Every printed fixture was parentless.** `set_concept_consequence` and
+>    `set_concept_flag` are both FK-backed onto `concepts`, so
+>    `mark_consequence(vault, "catalog/sources/w2", …)` on a vault with no `w2`
+>    catalog row raises `_concept_missing_parent` before any rule below is
+>    reached. Every fixture seeds its parent (`state.upsert_catalog_record` for
+>    a work, `write_note` for a note), and `workspace()` is
+>    `tests.helpers.worker_workspace` so the engine in C.5 has a commit to
+>    build on.
+> 2. **`mark_consequence` refuses nothing and skips the unmirrored.** C.1 proved
+>    the walk legally reaches a pending edge's target, which has no `concepts`
+>    row; letting the FK refusal out would abort a whole propagation run for one
+>    dangling forward link. New guard: `if not state.concept_exists(vault,
+>    target): return unchanged`. **New public reader
+>    `state.concept_exists(vault, concept_id) -> bool`** — `resolve_concept_id`
+>    answers with the normalized reference itself for an unknown Concept, so
+>    nothing shipped could tell known from unknown.
+> 3. **A third hash reader had to move with the file.** The printed body keeps
+>    `rebuild_trace_state` current (the journal event) and the PI baseline
+>    current, but not `outputs.output_sha256` — the hash
+>    `read_barrier.is_consumable_checked_file` compares the file against. Without
+>    it a labelled note stops being consumable as checked, every later reader
+>    enqueues a scan for it, and that scan demotes it and cascades another
+>    propagation; `curate_note_link` on a marked target raises outright. **New
+>    narrow writer `state.refresh_output_sha256(vault, output_id, sha)`** — hash
+>    only, no verdict, following `set_concept_consequence`'s "a label is not a
+>    re-judgment" rule. `state.mark_checked` could not serve: it promotes to
+>    `checked` and deletes the very `stale` flag this writer just wrote.
+> 4. **The printed idempotence tests test one half of two conjunctions.** Both
+>    the file branch (`stale is True and consequence == …`) and the DB branch
+>    (`consequence == … and "stale" in flags`) now have a test per half, plus
+>    the non-markdown and missing-file halves of `is_markdown`.
+>
+> `tests/conftest.py` registers `"test_propagation_engine.py": "runtime"`.
+
 **Files:**
 - Modify: `src/memoria_vault/runtime/propagation.py` (add `mark_consequence` + `_target_aliases`)
 - Create: `tests/test_propagation_engine.py`
@@ -8861,8 +8899,8 @@ fresh schema; do not transform an older database.
 
 **Steps:**
 
-- [ ] Register the test file in `tests/conftest.py` `TEST_LEVELS`: `"test_propagation_engine.py": "runtime",`.
-- [ ] Write the failing tests. Create `tests/test_propagation_engine.py`:
+- [x] Register the test file in `tests/conftest.py` `TEST_LEVELS`: `"test_propagation_engine.py": "runtime",`.
+- [x] Write the failing tests. Create `tests/test_propagation_engine.py`:
 
   ```python
   from __future__ import annotations
@@ -8985,9 +9023,9 @@ fresh schema; do not transform an older database.
       assert baseline["restriction_keys"] == ["quote"]
   ```
 
-- [ ] Run to verify failure: `python -m pytest tests/test_propagation_engine.py -v` — expected: `ImportError: cannot import name 'mark_consequence'`.
+- [x] Run to verify failure: `python -m pytest tests/test_propagation_engine.py -v` — expected: `ImportError: cannot import name 'mark_consequence'`.
 
-- [ ] Write the minimal implementation. In `src/memoria_vault/runtime/propagation.py`, extend the imports:
+- [x] Write the minimal implementation. In `src/memoria_vault/runtime/propagation.py`, extend the imports:
 
   ```python
   from memoria_vault.runtime.policy.audit import EMPTY_SHA256, sha256_file
@@ -9090,7 +9128,7 @@ fresh schema; do not transform an older database.
   is lazy (spec §5 last bullet) — `state.set_concept_verdict(..., "checked")` clears
   the DB mirror (C.3) and the PI removing the two fields is an observed PI edit.
 
-- [ ] Run to verify pass: `python -m pytest tests/test_propagation_engine.py -v`.
+- [x] Run to verify pass: `python -m pytest tests/test_propagation_engine.py -v`.
 - [ ] Commit:
 
   ```
@@ -9103,6 +9141,16 @@ fresh schema; do not transform an older database.
 ---
 
 ### Task ERP-C.6: Loudness routing — attention card only when the active project's slice is touched (executes BEFORE C.5)
+
+> **Execution note (2026-08-02): C.5 landed first, so this task now has a third
+> deliverable.** `propagation._propagate` holds the routing seat with a literal
+> `cards: list[str] = []`; replacing that line with `route_consequence_cards(
+> vault, consequences, trigger_id=target, reason=reason)` is what turns the
+> engine's quiet tier back on. `tests/test_propagation_engine.py` already carries
+> the workspace and `_work` helpers this task's fixtures need, and its
+> `test_retraction_sweep_labels_every_reached_claim_and_commits_them` asserts
+> `result["cards"] == []` — that assertion is this task's to flip, and it is the
+> one place the deferral is visible from outside.
 
 **Files:**
 - Modify: `src/memoria_vault/runtime/propagation.py` (add `active_project_slices` + `route_consequence_cards`)
@@ -9313,6 +9361,58 @@ fresh schema; do not transform an older database.
 
 ### Task ERP-C.5: Engine orchestration + trigger seams (scan, curate/insert, standing sweep, disposition)
 
+> **Landing amendment (2026-08-02, ERP-C.5 as built).**
+>
+> 1. **Card routing is deferred, not dropped — ERP-C.6 has not landed.** This
+>    task's Consumes names `route_consequence_cards` (C.6), and the section's
+>    execution order puts C.6 first, but C.5 was executed alone. `_propagate`
+>    therefore holds the routing seat with `cards: list[str] = []` and a comment
+>    naming C.6, so every run stays at the quiet tier the routing rule already
+>    gives marks outside every active slice: labels and journal, no card. The
+>    published return shape is unchanged — `cards` is a real key, always empty
+>    until C.6. **Obligation on ERP-C.6:** besides its own two functions it must
+>    replace that one line in `propagate._propagate` with the
+>    `route_consequence_cards(vault, consequences, trigger_id=target,
+>    reason=reason)` call, and re-point this task's engine test
+>    (`test_retraction_sweep_labels_every_reached_claim_and_commits_them`
+>    asserts `result["cards"] == []` today).
+> 2. **`added=changed` was a bug in the printed curate seam.** `added=False` is
+>    not "no edge event", it is the *removal* trigger, and
+>    `hop_consequence("edge-removed", "supports", seed=True)` is `grounds-lost` —
+>    so an idempotent re-curate of a link that already exists would have marked
+>    the target as having lost its grounds. The seam is now guarded by
+>    `if changed:` and always passes `added=True`; `curate_note_link(...)
+>    ["propagation"]` is `{}` when nothing changed, mirroring the worker's `{}`
+>    for a non-transition standing.
+> 3. **`marked` is closure membership, not write receipts.** A dependent the
+>    mirror never saw and a dependent already carrying this consequence are both
+>    in `marked` and neither reaches the commit; only rels `mark_consequence`
+>    actually rewrote do. That is what makes a re-run of a settled sweep return
+>    the same `marked` with `commit == ""`.
+> 4. **The two latest-derived folds stay two folds.** C.5 is where that was to be
+>    revisited, and it resolves the *direction*, not the duplication: `integrity`
+>    now imports `propagation` at module scope, so the import back is closed for
+>    good and `propagation` keeps its own fold and its own `_target_aliases` copy.
+>    Unifying the other way — `integrity._downstream_events` consuming
+>    propagation's fold — was considered and refused: the two are not the same
+>    function (propagation's `_journal_ref` drops a reference `normalize_path`
+>    rejects, `integrity._latest_derived` propagates the `ValueError`), and it
+>    would make a propagation edit able to move the shipped scan-demotion walk.
+>    The new edge stays one-directional and shallow: integrity calls propagation
+>    for the new consequence behavior only.
+> 5. **No golden drift.** The floor suite passes against the committed goldens
+>    unchanged — the fixtures exercise neither a scan demotion with graph
+>    dependents nor an `update-work` transition into `{retracted, superseded}`,
+>    so neither seam appends a `typed-consequence` event there. The regeneration
+>    step below was not needed and was not run.
+> 6. **Signature of record for ERP-D.1** (cross-section contract 3):
+>    `propagation.compute_consequences(vault: Path, target_id: str, *, trigger:
+>    str) -> dict[str, dict[str, Any]]`, mapping concept **path** →
+>    `{"consequence": str, "via": str, "depth": int}`. Pure read, no writes; the
+>    start target is alias-expanded and is never itself in the result. The typed
+>    count D.1's report card wants is `Counter(mark["consequence"] for mark in
+>    compute_consequences(...).values())`.
+
 **Files:**
 - Modify: `src/memoria_vault/runtime/propagation.py` (add `compute_consequences`, `_propagate`, `propagate_consequences`, `propagate_consequences_explicit`, `propagate_edge_change`)
 - Modify: `src/memoria_vault/runtime/integrity.py` — `propagate_scan_demotion` (lines 911-925) and `propagate_scan_demotion_explicit` (lines 928-948); both funnel from the trusted-writer scan trigger (`_observe_pi_edits_from_status`, trusted_writer.py:550-572), so wiring the two wrappers covers claim edit/retract with no trusted_writer change
@@ -9332,7 +9432,7 @@ fresh schema; do not transform an older database.
 
 **Steps:**
 
-- [ ] Write the failing engine test. Append to `tests/test_propagation_engine.py` (extend imports with `from memoria_vault.runtime.propagation import propagate_consequences_explicit` and `from memoria_vault.runtime.trusted_writer import append_explicit_journal_event`):
+- [x] Write the failing engine test. Append to `tests/test_propagation_engine.py` (extend imports with `from memoria_vault.runtime.propagation import propagate_consequences_explicit` and `from memoria_vault.runtime.trusted_writer import append_explicit_journal_event`):
 
   ```python
   def test_retraction_sweep_marks_transitive_claims_and_routes_bounded_cards(
@@ -9408,9 +9508,9 @@ fresh schema; do not transform an older database.
       assert again["cards"] == [] and again["commit"] == ""
   ```
 
-- [ ] Run to verify failure: `python -m pytest tests/test_propagation_engine.py::test_retraction_sweep_marks_transitive_claims_and_routes_bounded_cards -v` — expected: `ImportError: cannot import name 'propagate_consequences_explicit'`.
+- [x] Run to verify failure: `python -m pytest tests/test_propagation_engine.py::test_retraction_sweep_marks_transitive_claims_and_routes_bounded_cards -v` — expected: `ImportError: cannot import name 'propagate_consequences_explicit'`.
 
-- [ ] Implement the engine. In `src/memoria_vault/runtime/propagation.py`, extend the trusted_writer import with `OperationContext, append_explicit_journal_event, append_journal_event, commit_explicit_writer_changes, commit_writer_changes, validate_operation_context`, then add:
+- [x] Implement the engine. In `src/memoria_vault/runtime/propagation.py`, extend the trusted_writer import with `OperationContext, append_explicit_journal_event, append_journal_event, commit_explicit_writer_changes, commit_writer_changes, validate_operation_context`, then add:
 
   ```python
   def compute_consequences(
@@ -9571,9 +9671,9 @@ fresh schema; do not transform an older database.
       )
   ```
 
-- [ ] Run to verify the engine test passes: `python -m pytest tests/test_propagation_engine.py -v`.
+- [x] Run to verify the engine test passes: `python -m pytest tests/test_propagation_engine.py -v`.
 
-- [ ] Write the failing scan-seam test. Append to `tests/test_propagation_engine.py`:
+- [x] Write the failing scan-seam test. Append to `tests/test_propagation_engine.py`:
 
   ```python
   def test_scan_demotion_wrappers_attach_grounding_consequences(tmp_path: Path) -> None:
@@ -9608,9 +9708,9 @@ fresh schema; do not transform an older database.
       assert read_frontmatter(vault / "notes/dependent.md")["stale"] is True
   ```
 
-- [ ] Run to verify failure: `python -m pytest tests/test_propagation_engine.py::test_scan_demotion_wrappers_attach_grounding_consequences -v` — expected: `KeyError: 'consequences'`.
+- [x] Run to verify failure: `python -m pytest tests/test_propagation_engine.py::test_scan_demotion_wrappers_attach_grounding_consequences -v` — expected: `KeyError: 'consequences'`.
 
-- [ ] Wire the scan seam. In `src/memoria_vault/runtime/integrity.py`, add the import `from memoria_vault.runtime import propagation` to the top-level import block (after line 15's `from memoria_vault.runtime import capture, state` — no cycle: propagation imports state/trusted_writer/inbox only). Then in `propagate_scan_demotion` (lines 911-925), replace the bare `return _propagate_scan_demotion(...)` with:
+- [x] Wire the scan seam. In `src/memoria_vault/runtime/integrity.py`, add the import `from memoria_vault.runtime import propagation` to the top-level import block (after line 15's `from memoria_vault.runtime import capture, state` — no cycle: propagation imports state/trusted_writer/inbox only). Then in `propagate_scan_demotion` (lines 911-925), replace the bare `return _propagate_scan_demotion(...)` with:
 
   ```python
       result = _propagate_scan_demotion(
@@ -9649,9 +9749,9 @@ fresh schema; do not transform an older database.
 
   `_propagate_scan_demotion` (lines 951-1019) and `_downstream_events` (lines 1022-1048) stay untouched — the DAG demote/flag behavior is preserved; the engine's union walk overlaps it only through idempotent marks. Both call sites in the trusted-writer scan trigger (trusted_writer.py:556-572) flow through these wrappers unchanged.
 
-- [ ] Run to verify pass: `python -m pytest tests/test_propagation_engine.py -v`.
+- [x] Run to verify pass: `python -m pytest tests/test_propagation_engine.py -v`.
 
-- [ ] Write the failing curate-seam test. Append to `tests/test_knowledge.py` (after `test_curate_note_link_records_typed_link_on_checked_note`, line 395 block; uses the file's existing `_md`, `workspace`, `curate_note_link` wrappers):
+- [x] Write the failing curate-seam test. Append to `tests/test_knowledge.py` (after `test_curate_note_link_records_typed_link_on_checked_note`, line 395 block; uses the file's existing `_md`, `workspace`, `curate_note_link` wrappers):
 
   ```python
   def test_curate_note_link_fires_edge_added_propagation(tmp_path: Path) -> None:
@@ -9685,9 +9785,9 @@ fresh schema; do not transform an older database.
   line 361; the decision-table row is already covered at unit level in C.2, so
   this seam test intentionally uses `supports`.)
 
-- [ ] Run to verify failure: `python -m pytest tests/test_knowledge.py::test_curate_note_link_fires_edge_added_propagation -v` — expected: `KeyError: 'propagation'`.
+- [x] Run to verify failure: `python -m pytest tests/test_knowledge.py::test_curate_note_link_fires_edge_added_propagation -v` — expected: `KeyError: 'propagation'`.
 
-- [ ] Wire the curate seam. In `src/memoria_vault/runtime/knowledge.py` `curate_note_link`, after the `commit = commit_writer_changes(...)` call (lines 404-406) and before the return dict, add:
+- [x] Wire the curate seam. In `src/memoria_vault/runtime/knowledge.py` `curate_note_link`, after the `commit = commit_writer_changes(...)` call (lines 404-406) and before the return dict, add:
 
   ```python
       from memoria_vault.runtime.propagation import propagate_edge_change
@@ -9705,9 +9805,9 @@ fresh schema; do not transform an older database.
 
   and add `"propagation": propagation_result,` to the returned dict (lines 407-414). (`added=changed`: re-curating an existing link is not an edge event. Lazy import matches the module's existing style for cross-runtime imports and keeps knowledge.py's import graph flat.)
 
-- [ ] Run to verify pass: `python -m pytest tests/test_knowledge.py -v`.
+- [x] Run to verify pass: `python -m pytest tests/test_knowledge.py -v`.
 
-- [ ] Write the failing standing-seam test. Append to `tests/test_worker_product_jobs.py` (uses the file's existing `workspace`, `enqueue_operation`, `run_next_job`, `write_note` imports; add `from memoria_vault.runtime.vaultio import read_frontmatter` if not already imported — it is, line 28):
+- [x] Write the failing standing-seam test. Append to `tests/test_worker_product_jobs.py` (uses the file's existing `workspace`, `enqueue_operation`, `run_next_job`, `write_note` imports; add `from memoria_vault.runtime.vaultio import read_frontmatter` if not already imported — it is, line 28):
 
   ```python
   def test_update_work_standing_retraction_sweeps_grounded_claims(tmp_path: Path) -> None:
@@ -9777,9 +9877,9 @@ fresh schema; do not transform an older database.
       assert done["propagation"] == {}
   ```
 
-- [ ] Run to verify failure: `python -m pytest tests/test_worker_product_jobs.py::test_update_work_standing_retraction_sweeps_grounded_claims -v` — expected: `KeyError: 'propagation'`.
+- [x] Run to verify failure: `python -m pytest tests/test_worker_product_jobs.py::test_update_work_standing_retraction_sweeps_grounded_claims -v` — expected: `KeyError: 'propagation'`.
 
-- [ ] Wire the standing seam. In `src/memoria_vault/runtime/worker.py`'s `update-work` branch: directly after the `memoria` dict is first built (line 944, before the `standing :=` walrus block at 946), capture the prior value:
+- [x] Wire the standing seam. In `src/memoria_vault/runtime/worker.py`'s `update-work` branch: directly after the `memoria` dict is first built (line 944, before the `standing :=` walrus block at 946), capture the prior value:
 
   ```python
           prior_standing = str(memoria.get("standing") or "current")
@@ -9804,9 +9904,9 @@ fresh schema; do not transform an older database.
 
   and add `"propagation": propagation_result,` to the return dict. (Archived is excluded per the SPEC GAP ruling at the section top. The disposition seam needs no wiring here: ERP-D's `decided-wrong` verb calls `compute_consequences` for its report card and `propagate_consequences(..., trigger="decided-wrong")` for the labels — both are this task's Produces.)
 
-- [ ] Run to verify pass: `python -m pytest tests/test_worker_product_jobs.py tests/test_propagation_engine.py tests/test_knowledge.py -v`.
+- [x] Run to verify pass: `python -m pytest tests/test_worker_product_jobs.py tests/test_propagation_engine.py tests/test_knowledge.py -v`.
 
-- [ ] **Regenerate floor goldens** — the scan and update-work seams append `typed-consequence` journal events and write frontmatter on fixture files, and the goldens hash `.memoria/journal/*.jsonl` + `.memoria/journal-head`:
+- [x] **Regenerate floor goldens** — *not needed as built (2026-08-02): the floor suite passes against the committed goldens unchanged, because its fixtures exercise neither a scan demotion with graph dependents nor an `update-work` transition into `{retracted, superseded}`. The step below was run only as far as confirming that.* The step as drafted — the scan and update-work seams append `typed-consequence` journal events and write frontmatter on fixture files, and the goldens hash `.memoria/journal/*.jsonl` + `.memoria/journal-head`:
 
   ```
   MEMORIA_FLOOR_UPDATE_GOLDENS=1 python -m pytest tests/test_floor_seed.py \
@@ -9818,7 +9918,7 @@ fresh schema; do not transform an older database.
   Review the drift with `git diff tests/fixtures/floor/goldens/` — only hash
   values may change; a shape change means a wiring bug.
 
-- [ ] Run the gate: `python scripts/verify`.
+- [x] Run the gate: `python scripts/verify`.
 - [ ] Commit:
 
   ```

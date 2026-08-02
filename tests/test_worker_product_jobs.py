@@ -1285,3 +1285,97 @@ def test_worker_rejects_tension_curate_note_link(tmp_path: Path) -> None:
 
     assert failed is not None and failed["status"] == "failed"
     assert "link_type must be one of" in str(failed["error"])
+
+
+def _retractable_work(vault: Path, work_id: str) -> None:
+    state.upsert_catalog_record(
+        vault,
+        work_id=work_id,
+        title="Retractable",
+        description="Soon retracted.",
+        csl_json={"title": "Retractable"},
+        check_status="checked",
+    )
+
+
+def _ground_claim_in(vault: Path, work_id: str, note: str, evidence_id: str) -> None:
+    write_note(vault, note, "checked", f"Claim grounded in {work_id}.")
+    state.replace_evidence_sets(
+        vault,
+        [
+            {
+                "id": evidence_id,
+                "block_ref": f"notes/{note}.md#^blk-33333333",
+                "items": [f"{work_id}#^p0001"],
+                "type": "single-span",
+                "state": "complete",
+                "review_required": False,
+                "bind": False,
+            }
+        ],
+    )
+
+
+def _update_standing(vault: Path, work_id: str, standing: str, key: str) -> dict:
+    enqueue_operation(
+        vault,
+        "update-work",
+        payload={"work_id": work_id, "standing": standing},
+        idempotency_key=key,
+        actor="pi",
+    )
+    done = run_next_job(vault, machine="test-machine")
+    assert done is not None and done["status"] == "done", done
+    return done
+
+
+def test_update_work_standing_retraction_sweeps_grounded_claims(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    _retractable_work(vault, "w9")
+    _ground_claim_in(vault, "w9", "grounded", "ev-33333333")
+
+    done = _update_standing(vault, "w9", "retracted", "retract-w9")
+
+    assert done["propagation"]["trigger"] == "standing-changed"
+    assert done["propagation"]["target_id"] == "catalog/sources/w9"
+    assert done["propagation"]["marked"] == {"notes/grounded.md": "grounds-lost"}
+    frontmatter = read_frontmatter(vault / "notes/grounded.md")
+    assert frontmatter["stale"] is True
+    assert frontmatter["consequence"] == "grounds-lost"
+    assert state.concept_consequence(vault, "notes/grounded.md") == "grounds-lost"
+
+
+def test_update_work_supersession_sweeps_too(tmp_path: Path) -> None:
+    """`superseded` is the standing set's second member, not a copy of the first."""
+    vault = workspace(tmp_path)
+    _retractable_work(vault, "w11")
+    _ground_claim_in(vault, "w11", "superseded-claim", "ev-44444444")
+
+    done = _update_standing(vault, "w11", "superseded", "supersede-w11")
+
+    assert done["propagation"]["marked"] == {"notes/superseded-claim.md": "grounds-lost"}
+
+
+def test_update_work_archiving_does_not_sweep(tmp_path: Path) -> None:
+    """Shelving is not falsification: `archived` is outside the standing set."""
+    vault = workspace(tmp_path)
+    _retractable_work(vault, "w10")
+    _ground_claim_in(vault, "w10", "shelved-claim", "ev-55555555")
+
+    done = _update_standing(vault, "w10", "archived", "archive-w10")
+
+    assert done["propagation"] == {}
+    assert read_frontmatter(vault / "notes/shelved-claim.md").get("stale") is None
+
+
+def test_update_work_restating_a_standing_is_not_a_transition(tmp_path: Path) -> None:
+    """Already retracted: the sweep fired once, and re-issuing it is not a second fall."""
+    vault = workspace(tmp_path)
+    _retractable_work(vault, "w12")
+    _ground_claim_in(vault, "w12", "twice-claim", "ev-66666666")
+    first = _update_standing(vault, "w12", "retracted", "retract-w12-once")
+
+    again = _update_standing(vault, "w12", "retracted", "retract-w12-twice")
+
+    assert first["propagation"]["marked"] == {"notes/twice-claim.md": "grounds-lost"}
+    assert again["propagation"] == {}

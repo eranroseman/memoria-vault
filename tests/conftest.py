@@ -116,6 +116,7 @@ TEST_LEVELS = {
     "test_project_structural_impact.py": "contract",
     "test_projections.py": "contract",
     "test_propagation.py": "runtime",
+    "test_propagation_engine.py": "runtime",
     "test_query_substrate.py": "contract",
     "test_read_api_auth_walk.py": "contract",
     "test_read_api_scope_walk.py": "floor",
