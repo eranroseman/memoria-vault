@@ -1159,6 +1159,17 @@ It implements NODES §1.1, §1.4, §1.6–.8 and preserves the G2 mirror contrac
   `path`, `work_id`, or `passage_id`). End with `PRAGMA foreign_key_check` and raise
   if it is nonempty; let the normal schema pass recreate indexes, triggers, and view.
 
+  > *(2026-08-02 reconciliation: deliberately never executed, and never tickable.
+  > The Execution replacement above retired migrations wholesale, so no migration
+  > was written: `src/` contains no `MIGRATIONS` registry and no
+  > `_rekey_concept_identity`, and the schema is fresh-install-only, now at
+  > `state.SCHEMA_VERSION = 19`. The identity product this step was to deliver —
+  > `concepts.path`, `concept_edges.target_path` with the
+  > `(source_concept_id, relation_type, target_path)` primary key, the
+  > `catalog_sources.work_id → concepts` RESTRICT FK, and collision-safe parent
+  > ensuring — is live on main through the ticked steps around it. Leave this box
+  > open forever; do not re-dispatch it.)*
+
 - [x] Make the v16 runtime seams safe before NID-B.2. `upsert_catalog_record` first
   calls `ensure_concept_parent_conn(conn, stable_work_id, concept_type="work",
   store="db", path=f"catalog/sources/{stable_work_id}")`, then writes the catalog
@@ -1237,6 +1248,13 @@ It implements NODES §1.1, §1.4, §1.6–.8 and preserves the G2 mirror contrac
 The following original draft is retained for historical comparison only. Its migration,
 mirror, and B.2-boundary instructions are superseded by the revised NID-B.1 task above.
 Do not execute its checkboxes or copy its code snippets.
+
+*(2026-08-02 reconciliation: every checkbox below is permanently dead — never tick
+one, never re-dispatch one, and do not count them as remaining work. Two of them
+name mechanisms that no longer exist at all: there is no `MIGRATIONS` registry in
+`src/`, and `tests/conftest.py` has no `TEST_LEVELS` dict — testing levels moved to
+a module-level `pytestmark` in `cc55c40f`, and `tests/test_schema_v16_identity.py`
+carries `pytestmark = pytest.mark.contract` accordingly.)*
 
 One migration, per the binding allocation: 15→16. The DB re-keys to frontmatter
 identity (clause 1), `path` becomes a unique updatable attribute, real FKs land
@@ -2174,6 +2192,15 @@ frontmatter ULIDs on first write; it performs no path-key re-key or reconciliati
 The following original draft predates the B.1 safety-floor transfer. Its mirror-prune,
 parent/status resolution, and catalog instructions now belong solely to revised NID-B.1;
 only the revised B.2 task above is executable.
+
+*(2026-08-02 reconciliation: every checkbox below is permanently dead — never tick
+one, never re-dispatch one, and do not count them as remaining work. The products
+they describe are live on main today under the revised tasks:
+`rebuild_file_concept_mirror` is upsert-and-prune keeping verdict-bearing
+tombstones, `set_concept_verdict` / `concept_check_status` / `set_concept_flag` /
+`record_file_output` / `record_observed_file_edit` all route through
+`resolve_concept_id` and `_concept_key_for_file`, and the whole contract is covered
+by `tests/test_schema_v16_identity.py`. Only this draft's wording is retired.)*
 
 Runtime writers stop keying file concepts by path: the mirror carries the
 frontmatter ULID (uniform rule: ULID when the `id` is one, else the path; catalog

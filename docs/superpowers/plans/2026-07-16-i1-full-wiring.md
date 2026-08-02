@@ -33,7 +33,25 @@
 8. **Decision-rule registry entry shape (H.3):** `{id, blocker, metric, window, threshold, recommendation, check: auto|manual, status: armed|fired|retired}`, seeded in `.memoria/config/decision-rules.yaml` with all fifteen empirical-plan §4 blockers + `attention-throttle`.
 9. **Execution order:** T.1 → T.2 → {T.3, T.4, D.*, A.*} → H.*. **Cross-plan:** this plan executes after the current direct graph schema is at v18. T.1 updates that fresh schema to v19; it does not require or add a migration chain. The graph plan's ERP-D.6 executes **after** T.1+T.2 (recorded in that task). Every task consuming a not-yet-landed seam from Plans 21/22/graph/surfaces carries a grep-first order-tolerance note — follow it.
 10. **Golden serialization:** D-section tasks add journal events and may drift floor goldens (`tests/fixtures/floor/goldens/`). Regenerate with `MEMORIA_FLOOR_UPDATE_GOLDENS=1 python -m pytest tests/test_floor_sweep_operations.py tests/test_floor_invariants.py -q`, review `git diff --stat tests/fixtures/floor/goldens/`, commit with the task. Never run golden-touching tasks concurrently with other plans' golden tasks (Plan 21 COV.*, Plan 22 S68.3/COST.4, graph ERP-D.1/D.5, surfaces contract 10 list).
-11. **TEST_LEVELS registrations** (`tests/conftest.py:18`): new files — `test_telemetry_events.py: "contract"`, `test_telemetry_read_paths.py: "runtime"`, `test_attention_ordering.py: "contract"`, `test_attention_flow.py: "contract"`, `test_dashboard_view.py: "contract"`, `test_decision_rules.py: "contract"`. Extended files (`test_empirical_events.py`, `test_operations.py`, `test_worker_*.py`, `test_loudness.py`, `test_knowledge.py`, `test_feedback_instrumentation.py`) are already registered — no conftest change.
+11. **TEST_LEVELS registrations** (`tests/conftest.py:18`): new files — `test_telemetry_events.py: "contract"`, `test_telemetry_read_paths.py: "runtime"`, `test_attention_ordering.py: "contract"`, `test_attention_flow.py: "contract"`, `test_dashboard_view.py: "contract"`, `test_decision_rules.py: "contract"`. Extended files (`test_empirical_events.py`, `test_operations.py`, `test_worker_*.py`, `test_loudness.py`, `test_knowledge.py`, `test_feedback_instrumentation.py`) are already registered — no conftest change. **Stale as of 2026-08-02:** PR #1671 (`cc55c40f`) deleted the `TEST_LEVELS` dict; each test module now declares its own level with a module-level `pytestmark = pytest.mark.<level>`, enforced by `tests/test_testing_levels.py`. Every "register the file in `TEST_LEVELS`" instruction in this plan is superseded — and the module must already `import pytest`, or the `pytestmark` line raises `NameError` at collection and the file drops out of every gate selection silently.
+
+## Plan status — 2026-08-02 reconciliation against `main` @ `973a0676`
+
+**All seventeen tasks are executed and on `main`: T.1–T.4, D.1–D.4, A.1–A.5,
+H.1–H.4. This plan is at zero open work.** A naive checkbox scan reads far worse
+than that, because the 22 boxes still showing open are all one of three things,
+none of them remaining work:
+
+- **13 `Commit:` steps** — orchestrator-owned by convention, never ticked here.
+- **4 "Step 2: Run to verify failure" boxes in A.1–A.4** — permanently unticked on
+  purpose. Implementation preceded the tests in section A, so red-first was not
+  performed and ticking it would be false; the section's 46/46 mutation run is the
+  stronger claim that stands in its place. See the Section A landing record.
+- **5 boxes in H.4** — dead drafting history for `evaluate_decision_rules`, which
+  was deliberately not built and will not be. See the H.4 application-half
+  amendment.
+
+Do not re-dispatch any of them.
 
 ## Plan-reconciliation amendment — dashboard read purity and registered view (2026-07-29)
 
@@ -1505,7 +1523,10 @@ def test_table_view_gains_loudness_raised_by_created_columns(tmp_path: Path) -> 
 
 (Adjust the `_card` helper to the file's final form — the double frontmatter read above is illustrative of intent, not required; one `split_frontmatter` read suffices.)
 
-- [ ] **Step 2: Run to verify failure**
+- [ ] **Step 2: Run to verify failure** — *permanently unticked; see the "Section A
+  landing record" at the head of this plan: implementation preceded the tests in
+  A.1–A.4, so red-first was not performed and ticking it would be false. Kill power
+  comes from the section's 46/46 mutation run instead. Do not re-dispatch.*
 
 Run: `python -m pytest tests/test_attention_ordering.py -v`
 Expected: FAIL — alphabetical order (`aa…` first) and `KeyError: 'rank_factors'`.
@@ -1636,7 +1657,7 @@ def test_order_by_param_overrides_config_and_malformed_config_falls_back(tmp_pat
     assert payload["attention"][0]["rank_factors"]["age_days"] >= 0
 ```
 
-- [ ] **Step 2: Run to verify failure** — `python -m pytest tests/test_attention_ordering.py -k order_by -v` → FAIL (`ModuleNotFoundError` / `TypeError`).
+- [ ] **Step 2: Run to verify failure** — `python -m pytest tests/test_attention_ordering.py -k order_by -v` → FAIL (`ModuleNotFoundError` / `TypeError`). *Permanently unticked; see the "Section A landing record" at the head of this plan — red-first was not performed in A.1–A.4 and the 46/46 mutation run stands in its place. Do not re-dispatch.*
 - [x] **Step 3: Implement.** Create `src/memoria_vault/runtime/attention_config.py`:
 
 ```python
@@ -1775,7 +1796,7 @@ def test_deduped_work_prompt_write_inserts_nothing(tmp_path: Path) -> None:
     assert len(_admitted(tmp_path)) == 1
 ```
 
-- [ ] **Step 2: Run to verify failure** — `python -m pytest tests/test_attention_flow.py -v` → FAIL (zero rows).
+- [ ] **Step 2: Run to verify failure** — `python -m pytest tests/test_attention_flow.py -v` → FAIL (zero rows). *Permanently unticked; see the "Section A landing record" at the head of this plan — red-first was not performed in A.1–A.4 and the 46/46 mutation run stands in its place. Do not re-dispatch.*
 - [x] **Step 3: Implement.** In `inbox.py`, extend `_write` to accept `raised_by: str = ""` (each writer passes its own) and add after `write_text_durable(path, content)` (`:184`) — and identically in the `dedupe_slug` branch of `write_work_prompt` after its `write_text_durable` (`:169`):
 
 ```python
@@ -1866,7 +1887,7 @@ def test_paused_producer_skips_with_recorded_skip(tmp_path: Path) -> None:
     assert len(_admitted(tmp_path)) == 0
 ```
 
-- [ ] **Step 2: Run to verify failure** — `python -m pytest tests/test_attention_flow.py -k producer -v` → FAIL.
+- [ ] **Step 2: Run to verify failure** — `python -m pytest tests/test_attention_flow.py -k producer -v` → FAIL. *Permanently unticked; see the "Section A landing record" at the head of this plan — red-first was not performed in A.1–A.4 and the 46/46 mutation run stands in its place. Do not re-dispatch.*
 - [x] **Step 3: Implement.** Add at the top of each writer (`write_proposal:44`, `write_finding:87`, `write_work_prompt:135`), right after the argument validation:
 
 ```python
@@ -2353,7 +2374,11 @@ def test_update_rule_status_round_trips(tmp_path: Path) -> None:
     assert rules["attention-throttle"]["status"] == "fired"
 ```
 
-- [ ] **Step 2: Run to verify failure** — `ModuleNotFoundError` / missing seed file.
+- [x] **Step 2: Run to verify failure** — `ModuleNotFoundError`. *(2026-08-02: the
+  "missing seed file" half of the printed expectation never applied — amendment §1
+  ships the registry as `DEFAULT_RULES_YAML` in code, so the red state was the
+  absent `memoria_vault.runtime.decision_rules` module that
+  `tests/test_decision_rules.py` imports, and nothing else.)*
 - [x] **Step 3: Implement.** *(Landed as `DEFAULT_RULES_YAML` in
       `runtime/decision_rules.py`, not as a `workspace_seed` file — amendment §1;
       the four auto thresholds were restated — amendment §3.)* Seed `decision-rules.yaml` with all sixteen entries — the four `auto` rules in full below; the twelve `manual` rows copy their three §4 columns verbatim into `metric`/`window`/`recommendation` with `threshold` restating the rule's trigger condition (ids: `srd-contract`, `seed-corpus`, `workspace-gate-topology`, `export-target`, `multi-device-topology`, `raw-dataset-bundling`, `mode-work-creation`, `non-api-schema-drift`, `fulltext-v2-shape`, `warrant-touch-budget`, `two-window-friction`, `canvas-authoring`):
@@ -2573,6 +2598,11 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 > `apply_decision_rule_notices(vault, *, context)` behind the
 > `apply-decision-rule-notices` operation. It minted **no** new floor golden: it is
 > PI-only, so the sweep refuses it and the sweep writes goldens only on `done`.
+>
+> **The five unticked boxes below can never be ticked and must never be
+> re-dispatched (2026-08-02).** They describe building `evaluate_decision_rules`,
+> which was deliberately not built and will not be. H.4 is complete; its
+> checkboxes are dead drafting history, not remaining work.
 
 **Files:**
 - Modify: `src/memoria_vault/runtime/decision_rules.py` (added `assess_decision_rules`, not `evaluate_decision_rules`), `src/memoria_vault/engine/dashboard.py` (wire into assembly)

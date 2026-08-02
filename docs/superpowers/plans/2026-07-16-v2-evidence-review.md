@@ -2668,6 +2668,13 @@ must reflect only the in-scope queue universe.
 
 ### Historical draft — V2R-B.2: pure queue assembly over rows + disposition events
 
+> *(2026-08-02: **dead — never tick, never re-dispatch.** Every checkbox below is
+> superseded by the executable V2R-B.2 above, which shipped. Its `S35.4
+> coordination grep` is resolved for the record: `_disposed_evidence_digests`
+> exists (`runtime/knowledge.py:4021`), so the fail-closed branch was taken —
+> shipped as `evidence_review._accept_clears`, covered by
+> `test_queue_accept_without_digest_is_inert`.)*
+
 The queue function is pure (spec §1's union, one rule per test): PI-clearable holds
 without a hold-clearing disposition; **only a digest-matching accept clears**
 (spec §4 semantics, owned here independent of the slice-2 verify flip); rejected rows
@@ -3214,6 +3221,10 @@ srd-gap cards union in behind a reserved facet.
 > flat row/analysis-card tests and implementation below. Follow its one-card
 > nested grammar and replacement tests; retained flat snippets are drafting
 > history only.
+>
+> *(2026-08-02: **dead — never tick, never re-dispatch.** The executable V2R-B.3
+> above shipped; `evidence_review.evidence_review_card` / `evidence_review_blocks`
+> are the live product.)*
 
 Spec §2's seven fields as view-spec.v1 blocks, present-only, evidence blocks (1–3)
 strictly before the analysis block (4–6), analysis collapsed by default (spec §3),
@@ -3598,6 +3609,14 @@ no verdict and no pre-selected action (field 7).
 > **Execution override:** Inspect only top-level cards and their nested
 > `blocks` under the reconciliation amendment; do not restore flat sibling
 > blocks or a second assembler from the historical snippets below.
+>
+> *(2026-08-02: **dead — never tick, never re-dispatch.** The executable V2R-B.4
+> above shipped as `engine_api.evidence_review_queue` /
+> `read_evidence_review_view` over one private `_collect_evidence_review_queue`;
+> the façade named `read_evidence_review_queue` was never built. The conftest
+> registration step below is also moot: `TEST_LEVELS` was deleted in `cc55c40f`,
+> and `tests/test_evidence_review_view.py` declares its level with a module-level
+> `pytestmark = pytest.mark.contract`.)*
 
 Wires the pure machinery to a workspace: enumerate checked projects, read drafts
 (read-only — no rebuild, no context), load dispositions and minted timestamps, union
@@ -4104,6 +4123,10 @@ only, and wrap in the binding view envelope.
 ---
 
 ### Historical draft — V2R-B.5: register `GET /v1/views/evidence-review` and prove it through the real HTTP server
+
+> *(2026-08-02: **dead — never tick, never re-dispatch.** The executable V2R-B.5
+> above shipped: `surface_contract` action `views.evidence_review` at
+> `GET /v1/views/evidence-review`, dispatched in `http_transport._read`.)*
 
 Mirrors U3-ENG.4's registration (surface action → `_read` branch → floor ARG_TABLE)
 and U3-ENG.6's real-server auth proof.
@@ -7308,7 +7331,12 @@ export acceptance file passed (227 passed); independent review found no issues.
   `doc-claims-gate: clean` (it walks the real argparse tree and the manifest
   roster, so a premature `memoria review` citation fails here).
 
-- [ ] Run the full gate: `python scripts/verify` — green.
+- [x] Run the full gate: `python scripts/verify` — green.
+  *(2026-08-02: green on `main`. The only failure the D.2/.3/.7 amendment left —
+  36 `golden drift` failures from the unregenerated seed hashes of item 10 — is
+  gone: the goldens now carry `styles.css: 1ea44a1e4820` and
+  `viewspec.js: f66ce9be6e0e` as that item required, and `main.js: b8b1db561a2c`
+  after the later U3-PLUG.6 rewrite, each byte-matching the redacted seed.)*
 
 - [ ] Commit:
 

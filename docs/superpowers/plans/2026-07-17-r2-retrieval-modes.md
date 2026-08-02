@@ -2959,7 +2959,7 @@ Shipped seams consumed (verified): `checked_search_documents` `search_index.py:1
       assert output["explore"]["honest_empty"] == sentence
   ```
 
-- [ ] Run: `python -m pytest tests/test_explore.py -q` — expected failure: `KeyError: 'honest_empty'`.
+- [ ] Run: `python -m pytest tests/test_explore.py -q` — expected failure: `KeyError: 'honest_empty'`. *This box can never be ticked and must never be re-dispatched (2026-08-02): the runtime it was meant to fail against had already shipped, so the red state does not exist — see amendment item 4 above. E.3 is complete.*
 - [x] Minimal implementation — two edits. In `src/memoria_vault/runtime/explore.py` (`_explore_side`, before the return):
 
   old:

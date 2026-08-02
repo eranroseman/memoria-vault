@@ -1320,6 +1320,22 @@ before pane actions), and U2 remains after its declared U1/V2/I1 seams.  This
 amendment changes ordering only; it does not authorize real-vault ingestion
 before I1 instrumentation and the seeded-error battery are green.
 
+### Plan status — 2026-08-02 reconciliation against `main` @ `973a0676`
+
+**LOOP.13 is the only open task in this plan, and it needs a human at a
+keyboard.** LOOP.1–LOOP.12 are executed; every code precondition LOOP.13 named is
+now closed (see the re-audited table in LOOP.13). What remains is by construction
+PI-only: a fresh real vault, licensed 10-work and 100-work Zotero exports, live
+model dispatch, and human wall-clock triage timing. Tracked as
+[#1702](https://github.com/eranroseman/memoria-vault/issues/1702).
+
+The two boxes that still read as open outside LOOP.13 are not work:
+
+- LOOP.3's "Verify and commit the replacement" — verification is done and green;
+  it stays unticked because the executing session does not commit.
+- One box inside LOOP.3's superseded `<details>` draft, which is marked
+  do-not-execute and **can never be ticked**.
+
 ---
 
 ### Task LOOP.1: R1 — mtime-gated incremental passage refresh (stop the O(vault) read + concept_edges wipe)
@@ -2246,7 +2262,7 @@ the doctor behavior. The `Files:` list above stands except that
   that draft is marked do-not-execute.)*
 
 <details>
-<summary>Superseded legacy draft — retained only as review history; do not execute or copy these steps</summary>
+<summary>Superseded legacy draft — retained only as review history; do not execute or copy these steps. Its one unticked box can never be ticked and must never be re-dispatched (2026-08-02).</summary>
 
 - [ ] Write the failing tests. Create `tests/test_token_ceiling.py`:
 
@@ -3070,29 +3086,29 @@ its numbers feed the Phase 3 decision review. **1000-scale is out of scope
   triage minutes; disposition-event count > 0; a stop-reason for any stage
   that broke the session ("that observation IS the finding").
 
-**Blocked — precondition audit 2026-08-01 (verified against `main` @ `88787954`,
-not against plan checkboxes, several of which lag what shipped):**
+**Every code precondition is now closed — re-audited 2026-08-02 against `main` @
+`973a0676`, not against plan checkboxes.** What remains is the PI-executed run
+itself (see the paragraph below the table). This supersedes the 2026-08-01 audit,
+which listed five preconditions as missing or open; all five have since landed.
 
 | Precondition | State | Evidence |
 | --- | --- | --- |
 | O1 M.3 — `memoria seed install` | **shipped** | `cli.py` `seed` subparser, `_cmd_seed_install`, `src/memoria_vault/runtime/seed_install.py`; emits `onboarding-step` `seed-installed` |
 | O1 T.2 — the five `onboarding-step` emit points | **shipped** | `runtime/onboarding_steps.py`; `init-done`, `project-framed`, `seed-installed`, `onboard-done`, `first-answer` all have call-sites |
-| `telemetry_events` plane (I1 T.1–T.3) | **shipped** | `runtime/schema.sql:434-443` at rung 19; `runtime/telemetry.py` |
+| `telemetry_events` plane (I1 T.1–T.3) | **shipped** | `runtime/schema.sql` at rung 19; `runtime/telemetry.py` |
 | O2 W.1 — import worklist | **shipped** | `runtime/subsystems/lib/worklists.py:146` `emit_import_worklist` |
-| **O2 W.2 — `import-run.v1`** | **missing** | no `import-run` anywhere in `runtime/telemetry.py` |
-| **O2 W.3 — `staged-import` decision rule** | **missing** | no `staged-import` in `workspace_seed/.memoria/config/decision-rules.yaml` |
-| **O2 W.4 — the Phase 1 protocol block** | **open** | it *produces* the stage-1/stage-2 shell block that supersedes the `csplit` loop below; without it there is no bulk-import protocol to run |
-| **O2 A.2 — fetch synthesis + admission-tier routing** | **open** | `docs/superpowers/plans/2026-07-17-o2-staged-import.md` |
-| **R2 F.3 — frozen retrieval fixtures** | **done 2026-08-02** (branch `wip/r2ef`, pending merge) | every row in `tests/fixtures/retrieval/cases.yaml` is now `frozen: true, frozen_on: 2026-08-02` after a green evaluation; read Shape-1's query and Shape-2's topic + declared depth + metric through `load_retrieval_fixtures(spike_mode=True)` and `retrieval_fixtures.metric_cutoff`, and record the fixture id with each latency — do not re-type a query or assume depth 1 |
-| **R2 E.3 — honest-empty explore + §9 acceptance wiring** | **done 2026-08-02** (branch `wip/r2ef`, pending merge) | `docs/superpowers/plans/2026-07-17-r2-retrieval-modes.md`; the runtime had already shipped, so E.3 landed as the missing §9 acceptance + honest-empty CLI-front pins in `tests/test_explore.py` |
-| **I1 D.1–D.4 — the disposition call-sites** | **open** | the step below requires ≥ 1 disposition event; only the alpha.21 skeleton's `resolve-attention` site emits today |
+| O2 W.2 — `import-run.v1` | **shipped 2026-08-02** (`63d0ddb1`) | `engine/empirical_events.py:108` `IMPORT_RUN_EVENT_SCHEMA = "import-run.v1"` + `validate_import_run_event`; dispatch branch reached from `cli.py:1757` |
+| O2 W.3 — `staged-import` decision rule | **shipped 2026-08-02** (`9645a1da`) | `runtime/decision_rules.py:216` `- id: staged-import` inside `DEFAULT_RULES_YAML` (the registry ships in code — I1 H.3 amendment §1 — not as a `workspace_seed` file) |
+| O2 W.4 — the Phase 1 protocol block | **shipped 2026-08-02** (`9645a1da`) | O2 plan Task W.4 plus its 2026-08-02 amendment, which supersedes the printed Step 2 body; that corrected block is the protocol to run, and it supersedes the `csplit` loop below |
+| O2 A.2 — fetch synthesis + admission-tier routing | **shipped** (`8c1d0d41`) | `runtime/bulk_import.py:184` `entry_fetch`, `:220` `entry_capture_request`, and the PI-only `capture-remote-pdf-source` operation manifest |
+| R2 F.3 — frozen retrieval fixtures | **merged 2026-08-02** (`649c7e22`) | every row in `tests/fixtures/retrieval/cases.yaml` is `frozen: true, frozen_on: 2026-08-02` after a green evaluation; read Shape-1's query and Shape-2's topic + declared depth + metric through `load_retrieval_fixtures(spike_mode=True)` and `retrieval_fixtures.metric_cutoff`, and record the fixture id with each latency — do not re-type a query or assume depth 1 |
+| R2 E.3 — honest-empty explore + §9 acceptance wiring | **merged 2026-08-02** (`649c7e22`) | the runtime had already shipped, so E.3 landed as the missing §9 acceptance + honest-empty CLI-front pins in `tests/test_explore.py` |
+| I1 D.1–D.4 — the disposition call-sites | **shipped 2026-08-02** (`b4b62063`) | `emit_disposition_event` call-sites in `runtime/knowledge.py:162,366,476`, `runtime/worker.py:1006,1151`, `runtime/integrity.py:1346` — six sites beyond the alpha.21 skeleton, so the ≥ 1 disposition-event check below can now pass |
+| I1 A.1–A.5, H.1–H.4 (LOOP.4's gate) | **shipped 2026-08-02** (`f5055ba0`, `f28be531`, `44ca3411`, `973a0676`) | `rank_factors`/`attention_config`, `engine/dashboard.py`, `memoria dashboard`, the decision-rule registry, and `apply_decision_rule_notices` |
 
-Shortest unblocking path, in dependency order: **O2 W.2 → O2 W.3**, then
-**O2 W.4** (which needs both W.3 and F.3), then
-LOOP.13. I1 D.1–D.4 must also land before the disposition-count check below can
-pass. This matches the 2026-07-29 executable partial order
-(`{O1 M.3, O2 W.4, R2 F.3} → LOOP.13`); O1 M.3 and R2 F.3 are satisfied,
-O2 W.4 is not.
+The 2026-07-29 executable partial order (`{O1 M.3, O2 W.4, R2 F.3} → LOOP.13`) is
+satisfied in full. **Nothing in `src/`, `tests/` or `docs/` blocks this task any
+longer.**
 
 Beyond the code preconditions, LOOP.13 is by construction **PI-executed**: it
 needs a fresh real vault (explicitly never `test-vault/`), a licensed 10-work
@@ -3126,6 +3142,10 @@ cannot be satisfied by unrelated events.
 
 - [ ] Preconditions (all blocking): LOOP.4 and LOOP.6 implementation PRs
   merged; seeded-error license green on the target vault:
+  *(2026-08-02: the merge half is satisfied — LOOP.4's I1 wiring and LOOP.6's O2
+  import are both on `main`, per the table above. The box stays open only for the
+  half no agent can perform: the seeded-error battery run against the PI's fresh
+  real vault.)*
 
   ```
   VAULT="$HOME/memoria-beta1-vault"   # a fresh real vault; NEVER test-vault/, never an existing personal vault
@@ -3190,7 +3210,11 @@ cannot be satisfied by unrelated events.
   matches a resolution from the previous step:
 
   ```
-  grep -h '"disposition' "$VAULT"/.memoria/journal/*.jsonl | wc -l   # must be >= 1
+  # Corrected 2026-08-02 — the printed `grep … .memoria/journal/*.jsonl | wc -l`
+  # matched nothing (no JSONL journal exists) and printed a false 0. See the
+  # defect note above this Steps list.
+  sqlite3 "$VAULT/.memoria/memoria.sqlite" \
+    "SELECT COUNT(*) FROM event_log WHERE event_type='disposition';"   # must be >= 1
   ```
 
   Zero is a hard failure of LOOP.4's implementation — stop and file the bug;
