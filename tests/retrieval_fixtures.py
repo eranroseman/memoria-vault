@@ -119,6 +119,24 @@ def _normalize_calendar_date(value: object, field: str, source: str, case_id: st
         raise ValueError(f"{source}: {case_id}: {field} must be a valid ISO calendar date") from exc
 
 
+def metric_cutoff(metric: str) -> tuple[str, int]:
+    """Split a validated metric string into ``(family, cutoff)``.
+
+    ``hit@K``/``recall@K`` cut a ranked list at K; ``present@N`` declares the
+    explore depth a Shape-2 case is scored at. An unknown family is refused
+    rather than given a default cutoff: guessing one would let a fixture
+    quietly change what it claims to measure, which is the one thing a
+    preregistration is for.
+    """
+    family, separator, cutoff = str(metric).partition("@")
+    if family not in {"hit", "recall", "present"} or not separator or not cutoff.isdigit():
+        raise ValueError(f"unsupported retrieval metric: {metric!r}")
+    value = int(cutoff)
+    if value < 1:
+        raise ValueError(f"unsupported retrieval metric: {metric!r}")
+    return family, value
+
+
 def shape1_bm25_cases(vault: Path, cases: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Map Shape-1 gold span refs to containing-document paths for evaluate_bm25."""
     mapped: list[dict[str, Any]] = []

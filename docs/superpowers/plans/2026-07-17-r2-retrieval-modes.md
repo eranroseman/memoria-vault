@@ -51,12 +51,27 @@
   the retrieval-fixture form, loader, contract suite, and registration
   declared by this task.
 
+## Execution status — 2026-08-02
+
+- [x] **E.3 complete** (test-only; the runtime half had already shipped). The
+  §9 acceptance pin and the honest-empty CLI-front pin are in
+  `tests/test_explore.py`; the printed counts were stale and are corrected in
+  E.3's dated amendment.
+- [x] **F.3 complete.** `tests/fixtures/retrieval/cases.yaml` is frozen at
+  `2026-08-02` after a green evaluation of all three registered cases; the
+  receipt and the `spike_mode` resolution are in F.3's dated amendment.
+- **R2 has no open tasks.** The only unticked boxes left in this plan are the
+  two `Commit:` steps (the orchestrator commits) and E.3's printed red run,
+  which cannot occur because the runtime it was supposed to fail against had
+  already landed. Verification: `python scripts/verify` green
+  (3,861 passed, 25 skipped).
+
 ## Cross-section contracts (BINDING — the manifests' seam resolutions)
 
 1. **Primitives** (G produces): `graph_sql.DEPTH_CAP = 2`; `concept_edge_relations(vault) -> set[str]` (live-CHECK read; subset parity vs packaged schema — the graph plan's widening flows through); `neighborhood(vault, seeds, *, depth=1, relations=None) -> {"ids", "counts"}` (checked path-projected edges only; depth 1..2 rejected naming the cap); `co_citation` / `coupling` (over `references` rows); `degree_centrality(vault, ids) -> dict[str,int]` (distinct-neighbor orderer only); `project_slice(vault, project) -> {"ids", "counts", "source"}` (adapts graph `propagation.active_project_slices(vault)` by project-relative path; before that producer exists, uses the project `links:` closure).
 2. **Pipeline staging** (P produces; E consumes): `retrieval_pipeline.PipelineStages` (`add_filter` unique-suffixing repeats, `rows() -> [{stage, count}]` ordered), `excluded_strata(*, unchecked=0, stale=0, gated=0)` (zeros always present), `RERANK_MODE = "off"` rendered in every trace.
 3. **Explore** (E produces): `explore.explore_topic(vault, topic, *, project="", depth=1, versus="") -> dict` — kind groups `{claims, questions, tensions, works, hubs}`, per-entry edges + `grounds_count` (complete evidence-set rows via `block_ref`), `SEED_K = 5`, stage order `universe → [project-slice] → ranked → seed → neighborhood → returned`, per-side payloads + intersection + crossing tensions under `--versus`, `honest_empty` string on zero-return; CLI `memoria explore` with the pinned `test_cli_command_surface_is_exact` edit, both-direction help disambiguation vs `memoria project explore`, and the U1 registry row (grep-first both-branch).
-4. **Span refs + fixtures** (F produces): `span_refs.resolve_span_ref(vault, ref) -> {work_id, anchor, path} | None` (passages `(work_id, anchor)` match; file-scan interim fallback); `tests/retrieval_fixtures.py` loader (`load_retrieval_fixtures(*, spike_mode=False)` refusing unfrozen rows in spike mode), `shape1_bm25_cases` (gold span refs → doc paths for `evaluate_bm25` — doc-level hit@k stated), `score_present_at_depth(payload, gold_ids) -> bool`, `FIXTURES_DIR = tests/fixtures/retrieval/`, the seeded `cases.yaml` (registered, unfrozen, over O1 seed-corpus work ids).
+4. **Span refs + fixtures** (F produces): `span_refs.resolve_span_ref(vault, ref) -> {work_id, anchor, path} | None` (passages `(work_id, anchor)` match; file-scan interim fallback); `tests/retrieval_fixtures.py` loader (`load_retrieval_fixtures(*, spike_mode=False)` refusing unfrozen rows in spike mode), `shape1_bm25_cases` (gold span refs → doc paths for `evaluate_bm25` — doc-level hit@k stated), `score_present_at_depth(payload, gold_ids) -> bool`, `FIXTURES_DIR = tests/fixtures/retrieval/`, the seeded `cases.yaml` (registered, unfrozen, over O1 seed-corpus work ids). **Superseded 2026-08-02 by F.3:** `cases.yaml` is now **frozen** — every row `frozen: true, frozen_on: 2026-08-02` — and `tests/retrieval_fixtures.py` also exports `metric_cutoff(metric) -> (family, cutoff)`, the parser LOOP.13 and the R3 spike read a declared `hit@K`/`present@N` through.
 5. **Execution order:** P.1 → P.2 → P.3 → F.1 → F.2 is the no-prose/fixture path; F.3 additionally requires E.1/E.2, graph ERP-A.6, the implemented `explore_topic`, and the O1 seed corpus. Graph endpoint/path activation → G → P → E remains the structural/explore path, but F.1/F.2 do not import graph or explore. P.2 rebases on LOOP.1's checked-search refresh seam, and F.2 precedes LOOP.13's Shape-2 protocol.
 6. **TEST_LEVELS:** `test_graph_sql.py`, `test_explore.py`, `test_retrieval_fixtures.py` — `"contract"`; P extends registered files (exact registrations named in-section).
 
@@ -2835,10 +2850,64 @@ Shipped seams consumed (verified): `checked_search_documents` `search_index.py:1
 > not the 5/4/4/5/6 printed here. Re-derive the numbers from the fixture; do
 > not paste the block.
 
+> **Executed 2026-08-02 — amendment (deviations from the printed body).** The
+> runtime edits below were already landed, so this task shipped as a test-only
+> change to `tests/test_explore.py`. `runtime/explore.py` and `cli.py` are
+> untouched.
+>
+> 1. **Counts corrected, measured not copied.** The §9 pin's `pipeline_counts`
+>    are `universe 8 / displayable-kind 6 / ranked 3 / seed 3 / neighborhood 5 /
+>    returned 5` for side A, and `8 / 6 / 1 / 1 / 3 / 3` for side B under
+>    `--versus massed` (the printed 5/4/4/5/6 and 5/2/2/3/4 predate the
+>    `displayable-kind` stage and the fixture's current shape). `intersection`
+>    is the one block whose printed values survived: `count 3`, `a_count 5`,
+>    `b_count 3`. The honest-empty sentence is `0 of 6 candidates matched`, not
+>    `0 of 5`.
+> 2. **Depth-cap refusal front.** The printed test asserts the cap only on the
+>    JSON front. The text front routes the refusal to **stderr** with `rc 2` and
+>    an empty stdout, so the pin asserts both — "named on the CLI front" is a
+>    claim about where an operator actually reads it.
+> 3. **The honest-empty test says *why* it is empty.** An empty payload is an
+>    absorbing state: a swallowed crash, an unbuilt index, and an over-eager
+>    filter all render identically to a genuine no-answer. `==  <sentence>`
+>    alone cannot tell them apart, so
+>    `test_cli_explore_honest_empty_names_its_denominator_on_both_fronts` adds
+>    three discriminators: the stage row shows the zero entering at `ranked`
+>    (with `universe 8` and `displayable-kind 6` above it); the denominator
+>    moves 6 → 5 under `--project memory`, proving it tracks the *last* filter
+>    stage rather than `universe` or a constant; and the same vault, same
+>    command, topic `spacing` returns 5 entries with **no** `honest_empty` key.
+> 4. **No new red run.** Step 3's `KeyError: 'honest_empty'` cannot occur (the
+>    reconciliation note above). The two added tests were written against
+>    measured values and passed on first run; the red they would have shown is
+>    reproduced instead by the amendment's count corrections, which are what a
+>    pasted block would have failed on.
+>
+> Landed: `tests/test_explore.py` —
+> `test_cli_explore_honest_empty_names_its_denominator_on_both_fronts`,
+> `test_cli_explore_acceptance_five_groups_versus_counts_and_depth_cap`, the
+> `_cli_explore_json` helper, and the `memoria_vault.cli.main` import.
+>
+> **Mutation (E.3 + F.3 share one run): 23 mutants, 22 killed, 1 equivalent.**
+> The E.3 half covers `retrieval_pipeline.candidate_count`/`honest_empty`
+> (denominator = universe / constant 0 / gated-instead-of-unchecked /
+> unchecked-as-denominator), `explore._explore_side` (honest-empty on the wrong
+> branch, never attached, `displayable-kind` recording the universe,
+> seed/neighborhood rows swapped, cap off-by-one, project filter dropped,
+> catalog works not displayable), and `cli._emit_explore_result` (sentence
+> swallowed, empty side never recognized) — all killed.
+> **Equivalent survivor, justified:** `_cmd_explore`'s
+> `return _emit_explore_result(...)` → `... ; return 0`. `engine_api.read_explore`
+> routes through `_read_payload`, which hard-codes `ok: True`, so `_emit` returns
+> 0 on every reachable explore path and every other branch of
+> `_emit_explore_result` returns a literal 0. The `--depth 3` refusal's `rc 2`
+> comes from `main`'s `except Exception -> _fail`, never from this return. There
+> is no state that distinguishes the two texts.
+
 **Files:** `src/memoria_vault/runtime/explore.py`, `src/memoria_vault/cli.py`, `tests/test_explore.py`.
 **Interfaces:** `payload["honest_empty"]: str` on any explore side with `returned == 0` — the §4 sentence `"0 of <candidates> candidates matched; <n> unchecked documents were not searched"` (candidates = the last filter-stage count before `ranked`, i.e. the denominator the candidate set defines); the CLI text front prints that sentence instead of a bare summary. The slice-4 (honest-empty/ride-through enforcement) section consumes this field for its cross-front tests.
 
-- [ ] Extend `tests/test_explore.py` imports for the CLI-front tests:
+- [x] Extend `tests/test_explore.py` imports for the CLI-front tests:
 
   old:
   ```python
@@ -2861,7 +2930,7 @@ Shipped seams consumed (verified): `checked_search_documents` `search_index.py:1
   from memoria_vault.runtime import state
   ```
 
-- [ ] Write the failing honest-empty test — append to `tests/test_explore.py`:
+- [x] Write the failing honest-empty test — append to `tests/test_explore.py`:
 
   ```python
   def test_explore_honest_empty_renders_counts_on_text_and_json_fronts(
@@ -2941,8 +3010,8 @@ Shipped seams consumed (verified): `checked_search_documents` `search_index.py:1
       return _emit({"ok": True, "explore": payload}, args)
   ```
 
-- [ ] Run to pass: `python -m pytest tests/test_explore.py -q`.
-- [ ] Add the §9 acceptance pin — append to `tests/test_explore.py` (this drives the full fixture through the real CLI: five groups, tension listed, zero-grounds mark, exact ordered counts, per-side versus counts, intersection with the shared work, crossing tension, depth cap named on the CLI front). Expected: **pass immediately** — it pins E.1/E.2 behavior end-to-end; any failure is a defect in those tasks and must be fixed before commit:
+- [x] Run to pass: `python -m pytest tests/test_explore.py -q`.
+- [x] Add the §9 acceptance pin — append to `tests/test_explore.py` (this drives the full fixture through the real CLI: five groups, tension listed, zero-grounds mark, exact ordered counts, per-side versus counts, intersection with the shared work, crossing tension, depth cap named on the CLI front). Expected: **pass immediately** — it pins E.1/E.2 behavior end-to-end; any failure is a defect in those tasks and must be fixed before commit:
 
   ```python
   def test_cli_explore_acceptance_five_groups_versus_counts_and_depth_cap(
@@ -3013,7 +3082,7 @@ Shipped seams consumed (verified): `checked_search_documents` `search_index.py:1
       assert "hard cap of 2" in refusal["error"]
   ```
 
-- [ ] Run: `python -m pytest tests/test_explore.py tests/test_cli.py -q` — all passed.
+- [x] Run: `python -m pytest tests/test_explore.py tests/test_cli.py -q` — all passed.  (2026-08-02: 63 passed.)
 - [x] Section-final gate: `python scripts/verify` — green (the roster gate `test_testing_levels.py` sees `test_explore.py` registered from E.1; the doc-claims gate is unaffected — it only fails on docs citing commands that do not exist, and `memoria explore` now exists).
 - [ ] Commit:
 
@@ -3893,6 +3962,80 @@ the Shape-2 `explore_topic` implementation are merged.  This is the explicit
 producer of the frozen-fixture contract consumed by O2 W.4 and LOOP.13; F.2's
 unfrozen preregistration is intentionally insufficient.
 
+> **Executed 2026-08-02 — amendment. The freeze happened; every registered row
+> is `frozen: true, frozen_on: 2026-08-02`.**
+>
+> **Evaluation receipt** (the "Produces" clause: per fixture, id, shape,
+> query/topic, metric, and for Shape 2 the declared/actual depth). Reproduce
+> with `python -m pytest tests/test_retrieval_fixtures.py -q`; the corpus is
+> `seed_retrieval_corpus` in that file — three fulltext works and five checked
+> notes, built fresh per test.
+>
+> | fixture | shape | query / topic | metric | depth | result | |
+> | --- | --- | --- | --- | --- | --- | --- |
+> | `shape1-spacing-effect-lookup` | 1 | `what did the spaced-repetition model find about lag effects` | `hit@5` | n/a | gold at rank 1 of 5 returned, 8 documents in corpus | PASS |
+> | `shape1-undesirable-difficulty-boundary` | 1 | `when do desirable difficulties reverse for high element interactivity material` | `hit@5` | n/a | gold at rank 1 of 5 returned, 8 documents in corpus | PASS |
+> | `shape2-testing-effect-tension` | 2 | `testing effect boundary conditions` | `present@1` | declared 1 / ran 1 | both gold ids present; seed 2 → returned 3; `moreira-2019` `seed_score` 0.0 | PASS |
+> | `shape2-two-hop-probe` (synthetic, not registered) | 2 | same topic | `present@2` | declared 2 / probed at 1 and 2 | depth-1 False, depth-2 True | PASS (correctly refused at depth 1) |
+>
+> No row's query, gold, metric, or `registered` date was touched. Only
+> `frozen`/`frozen_on` changed, plus a `FROZEN 2026-08-02` header comment in
+> `cases.yaml` restating that no later edit is permitted.
+>
+> **`spike_mode` — the deleted-parameter question, resolved.** PR #1671 (test
+> colocation) deletes `load_retrieval_fixtures(spike_mode=...)` on the ground
+> that nothing referenced it. Verified at this task's base (`origin/main`
+> @ `ea46a201`, #1671 unmerged): **`spike_mode` is present, and F.3 now
+> references it**, so the deletion's premise no longer holds and #1671 must
+> drop that hunk on rebase rather than re-delete. If a future session finds the
+> parameter gone, re-add it as ~6 lines inside `load_retrieval_fixtures` (the
+> unfrozen-id scan plus the `ValueError`) — its absence is a merge artifact,
+> never a reason to weaken this task.
+>
+> **Deviations from the printed steps:**
+>
+> 1. **One helper, not several.** `metric_cutoff(metric) -> (family, cutoff)`
+>    in `tests/retrieval_fixtures.py` covers `hit@K`, `recall@K`, and
+>    `present@N`; splitting it per family would have been three copies of one
+>    `partition("@")`. Unknown families raise rather than default — a guessed
+>    threshold is how a preregistration silently changes what it measures.
+> 2. **The corpus is sized so the declared cuts bite.** `hit@5` over a
+>    two-document corpus is not a threshold, so the Shape-1 assertion also pins
+>    `len(result["hits"]) == cut` — five documents must actually score. The
+>    Shape-2 case gets the mirrored guard: `moreira-2019` is written to share no
+>    term with the topic and is asserted to arrive with `seed_score == 0.0`, so
+>    `present@1` cannot degenerate into `hit@k` over the seed ranking.
+> 3. **The negative test's real target is the runner, not the corpus.** Step 3
+>    asks that a depth-1 payload cannot satisfy a `present@2` case "even if its
+>    membership happens to look right". That is pinned literally: the same test
+>    asserts the *registered* `present@1` gold **is** satisfied by the depth-1
+>    payload, so a runner that hard-coded depth 1 would pass every shipped case
+>    and still fail the two-hop probe.
+> 4. **The post-freeze spike test needs a synthetic file, not a synthetic row.**
+>    `load_retrieval_fixtures` reads `FIXTURES_DIR` from disk and takes no rows
+>    argument, so the "still refuses an unfrozen row" half monkeypatches
+>    `retrieval_fixtures.FIXTURES_DIR` at a tmp directory. No production
+>    parameter was added to make a test easier.
+> 5. **Tension edges are inserted by hand.** `state.replace_concept_edges`
+>    skips `tension` outright (PI-owned rows are exempt from the mirror pass),
+>    so `seed_checked_edge` writes `concept_edges` directly through
+>    `state.resolve_concept_id` — the same identity-space seam
+>    `tests/test_explore.py` uses.
+>
+> **Mutation (the F.3 share of the 23-mutant run recorded under E.3):** all 10
+> F.3 mutants killed — `metric_cutoff` accepting an unsupported family,
+> guessing a default cutoff, and admitting `@0`; `spike_mode` never refusing
+> and refusing the frozen rows instead; `neighborhood(depth=depth)` pinned to
+> `depth=1` (killed by the two-hop probe); and three mutations of the frozen
+> file itself — one row thawed, the Shape-2 metric re-declared `present@2`, and
+> one `frozen_on` drifted by a day.
+>
+> **Obligation handed to LOOP.13 / O2 W.4:** the frozen rows are now the
+> binding source for Shape-1's query and Shape-2's topic + declared depth +
+> metric. Read them through `load_retrieval_fixtures(spike_mode=True)` and
+> `metric_cutoff`, and record the fixture id alongside each latency; do not
+> re-type a query or assume depth 1.
+
 **Files:**
 
 - Modify: `tests/retrieval_fixtures.py`
@@ -3911,11 +4054,11 @@ unfrozen preregistration is intentionally insufficient.
 
 **Steps:**
 
-- [ ] Extend `tests/retrieval_fixtures.py` with small test-only helpers that
+- [x] Extend `tests/retrieval_fixtures.py` with small test-only helpers that
   parse `hit@K`/`recall@K` and `present@N` from the validated metric strings;
   reject an unsupported metric rather than guessing a threshold.  Do not add a
   production evaluation abstraction merely to freeze static fixtures.
-- [ ] Write the failing test in `tests/test_retrieval_fixtures.py`.  Build a
+- [x] Write the failing test in `tests/test_retrieval_fixtures.py`.  Build a
   disposable seeded retrieval vault with F.2's fulltext helper and the
   identity-safe graph seam; the fixture has the registered two Shape-1 works
   and the two Shape-2 work IDs connected by the necessary checked path edges.
@@ -3933,7 +4076,7 @@ unfrozen preregistration is intentionally insufficient.
 
   The test output names the fixture id, topic/query, metric, and actual depth
   on failure; a failing evaluation is a finding and blocks freezing.
-- [ ] Run the focused test red:
+- [x] Run the focused test red:
 
   ```bash
   python -m pytest tests/test_retrieval_fixtures.py -q
@@ -3942,12 +4085,18 @@ unfrozen preregistration is intentionally insufficient.
   Expected: the spike-mode assertion fails because F.2 registered all rows as
   unfrozen (or an evaluation failure names the fixture that must be corrected
   before freezing).
-- [ ] Once every registered Shape-1 and Shape-2 evaluation is green, update
+
+  Observed 2026-08-02: `2 failed, 11 passed` — exactly the two freeze
+  assertions (`[False, False, False] == [True, True, True]` and the spike-mode
+  `ValueError` naming all three ids). **Every Shape-1 and Shape-2 evaluation
+  was green before the freeze**, so no gold anchor needed correcting and the
+  preregistration bets from F.2 stand as registered.
+- [x] Once every registered Shape-1 and Shape-2 evaluation is green, update
   **only** the already-registered `cases.yaml` rows: set `frozen: true` and add
   one `frozen_on: YYYY-MM-DD` date.  Do not change a query, gold ID, metric, or
   registration date in this task; any such correction requires a separate
   preregistration decision before the freeze.
-- [ ] Replace the pre-freeze spike-refusal assertion with the post-freeze
+- [x] Replace the pre-freeze spike-refusal assertion with the post-freeze
   assertion:
 
   ```python
@@ -3959,7 +4108,7 @@ unfrozen preregistration is intentionally insufficient.
   Keep the malformed-row validation that proves an unfrozen synthetic row is
   still refused in spike mode; the loader rule is not relaxed merely because
   the shipped fixture is now frozen.
-- [ ] Run the focused contracts and gate:
+- [x] Run the focused contracts and gate:
 
   ```bash
   python -m pytest tests/test_retrieval_fixtures.py tests/test_explore.py -q

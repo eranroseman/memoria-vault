@@ -3083,15 +3083,16 @@ not against plan checkboxes, several of which lag what shipped):**
 | **O2 W.3 — `staged-import` decision rule** | **missing** | no `staged-import` in `workspace_seed/.memoria/config/decision-rules.yaml` |
 | **O2 W.4 — the Phase 1 protocol block** | **open** | it *produces* the stage-1/stage-2 shell block that supersedes the `csplit` loop below; without it there is no bulk-import protocol to run |
 | **O2 A.2 — fetch synthesis + admission-tier routing** | **open** | `docs/superpowers/plans/2026-07-17-o2-staged-import.md` |
-| **R2 F.3 — frozen retrieval fixtures** | **open** | every row in `tests/fixtures/retrieval/cases.yaml` is `frozen: false` with no `frozen_on`; the 2026-07-29 retrieval amendment above makes this binding, and Shape-1's query and Shape-2's topic/depth/metric are read from those rows |
-| **R2 E.3 — honest-empty explore + §9 acceptance wiring** | **open** | `docs/superpowers/plans/2026-07-17-r2-retrieval-modes.md` |
+| **R2 F.3 — frozen retrieval fixtures** | **done 2026-08-02** (branch `wip/r2ef`, pending merge) | every row in `tests/fixtures/retrieval/cases.yaml` is now `frozen: true, frozen_on: 2026-08-02` after a green evaluation; read Shape-1's query and Shape-2's topic + declared depth + metric through `load_retrieval_fixtures(spike_mode=True)` and `retrieval_fixtures.metric_cutoff`, and record the fixture id with each latency — do not re-type a query or assume depth 1 |
+| **R2 E.3 — honest-empty explore + §9 acceptance wiring** | **done 2026-08-02** (branch `wip/r2ef`, pending merge) | `docs/superpowers/plans/2026-07-17-r2-retrieval-modes.md`; the runtime had already shipped, so E.3 landed as the missing §9 acceptance + honest-empty CLI-front pins in `tests/test_explore.py` |
 | **I1 D.1–D.4 — the disposition call-sites** | **open** | the step below requires ≥ 1 disposition event; only the alpha.21 skeleton's `resolve-attention` site emits today |
 
-Shortest unblocking path, in dependency order: **O2 W.2 → O2 W.3**, and
-**R2 E.3 → R2 F.3**, then **O2 W.4** (which needs both W.3 and F.3), then
+Shortest unblocking path, in dependency order: **O2 W.2 → O2 W.3**, then
+**O2 W.4** (which needs both W.3 and F.3), then
 LOOP.13. I1 D.1–D.4 must also land before the disposition-count check below can
 pass. This matches the 2026-07-29 executable partial order
-(`{O1 M.3, O2 W.4, R2 F.3} → LOOP.13`); only O1 M.3 is satisfied.
+(`{O1 M.3, O2 W.4, R2 F.3} → LOOP.13`); O1 M.3 and R2 F.3 are satisfied,
+O2 W.4 is not.
 
 Beyond the code preconditions, LOOP.13 is by construction **PI-executed**: it
 needs a fresh real vault (explicitly never `test-vault/`), a licensed 10-work
