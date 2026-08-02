@@ -8,7 +8,7 @@ import pytest
 from memoria_vault.cli import _build_parser, main
 from memoria_vault.runtime import state
 from memoria_vault.runtime.subsystems.lib.edges import LINK_RELATIONS
-from memoria_vault.runtime.vaultio import read_frontmatter
+from memoria_vault.runtime.vaultio import read_frontmatter, split_frontmatter
 from tests.helpers import _assert_request_columns, mark_file_status
 
 
@@ -2078,3 +2078,310 @@ def test_cli_link_offers_every_served_relation_and_refuses_tension() -> None:
         )
 
     assert exc.value.code == 2
+
+
+# --- O2 I.1: the composed bulk driver (adapters + duplicates + run artifacts) ---
+
+ARXIV_SHARED = "2411.14199v1"
+ARXIV_MISSING = "9999.99999"
+ARXIV_UNMAPPED = "2501.00001"
+
+IMPORT_CSL_ITEMS: list[dict[str, object]] = [
+    # mapped, no synthesizable fetch -> capture-source
+    {"id": "alpha-csl", "type": "article-journal", "title": "Alpha", "DOI": "10.9000/alpha"},
+    # mapped article + arXiv -> capture-remote-pdf-source
+    {
+        "id": "beta-csl",
+        "type": "article-journal",
+        "title": "Beta",
+        "DOI": "10.9000/beta",
+        "arXiv": ARXIV_SHARED,
+    },
+    # same arXiv id as beta, different DOI -> admitted, cross-identifier duplicate row
+    {
+        "id": "gamma-csl",
+        "type": "article-journal",
+        "title": "Gamma",
+        "DOI": "10.9000/gamma",
+        "arXiv": ARXIV_SHARED,
+    },
+    # type outside the shipped vocabulary -> admitted as article, unmapped row. It also
+    # carries a resolvable arXiv id: the guessed type must NOT make it an eligible PDF
+    # row, which is the only thing that distinguishes the mapped flag at the router.
+    {
+        "id": "delta-csl",
+        "type": "song",
+        "title": "Delta",
+        "DOI": "10.9000/delta",
+        "arXiv": ARXIV_UNMAPPED,
+    },
+    # alpha's DOI under a different CSL id -> catalog doi UNIQUE failure + duplicate row
+    {"id": "epsilon-csl", "type": "article-journal", "title": "Epsilon", "DOI": "10.9000/alpha"},
+    # eligible remote PDF whose fetch refuses -> named failed row, later entries unaffected
+    {
+        "id": "zeta-csl",
+        "type": "article-journal",
+        "title": "Zeta",
+        "DOI": "10.9000/zeta",
+        "arXiv": ARXIV_MISSING,
+    },
+]
+
+
+def _offline_remote_pdf(monkeypatch: pytest.MonkeyPatch) -> list[str]:
+    """Replay the one allowed arXiv PDF; refuse the missing one. No network."""
+    import io
+
+    opened: list[str] = []
+
+    def fixture_opener(url: str) -> io.BytesIO:
+        opened.append(url)
+        if ARXIV_MISSING in url:
+            raise ValueError(f"remote PDF fetch refused: {url}")
+        return io.BytesIO(b"%PDF-1.4 fixture\n")
+
+    monkeypatch.setattr("memoria_vault.runtime.seed_install._default_opener", fixture_opener)
+    monkeypatch.setattr(
+        "memoria_vault.runtime.capture._extract_pdf_pages",
+        lambda _raw: [{"page": 1, "text": "A remote PDF evidence block."}],
+    )
+    return opened
+
+
+def _csl_import(workspace: Path, source: Path, *extra: str) -> list[str]:
+    return [
+        "work",
+        "import",
+        "--workspace",
+        str(workspace),
+        "--format",
+        "csl",
+        "--file",
+        str(source),
+        "--json",
+        *extra,
+    ]
+
+
+def _worklist_rows(workspace: Path, worklist_id: str) -> list[dict[str, object]]:
+    rows = []
+    for path in sorted((workspace / "system" / "worklists" / worklist_id).glob("*.md")):
+        frontmatter, body = split_frontmatter(path.read_text(encoding="utf-8"))
+        rows.append({**frontmatter, "body": body})
+    return sorted(rows, key=lambda row: int(row["rank"]))
+
+
+def _import_cards(workspace: Path) -> list[dict[str, object]]:
+    return [
+        frontmatter
+        for path in sorted((workspace / "inbox").glob("work-prompt-*.md"))
+        if (frontmatter := read_frontmatter(path)).get("raised_by") == "import"
+    ]
+
+
+def _import_run_events(workspace: Path) -> list[dict[str, object]]:
+    with state.connect(workspace) as conn:
+        rows = conn.execute(
+            "SELECT payload_json FROM telemetry_events WHERE event_type = 'import-run.v1'"
+            " ORDER BY ts, rowid"
+        ).fetchall()
+    return [json.loads(row["payload_json"]) for row in rows]
+
+
+def test_cli_work_import_composes_adapters_duplicates_and_one_run_artifact_set(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    workspace = tmp_path / "workspace"
+    csl = tmp_path / "sources.csl.json"
+    csl.write_text(json.dumps(IMPORT_CSL_ITEMS), encoding="utf-8")
+    main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    capsys.readouterr()
+    opened = _offline_remote_pdf(monkeypatch)
+
+    rc = main(_csl_import(workspace, csl))
+    out = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    assert out["ok"] is True
+    assert out["entries_total"] == 6
+    assert out["admitted"] == ["alpha-csl", "beta-csl", "gamma-csl", "delta-csl"]
+    assert out["skipped"] == []
+    assert [row["ref"] for row in out["failed"]] == ["epsilon-csl", "zeta-csl"]
+    assert "catalog_sources.doi" in out["failed"][0]["error"]
+    assert ARXIV_MISSING in out["failed"][1]["error"]
+    assert out["duplicates_flagged"] == 2
+
+    # Routing, per entry rather than in aggregate: an unmapped type never becomes an
+    # eligible PDF row even when its identifiers would resolve one.
+    run_id = out["run_id"]
+    with state.connect(workspace) as conn:
+        routes = {
+            row["request_id"].removeprefix(f"import-{run_id}-"): row["operation_id"]
+            for row in conn.execute(
+                "SELECT request_id, operation_id FROM operation_requests WHERE request_id LIKE ?",
+                (f"import-{run_id}-%",),
+            )
+        }
+    assert routes == {
+        "alpha-csl": "capture-source",
+        "beta-csl": "capture-remote-pdf-source",
+        "gamma-csl": "capture-remote-pdf-source",
+        "delta-csl": "capture-source",
+        "epsilon-csl": "capture-source",
+        "zeta-csl": "capture-remote-pdf-source",
+    }
+    # The CLI itself never fetched -- the worker's injected opener did, once per
+    # routed row and never for the metadata-only ones.
+    assert opened == [
+        f"https://export.arxiv.org/pdf/{ARXIV_SHARED}",
+        f"https://export.arxiv.org/pdf/{ARXIV_SHARED}",
+        f"https://export.arxiv.org/pdf/{ARXIV_MISSING}",
+    ]
+
+    # Normalization is stamped on the admitted row, not merely computed.
+    assert state.catalog_source(workspace, "delta-csl")["item_type"] == "article"
+
+    # One ranked worklist: duplicates, then failed, then unmapped.
+    assert out["worklist"] == f"import-{run_id}"
+    rows = _worklist_rows(workspace, out["worklist"])
+    assert [(row["rank"], row["group"], row["item_ref"]) for row in rows] == [
+        (1, "duplicate", "gamma-csl"),
+        (2, "duplicate", "epsilon-csl"),
+        (3, "failed", "zeta-csl"),
+        (4, "unmapped", "delta-csl"),
+    ]
+    # A duplicate row names which identifier matched which admitted work; a failed
+    # row carries the worker's own error, not a generic label.
+    assert "arxiv matches admitted work beta-csl" in str(rows[0]["body"])
+    assert "catalog_sources.doi" in str(rows[1]["body"])
+    assert ARXIV_MISSING in str(rows[2]["body"])
+    assert "'song' is outside the shipped vocabulary" in str(rows[3]["body"])
+
+    # One quiet card for the batch, never one per entry.
+    cards = _import_cards(workspace)
+    assert len(cards) == 1
+    assert cards[0]["loudness"] == "quiet"
+    for denominator in ("6 entries", "4 admitted", "4 need judgment"):
+        assert denominator in str(cards[0]["title"])
+
+    # Exactly one nine-field telemetry row for this run.
+    (event,) = _import_run_events(workspace)
+    assert event["run_id"] == run_id
+    assert event["format"] == "csl"
+    assert event["entries_total"] == 6
+    assert event["admitted"] == 4
+    assert event["skipped"] == 0
+    assert event["failed"] == 2
+    assert event["duplicates_flagged"] == 2
+    assert event["duration_s"] > 0.0
+    assert event["index_refresh_s"] > 0.0
+    assert set(event) == {
+        "run_id",
+        "format",
+        "entries_total",
+        "admitted",
+        "skipped",
+        "failed",
+        "duplicates_flagged",
+        "duration_s",
+        "index_refresh_s",
+    }
+
+
+def test_cli_work_import_rerun_mints_a_new_run_whose_artifacts_describe_the_rerun(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # Idempotent re-import: admitted works are skipped, so the retry's worklist and
+    # telemetry row must describe the retry -- not replay the first run's judgment.
+    workspace = tmp_path / "workspace"
+    csl = tmp_path / "sources.csl.json"
+    csl.write_text(json.dumps(IMPORT_CSL_ITEMS), encoding="utf-8")
+    main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    capsys.readouterr()
+    _offline_remote_pdf(monkeypatch)
+    main(_csl_import(workspace, csl))
+    first = json.loads(capsys.readouterr().out)
+
+    rc = main(_csl_import(workspace, csl))
+    second = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    assert second["run_id"] != first["run_id"]
+    assert second["admitted"] == []
+    assert second["skipped"] == ["alpha-csl", "beta-csl", "gamma-csl", "delta-csl"]
+    assert [row["ref"] for row in second["failed"]] == ["epsilon-csl", "zeta-csl"]
+    assert second["duplicates_flagged"] == 1
+    assert second["index_refresh_s"] == 0.0
+
+    # A skip is never a judgment row: the retry's worklist holds only the two rows
+    # that still need judgment, and the first run's four are untouched.
+    assert [
+        (row["rank"], row["group"], row["item_ref"])
+        for row in _worklist_rows(workspace, second["worklist"])
+    ] == [(1, "duplicate", "epsilon-csl"), (2, "failed", "zeta-csl")]
+    assert len(_worklist_rows(workspace, first["worklist"])) == 4
+    assert len(_import_cards(workspace)) == 2
+
+    events = _import_run_events(workspace)
+    assert [event["run_id"] for event in events] == [first["run_id"], second["run_id"]]
+    assert events[1]["admitted"] == 0
+    assert events[1]["skipped"] == 4
+    assert events[1]["failed"] == 2
+    assert events[1]["duplicates_flagged"] == 1
+    assert events[1]["index_refresh_s"] == 0.0
+
+
+def test_cli_work_import_clean_run_mints_no_worklist_and_no_card(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    # Zero judgment rows: no worklist, no card, still exactly one telemetry row.
+    workspace = tmp_path / "workspace"
+    bib = tmp_path / "sources.bib"
+    bib.write_text(THREE_ENTRY_BIB, encoding="utf-8")
+    main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    capsys.readouterr()
+
+    rc = main(_bulk_import(workspace, bib))
+    out = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    assert len(out["admitted"]) == 3
+    assert out["worklist"] == ""
+    assert out["duplicates_flagged"] == 0
+    assert not (workspace / "system" / "worklists").exists()
+    assert _import_cards(workspace) == []
+    (event,) = _import_run_events(workspace)
+    assert event["format"] == "bibtex"
+    assert (event["admitted"], event["skipped"], event["failed"]) == (3, 0, 0)
+    assert event["duplicates_flagged"] == 0
+
+
+def test_cli_work_import_enrich_finalizes_at_return_with_children_still_queued(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # The #1517 obligation: the driver finalizes at command return. The queued
+    # enrich-source children have not run, so the run contributes zero retraction
+    # rows and the telemetry row carries no retraction field.
+    workspace = tmp_path / "workspace"
+    csl = tmp_path / "sources.csl.json"
+    csl.write_text(json.dumps(IMPORT_CSL_ITEMS), encoding="utf-8")
+    main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    capsys.readouterr()
+    _offline_remote_pdf(monkeypatch)
+
+    rc = main(_csl_import(workspace, csl, "--enrich"))
+    out = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    assert len(out["enrichment_jobs"]) == 4
+    with state.connect(workspace) as conn:
+        pending = conn.execute(
+            "SELECT COUNT(*) FROM operation_requests"
+            " WHERE operation_id = 'enrich-source' AND status = 'pending'"
+        ).fetchone()[0]
+    assert pending == 4
+
+    (event,) = _import_run_events(workspace)
+    assert "retraction_flags" not in event
+    rows = _worklist_rows(workspace, out["worklist"])
+    assert {str(row["group"]) for row in rows} == {"duplicate", "failed", "unmapped"}

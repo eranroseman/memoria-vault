@@ -1580,41 +1580,85 @@ def _cmd_work_import(args: argparse.Namespace) -> int:
 
 
 def _bulk_work_import(args: argparse.Namespace, entries: list[str]) -> dict[str, Any]:
-    from memoria_vault.runtime.bulk_import import build_entry_payload, entry_ref
+    from memoria_vault.runtime.bulk_import import (
+        build_entry_payload,
+        detect_identifier_collisions,
+        entry_capture_request,
+        entry_fetch,
+        entry_item_type,
+        entry_ref,
+        entry_type_mapped,
+        is_doi_collision_error,
+        parse_entry_fields,
+    )
 
     workspace = _workspace(args)
     run_id = uuid.uuid4().hex
+    run_started = time.monotonic()
     admitted: list[str] = []
     skipped: list[str] = []
     failed: list[dict[str, str]] = []
     enrichment_jobs: list[str] = []
+    judgments: list[dict[str, str]] = []
     for index, entry_text in enumerate(entries, start=1):
+        ref = entry_ref(args.format, entry_text, index)
         try:
             payload = build_entry_payload(args.format, entry_text)
+            fields = parse_entry_fields(args.format, entry_text)
+            payload["item_type"] = entry_item_type(fields)
+            mapped = entry_type_mapped(fields)
             work_id = str(payload["work_id"])
             if (existing := state.catalog_source(workspace, work_id)) is not None:
                 skipped.append(str(existing["work_id"]))
                 continue
+            operation_id, request = entry_capture_request(
+                payload, entry_fetch(fields, payload["identifiers"]), mapped=mapped
+            )
             output = engine_api.run_operation(
                 workspace,
-                "capture-source",
-                payload,
+                operation_id,
+                request,
                 idempotency_key=f"import-{run_id}-{work_id}",
                 schedule_id=args.schedule_id,
                 actor=args.actor,
-                command="capture-source",
+                command=operation_id,
             )
         except ValueError as exc:
-            failed.append({"ref": entry_ref(args.format, entry_text, index), "error": str(exc)})
+            failed.append({"ref": ref, "error": str(exc)})
+            judgments.append(_import_judgment("failed", ref, ref, str(exc)))
             continue
         result = output.get("result") if isinstance(output.get("result"), dict) else {}
         if output["ok"]:
-            admitted.append(str(result.get("work_id") or work_id))
+            catalog_id = str(result.get("work_id") or work_id)
+            admitted.append(catalog_id)
+            if not mapped:
+                judgments.append(
+                    _import_judgment(
+                        "unmapped",
+                        ref,
+                        catalog_id,
+                        f"entry type {str(fields.get('type') or 'unknown')!r} is outside the"
+                        " shipped vocabulary; admitted as article",
+                    )
+                )
+            judgments.extend(
+                _import_judgment(
+                    "duplicate",
+                    ref,
+                    catalog_id,
+                    f"{collision['field']} matches admitted work {collision['other_work_id']}",
+                )
+                for collision in detect_identifier_collisions(
+                    workspace, catalog_id, payload["identifiers"]
+                )
+            )
             if args.enrich and (enrichment := _queue_import_enrichment(args, payload, output)):
                 enrichment_jobs.append(str(enrichment["job_id"]))
         else:
             error = str(result.get("error") or result.get("status") or "capture failed")
-            failed.append({"ref": entry_ref(args.format, entry_text, index), "error": error})
+            failed.append({"ref": ref, "error": error})
+            group = "duplicate" if is_doi_collision_error(error) else "failed"
+            judgments.append(_import_judgment(group, ref, ref, error))
     index_refresh_s = 0.0
     if admitted:
         from memoria_vault.runtime.search_index import rebuild_checked_search_index_explicit
@@ -1622,6 +1666,20 @@ def _bulk_work_import(args: argparse.Namespace, entries: list[str]) -> dict[str,
         refresh_started = time.monotonic()
         rebuild_checked_search_index_explicit(workspace, actor=args.actor, machine="memoria-cli")
         index_refresh_s = time.monotonic() - refresh_started
+    duplicates_flagged = sum(row["group"] == "duplicate" for row in judgments)
+    worklist = _finalize_import_run(
+        workspace,
+        run_id=run_id,
+        entry_format=args.format,
+        entries_total=len(entries),
+        judgments=judgments,
+        admitted=admitted,
+        skipped=skipped,
+        failed=failed,
+        duplicates_flagged=duplicates_flagged,
+        duration_s=time.monotonic() - run_started,
+        index_refresh_s=index_refresh_s,
+    )
     return {
         "ok": bool(admitted or skipped),
         "run_id": run_id,
@@ -1630,9 +1688,76 @@ def _bulk_work_import(args: argparse.Namespace, entries: list[str]) -> dict[str,
         "admitted": admitted,
         "skipped": skipped,
         "failed": failed,
+        "duplicates_flagged": duplicates_flagged,
         "enrichment_jobs": enrichment_jobs,
         "index_refresh_s": index_refresh_s,
+        "worklist": worklist,
     }
+
+
+_IMPORT_JUDGMENT_TITLES = {
+    "duplicate": "Duplicate identifier",
+    "failed": "Entry failed",
+    "unmapped": "Unmapped entry type",
+}
+
+
+def _import_judgment(group: str, ref: str, item_ref: str, reason: str) -> dict[str, str]:
+    """One bulk-admission judgment row in the worklist section's vocabulary."""
+    return {
+        "title": f"{_IMPORT_JUDGMENT_TITLES[group]}: {ref}",
+        "item_ref": item_ref,
+        "group": group,
+        "reason": reason,
+    }
+
+
+def _finalize_import_run(
+    workspace: Path,
+    *,
+    run_id: str,
+    entry_format: str,
+    entries_total: int,
+    judgments: list[dict[str, str]],
+    admitted: list[str],
+    skipped: list[str],
+    failed: list[dict[str, str]],
+    duplicates_flagged: int,
+    duration_s: float,
+    index_refresh_s: float,
+) -> str:
+    """Write the run's two artifacts, once each, after the index-refresh boundary.
+
+    The driver is the finalizer (#1517): no durable run state crosses commands, so
+    a retry mints a new ``run_id`` and describes itself honestly. A zero-judgment
+    run yields no worklist and no card, never a fabricated empty artifact.
+    """
+    from memoria_vault.runtime.subsystems.lib.worklists import emit_import_worklist
+    from memoria_vault.runtime.telemetry import record_telemetry_event
+
+    emitted = emit_import_worklist(
+        workspace,
+        run_id=run_id,
+        rows=judgments,
+        entries_total=entries_total,
+        admitted=len(admitted),
+    )
+    record_telemetry_event(
+        workspace,
+        "import-run.v1",
+        {
+            "run_id": run_id,
+            "format": entry_format,
+            "entries_total": entries_total,
+            "admitted": len(admitted),
+            "skipped": len(skipped),
+            "failed": len(failed),
+            "duplicates_flagged": duplicates_flagged,
+            "duration_s": duration_s,
+            "index_refresh_s": index_refresh_s,
+        },
+    )
+    return str(emitted["worklist"]) if emitted else ""
 
 
 def _cmd_work_enrich(args: argparse.Namespace) -> int:

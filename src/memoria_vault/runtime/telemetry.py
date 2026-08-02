@@ -51,6 +51,8 @@ def _validated(event_type: str, payload: dict[str, Any]) -> dict[str, Any]:
         return schemas.validate_read_event(payload)
     if event_type == schemas.EDGE_WRITE_EVENT_SCHEMA:
         return schemas.validate_edge_write_event(payload)
+    if event_type == schemas.IMPORT_RUN_EVENT_SCHEMA:
+        return schemas.validate_import_run_event(payload)
     fields = NATIVE_EVENT_FIELDS.get(event_type)
     if fields is None:
         raise ValueError(f"unknown telemetry event type: {event_type}")

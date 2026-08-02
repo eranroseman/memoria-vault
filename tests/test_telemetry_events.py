@@ -353,3 +353,51 @@ def test_emit_edge_write_event_normalizes_and_needs_a_bound_operation_context(
             tmp_path, relation_type="supports", write_path="curate-note-link", context=unbound
         )
     assert len(_rows(tmp_path)) == 1
+
+
+def test_record_telemetry_event_routes_import_run_through_its_validator(tmp_path: Path) -> None:
+    import json
+
+    from memoria_vault.runtime import state
+    from memoria_vault.runtime.telemetry import record_telemetry_event
+
+    row = {
+        "run_id": "import-20260717-a1b2",
+        "format": "csl",
+        "entries_total": 3,
+        "admitted": 2,
+        "skipped": 1,
+        "failed": 0,
+        "duplicates_flagged": 0,
+        "duration_s": 4.2,
+        "index_refresh_s": 0.8,
+    }
+
+    event_id = record_telemetry_event(tmp_path, "import-run.v1", row)
+
+    with state.connect(tmp_path) as conn:
+        stored = conn.execute(
+            "SELECT event_type, session_id, surface, payload_json FROM telemetry_events"
+            " WHERE event_id = ?",
+            (event_id,),
+        ).fetchone()
+    assert stored["event_type"] == "import-run.v1"
+    assert json.loads(stored["payload_json"]) == row
+    # A server-side row carries no client identity; the nine-field contract has no
+    # session_id/surface to leak into those columns.
+    assert stored["session_id"] is None
+    assert stored["surface"] is None
+
+    with pytest.raises(ValueError, match="admitted must be an integer"):
+        record_telemetry_event(tmp_path, "import-run.v1", {**row, "admitted": True})
+
+
+def test_import_run_dispatch_is_not_the_native_fields_fallback(tmp_path: Path) -> None:
+    # Misattribution guard: the native fallback coerces every field to a string and
+    # would silently accept a payload the typed validator must reject. Routing has to
+    # reach `validate_import_run_event`, not NATIVE_EVENT_FIELDS.
+    from memoria_vault.runtime import telemetry
+
+    assert "import-run.v1" not in telemetry.NATIVE_EVENT_FIELDS
+    with pytest.raises(ValueError, match="import-run event missing required fields"):
+        telemetry.record_telemetry_event(tmp_path, "import-run.v1", {"run_id": "r1"})

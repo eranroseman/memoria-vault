@@ -105,6 +105,19 @@ EDGE_WRITE_REQUIRED_FIELDS = frozenset({"relation_type", "write_path"})
 # The two seams that mint a concept edge: the PI's typed link and the single-row
 # upsert behind `confirm-tension`. A third write path is a schema change here.
 EDGE_WRITE_PATHS = frozenset({"curate-note-link", "insert-concept-edge"})
+IMPORT_RUN_EVENT_SCHEMA = "import-run.v1"
+IMPORT_RUN_FORMATS = frozenset({"bibtex", "csl"})
+IMPORT_RUN_COUNT_FIELDS = (
+    "entries_total",
+    "admitted",
+    "skipped",
+    "failed",
+    "duplicates_flagged",
+)
+IMPORT_RUN_TIMING_FIELDS = ("duration_s", "index_refresh_s")
+IMPORT_RUN_REQUIRED_FIELDS = frozenset(
+    {"run_id", "format", *IMPORT_RUN_COUNT_FIELDS, *IMPORT_RUN_TIMING_FIELDS}
+)
 
 
 def validate_empirical_event(payload: dict[str, Any]) -> dict[str, Any]:
@@ -216,6 +229,37 @@ def validate_edge_write_event(payload: dict[str, Any]) -> dict[str, Any]:
     return {"relation_type": relation_type, "write_path": write_path}
 
 
+def validate_import_run_event(payload: dict[str, Any]) -> dict[str, Any]:
+    """Return a normalized per-run bulk-import event or raise ``ValueError``.
+
+    One row per import run (O2 spec section 6): analytics-only, routed to the
+    telemetry table — never the journal. Counts are integers; timings are
+    non-negative numerics (whole-index refresh time until LOOP.1 lands). The
+    row carries nine fields and no retraction count: ``--enrich`` only queues
+    ``enrich-source`` jobs, so retraction truth does not exist at command
+    return (#1517).
+    """
+    if not isinstance(payload, dict):
+        raise ValueError("import-run event payload must be an object")
+    unknown = sorted(set(payload) - IMPORT_RUN_REQUIRED_FIELDS)
+    if unknown:
+        raise ValueError(f"import-run event contains unsupported fields: {', '.join(unknown)}")
+    missing = sorted(field for field in IMPORT_RUN_REQUIRED_FIELDS if _missing(payload.get(field)))
+    if missing:
+        raise ValueError(f"import-run event missing required fields: {', '.join(missing)}")
+    run_id = _string_field("run_id", payload["run_id"])
+    _reject_pathlike("run_id", run_id)
+    entry_format = _string_field("format", payload["format"])
+    if entry_format not in IMPORT_RUN_FORMATS:
+        raise ValueError(f"format must be one of: {', '.join(sorted(IMPORT_RUN_FORMATS))}")
+    event: dict[str, Any] = {"run_id": run_id, "format": entry_format}
+    for field in IMPORT_RUN_COUNT_FIELDS:
+        event[field] = _count_field(field, payload[field])
+    for field in IMPORT_RUN_TIMING_FIELDS:
+        event[field] = _elapsed_field(field, payload[field])
+    return event
+
+
 def _missing(value: Any) -> bool:
     return value is None or (isinstance(value, str) and not value.strip())
 
@@ -256,6 +300,22 @@ def _duration(value: Any) -> float | int:
         raise ValueError("duration_s must be numeric")
     if value <= 0:
         raise ValueError("duration_s must be positive")
+    return value
+
+
+def _count_field(field: str, value: Any) -> int:
+    if not isinstance(value, int) or isinstance(value, bool):
+        raise ValueError(f"{field} must be an integer")
+    if value < 0:
+        raise ValueError(f"{field} must be >= 0")
+    return value
+
+
+def _elapsed_field(field: str, value: Any) -> float | int:
+    if not isinstance(value, int | float) or isinstance(value, bool):
+        raise ValueError(f"{field} must be numeric")
+    if value < 0:
+        raise ValueError(f"{field} must be >= 0")
     return value
 
 

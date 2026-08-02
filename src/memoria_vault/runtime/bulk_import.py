@@ -22,7 +22,11 @@ from typing import Any
 from urllib.parse import urlparse
 
 from memoria_vault.runtime import state
-from memoria_vault.runtime.capture import bibtex_capture_payload, csl_capture_payload
+from memoria_vault.runtime.capture import (
+    bibtex_capture_payload,
+    csl_capture_payload,
+    parse_bibtex_entry,
+)
 
 _ENTRY_TYPE_MAP: dict[str, str] = {
     "article": "article",
@@ -144,6 +148,22 @@ def build_entry_payload(fmt: str, entry_text: str) -> dict[str, Any]:
     payload = csl_capture_payload(item, raw_text=entry_text)
     payload["identifiers"] = _normalized_entry_identifiers(item, payload["identifiers"])
     return payload
+
+
+def parse_entry_fields(fmt: str, entry_text: str) -> dict[str, Any]:
+    """Derive the flat adapter field map for one split entry chunk.
+
+    BibTeX becomes ``{"type": entry_type, **fields}``; CSL is the parsed item.
+    This is the shape ``entry_item_type`` / ``entry_type_mapped`` / ``entry_fetch``
+    read, so the driver never re-implements either extraction.
+    """
+    if fmt == "bibtex":
+        entry = parse_bibtex_entry(entry_text)
+        return {"type": entry["entry_type"], **entry["fields"]}
+    item = json.loads(entry_text)
+    if not isinstance(item, dict):
+        raise ValueError("CSL entry must be a JSON object")
+    return item
 
 
 def entry_ref(fmt: str, entry_text: str, index: int) -> str:

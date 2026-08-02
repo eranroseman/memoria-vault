@@ -44,10 +44,23 @@
 - [x] **W.1 complete:** `0dc8ec59` is an ancestor of `main`; it adds the
   raised-by/loudness passthrough and run-scoped quiet import worklist.
 
+## Execution status — 2026-08-02
+
+- [x] **W.2 complete:** the `import-run.v1` typed validator, its
+  `record_telemetry_event` dispatch branch, and their contract coverage. See
+  W.2's execution amendment for the two deviations from the printed body.
+- [x] **I.1 complete:** the driver composes the A.1–A.3 adapters and the W.1/W.2
+  artifacts and finalizes at command return. See I.1's execution amendment for
+  the precondition ruling, four deviations, and the 38/38 mutation report.
+- [ ] **W.3 BLOCKED** on external I1 H.3 (no seeded `decision-rules.yaml`, no
+  `tests/test_decision_rules.py`). This is the frontier stop.
+- [ ] **W.4 BLOCKED** transitively on W.3 plus the full external I1 merge its
+  real-vault protocol requires.
+
 ## Cross-section contracts (BINDING — the manifests' seam resolutions)
 
-1. **`runtime/bulk_import.py` module seams:** P.1's `split_bibtex_entries(text) -> list[str]` / `split_csl_entries(text) -> list[str]`; P.2's `build_entry_payload(fmt, entry_text) -> dict` (section A's interception point) and `entry_ref(fmt, entry_text, index) -> str` (citekey / CSL id / `entry-<index>` — the worklist item-ref vocabulary).
-2. **Driver ownership:** P.2/P.3 produce only the baseline capture summary `{ok, run_id (uuid4 hex), format, entries_total, admitted: [work_id…], skipped: [work_id…], failed: [{ref, error}…], enrichment_jobs, index_refresh_s}`. The new I.1 integration task owns adapter application, duplicate/unmapped judgment rows, and the call into the W seams; `admitted`/`skipped` use the **catalog's** work_id vocabulary (SPEC GAP P-1), zero-rows-PRESENT is the failure exit, and keys remain `import-<run_id>-<work_id>`.
+1. **`runtime/bulk_import.py` module seams:** P.1's `split_bibtex_entries(text) -> list[str]` / `split_csl_entries(text) -> list[str]`; P.2's `build_entry_payload(fmt, entry_text) -> dict` (section A's interception point) and `entry_ref(fmt, entry_text, index) -> str` (citekey / CSL id / `entry-<index>` — the worklist item-ref vocabulary); I.1's `parse_entry_fields(fmt, entry_text) -> dict` (BibTeX `{"type": entry_type, **fields}` / the parsed CSL item — the one shape the A.1–A.2 adapter helpers read, raising `ValueError` on a chunk the driver must name as failed).
+2. **Driver ownership:** P.2/P.3 produce only the baseline capture summary `{ok, run_id (uuid4 hex), format, entries_total, admitted: [work_id…], skipped: [work_id…], failed: [{ref, error}…], enrichment_jobs, index_refresh_s}`. The new I.1 integration task owns adapter application, duplicate/unmapped judgment rows, and the call into the W seams; `admitted`/`skipped` use the **catalog's** work_id vocabulary (SPEC GAP P-1), zero-rows-PRESENT is the failure exit, and keys remain `import-<run_id>-<work_id>`. **As landed, I.1 adds two keys to that summary:** `duplicates_flagged` (int — the count of `duplicate`-group judgment rows, i.e. cross-identifier collisions plus DOI-UNIQUE failures; structural same-DOI skips are excluded) and `worklist` (the `import-<run_id>` slug, `""` when the run had nothing to judge). Both mirror the telemetry row.
 3. **Adapter seams** (A produces): `_ENTRY_TYPE_MAP`, `entry_item_type(entry_fields) -> str` (shipped vocabulary `article/book/webpage/software/dataset/report`), `entry_type_mapped(entry_fields) -> bool`, `entry_fetch(entry_fields, identifiers) -> {method,url} | None` (PMCID→`pmc-oa`, arXiv→`arxiv-pdf`, `.pdf` URL→`pdf-url`, else None), `entry_capture_request(payload, fetch, *, mapped)`, `capture-remote-pdf-source` (PI-only worker operation; the sole O2 caller of O1's policy-bound resolver), `detect_identifier_collisions(vault, work_id, identifiers) -> [{other_work_id, field}]`, `is_doi_collision_error(error) -> bool`.
 4. **Worklist seams** (W produces): `emit_worklist(…, raised_by="worklists", loudness="notice")` passthrough (defaults = shipped behavior); `emit_import_worklist(vault, *, run_id, rows, entries_total, admitted) -> dict | None` (None on zero judgment rows — no worklist, no card); worklist id `import-<run_id>`; rows ranked duplicates → retraction → failed → unmapped.
 5. **Telemetry** (W produces): `IMPORT_RUN_EVENT_SCHEMA = "import-run.v1"` + `validate_import_run_event` (typed ints, `format ∈ {bibtex, csl}`) in `engine/empirical_events.py`; dispatch branch in I1's `record_telemetry_event`; the chosen I.1 finalizer emits exactly one row per run.
@@ -2384,9 +2397,9 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 - Consumes: I1 T.2's `record_telemetry_event(vault: Path, event_type: str, payload: dict[str, Any]) -> str` and its `_validated` dispatch (`runtime/telemetry.py`); I1 T.1's `telemetry_events` table (columns `event_id, ts, event_type, session_id, surface, payload_json`); shipped private helpers `_missing` (`empirical_events.py:187`), `_string_field` (`:198`), `_reject_pathlike` (`:236`); `state.connect` bootstraps the schema on a bare `tmp_path` vault (`state.py:472-481`), so tests need no init and no network.
 - Produces: `empirical_events.IMPORT_RUN_EVENT_SCHEMA = "import-run.v1"`; `empirical_events.validate_import_run_event(payload: dict[str, Any]) -> dict[str, Any]` — its own `IMPORT_RUN_REQUIRED_FIELDS` (the `edge-write.v1` pattern, graph plan ERP-D.6: a separate validator so integer fields are legal — `validate_empirical_event`'s `ALLOWED_FIELDS`/string coercion cannot carry counts); the `_validated` branch making `record_telemetry_event(vault, "import-run.v1", row)` a working call. Row shape (spec §6, amended by #1517 — **nine** fields, no `retraction_flags`): `{run_id, format, entries_total, admitted, skipped, failed, duplicates_flagged, duration_s, index_refresh_s}` — `run_id` an opaque string, `format ∈ {bibtex, csl}`, the five counts non-negative `int`s (bool rejected), the two timings non-negative numerics. One row per run is emitted by I.1's finalizer (the driver at command return), never speculatively by P.2/P.3.
 
-- [ ] **Step 1: Grep-first (order tolerance).** Run `grep -n "_validated\|edge-write.v1" src/memoria_vault/runtime/telemetry.py`. If the file is absent, the plan header's precondition is unmet — **STOP: land and merge the I1 plan (2026-07-16-i1-full-wiring.md, T.1/T.2) first.** If present but the `edge-write.v1` branch is absent (graph-plan ordering), insert the new branch in the same position relative to the native-fields fallback; anchor by symbol, not line.
+- [x] **Step 1: Grep-first (order tolerance).** Run `grep -n "_validated\|edge-write.v1" src/memoria_vault/runtime/telemetry.py`. If the file is absent, the plan header's precondition is unmet — **STOP: land and merge the I1 plan (2026-07-16-i1-full-wiring.md, T.1/T.2) first.** If present but the `edge-write.v1` branch is absent (graph-plan ordering), insert the new branch in the same position relative to the native-fields fallback; anchor by symbol, not line.
 
-- [ ] **Step 2: Write the failing tests** — append to `tests/test_empirical_events.py`:
+- [x] **Step 2: Write the failing tests** — append to `tests/test_empirical_events.py`:
 
 ```python
 def _import_run_row(**overrides: object) -> dict[str, object]:
@@ -2476,12 +2489,12 @@ def test_record_telemetry_event_routes_import_run_through_its_validator(tmp_path
         record_telemetry_event(tmp_path, "import-run.v1", {**row, "admitted": True})
 ```
 
-- [ ] **Step 3: Run to verify failure**
+- [x] **Step 3: Run to verify failure**
 
 Run: `python -m pytest tests/test_empirical_events.py tests/test_telemetry_events.py -v`
 Expected: FAIL — `ImportError: cannot import name 'IMPORT_RUN_EVENT_SCHEMA'` in the first two tests; the dispatch test fails with `ValueError: unknown telemetry event type: import-run.v1`.
 
-- [ ] **Step 4: Implement.** In `src/memoria_vault/engine/empirical_events.py`, append after `READ_REQUIRED_FIELDS` (`:101`):
+- [x] **Step 4: Implement.** In `src/memoria_vault/engine/empirical_events.py`, append after `READ_REQUIRED_FIELDS` (`:101`):
 
 ```python
 IMPORT_RUN_EVENT_SCHEMA = "import-run.v1"
@@ -2558,7 +2571,7 @@ In `src/memoria_vault/runtime/telemetry.py`, insert into `_validated` directly a
 
 (The `hasattr` guard is the file's guarded-absence house pattern for cross-plan branches; both halves land in this one commit, so it is order-tolerance parity, and an early call before this commit gets the honest `unknown telemetry event type` error.)
 
-- [ ] **Step 5: Run to verify pass**
+- [x] **Step 5: Run to verify pass**
 
 Run: `python -m pytest tests/test_empirical_events.py tests/test_telemetry_events.py -v`
 Expected: PASS.
@@ -2573,9 +2586,39 @@ git commit -m "feat(telemetry): import-run.v1 typed validator + dispatch, one an
 Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 ```
 
-### Task I.1 (blocked): compose the adapter and artifact seams into the bulk driver
+> **Execution amendment (2026-08-02): two deviations from the printed body.**
+>
+> 1. **The dispatch branch is unguarded.** The printed snippet wrapped it in
+>    `hasattr(schemas, "validate_import_run_event")`. That guard is the
+>    cross-plan absence pattern; here both halves land in one change, so the
+>    condition is constant-true and the mutant that deletes the whole branch
+>    would otherwise fall through to the native-fields fallback silently. The
+>    landed branch is `if event_type == schemas.IMPORT_RUN_EVENT_SCHEMA:`,
+>    placed after the `edge-write.v1` branch as printed. The shipped
+>    `edge-write.v1` guard is untouched — that one is still genuinely absent.
+> 2. **One doc file was added to the task's file list:**
+>    `docs/reference/control-and-policy/empirical-events.md`. That page states
+>    it mirrors `engine/empirical_events.py` by hand and enumerates the
+>    server-side schemas ("Two further schemas…"); shipping a third one without
+>    the row would leave a published reference lying by omission. The row names
+>    all nine fields, the finalization point, and the deliberate absence of a
+>    retraction count.
+>
+> Also recorded: the printed test body asserts only `admitted` / `entries_total`
+> / `failed` for the typed-count loop. Landed coverage adds (a) each of the five
+> count fields and both timing fields checked **alone**, so a truncated
+> `IMPORT_RUN_COUNT_FIELDS` / `IMPORT_RUN_TIMING_FIELDS` tuple cannot pass by
+> riding a neighbour's assertion, (b) the honest all-zero row a no-op re-run
+> produces (a truthiness-based required-field check would call every count
+> "missing"), and (c) a dispatch test proving the route reaches the typed
+> validator rather than the string-coercing native fallback.
 
-**Status:** do not start until the external I1 full-wiring plan
+### Task I.1: compose the adapter and artifact seams into the bulk driver
+
+**Status: complete (2026-08-02).** See the execution amendment at the end of
+this task for the precondition ruling, the deviations, and the mutation report.
+
+**Former status:** do not start until the external I1 full-wiring plan
 (`docs/superpowers/plans/2026-07-16-i1-full-wiring.md`) is implemented and
 merged. That is now the **only** blocker:
 [#1517](https://github.com/eranroseman/memoria-vault/issues/1517) is decided and
@@ -2634,11 +2677,109 @@ rows. The shipped enrichment source-retraction flag tests
 Keep the test fully offline with the injectable opener/provider replay seam. Run
 the focused tests, then `python scripts/verify` before committing.
 
-### Task W.3: `staged-import` decision-rule registry entry (spec §7; slice 7)
+> **Execution amendment (2026-08-02): landed, with the precondition narrowed to
+> the seams actually consumed.**
+>
+> **Precondition ruling.** The printed blocker is "external I1 implemented and
+> merged", whole-plan. At execution time I1 T.1–T.4 are on `main`
+> (`runtime/telemetry.py` with `record_telemetry_event` / `_validated`, the
+> `telemetry_events` table at the current rung, the sink rewire, the first
+> read emitters) and I1's D / A / H sections are not. Every seam this task
+> **Consumes** is landed: P.2's `build_entry_payload` / `entry_ref`, A.1–A.3's
+> adapter and collision helpers, W.1's `emit_import_worklist`, and W.2's
+> `import-run.v1` validator plus its dispatch branch (landed in the same
+> change). Cross-section contract 5 names exactly one external I1 dependency
+> for this task — the dispatch branch in `record_telemetry_event` — and it
+> exists. I1's remaining sections govern attention ordering, producer
+> throttles, disposition events, and the dashboard; none is on this driver's
+> path. The blanket precondition was written when the telemetry plane did not
+> exist yet; the substantive half of it is now satisfied and the task is
+> executed on that basis. Two things this does **not** authorize and that stay
+> untouched: real-vault ingestion (W.4's protocol, PI-only, still gated on the
+> full I1 merge) and the `import` producer's entry in I1 A.4's `attention.yaml`
+> throttle map (I1's to add; its absence only means the quiet card is never
+> demoted further).
+>
+> **Deviations from the printed composition contract.**
+>
+> 1. **A new pure seam, `parse_entry_fields(fmt, entry_text) -> dict`, in
+>    `runtime/bulk_import.py`** (contract 1's module). The printed step 1 says
+>    "derive the A.1 `entry_fields` shape from the original entry" without
+>    naming a home; putting the BibTeX/CSL extraction in `cli.py` would have
+>    duplicated `parse_bibtex_entry` handling and let the driver feed the
+>    adapters a look-alike dict. The task's own file list already anticipates
+>    this ("`tests/test_bulk_import.py` only for any pure entry-field helper
+>    required to prevent duplicated BibTeX/CSL extraction"). BibTeX returns
+>    `{"type": entry_type, **fields}`; CSL returns the parsed item; both raise
+>    `ValueError` on the chunks the driver must name as failed.
+> 2. **A DOI-UNIQUE failure produces one worklist row, not two.** Step 3 says
+>    it is "both a named failure and a duplicate judgment row". Landed reading:
+>    it appears in the summary's `failed[]` (it genuinely did not admit) **and**
+>    its single judgment row carries `group: duplicate` (that is what the PI has
+>    to judge). Emitting it twice would double-count one entry in both
+>    `failed` and `duplicates_flagged`.
+> 3. **Two keys added to the run summary: `duplicates_flagged` (int) and
+>    `worklist` (the `import-<run_id>` slug, `""` when nothing was minted).**
+>    Contract 2 froze the baseline P summary; I.1 owns the judgment rows, and a
+>    summary that reports "4 admitted, 2 failed" while silently minting a
+>    four-row worklist is the fiction §2 forbids. Both values are already in the
+>    telemetry row, so this also makes CLI output and telemetry checkable
+>    against each other.
+> 4. **`duplicates_flagged` is defined as the number of `duplicate`-group
+>    judgment rows** — cross-identifier collisions plus DOI-UNIQUE failures.
+>    Structural same-DOI pre-check skips are *not* counted and are not judgment
+>    rows, per step 3's last sentence.
+>
+> **Red/green proof, as required.** `tests/test_cli_work_project.py` gains a
+> six-item CSL run (one mapped `capture-source` admission, one mapped
+> `capture-remote-pdf-source` admission, one cross-identifier arXiv duplicate,
+> one unmapped type admitted as `article`, one DOI-UNIQUE failure, one refused
+> remote fetch) asserting the **per-entry** route map, one ranked worklist
+> (duplicate → duplicate → failed → unmapped), exactly one quiet card with
+> honest denominators, and exactly one nine-field `import-run.v1` row. Fully
+> offline through `seed_install._default_opener` and `capture._extract_pdf_pages`.
+> Three more tests cover the #1517 obligation (`--enrich` finalizes at return
+> with four `enrich-source` children still `pending` and no retraction field),
+> the zero-judgment run (no worklist, no card, still one telemetry row), and
+> **idempotent re-import** (a rerun mints a new `run_id`; its four skips are not
+> judgment rows, so its worklist holds only the two entries that still need
+> judgment and its telemetry row reports `index_refresh_s: 0.0`).
+>
+> **Mutation report: 38 mutants, 38 killed, 0 survivors** over
+> `empirical_events.py` (15), `telemetry.py` (2), `bulk_import.py` (3), and
+> `cli.py` (18). Harness: sha256 whole-file snapshot, `inflight.json` recovery
+> marker, byte-verified restore in `finally`, `__pycache__` dropped after every
+> apply and restore, `git status` swept after every mutant for out-of-file
+> artifacts, baseline confirmed green three times. One survivor was found and
+> fixed rather than argued away: `mapped=mapped` → `mapped=True` at the
+> `entry_capture_request` call survived because the only unmapped fixture had no
+> synthesizable fetch, so both values routed to `capture-source` regardless
+> (escape class 1). The fixture's unmapped entry now also carries a resolvable
+> arXiv id, which is the product claim that actually needs a test — a *guessed*
+> item type must not make an entry an eligible remote-PDF row.
+>
+> **Goldens: not touched.** `tests/fixtures/floor/goldens/` is byte-identical
+> (`git status --porcelain tests/fixtures/floor/goldens/` empty). Nothing here
+> reaches the workspace seed or the capability manifest.
+
+### Task W.3 (BLOCKED): `staged-import` decision-rule registry entry (spec §7; slice 7)
 
 **Precondition:** external I1 H.3 has landed with its seeded registry and tests.
 This registry-only task may land before O2's I.1 and #1517's selected
 finalization contract; it creates neither real-vault ingestion nor telemetry.
+
+> **Frontier stop (2026-08-02).** Step 1's grep-first blocker fires: neither
+> `src/memoria_vault/product/workspace_seed/.memoria/config/decision-rules.yaml`
+> nor `tests/test_decision_rules.py` exists, and `grep -rn "load_decision_rules"
+> src/ tests/` has zero hits. I1 H.3 owns the sixteen-entry seed, the loader,
+> and the conftest registration; per the printed instruction this task does not
+> create them. **W.3 is the frontier stop for this wave.** W.4 is blocked
+> transitively — its Step 1 requires a `staged-import` hit in the seeded
+> registry, and its Step 2 protocol block is a real-vault run that stays gated
+> on the full external I1 merge regardless.
+>
+> Note for whoever lands W.3: it seeds a file into `workspace_seed`, so it
+> **will move all 36 floor goldens** and needs that wave's golden token.
 
 **Files:**
 - Modify: `src/memoria_vault/product/workspace_seed/.memoria/config/decision-rules.yaml` (append one entry after the seeded file's final row, `id: canvas-authoring`), `tests/test_decision_rules.py` (extend; created and registered `contract` by I1 H.3)

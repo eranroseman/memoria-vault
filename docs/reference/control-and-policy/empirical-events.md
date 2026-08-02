@@ -67,7 +67,7 @@ rejected.
 
 ## Server-side events
 
-Two further schemas live in the same schema owner but are handled by the
+Three further schemas live in the same schema owner but are handled by the
 runtime itself, not submitted by clients through `empirical-event-record`. A
 server-side event carries no client `session_id` or `surface`. A journaled
 server-side event joins its originating request through the journal row's own
@@ -78,6 +78,7 @@ telemetry row carries no request join, only its own timestamp.
 | --- | --- | --- |
 | `disposition.v1` | `decision`, `item_type`, `item_id` | Appended to the journal as an `event: disposition` row at the call-sites listed below. `decision` uses the same enum as `empirical_event.v1`; `item_id` is a vault-relative path or an opaque record id depending on the site, so the opaque-id rule below does not apply to it. |
 | `read-observed.v1` | `workflow`, `staleness_hit` | One `telemetry_events` row per attention detail read (`read_attention_card`, the door shared by CLI, HTTP and MCP), with `workflow: attention`. `staleness_hit` is `true` when the served card carries a `stale:` mark. Telemetry is not journaled, which is what lets a read record at all without rewriting the tracked `.memoria/journal-head` anchor. |
+| `import-run.v1` | `run_id`, `format`, `entries_total`, `admitted`, `skipped`, `failed`, `duplicates_flagged`, `duration_s`, `index_refresh_s` | One `telemetry_events` row per `memoria work import` run, written by the command itself at return, after the post-loop index refresh. `format` is `bibtex` or `csl`; the five counts are non-negative integers and the two timings non-negative numerics (`index_refresh_s` is `0.0` on a run that admitted nothing). It carries no retraction count: `--enrich` only queues `enrich-source` jobs, so retraction truth does not exist yet at command return. A retried import mints a new `run_id` and writes its own row. |
 
 ### Disposition call-sites
 
