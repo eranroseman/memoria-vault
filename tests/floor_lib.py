@@ -734,6 +734,21 @@ OPERATION_REGISTRY: dict[str, dict] = {
         "expect": "refused",
         "reason": "requires PI actor authority",
     },
+    # worker.py's digest-related-works branch pops hub_path (required str) and
+    # optional k (positive int, default 5), dispatching to
+    # operations.py:digest_related_works — fully deterministic (SQL over
+    # work_graph_edges, no model call, no network). The seed hub
+    # (hubs/floor-hub.md, tag "floor-seed") has no digests tagged into it —
+    # the seed's digests/ bundle directory is empty — so its work set is empty
+    # and the run writes an empty, delimited Candidates block and finishes
+    # "done"; the hub was created unchecked (create-concept materializes
+    # without promotion), so the block write takes the status-preserving
+    # unchecked path. Confirmed live: "done", candidates [], hub still
+    # unchecked, curated "Seed body." untouched above the block.
+    "digest-related-works": {
+        "payload": {"hub_path": "{hub}"},
+        "expect": "done",
+    },
     # worker.py:340-355 requires the *enqueue's own idempotency_key* to
     # equal f"empirical-event:{event['event_id']}" exactly (checked against
     # `job["request_envelope"]["idempotency_key"]`, not the payload). Task

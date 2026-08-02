@@ -408,6 +408,21 @@ def _run_operation_job(
             "hub_suggestions": result["hub_suggestions"],
             "interview_count": result["interview_count"],
         }
+    if operation_id == "digest-related-works":
+        from memoria_vault.runtime.operations import digest_related_works
+
+        hub_path = str(payload.get("hub_path") or "").strip()
+        if not hub_path:
+            raise ValueError("digest-related-works requires hub_path")
+        limit = payload.get("k", 5)
+        if not isinstance(limit, int) or isinstance(limit, bool) or limit < 1:
+            raise ValueError("digest-related-works k must be a positive integer")
+        result = digest_related_works(vault, hub_path, context=context, k=limit)
+        return {
+            "commit": result["commit"],
+            "hub_path": result["hub_path"],
+            "candidates": result["candidates"],
+        }
     if operation_id == "record-copi-interview":
         from memoria_vault.runtime.operations import record_copi_interview_turn
 
