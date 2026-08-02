@@ -670,13 +670,32 @@ def compile_source_digest(
     )
     digest_check = promote_checked(vault, digest_rel, checks=promotion_checks, context=context)
 
-    hub_suggestions = []
+    hub_suggestions: list[str] = []
     hub_stage_events = []
     hub_checks = []
     hub_paths = []
     for topic, safe_topic in zip(topics, safe_topics, strict=True):
         hub_rel = f"hubs/{_topic_slug(topic)}.md"
-        hub_exists = (vault / hub_rel).exists()
+        hub_inputs = [
+            {"id": digest_rel, "sha256": digest_check["output_sha256"]},
+            {"id": source_ref, "sha256": _source_input_sha(vault, source_ref, source_fm)},
+        ]
+        if (vault / hub_rel).exists():
+            entry = candidate_entry(
+                digest_rel, "suggested hub update from this digest", context.run_id
+            )
+            hub_stage_events.append(
+                write_hub_candidates(
+                    vault,
+                    hub_rel,
+                    [entry],
+                    context=context,
+                    checks=promotion_checks,
+                    inputs=hub_inputs,
+                )
+            )
+            hub_suggestions.append(hub_rel)
+            continue
         hub_frontmatter = {
             "type": "hub",
             "title": safe_topic,
@@ -694,15 +713,9 @@ def compile_source_digest(
                 f"Suggested update from `{digest_rel}`. Curated hubs are not overwritten.\n",
             ),
             context=context,
-            inputs=[
-                {"id": digest_rel, "sha256": digest_check["output_sha256"]},
-                {"id": source_ref, "sha256": _source_input_sha(vault, source_ref, source_fm)},
-            ],
+            inputs=hub_inputs,
         )
         hub_stage_events.append(stage)
-        if hub_exists:
-            hub_suggestions.append(stage["staging_id"])
-            continue
         hub_checks.append(promote_checked(vault, hub_rel, checks=promotion_checks, context=context))
         hub_paths.append(hub_rel)
 
@@ -718,7 +731,10 @@ def compile_source_digest(
         context=context,
     )
     commit = commit_writer_changes(
-        vault, f"compile digest {work_id}", [digest_rel, *hub_paths], context=context
+        vault,
+        f"compile digest {work_id}",
+        [digest_rel, *hub_paths, *hub_suggestions],
+        context=context,
     )
     return {
         "run_id": context.run_id,

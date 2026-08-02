@@ -12,6 +12,7 @@ import pytest
 
 from memoria_vault.runtime import operations, state, trusted_writer
 from memoria_vault.runtime.capture import capture_source as _capture_source
+from memoria_vault.runtime.hub_candidates import split_candidates_section
 from memoria_vault.runtime.jsonl import iter_jsonl
 from memoria_vault.runtime.operations import (
     _pydantic_ai_chat,
@@ -33,7 +34,7 @@ from memoria_vault.runtime.operations import (
     record_copi_interview_turn as _record_copi_interview_turn,
 )
 from memoria_vault.runtime.operations import run_prompt_operation as _run_prompt_operation
-from memoria_vault.runtime.vaultio import read_frontmatter
+from memoria_vault.runtime.vaultio import read_frontmatter, split_frontmatter
 from tests.cli_test_helpers import write_runner_provider_config
 from tests.helpers import call_with_context, copy_memoria_dirs, git, init_git, patch_pydantic_ai
 
@@ -245,8 +246,9 @@ def test_compile_source_digest_traces_model_call_and_stages_hub_suggestions(
     curated_hub = vault / "hubs/framing.md"
     curated_hub.parent.mkdir(parents=True)
     curated_text = (
-        "---\ntype: hub\ncheck_status: checked\ntitle: Framing\n"
-        "description: Human curation.\n---\n# Framing\n\nHuman text.\n"
+        "---\ntype: hub\nid: 01KBN6V6KX0000000000000002\ntitle: Framing\n"
+        "tag: framing\ntags: []\nlinks: {}\ndescription: Human curation.\n---\n"
+        "# Framing\n\nHuman text.\n"
     )
     curated_hub.write_text(curated_text, encoding="utf-8")
 
@@ -271,12 +273,19 @@ def test_compile_source_digest_traces_model_call_and_stages_hub_suggestions(
         "hubs/gaps.md",
         "hubs/impact.md",
     ]
-    assert len(result["hub_suggestions"]) == 1
-    assert curated_hub.read_text(encoding="utf-8") == curated_text
+    assert result["hub_suggestions"] == ["hubs/framing.md"]
+    hub_body = split_frontmatter(curated_hub.read_text(encoding="utf-8"))[1]
+    curated_body, section = split_candidates_section(hub_body)
+    assert curated_body == "# Framing\n\nHuman text.\n"
+    assert "%%candidates: run=compile-alpha%%" in section
+    assert (
+        "- [[digests/source-alpha.md]] — suggested hub update from this digest "
+        "%%run=compile-alpha%%"
+    ) in section
+    assert read_frontmatter(curated_hub)["description"] == "Human curation."
 
     staged_hub = vault / ".memoria/staging/hubs/framing.md"
-    assert staged_hub.is_file()
-    assert read_frontmatter(staged_hub)["tags"] == ["suggestion"]
+    assert not staged_hub.exists()
     promoted_hub = vault / "hubs/methods.md"
     promoted_hub_fm = read_frontmatter(promoted_hub)
     assert "check_status" not in promoted_hub_fm
@@ -311,11 +320,19 @@ def test_compile_source_digest_traces_model_call_and_stages_hub_suggestions(
     assert events[1]["elapsed_s"] == 0.0
     assert events[-1]["suggestions"] == result["hub_suggestions"]
     assert events[-1]["outputs"] == ["digests/source-alpha.md", *result["hub_paths"]]
+    assert events[4]["output_id"] == "hubs/framing.md"
+    assert events[4]["inputs"] == [
+        {"id": "digests/source-alpha.md", "sha256": result["checked"]["output_sha256"]},
+        {"id": "catalog/sources/source-alpha", "sha256": events[2]["inputs"][0]["sha256"]},
+    ]
+    assert result["hub_events"][0]["output_id"] == "hubs/framing.md"
+    assert len(result["hub_events"]) == 5
 
     committed = set(git(vault, "show", "--name-only", "--format=", result["commit"]).splitlines())
     assert committed == {
         state.JOURNAL_HEAD_REL,
         "digests/source-alpha.md",
+        "hubs/framing.md",
         "hubs/gaps.md",
         "hubs/impact.md",
         "hubs/methods.md",
