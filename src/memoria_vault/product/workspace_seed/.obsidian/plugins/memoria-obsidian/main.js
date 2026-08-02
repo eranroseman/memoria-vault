@@ -149,6 +149,22 @@ module.exports = class MemoriaObsidianPlugin extends Plugin {
       name: "Memoria: Delete queued events",
       callback: () => this.deleteQueuedEvents(),
     });
+    this.forkBadge = "";
+    this.addCommand({
+      id: "fork-canvas",
+      name: "Memoria: Fork canvas to scratch",
+      callback: () => this.forkActiveCanvas(),
+    });
+    this.addCommand({
+      id: "graduate-scratch-edges",
+      name: "Memoria: Graduate scratch canvas edges",
+      callback: () => this.graduateScratchEdges(),
+    });
+    if (this.app.workspace.on && this.registerEvent) {
+      this.registerEvent(
+        this.app.workspace.on("active-leaf-change", () => this.updateForkBadge()),
+      );
+    }
     this.renderPill();
   }
 
@@ -265,6 +281,91 @@ module.exports = class MemoriaObsidianPlugin extends Plugin {
     this.sessionStartedAt = 0;
     this.renderPill();
     new Notice("Memoria data collection stopped.");
+  }
+
+  activeCanvasMatch(pattern) {
+    const file = this.app.workspace.getActiveFile && this.app.workspace.getActiveFile();
+    if (!file) {
+      return null;
+    }
+    const match = file.path.match(pattern);
+    return match ? { file, match } : null;
+  }
+
+  async forkActiveCanvas() {
+    const active = this.activeCanvasMatch(/^projects\/([^/]+)\/argument\.canvas$/);
+    if (!active) {
+      new Notice("Open a generated argument.canvas to fork it.");
+      return;
+    }
+    new ForkNameModal(this.app, async (name) => {
+      await this.enqueueNamedOperation("fork-project-canvas", {
+        project_path: `projects/${active.match[1]}/project.md`,
+        name: name || "scratch",
+      });
+    }).open();
+  }
+
+  async forkStatusForActiveScratch() {
+    const active = this.activeCanvasMatch(/^projects\/([^/]+)\/scratch-[^/]+\.canvas$/);
+    if (!active) {
+      return null;
+    }
+    const projectPath = `projects/${active.match[1]}/project.md`;
+    const payload = await this.authedJson(
+      `/project/canvas/forks?project_path=${encodeURIComponent(projectPath)}`,
+    );
+    const forks = (payload.canvas_forks && payload.canvas_forks.forks) || [];
+    return forks.find((fork) => fork.path === active.file.path) || null;
+  }
+
+  async updateForkBadge() {
+    try {
+      const fork = await this.forkStatusForActiveScratch();
+      if (!fork) {
+        this.forkBadge = "";
+      } else if (fork.error) {
+        this.forkBadge = "Memoria fork: unreadable";
+      } else {
+        this.forkBadge = fork.diff_count
+          ? `Memoria fork: ${fork.diff_count} edge(s) diverged`
+          : "Memoria fork: in sync";
+      }
+    } catch {
+      this.forkBadge = "";
+    }
+    this.renderPill();
+  }
+
+  async graduateScratchEdges() {
+    const fork = await this.forkStatusForActiveScratch();
+    if (!fork) {
+      new Notice("Open a scratch-*.canvas to graduate its edges.");
+      return;
+    }
+    if (fork.error) {
+      new Notice("Memoria could not read this scratch canvas.");
+      return;
+    }
+    const added = fork.added || [];
+    for (const edge of added) {
+      await this.postOperation(
+        "curate-note-link",
+        {
+          source_note_path: edge.source_note_path,
+          link_type: edge.link_type,
+          target_path: edge.target_path,
+          // The *request's* reason, which the journal records — never the edge
+          // warrant, which is the PI's own license text for the inference.
+          reason: `graduated from ${fork.path}`,
+        },
+        `graduate:${fork.path}:${edge.source_note_path}:${edge.link_type}:${edge.target_path}`,
+      );
+    }
+    const skipped = (fork.unresolved || []).length;
+    new Notice(
+      `Memoria queued ${added.length} link edge(s); skipped ${skipped} unresolved.`,
+    );
   }
 
   async recordDisposition(fields) {
@@ -536,6 +637,15 @@ module.exports = class MemoriaObsidianPlugin extends Plugin {
       this.statusBar.empty();
       this.statusBar.createEl("span", { cls: `memoria-pill-dot memoria-pill-${pill.tone}` });
       this.statusBar.createEl("span", { cls: "memoria-pill-text", text: pill.text });
+      // A second rendered status value, never a replacement for the connection
+      // pill: the fork badge answers "has the graph moved under this scratch",
+      // which says nothing about whether the engine is reachable.
+      if (this.forkBadge) {
+        this.statusBar.createEl("span", {
+          cls: "memoria-pill-text",
+          text: ` · ${this.forkBadge}`,
+        });
+      }
     } else {
       this.statusBar.setText(pill.text);
     }
@@ -1156,6 +1266,29 @@ class OperationModal extends Modal {
           this.close();
         }),
       );
+  }
+}
+
+class ForkNameModal extends Modal {
+  constructor(app, onSubmit) {
+    super(app);
+    this.onSubmit = onSubmit;
+  }
+
+  onOpen() {
+    const { contentEl } = this;
+    contentEl.empty();
+    contentEl.createEl("h2", { text: "Fork canvas to scratch" });
+    let name = "scratch";
+    new Setting(contentEl)
+      .setName("Scratch name")
+      .addText((text) => text.setValue(name).onChange((value) => (name = value.trim())));
+    new Setting(contentEl).addButton((button) =>
+      button.setButtonText("Queue fork").setCta().onClick(async () => {
+        await this.onSubmit(name);
+        this.close();
+      }),
+    );
   }
 }
 

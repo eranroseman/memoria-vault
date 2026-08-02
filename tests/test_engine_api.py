@@ -511,3 +511,146 @@ def test_journal_paths_sweeps_every_path_field_a_move_reverted_row_carries() -> 
         "notes/linker-one.md",
         "notes/linker-two.md",
     }
+
+
+def _canvas_fork_project(workspace: Path) -> None:
+    """A checked project whose live render carries two edges into the thesis."""
+    write_checked_concept(
+        workspace,
+        "projects/project-alpha/project.md",
+        "type: project\ntitle: Alpha project\ntags: []\nlinks: {}\nthesis: notes/thesis.md\n",
+        concept_type="project",
+    )
+    write_checked_concept(
+        workspace,
+        "notes/thesis.md",
+        "type: note\ntitle: Thesis\ntags: []\nlinks: {}\n",
+    )
+    write_checked_concept(
+        workspace,
+        "notes/support.md",
+        "type: note\ntitle: Support\ntags: []\nlinks:\n  supports:\n    - notes/thesis.md\n",
+    )
+    write_checked_concept(
+        workspace,
+        "notes/extra.md",
+        "type: note\ntitle: Extra\ntags: []\nlinks:\n  extends:\n    - notes/thesis.md\n",
+    )
+    # A second generated-only edge, so `added` and `removed` have different
+    # sizes: at 1 and 1 the two are indistinguishable and `removed_count`
+    # computed from the wrong direction reads correct.
+    write_checked_concept(
+        workspace,
+        "notes/rebut.md",
+        "type: note\ntitle: Rebut\ntags: []\nlinks:\n  rebuttal:\n    - notes/thesis.md\n",
+    )
+
+
+def test_engine_read_canvas_forks_reports_edge_diff(workspace: Path) -> None:
+    """One pass over every arm of the diff: added, removed, unresolved, unreadable.
+
+    The `removed` arm matters on its own: with `removed_count` pinned at 0 the
+    reported `diff_count` cannot tell `len(added)` from `len(added) +
+    len(removed)`, so the divergence badge would read low forever on a fork
+    that only deletes.
+    """
+    _canvas_fork_project(workspace)
+    scratch_dir = workspace / "projects/project-alpha"
+    scratch_dir.mkdir(parents=True, exist_ok=True)
+    (scratch_dir / "scratch-manual.canvas").write_text(
+        json.dumps(
+            {
+                "nodes": [
+                    {"id": "a", "type": "file", "file": "notes/support.md"},
+                    {"id": "b", "type": "file", "file": "notes/thesis.md"},
+                    {"id": "t", "type": "text", "text": "a sticky note"},
+                    # Not a `file` node, but carrying a `file` key: a
+                    # hand-edited canvas is untrusted input, and a member map
+                    # keyed on the key alone would adopt this as notes/extra.md
+                    # and silently resolve the edge below.
+                    {"id": "g", "type": "group", "file": "notes/extra.md"},
+                ],
+                "edges": [
+                    # Padding and case are the PI's, not the projector's: both
+                    # normalize, so this one matches the generated edge and is
+                    # neither added nor removed.
+                    {"id": "e1", "fromNode": "a", "toNode": "b", "label": " Supports "},
+                    {"id": "e2", "fromNode": "a", "toNode": "b", "label": "contradicts"},
+                    {"id": "e3", "fromNode": "a", "toNode": "b"},
+                    {"id": "e4", "fromNode": "a", "toNode": "t", "label": "supports"},
+                    {"id": "e5", "fromNode": "g", "toNode": "b", "label": "extends"},
+                ],
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    (scratch_dir / "scratch-broken.canvas").write_text("{not json", encoding="utf-8")
+    (scratch_dir / "scratch-list.canvas").write_text("[]\n", encoding="utf-8")
+    # A stale on-disk render must not become the comparison basis: the fork is
+    # diffed against the graph as it is now, which is what makes the badge a
+    # staleness signal rather than a copy check.
+    (scratch_dir / "argument.canvas").write_text(
+        json.dumps({"nodes": [], "edges": []}) + "\n", encoding="utf-8"
+    )
+
+    result = api.read_canvas_forks(workspace, "project-alpha")
+
+    assert result["ok"] is True
+    assert result["api_version"] == api.READ_API_VERSION
+    status = result["canvas_forks"]
+    assert status["project_path"] == "projects/project-alpha/project.md"
+    assert status["canvas_path"] == "projects/project-alpha/argument.canvas"
+    assert [fork["path"] for fork in status["forks"]] == [
+        "projects/project-alpha/scratch-broken.canvas",
+        "projects/project-alpha/scratch-list.canvas",
+        "projects/project-alpha/scratch-manual.canvas",
+    ]
+    assert status["forks"][0] == {
+        "path": "projects/project-alpha/scratch-broken.canvas",
+        "error": "unreadable scratch canvas",
+    }
+    assert status["forks"][1] == {
+        "path": "projects/project-alpha/scratch-list.canvas",
+        "error": "unreadable scratch canvas",
+    }
+    assert status["forks"][2] == {
+        "path": "projects/project-alpha/scratch-manual.canvas",
+        "added": [
+            {
+                "source_note_path": "notes/support.md",
+                "link_type": "contradicts",
+                "target_path": "notes/thesis.md",
+            }
+        ],
+        # notes/extra.md --extends--> and notes/rebut.md --rebuttal--> are both
+        # in the live render and neither is on the fork. Two removed against one
+        # added, so the two arms of `diff_count` cannot be swapped unnoticed —
+        # and `e5` is not one of them: the group node never became a member, so
+        # its edge is unresolved rather than a third graduated relation.
+        "removed_count": 2,
+        "diff_count": 3,
+        "unresolved": [
+            {"edge_id": "e3", "reason": "unknown relation label"},
+            {"edge_id": "e4", "reason": "edge endpoint is not a file node"},
+            {"edge_id": "e5", "reason": "edge endpoint is not a file node"},
+        ],
+    }
+
+
+def test_engine_read_canvas_forks_reports_an_empty_list_when_nothing_is_forked(
+    workspace: Path,
+) -> None:
+    _canvas_fork_project(workspace)
+
+    status = api.read_canvas_forks(workspace, "project-alpha")["canvas_forks"]
+
+    assert status["forks"] == []
+
+
+def test_engine_read_canvas_forks_respects_read_scope(workspace: Path) -> None:
+    _canvas_fork_project(workspace)
+
+    assert api.read_canvas_forks(workspace, "project-alpha", read_scope=["projects"])["ok"]
+    with pytest.raises(FileNotFoundError):
+        api.read_canvas_forks(workspace, "project-alpha", read_scope=["notes"])

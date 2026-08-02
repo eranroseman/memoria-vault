@@ -213,3 +213,53 @@ def _checked_project(vault: Path) -> None:
         output_sha256=sha256_file(path),
     )
     state.set_concept_verdict(vault, "projects/project-alpha/project.md", "checked")
+
+
+def test_promote_draft_passage_uses_kebab_slug_filenames(tmp_path: Path) -> None:
+    """U3 §7 filename rule: machine-created concepts get pure kebab slugs.
+
+    `safe_filename` turns punctuation into underscores, so the shipped
+    behaviour spelled this note `sleep-_-memory_-a-review.md`. Only titles
+    whose separators are already spaces (every fixture in the suite) hid it.
+    """
+    vault = _workspace(tmp_path)
+    _checked_project(vault)
+    draft = vault / "projects/project-alpha/draft.md"
+    draft.write_text("# Alpha draft\n\nSelected claim text.\n", encoding="utf-8")
+
+    result = promote_draft_passage(
+        vault,
+        "project-alpha",
+        title="Sleep & Memory: A Review!",
+        passage="Selected claim text.",
+        actor="pi",
+    )
+
+    assert result["note_path"] == "notes/sleep-memory-a-review.md"
+
+    second_draft_text = "Second claim text."
+    draft.write_text(
+        draft.read_text(encoding="utf-8") + f"\n{second_draft_text}\n", encoding="utf-8"
+    )
+    second = promote_draft_passage(
+        vault,
+        "project-alpha",
+        title="Sleep & Memory: A Review!",
+        passage=second_draft_text,
+        actor="pi",
+    )
+
+    # Collision suffixing is unchanged, and it keys on the slug rather than the
+    # title, so a second promotion of the same title never overwrites the first.
+    assert second["note_path"] == "notes/sleep-memory-a-review-2.md"
+
+    # A title with no slug characters at all still lands somewhere addressable.
+    draft.write_text(draft.read_text(encoding="utf-8") + "\nThird claim text.\n", encoding="utf-8")
+    third = promote_draft_passage(
+        vault,
+        "project-alpha",
+        title="???",
+        passage="Third claim text.",
+        actor="pi",
+    )
+    assert third["note_path"] == "notes/note.md"

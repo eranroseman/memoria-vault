@@ -481,6 +481,14 @@ OPERATION_REGISTRY: dict[str, dict] = {
         "expect": "done",
         "creates": ["projects/package-gate/argument.canvas"],
     },
+    # fork-project-canvas copies the seed's rendered package-gate canvas to
+    # an editable scratch copy; deliberately NOT a tracked projection
+    # (projections._is_argument_canvas matches only argument.canvas).
+    "fork-project-canvas": {
+        "payload": {"project_path": "{project}", "name": "review"},
+        "expect": "done",
+        "creates": ["projects/package-gate/scratch-review.canvas"],
+    },
     # Correction vs the brief: worker.py:936-952 routes check-falsifiability
     # through runtime/operations.py:run_prompt_operation, whose payload key
     # is input_text (or input_refs/input_ref pointing at an already-checked
@@ -1297,6 +1305,12 @@ ARG_TABLE: dict[str, dict] = {
         "cli": None,
         "http": ("GET", "/project/slice?project_path={project}"),
         "mcp": ("project_slice", {"project_path": "{project}"}),
+    },
+    # http only: project.canvas.forks has no cli/mcp binding in the contract.
+    "project.canvas.forks": {
+        "cli": None,
+        "http": ("GET", "/project/canvas/forks?project_path={project}"),
+        "mcp": None,
     },
     # U2 rows, all cli-only (spec §5). The composer gets an explicit --project:
     # the seed has one active project, but bare-invocation resolution is the

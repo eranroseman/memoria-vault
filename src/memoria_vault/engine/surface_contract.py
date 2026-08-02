@@ -303,6 +303,19 @@ SURFACE_ACTIONS: tuple[dict[str, Any], ...] = (
         "response_version": ENGINE_READ_API_VERSION,
     },
     {
+        # HTTP only, deliberately: the sole consumer is the Obsidian plugin's
+        # fork badge, polled on leaf change while a scratch canvas is open.
+        "id": "project.canvas.forks",
+        "job": "project",
+        "summary": "Diff scratch canvas forks against the generated project canvas.",
+        "engine": "read_canvas_forks",
+        "kind": "read",
+        "scope": "optional-read-scope",
+        "params": {"project_path": {"type": "string", "required": True}},
+        "http": {"method": "GET", "path": "/project/canvas/forks"},
+        "response_version": ENGINE_READ_API_VERSION,
+    },
+    {
         # context-read-set-action / situated-context-read: U1 spec §3 RESERVED
         # this row for its first-needing surface; U2 spec §1 panel 6 is that
         # surface, so U2 T.3 wired it. U1 still owns the ownership narrative —

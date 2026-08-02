@@ -391,6 +391,10 @@ def _read(
         return engine_api.read_draft(
             workspace, _required(query, "project_path"), read_scope=read_scope
         )
+    if path == "/project/canvas/forks":
+        return engine_api.read_canvas_forks(
+            workspace, _required(query, "project_path"), read_scope=read_scope
+        )
     if path == "/exploration":
         return engine_api.read_exploration(
             workspace, limit=_int_query(query, "limit", 10), read_scope=read_scope

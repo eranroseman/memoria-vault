@@ -23,7 +23,7 @@ Package-owned operation manifests currently ship these operation IDs:
 
 - `acknowledge-attention`, `analyze-claims`, `analyze-gaps`, `analyze-project-argument`, `answer-query`, `capture-bibtex-source`, `capture-pdf-source`, `capture-remote-pdf-source`, `capture-source`
 - `capture-url-source`, `cascade-rollback`, `check-falsifiability`, `check-source-metadata`, `compare-and-contrast`, `compile-source-digest`, `compose-project-draft`, `create-concept`
-- `curate-note-candidate`, `curate-note-link`, `digest-related-works`, `enrich-source`, `empirical-event-record`, `eval-run`, `export-project`, `extract-claim-stubs`, `frame-paper`, `integrity-citation-survival-check`
+- `curate-note-candidate`, `curate-note-link`, `digest-related-works`, `enrich-source`, `empirical-event-record`, `eval-run`, `export-project`, `extract-claim-stubs`, `fork-project-canvas`, `frame-paper`, `integrity-citation-survival-check`
 - `integrity-claim-quote-check`, `integrity-contradiction-check`, `integrity-evidence-check`, `integrity-link-target-check`, `integrity-prompt-injection-check`, `integrity-provenance-checkpoint`, `integrity-quote-anchor-check`, `mark-checked`
 - `move-concept`, `observe-pi-edits`, `promote-draft-passage`, `propose-note-candidates`, `rebuild-checked-search-index`, `record-copi-interview`, `red-team-argument`, `regenerate-capability-index`, `regenerate-indexes`
 - `regenerate-references-bib`, `regenerate-tracked-projections`, `render-project-argument-canvas`, `resolve-attention`, `resolve-evidence`, `run-seeded-error-verdict`, `summarize-for-recall`, `surface-tensions`, `trace-integrity-scan`

@@ -13,6 +13,9 @@ from memoria_vault.runtime.knowledge import (
     render_project_export_markdown,
 )
 from memoria_vault.runtime.knowledge import (
+    fork_project_canvas as _fork_project_canvas,
+)
+from memoria_vault.runtime.knowledge import (
     frame_project_paper as _frame_project_paper,
 )
 from memoria_vault.runtime.knowledge import (
@@ -42,6 +45,10 @@ ULID_THESIS = "01JXTTTTTTTTTTTTTTTTTTTTTT"
 ULID_SUPPORT = "01JXPPPPPPPPPPPPPPPPPPPPPP"
 ULID_ELSEWHERE_LICENSE = "01JXLLLLLLLLLLLLLLLLLLLLLL"
 ULID_ELSEWHERE_CLAIM = "01JXCCCCCCCCCCCCCCCCCCCCCC"
+
+
+def fork_project_canvas(vault: Path, *args, **kwargs):
+    return call_with_context(_fork_project_canvas, vault, *args, **kwargs)
 
 
 def frame_project_paper(vault: Path, *args, **kwargs):
@@ -1704,3 +1711,267 @@ def test_write_project_argument_canvas_omits_the_quarantine_field_when_clean(
 
     assert result["quarantined_edge_count"] == 0
     assert "quarantined_edges" not in _canvas_run_event(vault)
+
+
+def _forkable_vault(tmp_path: Path) -> Path:
+    """A checked project whose rendered canvas carries two file nodes and one edge."""
+    vault = workspace(tmp_path)
+    _md(
+        vault / "projects/project-alpha/project.md",
+        "type: project\ncheck_status: checked\ntitle: Alpha project\n"
+        "description: Project\nthesis: notes/thesis.md\n",
+    )
+    _md(vault / "notes/thesis.md", "type: note\ncheck_status: checked\ntitle: Thesis\n")
+    _md(
+        vault / "notes/support.md",
+        "type: note\ncheck_status: checked\ntitle: Support\n"
+        "links:\n  supports:\n    - notes/thesis.md\n",
+    )
+    return vault
+
+
+def test_fork_project_canvas_copies_generated_canvas_to_editable_scratch(
+    tmp_path: Path,
+) -> None:
+    vault = _forkable_vault(tmp_path)
+    write_project_argument_canvas(vault, "project-alpha")
+
+    result = fork_project_canvas(vault, "project-alpha", name="Try Layout!", commit=True)
+
+    assert result["scratch_canvas_path"] == "projects/project-alpha/scratch-try-layout.canvas"
+    assert result["source_canvas_path"] == "projects/project-alpha/argument.canvas"
+    assert result["project_path"] == "projects/project-alpha/project.md"
+    assert result["commit"]
+
+    scratch = json.loads((vault / result["scratch_canvas_path"]).read_text(encoding="utf-8"))
+    generated = json.loads((vault / result["source_canvas_path"]).read_text(encoding="utf-8"))
+    # Whole-canvas claim: the fork is the generated canvas minus the banner, so
+    # a copier that also dropped an edge, a node key, or the node order fails
+    # here rather than passing a per-key spot check.
+    assert generated["nodes"][0]["id"] == knowledge.CANVAS_BANNER_NODE_ID
+    assert scratch == {
+        **generated,
+        "nodes": [
+            node for node in generated["nodes"] if node["id"] != knowledge.CANVAS_BANNER_NODE_ID
+        ],
+    }
+    assert len([node for node in scratch["nodes"] if node.get("type") == "file"]) == 2
+    assert len(scratch["edges"]) == 1
+
+    # Deliberately not a tracked projection: nothing regenerates it, so
+    # projection-drift must not claim the PI's hand edits are drift.
+    checked = projections.check_tracked_projections(vault)
+    assert result["scratch_canvas_path"] not in checked["paths"]
+    assert result["source_canvas_path"] in checked["paths"]
+    assert [f["path"] for f in checked["findings"] if f["path"].endswith(".canvas")] == []
+
+    run_event = _fork_run_event(vault)
+    assert run_event["inputs"] == [result["source_canvas_path"]]
+    assert run_event["outputs"] == [result["scratch_canvas_path"]]
+    assert run_event["status"] == "done"
+
+    # The slug, not the raw name, is the identity: a differently spelled name
+    # that kebabs the same way is the same fork and must be refused.
+    with pytest.raises(ValueError):
+        fork_project_canvas(vault, "project-alpha", name="try layout")
+
+
+def _fork_run_event(vault: Path) -> dict:
+    journal = (vault / ".memoria/journal/test-machine.jsonl").read_text(encoding="utf-8")
+    rows = [json.loads(line) for line in journal.splitlines() if line]
+    return next(row for row in rows if row.get("workflow") == "fork-project-canvas")
+
+
+def test_fork_project_canvas_default_name_and_uncommitted_arm(tmp_path: Path) -> None:
+    """The default name, the punctuation-only fallback, and `commit=False`.
+
+    All three are producer states nothing else reaches: the floor entry names
+    the fork "review", and every other caller commits.
+    """
+    vault = _forkable_vault(tmp_path)
+    write_project_argument_canvas(vault, "project-alpha")
+
+    punctuation = fork_project_canvas(vault, "project-alpha", name="!!!")
+
+    assert punctuation["scratch_canvas_path"] == "projects/project-alpha/scratch-scratch.canvas"
+    assert punctuation["commit"] == ""
+    assert punctuation["event"] is None
+    assert not (vault / ".memoria/journal/test-machine.jsonl").exists()
+
+    # The default name kebabs to the same slug the fallback produced, so the
+    # collision guard is what proves the default is "scratch".
+    with pytest.raises(ValueError):
+        fork_project_canvas(vault, "project-alpha")
+
+
+def test_fork_project_canvas_requires_a_rendered_canvas(tmp_path: Path) -> None:
+    """A deleted `argument.canvas` is a missing source, whatever else is on disk.
+
+    The pre-existing scratch fork is what makes the guard load-bearing rather
+    than redundant with `read_text`: without the explicit check the collision
+    guard runs first, and the PI who deleted the generated canvas is told the
+    name is taken instead of that there is nothing to fork.
+    """
+    vault = workspace(tmp_path)
+    _md(
+        vault / "projects/project-beta/project.md",
+        "type: project\ncheck_status: checked\ntitle: Beta project\n"
+        "description: Project\nthesis: notes/thesis.md\n",
+    )
+    _md(vault / "notes/thesis.md", "type: note\ncheck_status: checked\ntitle: Thesis\n")
+    stale = vault / "projects/project-beta/scratch-scratch.canvas"
+    stale.parent.mkdir(parents=True, exist_ok=True)
+    stale.write_text(json.dumps({"nodes": [], "edges": []}) + "\n", encoding="utf-8")
+
+    with pytest.raises(FileNotFoundError):
+        fork_project_canvas(vault, "project-beta")
+
+
+def test_fork_project_canvas_strips_the_banner_by_id_not_by_position(
+    tmp_path: Path,
+) -> None:
+    """The banner is dropped because of what it is, not where it sits.
+
+    The generated canvas is hand-editable between renders — its own banner
+    says so — so `nodes[0]` is the banner only until someone drags a node in
+    Obsidian. A positional strip silently takes a member's node with it, and
+    the member's edges become dangling on the fork.
+    """
+    vault = _forkable_vault(tmp_path)
+    result = write_project_argument_canvas(vault, "project-alpha")
+    canvas_path = vault / result["canvas_path"]
+    canvas = json.loads(canvas_path.read_text(encoding="utf-8"))
+    banner = next(n for n in canvas["nodes"] if n["id"] == knowledge.CANVAS_BANNER_NODE_ID)
+    members = [n for n in canvas["nodes"] if n["id"] != knowledge.CANVAS_BANNER_NODE_ID]
+    canvas["nodes"] = [members[0], banner, *members[1:]]
+    canvas_path.write_text(json.dumps(canvas, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+    forked = fork_project_canvas(vault, "project-alpha", name="reordered")
+
+    scratch = json.loads((vault / forked["scratch_canvas_path"]).read_text(encoding="utf-8"))
+    assert scratch["nodes"] == members
+    assert scratch["edges"] == canvas["edges"]
+
+
+def test_fork_project_canvas_honors_the_manifest_policy(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The manifest is the policy, so both guards have to consult it.
+
+    Neither guard can fire against the shipped manifest — `projects/` is
+    allowed and `trusted_writer` is declared — so without this the two
+    policy lines are decorative and deleting them changes no test.
+    """
+    vault = _forkable_vault(tmp_path)
+    write_project_argument_canvas(vault, "project-alpha")
+    real_policy = knowledge.load_operation_policy(vault, "fork-project-canvas")
+
+    monkeypatch.setattr(
+        knowledge,
+        "load_operation_policy",
+        lambda _vault, _op: {**real_policy, "allowed_tools": ["projection_writer"]},
+    )
+    with pytest.raises(PermissionError, match="trusted_writer"):
+        fork_project_canvas(vault, "project-alpha", name="denied-tool")
+
+    monkeypatch.setattr(
+        knowledge,
+        "load_operation_policy",
+        lambda _vault, _op: {**real_policy, "allowed_paths": ["notes/"]},
+    )
+    with pytest.raises(PermissionError, match="projects/project-alpha"):
+        fork_project_canvas(vault, "project-alpha", name="denied-path")
+
+    assert sorted(p.name for p in (vault / "projects/project-alpha").glob("*.canvas")) == [
+        "argument.canvas"
+    ]
+
+
+def test_canvas_regeneration_delete_arm_removes_retired_edges_and_nodes(
+    tmp_path: Path,
+) -> None:
+    """Reconcile discipline (U3 §6): a re-render deletes, it does not only add.
+
+    Characterization pin — full-file regeneration already gives the delete arm.
+    Nothing else in the suite re-renders after retiring graph state, so an
+    accumulating writer (merge-into-existing, append-only edges) would pass
+    every other canvas test in this file.
+    """
+    vault = _forkable_vault(tmp_path)
+    first = write_project_argument_canvas(vault, "project-alpha")
+    assert first["edge_count"] == 1
+    assert first["node_count"] == 2
+
+    _md(vault / "notes/support.md", "type: note\ncheck_status: checked\ntitle: Support\n")
+    second = write_project_argument_canvas(vault, "project-alpha")
+
+    assert second["edge_count"] == 0
+    assert second["node_count"] == 1
+    canvas = json.loads((vault / second["canvas_path"]).read_text(encoding="utf-8"))
+    assert canvas["edges"] == []
+    assert [n["file"] for n in canvas["nodes"] if n.get("type") == "file"] == ["notes/thesis.md"]
+
+
+def test_canvas_node_ids_key_on_raw_path_not_sanitized_slug(tmp_path: Path) -> None:
+    """Two members that collide under any stem- or slug-keyed id scheme.
+
+    `notes/co-lab.md` and `notes/co_lab.md` share a punctuation-folded slug;
+    `notes/co-lab.md` and `notes/sub/co-lab.md` share a stem. Either collision
+    would silently merge two members into one canvas node and take one of the
+    two members' edges with it.
+    """
+    _md(
+        tmp_path / "projects/project-alpha/project.md",
+        "type: project\ncheck_status: checked\ntitle: Alpha project\n"
+        "description: Project\nthesis: notes/thesis.md\n",
+    )
+    _md(tmp_path / "notes/thesis.md", "type: note\ncheck_status: checked\ntitle: Thesis\n")
+    for rel in ("notes/co-lab.md", "notes/co_lab.md", "notes/sub/co-lab.md"):
+        _md(
+            tmp_path / rel,
+            "type: note\ncheck_status: checked\ntitle: Colab\n"
+            "links:\n  supports:\n    - notes/thesis.md\n",
+        )
+
+    canvas = knowledge.render_project_argument_canvas(tmp_path, "project-alpha")
+
+    file_nodes = [n for n in canvas["nodes"] if n.get("type") == "file"]
+    ids = {n["file"]: n["id"] for n in file_nodes}
+    assert set(ids) == {
+        "notes/thesis.md",
+        "notes/co-lab.md",
+        "notes/co_lab.md",
+        "notes/sub/co-lab.md",
+    }
+    assert len(set(ids.values())) == len(ids)
+    for rel, node_id in ids.items():
+        assert node_id == "n-" + hashlib.sha256(rel.encode()).hexdigest()[:12]
+    assert len(canvas["edges"]) == 3
+
+
+def test_canvas_edge_labels_conform_to_link_relations(tmp_path: Path) -> None:
+    """Every projector label is a relation the edges module owns.
+
+    JSON Canvas has no label vocabulary of its own, so this is the only place
+    the canvas and the frontmatter graph are held to one enum — and it is what
+    lets the fork diff key on `(source, label, target)` at all.
+    """
+    from memoria_vault.runtime.subsystems.lib.edges import LINK_RELATIONS
+
+    _md(
+        tmp_path / "projects/project-alpha/project.md",
+        "type: project\ncheck_status: checked\ntitle: Alpha project\n"
+        "description: Project\nthesis: notes/thesis.md\n",
+    )
+    _md(tmp_path / "notes/thesis.md", "type: note\ncheck_status: checked\ntitle: Thesis\n")
+    for relation in sorted(LINK_RELATIONS):
+        _md(
+            tmp_path / f"notes/{relation}-note.md",
+            f"type: note\ncheck_status: checked\ntitle: {relation.title()} note\n"
+            f"links:\n  {relation}:\n    - notes/thesis.md\n",
+        )
+
+    canvas = knowledge.render_project_argument_canvas(tmp_path, "project-alpha")
+
+    labels = {edge["label"] for edge in canvas["edges"]}
+    assert labels == set(LINK_RELATIONS)

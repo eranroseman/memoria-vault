@@ -15,6 +15,9 @@ from memoria_vault.runtime.attention_config import attention_order_by, normalize
 from memoria_vault.runtime.capabilities import render_capability_index
 from memoria_vault.runtime.explore import explore_topic
 from memoria_vault.runtime.knowledge import exploration_channel as _exploration_channel
+from memoria_vault.runtime.knowledge import (
+    project_canvas_fork_status as _project_canvas_fork_status,
+)
 from memoria_vault.runtime.knowledge import read_project_draft as _read_project_draft
 from memoria_vault.runtime.knowledge import read_project_slice as _read_project_slice
 from memoria_vault.runtime.paths import safe_filename
@@ -470,6 +473,14 @@ def read_draft(
     draft = _read_project_draft(Path(workspace), project_path)
     _require_scope(draft["draft_path"], read_scope, f"project draft not found: {project_path}")
     return _read_payload(draft=draft, view=_draft_view(draft))
+
+
+def read_canvas_forks(
+    workspace: Path, project_path: str, *, read_scope: list[str] | None = None
+) -> dict[str, Any]:
+    status = _project_canvas_fork_status(Path(workspace), project_path)
+    _require_scope(status["canvas_path"], read_scope, f"project canvas not found: {project_path}")
+    return _read_payload(canvas_forks=status)
 
 
 def compose_draft(

@@ -75,6 +75,7 @@ PROBES: dict[str, tuple[str, str | None]] = {
     "exploration.list": ("excluded", None),
     "project.slice.read": ("refused", "{project}"),
     "project.draft.read": ("refused", "{project}"),
+    "project.canvas.forks": ("refused", "{project}"),
 }
 
 SCOPED_READ_ROWS = [

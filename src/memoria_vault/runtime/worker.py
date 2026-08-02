@@ -657,6 +657,25 @@ def _run_operation_job(
             "node_count": result["node_count"],
             "edge_count": result["edge_count"],
         }
+    if operation_id == "fork-project-canvas":
+        from memoria_vault.runtime.knowledge import fork_project_canvas
+
+        project_path = str(payload.get("project_path") or "").strip()
+        if not project_path:
+            raise ValueError("fork-project-canvas requires project_path")
+        result = fork_project_canvas(
+            vault,
+            project_path,
+            context=context,
+            name=str(payload.get("name") or "scratch"),
+            commit=True,
+        )
+        return {
+            "commit": result["commit"],
+            "project_path": result["project_path"],
+            "source_canvas_path": result["source_canvas_path"],
+            "scratch_canvas_path": result["scratch_canvas_path"],
+        }
     if operation_id == "write-project-slice":
         from memoria_vault.runtime.knowledge import write_project_outline
 

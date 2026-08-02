@@ -14286,6 +14286,166 @@ Steps:
   Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
   ```
 
+### Execution amendment — U3-CANVAS.3/.4/.5/.6/.7 as built (2026-08-02)
+
+All five tasks landed as specified in behaviour. Where the build deviated from
+the written steps, this section governs.
+
+1. **Two registries the Files lists missed.**
+   `tests/test_surface_contract.py` pins the action roster three ways (the id
+   set at :48, the HTTP route set at :168, and the id→job map at :330); Task .4
+   named only the first as a maybe. All three were extended.
+   `tests/test_read_api_scope_walk.py` is the harder one: it derives its walk
+   from the registry, so a new `optional-read-scope` HTTP read row **fails the
+   suite until it is given a `PROBES` entry**. `project.canvas.forks` is
+   registered there as `("refused", "{project}")`, which is what makes the
+   void-scope 404 an asserted refusal rather than an unswept row. Task .4's
+   step list did not mention this file at all.
+
+2. **Task .3's policy lines were kept, and given a test that makes them live.**
+   Neither `_require_tool` nor `require_policy_path` can fire against the
+   shipped manifest — `projects/` is allowed and `trusted_writer` is declared,
+   and `_project_rel` already forces every path under `projects/`. Left as
+   written they are two lines no mutation can reach. The added
+   `test_fork_project_canvas_honors_the_manifest_policy` monkeypatches
+   `knowledge.load_operation_policy` at the module boundary (the seam Task .2's
+   write-path test already uses) and asserts both refusals, plus that nothing
+   was written. Prefer this to deleting the guards: the manifest is the policy,
+   and an edit to it should change behaviour.
+
+3. **Task .3 gained a default-name and uncommitted-arm test.** The written
+   tests never observe the `name: str = "scratch"` default (the second one
+   passes it but expects `FileNotFoundError` first) nor the `commit=False`
+   arm (every other caller commits). `..._default_name_and_uncommitted_arm`
+   produces both: a punctuation-only name proves the `or "scratch"` fallback
+   and lands on `scratch-scratch.canvas`, the default name then collides with
+   it, and the uncommitted fork is asserted to write no journal at all.
+
+4. **The scratch-copy assertion is whole-canvas, not per-key.** The written
+   test compares file nodes and edges separately, which cannot see a dropped
+   node key or a reordered `nodes` list. The shipped test asserts
+   `scratch == {**generated, "nodes": [everything but the banner]}`.
+
+5. **Task .3's worker test asserts the refusal arm too, and its status is
+   `failed`, not `refused`.** A `ValueError` from a dispatch branch is a failed
+   job in this worker; the plan's own step text guessed at the wording, and the
+   read-the-actual-error instruction was followed.
+
+6. **Task .4's prescribed test could not see two of the four arms it claims.**
+   `removed_count` was pinned at 0, so `diff_count` could not distinguish
+   `len(added)` from `len(added) + len(removed)` — escape class 8, a badge that
+   reads low forever on a delete-only fork. Neither the `"edge endpoint is not
+   a file node"` reason nor the `"unreadable scratch canvas"` row was ever
+   produced. The shipped `test_engine_read_canvas_forks_reports_edge_diff`
+   drives all of it in one pass: three forks (invalid JSON, a JSON array, and a
+   real one), a decoy generated edge that the fork deletes, a padded/mixed-case
+   label that must normalize to a *match*, an unlabeled edge, and an edge into a
+   text node. It also writes a deliberately stale `argument.canvas` to disk, so
+   "the generated side is the live render" is asserted rather than merely
+   implied by the file's absence.
+
+7. **Task .6's node-id test was widened to two collision families.** The
+   written pair (`co-lab` / `co_lab`) collides only under a punctuation-folding
+   slug; the red-check the plan itself prescribes mutates to `Path(...).stem`,
+   which those two survive. `notes/sub/co-lab.md` was added, so the fixture
+   collides under both a slug scheme and a stem scheme. The red-check was run
+   as mutants M30-M32 in the mutation report rather than by hand.
+
+8. **Task .7 gained a no-slug-characters case.** `"???"` produces the `or
+   "note"` fallback, which no other fixture reaches.
+
+9. **Task .5: the static test was trimmed and the weight moved to the node
+   suite.** Five of the prescribed assertions (`.getJson(`, `.updateStatus(`,
+   `vault.create`, `vault.modify`) already run over every plugin module in
+   `test_memoria_obsidian_uses_memoria_operation_run_only`, so repeating them
+   proves nothing new. What the canvas surface actually needed was behaviour:
+   `scripts/test.mjs` section 28 drives both commands and the badge through the
+   real `onload`-registered command roster and the real `active-leaf-change`
+   subscription. The shared `Plugin` mock now *records* `workspace.on(...)`
+   handlers (tagged with the plugin instance) and `registerEvent(...)`
+   references instead of discarding them — a subscription nothing can fire is
+   indistinguishable from a missing one. `MIN_NODE_TESTS` is unchanged: no new
+   suite file was added, and `test.mjs` is already in `NODE_SUITE_FILES`.
+
+10. **Task .5 golden regeneration was NOT run — it is handed off.** Mirroring
+    `main.js` to the seed moves one line in **every** golden. Measured exactly,
+    by regenerating into a snapshot and restoring byte-for-byte: **37 files, 37
+    insertions / 37 deletions, every changed line
+    `".obsidian/plugins/memoria-obsidian/main.js": "888a8a8ce199"` →
+    `"ba254abeb6f4"`.** No `db` block, no `journal_kinds` list, and no other
+    file hash moves. The checked-in goldens are therefore left at the
+    pre-plugin state — including the new `fork-project-canvas.json`, so all 37
+    are internally consistent and the sweep is one uniform substitution.
+    `tests/test_floor_sweep_operations.py` is red on exactly those 37 rows
+    until it lands. Because that red is branch-wide, **all four tasks'
+    "Run the gate — green" steps are left unticked**: one gate run covers the
+    branch, and it cannot honestly be called green while the handoff is open.
+    Every other gate member — the six product checks, the rest of the suite,
+    the offline e2e smoke, and the syntax checks — passes.
+
+11. **Task .3 *does* move one existing golden, and that one was regenerated.**
+    A new operation manifest changes `.memoria/index/capability-index.json`,
+    which only `regenerate-capability-index.json` hashes: one line,
+    `b924b90e8aae` → `ea84e13bf465`. Both hashes were reproduced from first
+    principles — deleting the single new `fork-project-canvas` catalog row from
+    the rendered index reproduces the prior hash exactly — so this is
+    accounted, not merely regenerated. It is a different mechanism from the
+    seed-bytes movement in item 10 and does not consume that token.
+
+12. **Task .5's MANUAL CHECK was not performed.** It needs a human at an
+    interactive Obsidian session against a disposable `test-vault/` vault;
+    driving it headlessly and reporting green would be a checklist nobody
+    looked at. Filed for a human pass alongside U3-PLUG.11 (#1690).
+
+13. **Reference-doc sync, not in any Files list.**
+    `docs/reference/commands-and-transports/system-actions.md` says outright
+    "keep the operation manifest roster in sync by hand", and nothing gates it.
+    Three rosters were updated: that operation-id list gains
+    `fork-project-canvas`, `local-http-transport.md`'s route table gains
+    `GET /project/canvas/forks`, and `system-actions-operations.md` gains a
+    "Fork project Canvas" row.
+
+14. **Mutation report: 53 mutants, 53 killed, 0 survivors.** Harness at
+    `scratchpad/u3canvas37/mutate.py` — whole-file sha256 snapshots, an
+    `inflight.json` marker restored at startup (it earned its keep: a run
+    killed mid-M02 left `knowledge.py` contaminated and the marker restored it
+    byte-for-byte), `__pycache__` dropped after every apply and restore, a
+    `git status --porcelain` sweep after each mutant, and a green baseline
+    proved twice before any verdict. Coverage: fork engine (M01-M12), worker
+    dispatch (M13-M15), fork-status diff and `_canvas_edge_keys` (M16-M26),
+    engine/HTTP/contract wiring (M27-M29), Task .6's three reconcile pins as
+    live red-checks (M30-M32), Task .7's slug rule (M33-M35), the plugin
+    mutated in both copies at once (M36-M48), and **escape class 10** —
+    poisoning one replica alone, seeded-only (M49-M51) and package-only
+    (M52-M53); all five died in the byte-parity test.
+    Five first-pass survivors were fixed rather than waved through, and each
+    named a real hole:
+    - *M02* (strip the banner by position, not by id) — no fixture had a
+      hand-reordered generated canvas, which is a state the banner's own text
+      says exists. Now
+      `test_fork_project_canvas_strips_the_banner_by_id_not_by_position`.
+    - *M07* (drop the missing-source guard) — equivalent as written, because
+      `read_text` raises `FileNotFoundError` anyway. Killed by making the guard
+      load-bearing instead of deleting it: with a stale `scratch-*.canvas` on
+      disk and no `argument.canvas`, the collision guard would otherwise fire
+      first and report the wrong thing.
+    - *M18* (`removed` computed from the wrong direction) — the fixture had
+      `added == removed == 1`, escape class 1. A second generated-only edge
+      makes the two sizes differ.
+    - *M26* (drop the `type == "file"` check) — the fixture's only non-file
+      node had no `file` key, so the check could not bite. A `group` node
+      carrying a `file` key was added: the scratch canvas is hand-edited,
+      untrusted input, which is what the check is for.
+    - *M37* (drop the plugin's `name || "scratch"`) — the form's own initial
+      value masked it. Typing whitespace clears the field and is the only input
+      that reaches the fallback.
+    One mutant (the original M52) was reported `NOT APPLIED (anchor count=0)`
+    rather than silently counted as killed, and was re-authored against a real
+    anchor.
+
+15. **Not committed.** Every task's commit step is left unticked; the work is
+    staged in the worktree for the owner to land.
+
 ---
 
 ### Task U3-CANVAS.3: `fork-project-canvas` operation (manifest + engine + worker + floor)
@@ -14305,7 +14465,7 @@ Steps:
 
 Steps:
 
-- [ ] Write the failing runtime test at the end of `tests/test_project_knowledge.py` (add `fork_project_canvas` to the existing import-and-wrap block at the top of the file, mirroring the `write_project_argument_canvas` wrapper at lines 17-43):
+- [x] Write the failing runtime test at the end of `tests/test_project_knowledge.py` (add `fork_project_canvas` to the existing import-and-wrap block at the top of the file, mirroring the `write_project_argument_canvas` wrapper at lines 17-43):
 
   ```python
   from memoria_vault.runtime.knowledge import (
@@ -14380,8 +14540,8 @@ Steps:
           fork_project_canvas(vault, "project-beta")
   ```
 
-- [ ] Run tests to verify they fail: `python -m pytest tests/test_project_knowledge.py::test_fork_project_canvas_copies_generated_canvas_to_editable_scratch tests/test_project_knowledge.py::test_fork_project_canvas_requires_a_rendered_canvas -v` — expected: `ImportError: cannot import name 'fork_project_canvas'`.
-- [ ] Create the manifest `src/memoria_vault/product/capabilities/operations/fork-project-canvas.md` (default `runner` is injected by `capabilities._manifest_frontmatter`, so none is declared, matching every sibling manifest):
+- [x] Run tests to verify they fail: `python -m pytest tests/test_project_knowledge.py::test_fork_project_canvas_copies_generated_canvas_to_editable_scratch tests/test_project_knowledge.py::test_fork_project_canvas_requires_a_rendered_canvas -v` — expected: `ImportError: cannot import name 'fork_project_canvas'`.
+- [x] Create the manifest `src/memoria_vault/product/capabilities/operations/fork-project-canvas.md` (default `runner` is injected by `capabilities._manifest_frontmatter`, so none is declared, matching every sibling manifest):
 
   ```markdown
   ---
@@ -14417,7 +14577,7 @@ Steps:
   graph, and hand-drawn edges graduate through `curate-note-link`.
   ```
 
-- [ ] Write the engine implementation in `src/memoria_vault/runtime/knowledge.py`, inserted directly after `write_project_argument_canvas` (`re`, `posixpath`, `json`, `load_operation_policy`, `require_policy_path`, `_require_tool` are already imported/defined in this module — see lines 5-32 and 3423-3425):
+- [x] Write the engine implementation in `src/memoria_vault/runtime/knowledge.py`, inserted directly after `write_project_argument_canvas` (`re`, `posixpath`, `json`, `load_operation_policy`, `require_policy_path`, `_require_tool` are already imported/defined in this module — see lines 5-32 and 3423-3425):
 
   ```python
   def fork_project_canvas(
@@ -14482,8 +14642,8 @@ Steps:
       }
   ```
 
-- [ ] Run the two runtime tests to verify they pass: same pytest command as above.
-- [ ] Write the failing worker test at the end of `tests/test_worker_product_jobs.py` (reuse the file's `workspace`, `mark_file_status`, `enqueue_operation`, `run_next_job` helpers exactly as the canvas job test at 477-493 does):
+- [x] Run the two runtime tests to verify they pass: same pytest command as above.
+- [x] Write the failing worker test at the end of `tests/test_worker_product_jobs.py` (reuse the file's `workspace`, `mark_file_status`, `enqueue_operation`, `run_next_job` helpers exactly as the canvas job test at 477-493 does):
 
   ```python
   def test_worker_runs_fork_project_canvas_operation_jobs(tmp_path: Path) -> None:
@@ -14533,8 +14693,8 @@ Steps:
       assert done["commit"]
   ```
 
-- [ ] Run to verify it fails: `python -m pytest tests/test_worker_product_jobs.py::test_worker_runs_fork_project_canvas_operation_jobs -v` — expected failure: request runs but the worker raises `ValueError: unsupported operation: fork-project-canvas` (or the file-local equivalent — read the actual fall-through error at the bottom of `_run_operation_job` before asserting the message anywhere).
-- [ ] Write the worker dispatch in `src/memoria_vault/runtime/worker.py`, inserted between the `render-project-argument-canvas` branch (ends line 612) and the `write-project-slice` branch (starts line 613):
+- [x] Run to verify it fails: `python -m pytest tests/test_worker_product_jobs.py::test_worker_runs_fork_project_canvas_operation_jobs -v` — expected failure: request runs but the worker raises `ValueError: unsupported operation: fork-project-canvas` (or the file-local equivalent — read the actual fall-through error at the bottom of `_run_operation_job` before asserting the message anywhere).
+- [x] Write the worker dispatch in `src/memoria_vault/runtime/worker.py`, inserted between the `render-project-argument-canvas` branch (ends line 612) and the `write-project-slice` branch (starts line 613):
 
   ```python
       if operation_id == "fork-project-canvas":
@@ -14558,8 +14718,8 @@ Steps:
           }
   ```
 
-- [ ] Run the worker test to verify it passes.
-- [ ] Register the floor entry: in `tests/floor_lib.py`, insert after the `render-project-argument-canvas` entry (lines 503-507):
+- [x] Run the worker test to verify it passes.
+- [x] Register the floor entry: in `tests/floor_lib.py`, insert after the `render-project-argument-canvas` entry (lines 503-507):
 
   ```python
       # fork-project-canvas copies the seed's rendered package-gate canvas to
@@ -14572,7 +14732,7 @@ Steps:
       },
   ```
 
-- [ ] Generate the new golden and verify coverage: `MEMORIA_FLOOR_UPDATE_GOLDENS=1 python -m pytest "tests/test_floor_sweep_operations.py::test_operation[fork-project-canvas]" -q`, review `git diff --stat tests/fixtures/floor/goldens` (exactly one new file `fork-project-canvas.json`), then `python -m pytest tests/test_floor_sweep_operations.py tests/test_floor_coverage.py -q` without the env var — green.
+- [x] Generate the new golden and verify coverage: `MEMORIA_FLOOR_UPDATE_GOLDENS=1 python -m pytest "tests/test_floor_sweep_operations.py::test_operation[fork-project-canvas]" -q`, review `git diff --stat tests/fixtures/floor/goldens` (exactly one new file `fork-project-canvas.json`), then `python -m pytest tests/test_floor_sweep_operations.py tests/test_floor_coverage.py -q` without the env var — green.
 - [ ] Run the gate: `python scripts/verify` — green.
 - [ ] Commit:
   ```
@@ -14603,7 +14763,7 @@ Steps:
 
 Steps:
 
-- [ ] Write the failing engine tests at the end of `tests/test_engine_api.py` (file has `workspace` fixture at 18-19, `write_checked_concept`/`write_checked_note` helpers, `api` import; `json` is already imported — verify at file top, add if absent):
+- [x] Write the failing engine tests at the end of `tests/test_engine_api.py` (file has `workspace` fixture at 18-19, `write_checked_concept`/`write_checked_note` helpers, `api` import; `json` is already imported — verify at file top, add if absent):
 
   ```python
   def test_engine_read_canvas_forks_reports_edge_diff(workspace: Path) -> None:
@@ -14683,8 +14843,8 @@ Steps:
           api.read_canvas_forks(workspace, "project-alpha", read_scope=["notes"])
   ```
 
-- [ ] Run to verify failure: `python -m pytest tests/test_engine_api.py::test_engine_read_canvas_forks_reports_edge_diff tests/test_engine_api.py::test_engine_read_canvas_forks_respects_read_scope -v` — expected: `AttributeError: module ... has no attribute 'read_canvas_forks'`.
-- [ ] Write the knowledge-layer diff in `src/memoria_vault/runtime/knowledge.py` after `fork_project_canvas`: add `from memoria_vault.runtime.subsystems.lib.edges import LINK_RELATIONS` alongside the existing imports; `posixpath` is already imported at line 8.
+- [x] Run to verify failure: `python -m pytest tests/test_engine_api.py::test_engine_read_canvas_forks_reports_edge_diff tests/test_engine_api.py::test_engine_read_canvas_forks_respects_read_scope -v` — expected: `AttributeError: module ... has no attribute 'read_canvas_forks'`.
+- [x] Write the knowledge-layer diff in `src/memoria_vault/runtime/knowledge.py` after `fork_project_canvas`: add `from memoria_vault.runtime.subsystems.lib.edges import LINK_RELATIONS` alongside the existing imports; `posixpath` is already imported at line 8.
 
   ```python
   def project_canvas_fork_status(vault: Path, project_path: str) -> dict[str, Any]:
@@ -14758,7 +14918,7 @@ Steps:
       return keys, unresolved
   ```
 
-- [ ] Write the engine read in `src/memoria_vault/engine/api.py` — add the import next to the other knowledge imports (line 12-14):
+- [x] Write the engine read in `src/memoria_vault/engine/api.py` — add the import next to the other knowledge imports (line 12-14):
 
   ```python
   from memoria_vault.runtime.knowledge import (
@@ -14779,8 +14939,8 @@ Steps:
       return _read_payload(canvas_forks=status)
   ```
 
-- [ ] Run the two engine tests — pass.
-- [ ] Register the surface action in `src/memoria_vault/engine/surface_contract.py`, inserted after the `project.draft.read` entry (line 218):
+- [x] Run the two engine tests — pass.
+- [x] Register the surface action in `src/memoria_vault/engine/surface_contract.py`, inserted after the `project.draft.read` entry (line 218):
 
   ```python
       {
@@ -14795,7 +14955,7 @@ Steps:
       },
   ```
 
-- [ ] Wire HTTP: in `src/memoria_vault/runtime/http_transport.py` `_read`, insert after the `/project/draft` branch (line 195):
+- [x] Wire HTTP: in `src/memoria_vault/runtime/http_transport.py` `_read`, insert after the `/project/draft` branch (line 195):
 
   ```python
       if path == "/project/canvas/forks":
@@ -14804,9 +14964,9 @@ Steps:
           )
   ```
 
-- [ ] Extend `tests/test_http_transport.py::test_http_transport_new_read_routes_call_engine` (lines 286-341): add a sixth monkeypatch `monkeypatch.setattr("memoria_vault.runtime.http_transport.engine_api.read_canvas_forks", record("canvas_forks"))`, add `"/project/canvas/forks?project_path=projects/alpha/project.md"` to the path tuple, append `"canvas_forks"` to the expected-names list, and add `assert seen[5][1]["read_scope"] == ["projects"]`.
-- [ ] Run to verify: `python -m pytest tests/test_http_transport.py tests/test_surface_contract.py -v` — green (`test_http_transport_openapi_covers_registry_http_routes` at line 157 and the surface-contract binding tests pick the new action up automatically; if `test_surface_contract_registry_is_minimal_and_unique` pins an action count or roster, update that pinned list in the same edit — read the failure output before touching it).
-- [ ] Register the floor read binding: in `tests/floor_lib.py` `ARG_TABLE`, insert next to `project.slice.read` (1223-1227):
+- [x] Extend `tests/test_http_transport.py::test_http_transport_new_read_routes_call_engine` (lines 286-341): add a sixth monkeypatch `monkeypatch.setattr("memoria_vault.runtime.http_transport.engine_api.read_canvas_forks", record("canvas_forks"))`, add `"/project/canvas/forks?project_path=projects/alpha/project.md"` to the path tuple, append `"canvas_forks"` to the expected-names list, and add `assert seen[5][1]["read_scope"] == ["projects"]`.
+- [x] Run to verify: `python -m pytest tests/test_http_transport.py tests/test_surface_contract.py -v` — green (`test_http_transport_openapi_covers_registry_http_routes` at line 157 and the surface-contract binding tests pick the new action up automatically; if `test_surface_contract_registry_is_minimal_and_unique` pins an action count or roster, update that pinned list in the same edit — read the failure output before touching it).
+- [x] Register the floor read binding: in `tests/floor_lib.py` `ARG_TABLE`, insert next to `project.slice.read` (1223-1227):
 
   ```python
       # http only: project.canvas.forks has no cli/mcp binding in the contract.
@@ -14817,7 +14977,7 @@ Steps:
       },
   ```
 
-- [ ] Run floor coverage + read sweep: `python -m pytest tests/test_floor_coverage.py tests/test_floor_sweep_reads.py -q` — green (seed's package-gate project renders; zero forks → empty list; no golden involved in the read sweep).
+- [x] Run floor coverage + read sweep: `python -m pytest tests/test_floor_coverage.py tests/test_floor_sweep_reads.py -q` — green (seed's package-gate project renders; zero forks → empty list; no golden involved in the read sweep).
 - [ ] Run the gate: `python scripts/verify` — green.
 - [ ] Commit:
   ```
@@ -14844,7 +15004,7 @@ Steps:
 
 Steps:
 
-- [ ] Write the failing static test at the end of `tests/test_memoria_obsidian_package.py`:
+- [x] Write the failing static test at the end of `tests/test_memoria_obsidian_package.py`:
 
   ```python
   def test_memoria_obsidian_canvas_surface_is_enqueue_and_read_only() -> None:
@@ -14865,8 +15025,8 @@ Steps:
       assert "vault.modify" not in source
   ```
 
-- [ ] Run to verify it fails: `python -m pytest tests/test_memoria_obsidian_package.py::test_memoria_obsidian_canvas_surface_is_enqueue_and_read_only -v` — expected: `AssertionError` on `"fork-project-canvas" in source`.
-- [ ] Write the plugin implementation in `packages/memoria-obsidian/main.js`:
+- [x] Run to verify it fails: `python -m pytest tests/test_memoria_obsidian_package.py::test_memoria_obsidian_canvas_surface_is_enqueue_and_read_only -v` — expected: `AssertionError` on `"fork-project-canvas" in source`.
+- [x] Write the plugin implementation in `packages/memoria-obsidian/main.js`:
   - In `onload()` after the `delete-events` command (line 73), add:
 
     ```javascript
@@ -15021,8 +15181,8 @@ Steps:
     }
     ```
 
-- [ ] Mirror to the seed: `cp packages/memoria-obsidian/main.js src/memoria_vault/product/workspace_seed/.obsidian/plugins/memoria-obsidian/main.js`
-- [ ] Run tests to verify they pass: `python -m pytest tests/test_memoria_obsidian_package.py -v` — includes the seed-parity test and the Node schema harness (`node scripts/test.mjs`, untouched).
+- [x] Mirror to the seed: `cp packages/memoria-obsidian/main.js src/memoria_vault/product/workspace_seed/.obsidian/plugins/memoria-obsidian/main.js`
+- [x] Run tests to verify they pass: `python -m pytest tests/test_memoria_obsidian_package.py -v` — includes the seed-parity test and the Node schema harness (`node scripts/test.mjs`, untouched).
 - [ ] Regenerate floor goldens (seeded plugin hash changed in every golden): `MEMORIA_FLOOR_UPDATE_GOLDENS=1 python -m pytest tests/test_floor_seed.py tests/test_floor_sweep_operations.py tests/test_floor_sweep_reads.py tests/test_floor_transports.py tests/test_floor_invariants.py tests/test_floor_coverage.py -q`; review `git diff tests/fixtures/floor/goldens` — only the `.obsidian/plugins/memoria-obsidian/main.js` hash line changes per golden; re-run without the env var — green.
 - [ ] MANUAL CHECK (honest, no automation claimed — record outcomes in the PR description, not in test files): in a **disposable** vault under `test-vault/` (never a personal vault) with `memoria` available through the plugin's Engine command. Handshake discovers any running server and keeps its per-boot token in memory; no plugin token is configured:
   1. Open `projects/<p>/argument.canvas` — the banner text node renders top-left, reads "read-only, regenerated", and names the fork command.
@@ -15059,7 +15219,7 @@ then restores.
 
 Steps:
 
-- [ ] Write the three tests at the end of `tests/test_project_knowledge.py`:
+- [x] Write the three tests at the end of `tests/test_project_knowledge.py`:
 
   ```python
   def test_canvas_regeneration_delete_arm_removes_retired_edges_and_nodes(
@@ -15149,8 +15309,8 @@ Steps:
       assert labels <= LINK_RELATIONS
   ```
 
-- [ ] Red-check the pins are live (temporary mutation, not committed): in `knowledge.py` `_canvas_from_nodes_edges`, temporarily change the node-id expression `f"n-{hashlib.sha256(node['path'].encode()).hexdigest()[:12]}"` (line 1747) to key on `Path(node['path']).stem` instead of the raw path; run `python -m pytest tests/test_project_knowledge.py::test_canvas_node_ids_key_on_raw_path_not_sanitized_slug -v` — must FAIL; revert the mutation (`git checkout -- src/memoria_vault/runtime/knowledge.py` is forbidden here because Tasks 1-4 changes live in this file uncommitted only if you deviated — instead undo the one-line edit by hand and re-run).
-- [ ] Run all three to verify they pass: `python -m pytest tests/test_project_knowledge.py -v`.
+- [x] Red-check the pins are live (temporary mutation, not committed): in `knowledge.py` `_canvas_from_nodes_edges`, temporarily change the node-id expression `f"n-{hashlib.sha256(node['path'].encode()).hexdigest()[:12]}"` (line 1747) to key on `Path(node['path']).stem` instead of the raw path; run `python -m pytest tests/test_project_knowledge.py::test_canvas_node_ids_key_on_raw_path_not_sanitized_slug -v` — must FAIL; revert the mutation (`git checkout -- src/memoria_vault/runtime/knowledge.py` is forbidden here because Tasks 1-4 changes live in this file uncommitted only if you deviated — instead undo the one-line edit by hand and re-run).
+- [x] Run all three to verify they pass: `python -m pytest tests/test_project_knowledge.py -v`.
 - [ ] Commit:
   ```
   git add tests/test_project_knowledge.py
@@ -15174,7 +15334,7 @@ Steps:
 
 Steps:
 
-- [ ] Write the failing test at the end of `tests/test_draft_writeback.py` (reuses its `_workspace`/`_checked_project`/`promote_draft_passage` helpers, lines 1-49):
+- [x] Write the failing test at the end of `tests/test_draft_writeback.py` (reuses its `_workspace`/`_checked_project`/`promote_draft_passage` helpers, lines 1-49):
 
   ```python
   def test_promote_draft_passage_uses_kebab_slug_filenames(tmp_path: Path) -> None:
@@ -15207,8 +15367,8 @@ Steps:
       assert second["note_path"] == "notes/sleep-memory-a-review-2.md"
   ```
 
-- [ ] Run to verify it fails: `python -m pytest tests/test_draft_writeback.py::test_promote_draft_passage_uses_kebab_slug_filenames -v` — expected: `AssertionError: assert 'notes/sleep-_-memory_-a-review.md' == 'notes/sleep-memory-a-review.md'`.
-- [ ] Write minimal implementation: in `src/memoria_vault/runtime/knowledge.py:3428`, replace
+- [x] Run to verify it fails: `python -m pytest tests/test_draft_writeback.py::test_promote_draft_passage_uses_kebab_slug_filenames -v` — expected: `AssertionError: assert 'notes/sleep-_-memory_-a-review.md' == 'notes/sleep-memory-a-review.md'`.
+- [x] Write minimal implementation: in `src/memoria_vault/runtime/knowledge.py:3428`, replace
 
   ```python
       slug = safe_filename(title.lower().replace(" ", "-")).strip("._-") or "note"
@@ -15221,8 +15381,8 @@ Steps:
   ```
 
   (`re` is imported at line 9; `safe_filename` stays imported — it has other call sites at knowledge.py:1070, 1375, 1631-1633).
-- [ ] Run to verify it passes: `python -m pytest tests/test_draft_writeback.py tests/test_knowledge.py tests/test_project_knowledge.py -v`.
-- [ ] Confirm no floor golden drift from `write-note-candidates` fixture titles: `python -m pytest tests/test_floor_sweep_operations.py -q` without the update env var. If (and only if) it reports golden drift for note-creating operations, the fixture titles contained punctuation: regenerate those specific goldens with `MEMORIA_FLOOR_UPDATE_GOLDENS=1 python -m pytest tests/test_floor_sweep_operations.py -q`, review that the diff touches only renamed `notes/*.md` hash keys, and include `tests/fixtures/floor/goldens` in the commit below.
+- [x] Run to verify it passes: `python -m pytest tests/test_draft_writeback.py tests/test_knowledge.py tests/test_project_knowledge.py -v`.
+- [x] Confirm no floor golden drift from `write-note-candidates` fixture titles: `python -m pytest tests/test_floor_sweep_operations.py -q` without the update env var. If (and only if) it reports golden drift for note-creating operations, the fixture titles contained punctuation: regenerate those specific goldens with `MEMORIA_FLOOR_UPDATE_GOLDENS=1 python -m pytest tests/test_floor_sweep_operations.py -q`, review that the diff touches only renamed `notes/*.md` hash keys, and include `tests/fixtures/floor/goldens` in the commit below.
 - [ ] Run the gate: `python scripts/verify` — green.
 - [ ] Commit:
   ```

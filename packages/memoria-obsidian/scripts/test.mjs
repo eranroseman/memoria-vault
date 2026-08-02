@@ -38,6 +38,7 @@ assert.equal(sanitizeItemId("memoria-id-1"), "memoria-id-1");
 
 const requests = [];
 const notices = [];
+const workspaceEvents = [];
 const opened = [];
 const modals = [];
 const settings = [];
@@ -326,7 +327,13 @@ Module._load = function load(request, parent, isMain) {
           workspace: {
             getActiveFile: () => null,
             getLeavesOfType: () => [],
-            on: () => ({}),
+            // Recorded, not swallowed: the fork badge is wired to
+            // `active-leaf-change`, and a handler nothing can fire is a
+            // subscription no test can tell from a missing one.
+            on: (name, handler) => {
+              workspaceEvents.push({ name, handler, plugin: this });
+              return { name };
+            },
             openLinkText: (...args) => {
               opened.push(args);
             },
@@ -379,7 +386,9 @@ Module._load = function load(request, parent, isMain) {
         this.domEvents.push({ target, event, handler });
       }
 
-      registerEvent() {}
+      registerEvent(reference) {
+        (this.registeredEvents = this.registeredEvents || []).push(reference);
+      }
 
       register() {}
     }
@@ -1851,6 +1860,233 @@ try {
   await bothPanes.poll();
   assert.deepEqual(refreshedTypes, ["memoria-attention", "memoria-evidence-review"]);
 
+  // 29) The canvas surface (U3 section 6). Fork is an enqueue, the badge is a
+  // read on the active scratch file, graduation is one enqueue per added edge.
+  // None of the three touches the vault: the engine owns every byte written.
+  respond = null;
+  assert.ok(plugin.commands.includes("fork-canvas"));
+  assert.ok(plugin.commands.includes("graduate-scratch-edges"));
+  const forkCommand = plugin.commandRoster.find((command) => command.id === "fork-canvas");
+  const graduateCommand = plugin.commandRoster.find(
+    (command) => command.id === "graduate-scratch-edges",
+  );
+  assert.equal(forkCommand.name, "Memoria: Fork canvas to scratch");
+  assert.equal(graduateCommand.name, "Memoria: Graduate scratch canvas edges");
+
+  const postBodiesSince = (from) =>
+    requests
+      .slice(from)
+      .filter((request) => request.method === "POST")
+      .map((request) => JSON.parse(request.body));
+
+  // 29a) Off a generated canvas the fork command explains itself and opens no
+  // form: a fork of the wrong file is a scratch canvas nothing can diff.
+  plugin.app.workspace.getActiveFile = () => ({ path: "notes/active.md" });
+  mark = noticesFrom();
+  let formsBefore = modals.length;
+  queuedFrom = requests.length;
+  await forkCommand.callback();
+  assert.deepEqual(notices.slice(mark), ["Open a generated argument.canvas to fork it."]);
+  assert.equal(modals.length, formsBefore, "no form opens off a generated canvas");
+  assert.deepEqual(postBodiesSince(queuedFrom), []);
+
+  // A scratch canvas is not a fork source either -- forking a fork would copy
+  // the PI's hand edits into a second file with no way back to the render.
+  plugin.app.workspace.getActiveFile = () => ({ path: "projects/alpha/scratch-review.canvas" });
+  formsBefore = modals.length;
+  await forkCommand.callback();
+  assert.equal(modals.length, formsBefore, "a scratch canvas is not a fork source");
+
+  // 29b) On a generated canvas it queues the fork against the *project*, which
+  // is derived from the canvas path rather than sent as the canvas path.
+  plugin.app.workspace.getActiveFile = () => ({ path: "projects/alpha/argument.canvas" });
+  await forkCommand.callback();
+  const forkModal = modals.at(-1);
+  queuedFrom = requests.length;
+  controlNamed(forkModal, "Scratch name").type("  Try Layout!  ");
+  await buttonLabeled(forkModal, "Queue fork").click();
+  assert.deepEqual(postBodiesSince(queuedFrom).map((body) => body.operation_id), [
+    "fork-project-canvas",
+    "empirical-event-record",
+  ]);
+  assert.deepEqual(postBodiesSince(queuedFrom)[0], {
+    operation_id: "fork-project-canvas",
+    payload: { project_path: "projects/alpha/project.md", name: "Try Layout!" },
+    idempotency_key: "",
+  });
+  assert.equal(forkModal.closed, 1, "a queued fork closes the form");
+
+  // An untouched form keeps the default name, which is the one the engine's
+  // own default produces -- so the two cannot drift apart unnoticed.
+  await forkCommand.callback();
+  const defaultForkModal = modals.at(-1);
+  queuedFrom = requests.length;
+  await buttonLabeled(defaultForkModal, "Queue fork").click();
+  assert.equal(postBodiesSince(queuedFrom)[0].payload.name, "scratch");
+
+  // A name typed as whitespace trims to "", which is the one input the form's
+  // own default cannot cover: the field was edited, so the initial value is
+  // gone. What goes on the wire is still a usable name, never an empty one.
+  await forkCommand.callback();
+  const blankForkModal = modals.at(-1);
+  controlNamed(blankForkModal, "Scratch name").type("   ");
+  queuedFrom = requests.length;
+  await buttonLabeled(blankForkModal, "Queue fork").click();
+  assert.equal(postBodiesSince(queuedFrom)[0].payload.name, "scratch");
+
+  // 29c) The badge rides `active-leaf-change`, registered for teardown, and
+  // reads the row for *this* file rather than the first row served.
+  const leafChange = workspaceEvents.find(
+    (entry) => entry.plugin === plugin && entry.name === "active-leaf-change",
+  );
+  assert.ok(leafChange, "the plugin subscribes to active-leaf-change");
+  assert.ok(
+    (plugin.registeredEvents || []).some((entry) => entry && entry.name === "active-leaf-change"),
+    "the subscription is registered so the host can tear it down",
+  );
+  const forkRow = {
+    path: "projects/alpha/scratch-review.canvas",
+    added: [
+      {
+        source_note_path: "notes/support.md",
+        link_type: "contradicts",
+        target_path: "notes/thesis.md",
+      },
+      {
+        source_note_path: "notes/extra.md",
+        link_type: "extends",
+        target_path: "notes/thesis.md",
+      },
+    ],
+    removed_count: 1,
+    diff_count: 3,
+    unresolved: [{ edge_id: "e9", reason: "unknown relation label" }],
+  };
+  const serveForks = (forks) => (options) =>
+    options.url.includes("/project/canvas/forks")
+      ? {
+          status: 200,
+          json: {
+            ok: true,
+            api_version: "engine-read-api.v1",
+            canvas_forks: {
+              project_path: "projects/alpha/project.md",
+              canvas_path: "projects/alpha/argument.canvas",
+              forks,
+            },
+          },
+        }
+      : { status: 200, json: SUMMARY_JSON };
+  // The decoy row is another fork of the same project with a louder number: a
+  // badge reading `forks[0]` would say 9 for a file it is not describing.
+  const decoy = {
+    path: "projects/alpha/scratch-other.canvas",
+    added: [],
+    removed_count: 9,
+    diff_count: 9,
+    unresolved: [],
+  };
+  plugin.app.workspace.getActiveFile = () => ({ path: "projects/alpha/scratch-review.canvas" });
+  respond = serveForks([decoy, forkRow]);
+  queuedFrom = requests.length;
+  await leafChange.handler();
+  assert.equal(plugin.forkBadge, "Memoria fork: 3 edge(s) diverged");
+  assert.equal(
+    requests[queuedFrom].url,
+    "http://127.0.0.1:43210/project/canvas/forks?project_path=projects%2Falpha%2Fproject.md",
+  );
+  assert.equal(requests[queuedFrom].method, "GET");
+  // Rendered beside the connection pill, never in place of it.
+  assert.equal(plugin.statusBar.children.length, 3);
+  assert.ok(plugin.statusBar.children[1].text.startsWith("Memoria · "));
+  assert.deepEqual(plugin.statusBar.children.at(-1), {
+    tag: "span",
+    cls: "memoria-pill-text",
+    text: " · Memoria fork: 3 edge(s) diverged",
+  });
+
+  // 29d) The other three badge states, each a different sentence.
+  respond = serveForks([{ ...forkRow, added: [], removed_count: 0, diff_count: 0 }]);
+  await leafChange.handler();
+  assert.equal(plugin.forkBadge, "Memoria fork: in sync");
+  respond = serveForks([{ path: forkRow.path, error: "unreadable scratch canvas" }]);
+  await leafChange.handler();
+  assert.equal(plugin.forkBadge, "Memoria fork: unreadable");
+  // A project whose fork list omits this file leaves no stale badge behind.
+  respond = serveForks([decoy]);
+  await leafChange.handler();
+  assert.equal(plugin.forkBadge, "");
+  assert.equal(plugin.statusBar.children.length, 2, "a cleared badge draws nothing");
+  // Nor does a leaf change onto an ordinary note issue a read at all.
+  respond = serveForks([decoy, forkRow]);
+  await leafChange.handler();
+  assert.equal(plugin.forkBadge, "Memoria fork: 3 edge(s) diverged");
+  plugin.app.workspace.getActiveFile = () => ({ path: "notes/active.md" });
+  queuedFrom = requests.length;
+  await leafChange.handler();
+  assert.equal(plugin.forkBadge, "");
+  assert.deepEqual(requests.slice(queuedFrom), []);
+  // A dead engine clears the badge instead of freezing yesterday's number.
+  plugin.app.workspace.getActiveFile = () => ({ path: "projects/alpha/scratch-review.canvas" });
+  respond = serveForks([decoy, forkRow]);
+  await leafChange.handler();
+  assert.equal(plugin.forkBadge, "Memoria fork: 3 edge(s) diverged");
+  respond = () => ({ status: 503, json: { ok: true } });
+  await leafChange.handler();
+  assert.equal(plugin.forkBadge, "");
+
+  // 29e) Graduation queues one `curate-note-link` per added edge, each under a
+  // key naming the edge, so re-running after a partial failure coalesces
+  // instead of writing the same relation twice.
+  respond = serveForks([decoy, forkRow]);
+  queuedFrom = requests.length;
+  mark = noticesFrom();
+  await graduateCommand.callback();
+  assert.deepEqual(postBodiesSince(queuedFrom), [
+    {
+      operation_id: "curate-note-link",
+      payload: {
+        source_note_path: "notes/support.md",
+        link_type: "contradicts",
+        target_path: "notes/thesis.md",
+        reason: "graduated from projects/alpha/scratch-review.canvas",
+      },
+      idempotency_key:
+        "graduate:projects/alpha/scratch-review.canvas:notes/support.md:contradicts:notes/thesis.md",
+    },
+    {
+      operation_id: "curate-note-link",
+      payload: {
+        source_note_path: "notes/extra.md",
+        link_type: "extends",
+        target_path: "notes/thesis.md",
+        reason: "graduated from projects/alpha/scratch-review.canvas",
+      },
+      idempotency_key:
+        "graduate:projects/alpha/scratch-review.canvas:notes/extra.md:extends:notes/thesis.md",
+    },
+  ]);
+  // The unresolved rows are counted out loud: an edge the engine could not
+  // read is a relation that silently did not happen.
+  assert.deepEqual(notices.slice(mark), [
+    "Memoria queued 2 link edge(s); skipped 1 unresolved.",
+  ]);
+
+  // 29f) Nothing graduates off an unreadable fork or off a non-scratch file.
+  respond = serveForks([{ path: forkRow.path, error: "unreadable scratch canvas" }]);
+  queuedFrom = requests.length;
+  mark = noticesFrom();
+  await graduateCommand.callback();
+  assert.deepEqual(notices.slice(mark), ["Memoria could not read this scratch canvas."]);
+  assert.deepEqual(postBodiesSince(queuedFrom), []);
+
+  plugin.app.workspace.getActiveFile = () => ({ path: "projects/alpha/argument.canvas" });
+  queuedFrom = requests.length;
+  mark = noticesFrom();
+  await graduateCommand.callback();
+  assert.deepEqual(notices.slice(mark), ["Open a scratch-*.canvas to graduate its edges."]);
+  assert.deepEqual(postBodiesSince(queuedFrom), []);
+  respond = null;
 } finally {
   globalThis.setTimeout = realSetTimeout;
   delete globalThis.document;
