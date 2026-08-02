@@ -26,6 +26,7 @@ RETIRED_FRONTMATTER_FIELDS = frozenset(
         "confidence",
         "contested",
         "created",
+        "timestamp",
         "updated",
         "status",
         "verdict",

@@ -15,6 +15,10 @@ optional:
   declared_inputs: list
   declared_outputs: list
   dependency_notes: str
+  generated: map
   output_dir: str
   source_dir: str
+  sources: list
+  usage_window: map
+  verified: list
   x: map

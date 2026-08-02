@@ -21,10 +21,12 @@ optional:
   claim_text: str
   description: str
   extraction_confidence: str
+  generated: map
   item_type: enum:item_type
   mode: enum:mode
   question_status: enum:question_status
   quote: str
+  sources: list
   work_id: str
   temporal_scope: str
   tense: str
@@ -36,6 +38,8 @@ optional:
   reading: str
   anchors: list
   todo: list
+  usage_window: map
+  verified: list
   x: map
 required_when:
   claim_text:

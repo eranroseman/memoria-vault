@@ -15,8 +15,12 @@ optional:
   archived: bool
   consequence: enum:consequence
   description: str
+  generated: map
   salience: str
+  sources: list
   stale: bool
   todo: list
+  usage_window: map
+  verified: list
   x: map
 forbidden: [citations]
