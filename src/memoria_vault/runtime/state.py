@@ -25,6 +25,7 @@ import yaml
 from memoria_vault.runtime.content_security import (
     classify_fenced_code_opening,
     fenced_code_closes,
+    neutralize_untrusted_markdown,
 )
 from memoria_vault.runtime.evidence import (
     EvidenceMarker,
@@ -709,6 +710,21 @@ def request_row(vault: Path, request_id: str) -> Any | None:
         ).fetchone()
 
 
+def _neutralized_request_error(error: Any) -> Any:
+    """requests.error is the designated home for untrusted operation text (#1608).
+
+    A raised operation's ``str(exc)`` can be composed from file-derived text the
+    PI never authored, and ``requests.get`` carries both an HTTP and an MCP
+    binding. Neutralizing here — the one summary every read shares — covers
+    every transport in one place while the stored row keeps the raw text.
+    The run-result channel (``job["error"]`` inside ``run_operation`` output)
+    is a separate seam, tracked on #1608.
+    """
+    if not isinstance(error, str) or not error:
+        return error
+    return neutralize_untrusted_markdown(error)
+
+
 def request_summary(row: Any) -> dict[str, Any]:
     return {
         "request_id": row["request_id"],
@@ -716,7 +732,7 @@ def request_summary(row: Any) -> dict[str, Any]:
         "status": row["status"],
         "created_at": row["created_at"],
         "completed_at": row["completed_at"],
-        "error": row["error"],
+        "error": _neutralized_request_error(row["error"]),
     }
 
 
