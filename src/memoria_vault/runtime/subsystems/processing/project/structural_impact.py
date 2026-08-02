@@ -11,12 +11,11 @@ from pathlib import Path
 from typing import Any
 
 from memoria_vault.runtime.subsystems.processing.project.structural_impact_graph import (
+    RELATIONS,
     Edge,
     Note,
     adjacency,
     articulation_points,
-    build_descriptive_edges,
-    build_edges,
     build_resolver,
     component,
     find_project,
@@ -24,6 +23,7 @@ from memoria_vault.runtime.subsystems.processing.project.structural_impact_graph
     lost_reachability,
     read_notes,
     scope_terms,
+    substrate_edges,
     truthy,
     values_as_set,
 )
@@ -73,9 +73,9 @@ def base_payload(project: Note, thesis: Note | None) -> dict[str, Any]:
 
 
 def analyze_survey(
-    notes: dict[str, Note], resolver: dict[str, str], project: Note
+    vault: Path, notes: dict[str, Note], resolver: dict[str, str], project: Note
 ) -> dict[str, Any]:
-    edges = [edge for edge in build_descriptive_edges(notes, resolver) if edge.addressed]
+    edges = [edge for edge in substrate_edges(vault, resolver) if edge.addressed]
     graph = adjacency(edges)
     project_scope = values_as_set(project.frontmatter.get("scope_topics"))
     scoped = {
@@ -162,6 +162,10 @@ def gap_taxonomy(
     advisories: list[dict[str, Any]] = []
 
     for key in sorted(on_path_nodes):
+        # A `catalog/sources/*` bridge node carries connectivity and has no Note:
+        # everything below reads a Note, so it stops here rather than crashing.
+        if key not in notes:
+            continue
         note = notes[key]
         row = rows_by_key.get(key, {})
         if _is_open_gap(note):
@@ -209,7 +213,8 @@ def gap_taxonomy(
             )
 
     for edge in component_edges:
-        if edge.relation == "contradicts":
+        # A conflict finding names two Notes; a claim→work bridge edge has one.
+        if edge.relation == "contradicts" and {edge.source, edge.target} <= notes.keys():
             source = notes[edge.source]
             target = notes[edge.target]
             findings.append(
@@ -248,7 +253,7 @@ def analyze(vault: Path, project_arg: str = "") -> dict[str, Any]:
     resolver = build_resolver(notes)
     project = find_project(notes, project_arg)
     if str(project.frontmatter.get("output_mode") or "") == "survey":
-        return analyze_survey(notes, resolver, project)
+        return analyze_survey(vault, notes, resolver, project)
     thesis = find_thesis(notes, project, resolver)
     if thesis is None:
         payload = base_payload(project, None)
@@ -257,7 +262,11 @@ def analyze(vault: Path, project_arg: str = "") -> dict[str, Any]:
         payload["displayed_confidence"] = "below-threshold"
         return payload
 
-    edges = [edge for edge in build_edges(notes, resolver) if edge.addressed]
+    edges = [
+        edge
+        for edge in substrate_edges(vault, resolver)
+        if edge.relation in RELATIONS and edge.addressed
+    ]
     graph = adjacency(edges)
     on_path_nodes = component(thesis.key, graph)
     component_edges = [
@@ -269,7 +278,9 @@ def analyze(vault: Path, project_arg: str = "") -> dict[str, Any]:
     project_scope = values_as_set(project.frontmatter.get("scope_topics"))
     scope_overlap = 0
     if project_scope:
-        scope_overlap = sum(1 for key in on_path_nodes if scope_terms(notes[key]) & project_scope)
+        scope_overlap = sum(
+            1 for key in on_path_nodes & notes.keys() if scope_terms(notes[key]) & project_scope
+        )
 
     if not component_edges or (project_scope and scope_overlap == 0):
         readiness = "cold-start"
