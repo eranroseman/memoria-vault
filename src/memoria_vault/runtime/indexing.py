@@ -82,6 +82,11 @@ def _passage_rows(vault: Path) -> list[dict[str, Any]]:
 
 
 def _previously_indexed_documents(vault: Path, seen: set[str]) -> list[dict[str, Any]]:
+    # Function-scope import, matching this module's search_index imports:
+    # read_barrier imports worker at module scope, so a top-level import here
+    # would close an import cycle.
+    from memoria_vault.runtime.read_barrier import is_consumable_checked_file
+
     docs = []
     for relpath in state.file_index_states(vault):
         rel = normalize_path(relpath)
@@ -89,6 +94,14 @@ def _previously_indexed_documents(vault: Path, seen: set[str]) -> list[dict[str,
             continue
         path = Path(vault) / rel
         if not path.is_file():
+            continue
+        # 1591: the verdict alone is not consumption authority. The sha256 read
+        # barrier must run on this route exactly as it does in
+        # checked_search_universe, or index -> edit -> reindex smuggles edited
+        # bytes into a checked passage row. enqueue_scan=False because the
+        # primary walk already owns scan-enqueueing for files it refuses;
+        # this pass only reconciles, and refusal alone is fail-closed.
+        if not is_consumable_checked_file(vault, rel, enqueue_scan=False):
             continue
         text = safe_read(path)
         docs.append(
