@@ -163,7 +163,15 @@ def _hold_single_run_lock(path: Path = LOCK_PATH) -> object | None:
 
 def run(command: list[str]) -> int:
     print(f"== {' '.join(command)}")
-    return subprocess.run(command, cwd=ROOT, check=False).returncode
+    try:
+        return subprocess.run(command, cwd=ROOT, check=False).returncode
+    except FileNotFoundError:
+        # `check=False` swallows a nonzero exit, but not a missing executable --
+        # that's exactly the failure the `memoria --version` gate exists to
+        # catch (#1689), so it must report the same way every other gate
+        # failure does rather than crash the whole run with a traceback.
+        print(f"  command not found: {command[0]}", file=sys.stderr)
+        return 127
 
 
 def check_json() -> int:

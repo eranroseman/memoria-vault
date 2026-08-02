@@ -205,6 +205,7 @@ def test_enqueue_trusted_write_is_idempotent_across_sqlite_states(tmp_path: Path
         {"causal_refs": []},
         {"provenance": {"surface": "different"}},
         {"schedule_id": "different-schedule"},
+        {"machine_authored": True},
     ],
 )
 def test_enqueue_operation_binds_idempotency_to_the_complete_request_identity(

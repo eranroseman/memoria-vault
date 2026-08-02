@@ -984,6 +984,7 @@ def test_json_responses_carry_nosniff_and_no_store_headers(workspace: Path) -> N
             conn.request("GET", "/status")
             response = conn.getresponse()
             response.read()
+            assert response.status == 401
             assert response.getheader("X-Content-Type-Options") == "nosniff"
             assert response.getheader("Cache-Control") == "no-store"
             assert response.getheader("Content-Type") == "application/json; charset=utf-8"

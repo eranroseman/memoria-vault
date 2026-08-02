@@ -92,6 +92,19 @@ def test_docs_only_scope_narrows_the_roster() -> None:
     assert not any("memoria --version" in d for d in docs)
 
 
+def test_run_reports_a_missing_executable_instead_of_raising(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    # `check=False` only suppresses a nonzero exit; a missing executable (e.g. an
+    # editable install whose console script never landed on PATH) raises
+    # FileNotFoundError instead, which `memoria --version` -- the roster's own
+    # probe for that failure (#1689) -- would trip first.
+    code = _verify_namespace()["run"](["memoria-does-not-exist-on-this-machine", "--version"])
+
+    assert code == 127
+    assert "command not found: memoria-does-not-exist-on-this-machine" in capsys.readouterr().err
+
+
 def test_single_run_lock_admits_the_first_gate(tmp_path: Path) -> None:
     handle = _verify_namespace()["_hold_single_run_lock"](tmp_path / "verify.lock")
 
