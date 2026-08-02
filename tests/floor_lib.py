@@ -748,8 +748,11 @@ OPERATION_REGISTRY: dict[str, dict] = {
     # The literal event_id below has no `{}` placeholders, so it needs no
     # doubled braces. Payload is a fully valid `session.started` empirical
     # event (validate_empirical_event, engine/empirical_events.py);
-    # dispatches to operations.py:record_empirical_event, which appends the
-    # journal event and returns (no file outputs: `"outputs": []`).
+    # dispatches to operations.py:record_empirical_event, which since I1 T.3
+    # inserts one `telemetry_events` row and returns (no journal append, no
+    # commit, no file outputs: `"outputs": []`). `telemetry_events` is not in
+    # `_DIGEST_TABLES` and `*.sqlite` is skipped, so this operation's golden now
+    # records a vault the sweep left untouched.
     # Confirmed live with the matching idempotency_key: "done".
     "empirical-event-record": {
         "payload": {

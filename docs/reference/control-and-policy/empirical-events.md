@@ -18,9 +18,11 @@ inconsistency, not a convention to copy. New schema ids should use
 
 The only storage operation is `empirical-event-record`. Call it through
 `operation_run` or `POST /operation/run` with
-`idempotency_key=empirical-event:<event_id>`. Accepted events append a
-queryable `empirical-event` journal row and return `journal_event_ref.v1`
-metadata. Replaying the same `event_id` with the same idempotency key stores no
+`idempotency_key=empirical-event:<event_id>`. Accepted events are stored as one
+`telemetry_events` row in `.memoria/memoria.sqlite` and the response returns
+that row's `telemetry_id`. These are analytics-only records: no gate or verifier
+reads them, so nothing is appended to the hash-chained journal and no commit is
+made. Replaying the same `event_id` with the same idempotency key stores no
 duplicate.
 
 ## Base Fields
@@ -67,14 +69,15 @@ rejected.
 
 Two further schemas live in the same schema owner but are handled by the
 runtime itself, not submitted by clients through `empirical-event-record`. A
-server-side event carries no client `session_id` or `surface`; it joins its
-originating request through the journal row's own provenance (the actor and
-`request_id` stamped when the row is appended).
+server-side event carries no client `session_id` or `surface`. A journaled
+server-side event joins its originating request through the journal row's own
+provenance (the actor and `request_id` stamped when the row is appended); a
+telemetry row carries no request join, only its own timestamp.
 
 | Schema | Required fields | Source |
 | --- | --- | --- |
 | `disposition.v1` | `decision`, `item_type`, `item_id` | Appended to the journal as an `event: disposition` row when `resolve-attention` resolves a PI attention disposition. `decision` uses the same enum as `empirical_event.v1`; `item_id` here is the vault-relative path of the resolved target, so the opaque-id rule below does not apply to it. |
-| `read-observed.v1` | `workflow`, `staleness_hit` | A validator that ships as schema plumbing for the deferred read-path signal. Nothing emits it yet: a read must not mutate the git-tracked journal, so real emission is deferred. |
+| `read-observed.v1` | `workflow`, `staleness_hit` | One `telemetry_events` row per attention detail read (`read_attention_card`, the door shared by CLI, HTTP and MCP), with `workflow: attention`. `staleness_hit` is `true` when the served card carries a `stale:` mark. Telemetry is not journaled, which is what lets a read record at all without rewriting the tracked `.memoria/journal-head` anchor. |
 
 ## Privacy Boundary
 
@@ -90,6 +93,6 @@ events through the same `empirical-event-record` operation.
 
 ## Related
 
-- The worker operation that validates and appends these events: [System action operations](../commands-and-transports/system-actions-operations.md)
+- The worker operation that validates and records these events: [System action operations](../commands-and-transports/system-actions-operations.md)
 - The shipped adapter that records and sends them: [External integrations](../evidence-and-integrations/integrations.md)
-- How this `event_log`-based schema fits Memoria's broader logging map: [Telemetry & logs](../pipelines-and-io/telemetry.md)
+- How this `telemetry_events`-based schema fits Memoria's broader logging map: [Telemetry & logs](../pipelines-and-io/telemetry.md)

@@ -831,7 +831,12 @@ def test_http_transport_operation_run_records_empirical_event_once(workspace: Pa
     assert replay["job"]["status"] == "done"
     assert replay["job"]["job_id"] == response["job"]["job_id"]
     with state.connect(workspace) as conn:
+        # T.3 moved this sink to `telemetry_events`; the once-only property the test
+        # is named for now lives there, and the journal must gain nothing at all.
         count = conn.execute(
+            "SELECT COUNT(*) FROM telemetry_events WHERE event_type = 'empirical_event.v1'"
+        ).fetchone()[0]
+        journaled = conn.execute(
             "SELECT COUNT(*) FROM event_log WHERE event_type = 'empirical-event'"
         ).fetchone()[0]
         request = conn.execute(
@@ -839,6 +844,7 @@ def test_http_transport_operation_run_records_empirical_event_once(workspace: Pa
             (response["job"]["job_id"],),
         ).fetchone()
     assert count == 1
+    assert journaled == 0
     assert request["operation_id"] == "empirical-event-record"
     assert json.loads(request["provenance_json"]) == {
         "surface": "memoria-http",

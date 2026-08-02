@@ -422,7 +422,7 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 - Consumes: T.2's `record_telemetry_event`; shipped `validate_operation_context` (`operations.py:118`).
 - Produces: `record_empirical_event(vault, payload, *, context) -> dict` returning `{"event_id", "telemetry_id", "event", "outputs": []}` — the `empirical-event-record` request contract is unchanged; the response drops `journal_event_id`/`commit` (spec §1).
 
-- [ ] **Step 1: Find every test pinning the journal sink.** Run:
+- [x] **Step 1: Find every test pinning the journal sink.** Run:
 
 ```bash
 grep -rn "empirical-event\|record_empirical_event\|journal_event_id" tests/ | grep -v goldens
@@ -448,12 +448,12 @@ def test_record_empirical_event_lands_in_telemetry_not_journal(tmp_path, ...):
     assert journal == 0
 ```
 
-- [ ] **Step 2: Run to verify the new/updated tests fail**
+- [x] **Step 2: Run to verify the new/updated tests fail**
 
 Run: `python -m pytest tests/test_feedback_instrumentation.py -v`
 Expected: FAIL — the shipped implementation journals (`operations.py:133-135`).
 
-- [ ] **Step 3: Implement.** Replace the body of `record_empirical_event` (`operations.py:111-143`) with:
+- [x] **Step 3: Implement.** Replace the body of `record_empirical_event` (`operations.py:111-143`) with:
 
 ```python
 def record_empirical_event(
@@ -482,7 +482,7 @@ def record_empirical_event(
 
 Delete the now-unused `_empirical_journal_event_id` helper if nothing else imports it (`grep -rn "_empirical_journal_event_id" src/`); drop the dead `JOURNAL_EVENT_REF_SCHEMA` import from this function.
 
-- [ ] **Step 4: Run to verify pass + sweep**
+- [x] **Step 4: Run to verify pass + sweep**
 
 Run: `python -m pytest tests/test_feedback_instrumentation.py tests/test_operations.py tests/test_telemetry_events.py -v`
 Expected: PASS. If floor goldens pinned the old journal event, regenerate per contract 10.
@@ -506,7 +506,7 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 - Consumes: T.2's `record_telemetry_event`; `read_attention_card` (`api.py:155`) — the one detail-read door shared by CLI/HTTP/MCP; `state.concept_consequence` **if present** (graph plan ERP-C adds the stale mirror — `hasattr` guard, else `staleness_hit=False`). Evidence-review detail emitters belong to the V2 plan (V2R-C telemetry contract) — **not implemented here**.
 - Produces: every attention detail read inserts one `read-observed.v1` row (`workflow="attention"`); reads never touch the tracked `.memoria/journal-head` anchor.
 
-- [ ] **Step 1: Write the failing tests** — create `tests/test_telemetry_read_paths.py`:
+- [x] **Step 1: Write the failing tests** — create `tests/test_telemetry_read_paths.py`:
 
 ```python
 """Runtime proof: read paths record telemetry and never dirty the tracked tree."""
@@ -569,12 +569,12 @@ def test_repeated_reads_leave_git_status_clean(tmp_path: Path) -> None:
 
 (Adapt `init_git`/`git` to the exact helpers in `tests/helpers.py` — `grep -n "def init_git\|def git" tests/helpers.py` first; if the DB file is untracked in the fixture, the porcelain comparison still holds because `.memoria/memoria.sqlite*` is gitignored — `product/workspace_seed/.gitignore:7-8`.)
 
-- [ ] **Step 2: Run to verify failure**
+- [x] **Step 2: Run to verify failure**
 
 Run: `python -m pytest tests/test_telemetry_read_paths.py -v`
 Expected: FAIL — zero `read-observed.v1` rows.
 
-- [ ] **Step 3: Implement.** In `engine/api.py`, add after the scope check inside `read_attention_card` (`:162`), before the return:
+- [x] **Step 3: Implement.** In `engine/api.py`, add after the scope check inside `read_attention_card` (`:162`), before the return:
 
 ```python
     _record_attention_read(Path(workspace), card)
@@ -605,7 +605,7 @@ def _record_attention_read(workspace: Path, card: dict[str, Any]) -> None:
 
 (Order-tolerance: `state.concept_consequence` is the graph plan's ERP-C stale mirror; until it lands, staleness comes from the card's own `stale:` frontmatter, else `False`. The outer `try` keeps a telemetry failure from ever breaking a read — recording is an observer, never a gate.)
 
-- [ ] **Step 4: Run to verify pass**
+- [x] **Step 4: Run to verify pass**
 
 Run: `python -m pytest tests/test_telemetry_read_paths.py tests/test_engine_api.py -v`
 Expected: PASS.
@@ -618,6 +618,70 @@ git commit -m "feat(api): attention detail reads emit read-observed.v1 to teleme
 
 Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 ```
+
+> **T.3/T.4 landing record (2026-08-01).** Both tasks landed as written. Nine things
+> the next reader needs; none change contract 1, 2 or the `empirical-event-record`
+> request contract.
+>
+> 1. **The journal exclusion is proved at the writer, not the reader.**
+>    `test_feedback_instrumentation.py::test_record_empirical_event_lands_in_telemetry_and_never_in_the_journal`
+>    drives the real writer in a `memoria init` workspace and pins every artifact the
+>    old sink produced: the `event_log` count, every per-machine JSONL line, the bytes
+>    of the tracked `.memoria/journal-head` anchor, `git rev-parse HEAD`, and
+>    `git status --porcelain`. `test_empirical_events.py` adds the bare-vault form —
+>    after the operation runs, `.memoria/journal/` and `.memoria/journal-head` do not
+>    exist at all and `git rev-list --all --count` is `0`.
+> 2. **Three tests were reaching the journal producer and were re-pointed, not
+>    deleted.** `test_empirical_event_operation_records_journal_event_once` was never
+>    really about the journal — its coverage was replay idempotency, the echoed client
+>    `event_id`, and the privacy allowlist on what is actually stored. All three moved
+>    to the `telemetry_events` row (renamed
+>    `..._records_one_telemetry_row_and_no_journal_row`).
+>    `test_http_transport.py::test_http_transport_operation_run_records_empirical_event_once`
+>    counts telemetry rows and additionally pins `event_log` at zero. The floor sweep's
+>    `empirical-event-record` entry keeps its `expect: "done"`; only its comment moved.
+> 3. **The `request_id` provenance join is gone for empirical events, by design.**
+>    The journal row used to carry the actor and `request_id` stamped by
+>    `append_journal_event`; a telemetry row carries neither, and `validate_empirical_event`
+>    rejects unknown fields, so it cannot be added to the payload. `operation_requests`
+>    still records the request. Recorded in `docs/reference/control-and-policy/empirical-events.md`.
+> 4. **The operation manifest moved with the sink (deviation from T.3's file list).**
+>    `product/capabilities/operations/empirical-event-record.md` claimed
+>    `io_schema.output: journal_event_ref.v1` and granted `.memoria/journal/` in
+>    `allowed_paths` — the list `require_policy_path` reads as permissions. Both are
+>    now false, so the description, body, output id (**`telemetry_event_ref.v1`**, a
+>    name coined here because the plan drops the response's `schema` key without
+>    naming a replacement) and the scope list were corrected.
+>    `JOURNAL_EVENT_REF_SCHEMA` (`engine/empirical_events.py:11`) is now dead — left in
+>    place rather than removed, since deleting an exported schema id is a contract
+>    change this task was not scoped for.
+> 5. **Two reference pages also moved:** `control-and-policy/empirical-events.md`
+>    (storage claim, the server-side provenance paragraph, and the `read-observed.v1`
+>    row, which said "nothing emits it yet") and
+>    `commands-and-transports/system-actions-operations.md`. Same reason as T.2's
+>    doc edit: no gate catches a reference page that contradicts the runtime.
+> 6. **Goldens did move — two of them, both explained.**
+>    `empirical-event-record.json`: `event_log` 11 → 10, `.memoria/journal/floor.jsonl`
+>    gone, `journal_kinds` loses its `empirical-event` entry. That is T.3 working.
+>    `regenerate-capability-index.json`: one hash, `.memoria/index/capability-index.json`,
+>    because the manifest text in item 4 changed. Nothing else drifted, and
+>    `telemetry_events` stays invisible to the digest exactly as T.1/T.2 recorded.
+> 7. **T.4's negative claim is asserted as an absence.** `test_repeated_reads_leave_the_tracked_tree_and_the_journal_untouched`
+>    pins four independent ways a read could dirty the vault: a content-hash map of
+>    every path in the tree (which sees a new *untracked* or *gitignored* file that
+>    `git status` cannot), `git status --porcelain`, `git rev-parse HEAD`, and the
+>    `event_log` count plus the continued absence of `.memoria/journal-head`.
+> 8. **`state.concept_consequence` did not exist at this landing** (ERP-C.1 landed
+>    consequence closure in `runtime/propagation.py`, not a `state` mirror), so
+>    `staleness_hit` comes only from the card's own `stale:` mark — and only from a
+>    real YAML boolean, matching how `feedback.yaml`'s flag is read. The `hasattr`
+>    branch is covered by monkeypatching the symbol into `state`, which also pins the
+>    call shape ERP-C has to meet: `(workspace, target)`, never called for a card with
+>    no target, and a raising mirror degrading to `False` rather than breaking the read.
+> 9. **`read_attention_card` is also the first call in `engine_api.resolve_attention`
+>    (`api.py:756`), so resolving an attention card emits one `read-observed.v1` row.**
+>    That is a real detail read and is left as-is; a later dashboard task counting
+>    attention reads should know the resolve path contributes to the count.
 
 # Section D — Disposition call-sites (spec §2; slice 4)
 

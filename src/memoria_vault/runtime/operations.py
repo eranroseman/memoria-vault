@@ -127,31 +127,26 @@ def record_empirical_event(
     *,
     context: OperationContext,
 ) -> dict[str, Any]:
-    """Validate and append one empirical-use event."""
+    """Validate and record one empirical-use event in the telemetry table (I1 spec §1).
+
+    Analytics-only, so it never touches the hash-chained journal: no `event_log`
+    row, no per-machine JSONL line, no `.memoria/journal-head` rewrite, no commit.
+    The request contract is unchanged; the response trades `journal_event_id`,
+    `schema` and `commit` for the telemetry row id.
+    """
     validate_operation_context(vault, context)
     from memoria_vault.engine.empirical_events import (
-        EMPIRICAL_EVENT_RECORD_OPERATION,
         EMPIRICAL_EVENT_SCHEMA,
-        JOURNAL_EVENT_REF_SCHEMA,
         validate_empirical_event,
     )
+    from memoria_vault.runtime.telemetry import record_telemetry_event
 
     event = validate_empirical_event(payload)
-    journal_event = {
-        "event": "empirical-event",
-        "operation": EMPIRICAL_EVENT_RECORD_OPERATION,
-        "schema": EMPIRICAL_EVENT_SCHEMA,
-        **event,
-    }
-    stored = append_journal_event(vault, journal_event, context=context)
-    journal_event_id = _empirical_journal_event_id(vault, event["event_id"])
-    commit = commit_writer_changes(vault, "record empirical event", [], context=context)
+    telemetry_id = record_telemetry_event(vault, EMPIRICAL_EVENT_SCHEMA, event)
     return {
         "event_id": event["event_id"],
-        "journal_event_id": journal_event_id,
-        "schema": JOURNAL_EVENT_REF_SCHEMA,
-        "event": stored,
-        "commit": commit,
+        "telemetry_id": telemetry_id,
+        "event": event,
         "outputs": [],
     }
 
@@ -1212,21 +1207,3 @@ def _network_target(target_url: str) -> str:
 
 def _sha256_text(text: str) -> str:
     return "sha256:" + hashlib.sha256(text.encode()).hexdigest()
-
-
-def _empirical_journal_event_id(vault: Path, event_id: str) -> int:
-    with state.connect(vault) as conn:
-        row = conn.execute(
-            """
-            SELECT event_id
-            FROM event_log
-            WHERE json_extract(payload_json, '$.operation') = 'empirical-event-record'
-              AND json_extract(payload_json, '$.event_id') = ?
-            ORDER BY event_id DESC
-            LIMIT 1
-            """,
-            (event_id,),
-        ).fetchone()
-    if row is None:
-        raise RuntimeError(f"empirical event was not stored: {event_id}")
-    return int(row["event_id"])
