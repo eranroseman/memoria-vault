@@ -7,7 +7,9 @@ cross-process t0 state.
 
 from __future__ import annotations
 
-from pathlib import Path
+from collections.abc import Callable
+from pathlib import Path, PurePosixPath
+from typing import Any
 
 from memoria_vault.runtime import state
 
@@ -56,3 +58,56 @@ def emit_onboarding_step_once(vault: Path, step: str) -> str | None:
     if has_onboarding_step(vault, step):
         return None
     return emit_onboarding_step(vault, step)
+
+
+_ANSWER_WORK_ROOTS = frozenset({"digests", "fulltexts", "graph-neighborhoods"})
+
+
+def answer_work_ids(answer: dict[str, Any]) -> frozenset[str]:
+    """Work ids an answer's sources resolve to, via the generated work-document path shapes.
+
+    `_answer_from_hits` sources carry no ``work_id`` field (search_index.py), so the
+    work id is the stem of a two-segment path under one of the generated work-document
+    roots. Anything else in ``sources`` — notes, hubs, project pages — is not a work.
+    """
+    ids: set[str] = set()
+    sources = answer.get("sources")
+    for source in sources if isinstance(sources, list) else []:
+        if not isinstance(source, dict):
+            continue
+        parts = PurePosixPath(str(source.get("path") or "")).parts
+        if len(parts) == 2 and parts[0] in _ANSWER_WORK_ROOTS and parts[1].endswith(".md"):
+            ids.add(parts[1].removesuffix(".md"))
+    return frozenset(ids)
+
+
+def seed_manifest_work_ids(
+    manifest_loader: Callable[[], list[dict[str, Any]]] | None = None,
+) -> frozenset[str]:
+    """Manifest work ids; empty when no seed manifest exists (then nothing is seed-grounded)."""
+    if manifest_loader is None:
+        try:
+            from memoria_vault.product.seed_corpus import load_seed_manifest as manifest_loader
+        except ImportError:
+            return frozenset()
+    try:
+        rows = manifest_loader()
+    except Exception:  # noqa: BLE001 -- an unreadable manifest must not gate the answer.
+        return frozenset()
+    return frozenset(
+        work_id
+        for row in rows
+        if isinstance(row, dict) and (work_id := str(row.get("id") or "").strip())
+    )
+
+
+def emit_first_answer_if_seed_grounded(
+    vault: Path,
+    answer: dict[str, Any],
+    *,
+    manifest_loader: Callable[[], list[dict[str, Any]]] | None = None,
+) -> str | None:
+    """O1 spec §5 first-answer rule: seed-grounded sources AND no prior first-answer row."""
+    if not answer_work_ids(answer) & seed_manifest_work_ids(manifest_loader):
+        return None
+    return emit_onboarding_step_once(vault, "first-answer")

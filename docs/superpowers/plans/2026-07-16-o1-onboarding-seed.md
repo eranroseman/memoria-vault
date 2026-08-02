@@ -2636,6 +2636,56 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 
 ### Task T.2: the five emit points (init-done, project-framed, seed-installed, onboard-done, first-answer)
 
+> **Execution amendment (2026-08-02, BINDING).** Seven corrections measured while
+> executing T.2 and T.3. Each is a repo-fact resolution; none changes a spec
+> mechanism.
+>
+> 1. **Branch A is live.** `_cmd_onboard` and `_run_onboarding_for_args` both exist
+>    (surfaces BOOT-D.7 landed), so the emit goes in `_run_onboarding_for_args`
+>    behind `payload.get("completed")` and **no** surfaces-plan note is written.
+>    Step 1's skip-guard on the onboard test is therefore dropped: the test runs.
+> 2. **`seed-installed` needed no work.** M.3 already wires it
+>    (`seed_install._emit_seed_installed`, proved against the real helper and the
+>    real sink by `tests/test_seed_install.py::test_seed_installed_step_emits_on_first_install`
+>    and `::test_seed_install_completes_when_the_telemetry_sink_refuses`). Step
+>    3(d) is a verification step only — do not add a second emit.
+> 3. **The `first-answer` CLI test does not mock the helper.** Step 1's sketch
+>    monkeypatches `emit_first_answer_if_seed_grounded` and asserts routing, which
+>    is layer-displaced: it proves the call happened, not that a real answer is
+>    seed-grounded. The landed test builds the real producer state — one real
+>    manifest work id admitted through `capture.capture_source`, retrieved by a
+>    real `memoria ask` as `fulltexts/<work_id>.md`, matched against the real
+>    shipped manifest — plus an off-corpus twin (same shape, non-manifest work id)
+>    and a `memoria project ask` silence test for spec-gap resolution 2.
+> 4. **Never-raises is proved per call site, five times, with a produced failure.**
+>    Each of `init`, `new project`, `ask`, `onboard`, and `seed install` has a test
+>    that installs T.1's `BEFORE INSERT` refusal trigger and asserts the command
+>    still exits 0 and does its real work. Deleting the helper's `except` clause is
+>    killed independently by all five.
+> 5. **Two I1 tests co-change.** `tests/test_feedback_instrumentation.py`'s
+>    `test_record_empirical_event_lands_in_telemetry_and_never_in_the_journal` and
+>    `test_record_empirical_event_rejects_a_forged_context_before_recording` count
+>    the *whole* `telemetry_events` table after `init_cli_workspace`; `init-done`
+>    now shares that table, so both are scoped to `event_type =
+>    'empirical_event.v1'` — the narrower assertion they always meant. M.3's
+>    `test_memoria_seed_install_cli_end_to_end_offline` likewise becomes
+>    `["init-done", "seed-installed"]`.
+> 6. **`_cmd_ask`'s `if result.get("ok")` guard is an equivalent mutant.**
+>    `run_operation` sets `ok` from `status == "done"`, and a failed job's `result`
+>    carries no `sources`, so removing the guard changes no producible behavior. It
+>    is kept for symmetry with `_cmd_new_project` (where the same guard *is*
+>    killable — a failed `create-concept` must not record `project-framed`) and
+>    because a future answer contract carrying partial sources on failure would
+>    otherwise record a first answer. Recorded, not covered.
+> 7. **T.3 co-changes a fifth gate and moves 36 goldens.** The Files list omits
+>    `tests/test_package_spine.py::test_pyproject_declares_installable_memoria_package`,
+>    which pins the exact `package-data` glob list, so the new
+>    `"system/templates/*.md"` entry must be added there too. And because
+>    `floor_lib.vault_digest` hashes **every** vault file, seeding one more file
+>    adds exactly one line to all 36 floor goldens (identical hash, nothing else
+>    drifts). Regenerate with `MEMORIA_FLOOR_UPDATE_GOLDENS=1` and confirm the diff
+>    is only that line.
+
 **Files:**
 - Modify: `src/memoria_vault/cli.py` — top imports (`:26`, `from memoria_vault.runtime import state` becomes `from memoria_vault.runtime import onboarding_steps, state`); `_cmd_init` (`:578-589`); `_cmd_ask` (`:706-712`); `_cmd_new_project` (`:854-869`); conditionally `_run_onboarding_for_args` (only if surfaces BOOT-D.7 landed) and the section-M seed-install handler (only if section M landed) — grep-first steps below
 - Modify: `src/memoria_vault/runtime/onboarding_steps.py` (append the first-answer rule helpers)
@@ -2652,7 +2702,7 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 
 The **first-answer rule, exactly as spec §5 states it**: emit when (a) the `answer-query` result's `sources` contain at least one path resolving to a `work_id` present in the seed manifest, and (b) no prior `first-answer` row exists. Path→work_id resolution uses the three generated/bundle work-doc shapes above (`_answer_from_hits` sources carry no `work_id` field — verified at `search_index.py:226-232` — so the stem of a two-segment path under `fulltexts/`, `digests/`, or `graph-neighborhoods/` is the work id; `tests/test_cli_work_project.py:437-441` pins this shape: `"fulltexts/doi-10.1000_alpha.md"`). The manifest loader is **injectable** (no network, no import-order coupling in tests); its guarded default is semantically honest, not merely tolerant: before section M lands there is no seed manifest, hence no seed work ids, hence no seed-grounded answer — the helper stays silent with no gap to record.
 
-- [ ] **Step 1: Write the failing tests.** Append to `tests/test_onboarding_steps.py`:
+- [x] **Step 1: Write the failing tests.** Append to `tests/test_onboarding_steps.py`:
 
 ```python
 def test_answer_work_ids_resolve_only_work_document_paths() -> None:
@@ -2807,12 +2857,12 @@ def test_cli_onboard_emits_onboard_done_when_the_runway_completes(
 
 The ask test's empty-vault arrangement is safe: on a freshly initialized workspace `memoria ask --json` returns `ok: true`, `result.status == "done"`, `sources: []` (verified against `07bedc74` by driving the CLI on a disposable scratchpad vault). The onboard test is the order-tolerant half of emit point 4: it self-skips until BOOT-D.7 lands, then activates and enforces the emit.
 
-- [ ] **Step 2: Run to verify failure**
+- [x] **Step 2: Run to verify failure**
 
 Run: `python -m pytest tests/test_onboarding_steps.py tests/test_cli.py -v`
 Expected: FAIL — `ImportError`/`AttributeError` for `answer_work_ids`, `seed_manifest_work_ids`, `emit_first_answer_if_seed_grounded`; `steps == ["init-done"]` fails with `[]`; project-framed count `0 != 1`; the onboard test SKIPS (or fails on the missing emit if BOOT-D.7 already landed).
 
-- [ ] **Step 3: Minimal implementation.**
+- [x] **Step 3: Minimal implementation.**
 
 (a) Append to `src/memoria_vault/runtime/onboarding_steps.py` (add `from collections.abc import Callable`, `from pathlib import PurePosixPath`, and `from typing import Any` to the imports):
 
@@ -2957,7 +3007,7 @@ M.3's CLI end-to-end test reads one corresponding `onboarding-step` row from
 or already admitted). If M.3 lacks the emit, return to M.3 and repair it; do
 not add a later backfill or accept a first-install no-op.
 
-- [ ] **Step 4: Run to verify pass**
+- [x] **Step 4: Run to verify pass**
 
 Run: `python -m pytest tests/test_onboarding_steps.py tests/test_cli.py -v`
 Expected: PASS (the onboard test passes in Branch A, skips in Branch B).
@@ -2990,7 +3040,7 @@ All four touched test files are already registered in `TEST_LEVELS` (`test_cli.p
 - Consumes: `SEED_FILES: tuple[tuple[str, str], ...]` (`cli.py:47-51`), `_copy_seed_file(source_rel: str, target: Path, *, overwrite: bool) -> None` (`cli.py:2466-2470`), `tests.helpers.WORKSPACE_SEED: Path` (already imported by `test_installer_skeleton.py:6`).
 - Produces: the seeded vault file `system/templates/session-diary.md` (present after `memoria init` and restored by `doctor --repair`); `SEED_FILES` extended with `("system/templates/session-diary.md", "system/templates/session-diary.md")` — **cross-plan rebase note:** alpha23 R1NG.1 (plan `:106`, `:428-431`) and surfaces BOOT-D.6 also extend this tuple and the same pinned test lists; whichever plan lands second rebases both (surfaces plan Global Constraint 11).
 
-- [ ] **Step 1: Write the failing tests.** In `tests/test_cli.py:414`, extend the pinned list (the dry-run report at `cli.py:2216` preserves `SEED_FILES` tuple order, so the new entry appends last):
+- [x] **Step 1: Write the failing tests.** In `tests/test_cli.py:414`, extend the pinned list (the dry-run report at `cli.py:2216` preserves `SEED_FILES` tuple order, so the new entry appends last):
 
 ```python
     assert output["package"]["seed_files"] == [
@@ -3033,12 +3083,12 @@ In `tests/test_package_spine.py:86-103`, add to the packaged positive tuple (aft
         "system/templates/session-diary.md",
 ```
 
-- [ ] **Step 2: Run to verify failure**
+- [x] **Step 2: Run to verify failure**
 
 Run: `python -m pytest tests/test_cli.py::test_cli_init_dry_run_reports_runtime_setup_without_mutation tests/test_cli.py::test_cli_init_seeds_the_session_diary_template tests/test_installer_skeleton.py tests/test_package_spine.py -v`
 Expected: FAIL — the pinned `seed_files` list mismatches, `template.is_file()` is False, `_seed_files() == expected_files` mismatches (`system/templates/session-diary.md` expected but absent), and the package-spine `is_file()` assertion fails.
 
-- [ ] **Step 3: Minimal implementation.**
+- [x] **Step 3: Minimal implementation.**
 
 (a) Create `src/memoria_vault/product/workspace_seed/system/templates/session-diary.md` (Phase 0's exact five fields, empirical plan `0.1.0-beta.1-empirical-use-action-plan.md:73-74`; the honest prose line is §6's operating rule, `:187`, quoted by O1 spec §6):
 
@@ -3076,12 +3126,12 @@ SEED_FILES = (
   "system/templates/*.md",
 ```
 
-- [ ] **Step 4: Run to verify pass**
+- [x] **Step 4: Run to verify pass**
 
 Run: `python -m pytest tests/test_cli.py tests/test_installer_skeleton.py tests/test_package_spine.py tests/test_workspace_seed_links.py -v`
 Expected: PASS — including `test_workspace_seed_links.py`, which continues to check seed-document references while deliberately excluding templates from its generic link-text and wikilink checks. The task's `test_cli.py` assertion covers the diary's five required fields.
 
-- [ ] **Step 5: Section gate — run the one correctness command**
+- [x] **Step 5: Section gate — run the one correctness command**
 
 Run: `python scripts/verify`
 Expected: green. This section edits no published `docs/` page, and its only doc touch (Branch B's note in `docs/superpowers/plans/`) sits inside the doc-claims gate's `SKIP_DIRS` (`scripts/checks/doc_claims_gate.py:23`), so no unshipped `memoria` CLI path can trip the gate; the package-level smoke in verify also proves the wheel carries the new template via the Step 3(c) glob.

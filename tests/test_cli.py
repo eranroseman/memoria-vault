@@ -13,7 +13,14 @@ from memoria_vault.engine.surface_contract import SURFACE_ACTIONS, actions_by_id
 from memoria_vault.runtime import state
 from memoria_vault.runtime.vaultio import read_frontmatter, split_frontmatter
 from tests.cli_test_helpers import _cli_command_surface
-from tests.helpers import ROOT, WORKSPACE_SEED, _assert_request_columns, git, write_checked_concept
+from tests.helpers import (
+    ROOT,
+    WORKSPACE_SEED,
+    _assert_request_columns,
+    call_with_context,
+    git,
+    write_checked_concept,
+)
 
 
 def _parser_for_command(parser: argparse.ArgumentParser, command: str) -> argparse.ArgumentParser:
@@ -882,6 +889,7 @@ def test_cli_init_dry_run_reports_runtime_setup_without_mutation(
         "inbox.base",
         "projects.base",
         "sources.base",
+        "system/templates/session-diary.md",
     ]
     # The bundle files are reported separately: `runtime.bundles` writes them,
     # not the seed-class copy (BOOT-C.6, one writer).
@@ -1114,3 +1122,342 @@ def test_cli_onboard_ask_survives_unusable_stdin_without_a_traceback(
 
     monkeypatch.setattr("builtins.input", closed_file_input)
     assert ask("prompt? ") == ""  # type: ignore[operator]
+
+
+# --- O1 T.2: onboarding-step emit points ------------------------------------------
+
+
+def _onboarding_steps(workspace: Path) -> list[str]:
+    with state.connect(workspace) as conn:
+        return [
+            json.loads(row["payload_json"])["step"]
+            for row in conn.execute(
+                "SELECT payload_json FROM telemetry_events"
+                " WHERE event_type = 'onboarding-step' ORDER BY rowid"
+            )
+        ]
+
+
+def _refuse_telemetry_inserts(workspace: Path) -> None:
+    """Break the telemetry sink for real, at the sink, without breaking anything else.
+
+    `DROP TABLE telemetry_events` is not durable: `state._init` re-runs the whole of
+    `schema.sql` (all `CREATE ... IF NOT EXISTS`) on every connect, so the table comes
+    straight back and the emit succeeds. A `BEFORE INSERT` trigger survives that
+    re-run and refuses only writes to this one table.
+    """
+    with state.connect(workspace) as conn:
+        conn.execute(
+            "CREATE TRIGGER telemetry_sink_offline BEFORE INSERT ON telemetry_events"
+            " BEGIN SELECT RAISE(ABORT, 'telemetry sink offline'); END"
+        )
+
+
+def _capture_work(workspace: Path, work_id: str, title: str, text: str) -> None:
+    """Admit one checked catalog work, so `memoria ask` really retrieves it.
+
+    `_checked_work_documents` renders every checked full-text catalog row as
+    `fulltexts/<work_id>.md`; that generated path is exactly what the first-answer
+    rule resolves back to a work id.
+    """
+    from memoria_vault.runtime import capture
+
+    call_with_context(capture.capture_source, workspace, work_id, title, "Seed corpus source", text)
+
+
+SEED_WORK_ID = "chen-2018-undesirable-difficulty"  # a real row of the shipped manifest
+SEED_WORK_TEXT = "Retrieval practice and undesirable difficulty in classroom learning."
+
+
+def test_cli_init_emits_the_init_done_onboarding_step(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+
+    rc = main(["init", "--workspace", str(workspace), "--yes", "--quiet"])
+    capsys.readouterr()
+
+    assert rc == 0
+    assert _onboarding_steps(workspace) == ["init-done"]
+
+
+def test_cli_init_emits_init_done_again_on_re_init(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    # Spec §5 gap resolution 4: `init-done` is a plain emit, an honest observer of a
+    # real re-init. Readers take MIN(ts) per step; the emitter does not dedupe.
+    workspace = tmp_path / "workspace"
+    assert main(["init", "--workspace", str(workspace), "--yes", "--quiet"]) == 0
+    assert main(["init", "--workspace", str(workspace), "--yes", "--quiet"]) == 0
+    capsys.readouterr()
+
+    assert _onboarding_steps(workspace) == ["init-done", "init-done"]
+
+
+def test_cli_init_completes_when_the_telemetry_sink_refuses(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    # The never-raises property proved at the call site with a produced failure, not
+    # with a mocked helper: the second init must still exit 0 and seed the workspace.
+    workspace = tmp_path / "workspace"
+    assert main(["init", "--workspace", str(workspace), "--yes", "--quiet"]) == 0
+    _refuse_telemetry_inserts(workspace)
+
+    rc = main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    assert output["ok"] is True
+    assert (workspace / "steering.md").is_file()
+    assert _onboarding_steps(workspace) == ["init-done"]  # only the pre-trigger row
+
+
+def test_cli_new_project_emits_project_framed_only_once(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    # Spec §5 gap resolution 1: once per vault. Sample the trajectory (1st, 2nd, 3rd
+    # project), because a once-guard is a state machine with an absorbing state.
+    workspace = tmp_path / "workspace"
+    assert main(["init", "--workspace", str(workspace), "--yes", "--quiet"]) == 0
+    for name in ("Tutorial project", "Second project", "Third project"):
+        assert main(["new", "project", name, "--workspace", str(workspace), "--quiet"]) == 0
+    capsys.readouterr()
+
+    assert _onboarding_steps(workspace) == ["init-done", "project-framed"]
+
+
+def test_cli_new_project_completes_when_the_telemetry_sink_refuses(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    assert main(["init", "--workspace", str(workspace), "--yes", "--quiet"]) == 0
+    _refuse_telemetry_inserts(workspace)
+
+    rc = main(["new", "project", "Tutorial project", "--workspace", str(workspace), "--json"])
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    assert output["ok"] is True
+    assert (workspace / output["path"]).is_file()
+    assert _onboarding_steps(workspace) == ["init-done"]  # only the pre-trigger row
+
+
+def test_cli_new_project_stays_silent_when_the_write_fails(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    # A frame that did not land is not a framed project. The failure is produced, not
+    # mocked: without the vault's schema pack `create-concept` really fails.
+    import shutil
+
+    workspace = tmp_path / "workspace"
+    assert main(["init", "--workspace", str(workspace), "--yes", "--quiet"]) == 0
+    shutil.rmtree(workspace / ".memoria/schemas")
+
+    rc = main(["new", "project", "Tutorial project", "--workspace", str(workspace), "--json"])
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 1
+    assert output["ok"] is False
+    assert not (workspace / output["path"]).exists()
+    assert _onboarding_steps(workspace) == ["init-done"]
+
+
+def test_cli_ask_emits_first_answer_for_a_seed_grounded_answer(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    # A real grounded answer is the producer state: a real catalog work under a real
+    # shipped-manifest id, retrieved by a real `memoria ask` against the real manifest.
+    # Nothing here is mocked, so a call site wired to the wrong workspace or handing
+    # over the wrong dict cannot pass.
+    workspace = tmp_path / "workspace"
+    assert main(["init", "--workspace", str(workspace), "--yes", "--quiet"]) == 0
+    _capture_work(workspace, SEED_WORK_ID, "Undesirable difficulty", SEED_WORK_TEXT)
+
+    rc = main(["ask", "--workspace", str(workspace), "--question", "retrieval practice", "--json"])
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    assert [source["path"] for source in output["result"]["sources"]] == [
+        f"fulltexts/{SEED_WORK_ID}.md"
+    ]
+    assert _onboarding_steps(workspace) == ["init-done", "first-answer"]
+
+    # Rule (b): a second grounded ask adds nothing.
+    assert main(["ask", "--workspace", str(workspace), "--question", "retrieval", "--json"]) == 0
+    capsys.readouterr()
+    assert _onboarding_steps(workspace) == ["init-done", "first-answer"]
+
+
+def test_cli_ask_stays_silent_for_an_answer_off_the_seed_corpus(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    # Same arrangement, same non-empty `sources`, only the work id differs: the rule
+    # turns on seed groundedness, not on "the ask returned something".
+    workspace = tmp_path / "workspace"
+    assert main(["init", "--workspace", str(workspace), "--yes", "--quiet"]) == 0
+    _capture_work(workspace, "local-work-2024", "A local work", SEED_WORK_TEXT)
+
+    rc = main(["ask", "--workspace", str(workspace), "--question", "retrieval practice", "--json"])
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    assert output["result"]["sources"]  # the answer is real and non-empty
+    assert _onboarding_steps(workspace) == ["init-done"]
+
+
+def test_cli_project_ask_does_not_emit_first_answer(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    # Spec §5 gap resolution 2: `memoria ask` is the tutorial rung the ≤30-minute bar
+    # measures; `project ask` is a later-stage project surface and stays silent.
+    workspace = tmp_path / "workspace"
+    assert main(["init", "--workspace", str(workspace), "--yes", "--quiet"]) == 0
+    _capture_work(workspace, SEED_WORK_ID, "Undesirable difficulty", SEED_WORK_TEXT)
+    assert (
+        main(["new", "project", "Tutorial project", "--workspace", str(workspace), "--quiet"]) == 0
+    )
+
+    rc = main(
+        [
+            "project",
+            "ask",
+            "tutorial-project",
+            "--workspace",
+            str(workspace),
+            "--question",
+            "retrieval practice",
+            "--json",
+        ]
+    )
+    capsys.readouterr()
+
+    assert rc == 0
+    assert _onboarding_steps(workspace) == ["init-done", "project-framed"]
+
+
+def test_cli_ask_completes_when_the_telemetry_sink_refuses(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    assert main(["init", "--workspace", str(workspace), "--yes", "--quiet"]) == 0
+    _capture_work(workspace, SEED_WORK_ID, "Undesirable difficulty", SEED_WORK_TEXT)
+    _refuse_telemetry_inserts(workspace)
+
+    rc = main(["ask", "--workspace", str(workspace), "--question", "retrieval practice", "--json"])
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    assert output["ok"] is True
+    assert output["result"]["sources"]
+    assert _onboarding_steps(workspace) == ["init-done"]
+
+
+def _completed_runway(completed: bool):
+    def fake_run_onboarding(ws: Path, **_kwargs: object) -> dict[str, object]:
+        return {"ok": True, "workspace": str(ws), "completed": completed, "steps": []}
+
+    return fake_run_onboarding
+
+
+def test_cli_onboard_emits_onboard_done_when_the_runway_completes(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from memoria_vault.runtime import onboarding
+
+    workspace = tmp_path / "workspace"
+    assert main(["init", "--workspace", str(workspace), "--yes", "--quiet"]) == 0
+    monkeypatch.setattr(onboarding, "run_onboarding", _completed_runway(True))
+
+    rc = main(["onboard", "--workspace", str(workspace), "--json"])
+    capsys.readouterr()
+
+    assert rc == 0
+    assert _onboarding_steps(workspace) == ["init-done", "onboard-done"]
+
+
+def test_cli_onboard_emits_onboard_done_on_every_completed_runway(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # Plain emit, not `_once`: a second completed runway is a real second event, the
+    # same honest-observer rule `init-done` follows (spec §5 gap resolution 4).
+    from memoria_vault.runtime import onboarding
+
+    workspace = tmp_path / "workspace"
+    assert main(["init", "--workspace", str(workspace), "--yes", "--quiet"]) == 0
+    monkeypatch.setattr(onboarding, "run_onboarding", _completed_runway(True))
+
+    assert main(["onboard", "--workspace", str(workspace), "--json"]) == 0
+    assert main(["onboard", "--workspace", str(workspace), "--json"]) == 0
+    capsys.readouterr()
+
+    assert _onboarding_steps(workspace) == ["init-done", "onboard-done", "onboard-done"]
+
+
+def test_cli_onboard_stays_silent_when_the_runway_did_not_complete(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # Spec §5 gap resolution 3: an incomplete runway is not "onboard done". Without
+    # this row the `completed` guard can be deleted and every other test still passes.
+    from memoria_vault.runtime import onboarding
+
+    workspace = tmp_path / "workspace"
+    assert main(["init", "--workspace", str(workspace), "--yes", "--quiet"]) == 0
+    monkeypatch.setattr(onboarding, "run_onboarding", _completed_runway(False))
+
+    rc = main(["onboard", "--workspace", str(workspace), "--json"])
+    capsys.readouterr()
+
+    assert rc == 0
+    assert _onboarding_steps(workspace) == ["init-done"]
+
+
+def test_cli_init_onboard_flag_emits_both_steps_in_order(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # `_run_onboarding_for_args` is the single choke point, so `init --onboard` gets
+    # onboard-done too — and after init-done, which is what the §5 delta reads.
+    from memoria_vault.runtime import onboarding
+
+    workspace = tmp_path / "workspace"
+    monkeypatch.setattr(onboarding, "run_onboarding", _completed_runway(True))
+
+    rc = main(["init", "--workspace", str(workspace), "--yes", "--onboard", "--json"])
+    capsys.readouterr()
+
+    assert rc == 0
+    assert _onboarding_steps(workspace) == ["init-done", "onboard-done"]
+
+
+def test_cli_onboard_completes_when_the_telemetry_sink_refuses(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from memoria_vault.runtime import onboarding
+
+    workspace = tmp_path / "workspace"
+    assert main(["init", "--workspace", str(workspace), "--yes", "--quiet"]) == 0
+    _refuse_telemetry_inserts(workspace)
+    monkeypatch.setattr(onboarding, "run_onboarding", _completed_runway(True))
+
+    rc = main(["onboard", "--workspace", str(workspace), "--json"])
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    assert output["completed"] is True
+    assert _onboarding_steps(workspace) == ["init-done"]  # only the pre-trigger row
+
+
+def test_cli_init_seeds_the_session_diary_template(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+
+    rc = main(["init", "--workspace", str(workspace), "--yes", "--quiet"])
+    capsys.readouterr()
+
+    assert rc == 0
+    template = workspace / "system/templates/session-diary.md"
+    assert template.is_file()
+    text = template.read_text(encoding="utf-8")
+    for field in ("Goal", "Workflow used", "Artifact kept", "Blocker hit", "Fallback used"):
+        assert f"- {field}:" in text
+    assert "delete or archive" in text.lower()

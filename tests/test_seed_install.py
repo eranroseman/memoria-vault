@@ -889,7 +889,9 @@ def test_memoria_seed_install_cli_end_to_end_offline(tmp_path, capsys, monkeypat
     all_ids = sorted(row["id"] for row in load_seed_manifest())
     assert sorted(payload["result"]["admitted"]) == all_ids
     assert any("frame your" in notice for notice in payload["result"]["notices"])
-    assert _telemetry_steps(workspace) == ["seed-installed"]
+    # T.2 wired `memoria init` to emit `init-done`, so the CLI arc records both steps
+    # in order -- which is exactly the pair the spec §5 delta is measured from.
+    assert _telemetry_steps(workspace) == ["init-done", "seed-installed"]
 
     # Acceptance-criteria idempotence: the re-run admits nothing new, exits
     # clean, and performs zero fetches (a fetch would raise loudly).

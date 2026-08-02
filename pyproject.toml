@@ -51,6 +51,7 @@ memoria_vault = ["runtime/*.sql"]
   "Start here.md",
   "steering.md",
   "system/*.md",
+  "system/templates/*.md",
 ]
 
 [tool.pytest.ini_options]

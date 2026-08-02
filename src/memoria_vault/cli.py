@@ -27,7 +27,7 @@ from memoria_vault.engine import api as engine_api
 from memoria_vault.engine import cockpit as engine_cockpit
 from memoria_vault.engine.empirical_events import REASON_CODES
 from memoria_vault.engine.surface_contract import SURFACE_ACTIONS, SURFACE_JOBS, actions_by_id
-from memoria_vault.runtime import evidence_review, state
+from memoria_vault.runtime import evidence_review, onboarding_steps, state
 from memoria_vault.runtime.evidence_review import EVIDENCE_REVIEW_ROUTING_TYPES
 from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.subsystems.lib.edges import LINK_RELATIONS
@@ -61,6 +61,7 @@ SEED_FILES = (
     ("inbox.base", "inbox.base"),
     ("projects.base", "projects.base"),
     ("sources.base", "sources.base"),
+    ("system/templates/session-diary.md", "system/templates/session-diary.md"),
 )
 # The agent bundle is a first-install bootstrap, not a repair-managed runtime
 # seed: it is absent from the rosters above, so a later doctor repair cannot
@@ -834,6 +835,7 @@ def _cmd_init(args: argparse.Namespace) -> int:
     _initialize_workspace_files(
         workspace, include_obsidian=include_obsidian, include_agent_bundle=True
     )
+    onboarding_steps.emit_onboarding_step(workspace, "init-done")
     payload: dict[str, Any] = {"ok": True, "workspace": str(workspace), "created": created}
     if args.onboard:
         payload["onboard"] = _run_onboarding_for_args(workspace, args)
@@ -874,7 +876,7 @@ def _run_onboarding_for_args(workspace: Path, args: argparse.Namespace) -> dict[
             # treats EOFError: a declined prompt, never a crash.
             return ""
 
-    return onboarding.run_onboarding(
+    payload = onboarding.run_onboarding(
         workspace,
         sys_platform=sys.platform,
         env=os.environ,
@@ -891,6 +893,11 @@ def _run_onboarding_for_args(workspace: Path, args: argparse.Namespace) -> dict[
         # exists for.
         url_open=onboarding._open_zotero_probe,
     )
+    # Spec §5 gap resolution 3: "onboard done" is a *completed* runway, and this
+    # is the single choke point for both `memoria onboard` and `init --onboard`.
+    if payload.get("completed"):
+        onboarding_steps.emit_onboarding_step(workspace, "onboard-done")
+    return payload
 
 
 def _cmd_status(args: argparse.Namespace) -> int:
@@ -1059,6 +1066,11 @@ def _cmd_ask(args: argparse.Namespace) -> int:
     if args.trace:
         payload["trace"] = True
     result = _enqueue_and_run(args, "answer-query", payload)
+    if result.get("ok"):
+        answer = result.get("result")
+        onboarding_steps.emit_first_answer_if_seed_grounded(
+            _workspace(args), answer if isinstance(answer, dict) else {}
+        )
     return _emit_ask_result(result, args, print_trace=args.trace)
 
 
@@ -1433,20 +1445,22 @@ def _cmd_new_hub(args: argparse.Namespace) -> int:
 
 def _cmd_new_project(args: argparse.Namespace) -> int:
     body = _concept_template_body(args.name, args.direction)
-    return _emit(
-        engine_api.write_new_concept(
-            _workspace(args),
-            "project",
-            args.name,
-            body=body,
-            tags=[],
-            extra={"description": args.description, "outcome_frame": {}, "paper_plan": {}},
-            idempotency_key=args.idempotency_key,
-            schedule_id=args.schedule_id,
-            actor=args.actor,
-        ),
-        args,
+    result = engine_api.write_new_concept(
+        _workspace(args),
+        "project",
+        args.name,
+        body=body,
+        tags=[],
+        extra={"description": args.description, "outcome_frame": {}, "paper_plan": {}},
+        idempotency_key=args.idempotency_key,
+        schedule_id=args.schedule_id,
+        actor=args.actor,
     )
+    if result.get("ok"):
+        # Spec §5 gap resolution 1: once per vault, so project-framed - init-done is a
+        # deterministic delta rather than a per-project stream.
+        onboarding_steps.emit_onboarding_step_once(_workspace(args), "project-framed")
+    return _emit(result, args)
 
 
 def _concept_template_body(title: str, body: str) -> str:
