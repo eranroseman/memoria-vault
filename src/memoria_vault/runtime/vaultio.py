@@ -145,6 +145,35 @@ def is_ulid(value: str) -> bool:
     return len(value) == 26 and all(ch in ULID_ALPHABET for ch in value)
 
 
+def okf_actor(
+    actor: str,
+    *,
+    agent_identity: str = "",
+    operation_id: str = "",
+    machine_authored: bool = False,
+) -> str:
+    """Render provenance in the OKF v0.2 actor grammar (spec §7).
+
+    Authorship follows `machine_authored`, mirroring the trusted writer's
+    authority/authorship split: a PI-authority door relaying a machine body
+    is a machine author.
+    """
+    if actor == "pi" and not machine_authored:
+        return "human:pi"
+    if actor in {"operation", "integrity"}:
+        return f"process:{operation_id or actor}"
+    identity = agent_identity or "agent"
+    return identity if "/" in identity else f"{identity}/unversioned"
+
+
+def okf_verified_actor(actor: str, *, operation_id: str = "") -> str:
+    """Actor for a `verified` event: promotion is PI judgment, so PI
+    authority verifies as `human:pi` regardless of body authorship."""
+    if actor == "pi":
+        return "human:pi"
+    return f"process:{operation_id or actor}"
+
+
 def new_ulid() -> str:
     value = ((int(time.time() * 1000) & ((1 << 48) - 1)) << 80) | secrets.randbits(80)
     chars = []
