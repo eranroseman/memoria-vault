@@ -749,6 +749,7 @@ def test_http_transport_rejects_idempotency_key_bound_to_pending_pi_request(
         workspace,
         "resolve-attention",
         actor="pi",
+        machine_authored=False,
         idempotency_key="pi-pending-request",
         payload={
             "target_id": "inbox/pi-pending.md",

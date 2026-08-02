@@ -83,6 +83,7 @@ def _write_note(
         output_intents=[{"id": rel, "kind": concept_type}],
         primary_target=rel,
         actor="agent",
+        machine_authored=False,
     )
     done = run_next_job(vault, machine="floor-seed")
     assert done is not None and done["status"] == "done", (rel, done)
@@ -208,6 +209,7 @@ def _seed_attention_item(workspace: Path, project_path: str) -> str:
         payload={"project_path": project_path},
         idempotency_key="floor-seed-analyze-gaps",
         actor="agent",
+        machine_authored=False,
     )
     done = run_next_job(workspace, machine="floor-seed")
     assert done is not None and done["status"] == "done", done

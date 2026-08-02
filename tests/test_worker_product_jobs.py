@@ -102,6 +102,7 @@ def test_worker_runs_digest_and_note_construction_operation_jobs(tmp_path: Path)
         },
         idempotency_key="compile-alpha",
         actor="operation",
+        machine_authored=False,
     )
     digest_done = run_next_job(vault, machine="test-machine")
 
@@ -140,6 +141,7 @@ def test_worker_runs_digest_and_note_construction_operation_jobs(tmp_path: Path)
         },
         idempotency_key="notes-alpha",
         actor="pi",
+        machine_authored=False,
     )
     note_done = run_next_job(vault, machine="test-machine")
 
@@ -160,6 +162,7 @@ def test_worker_runs_digest_and_note_construction_operation_jobs(tmp_path: Path)
         payload={"note_path": note_rel, "status": "accepted", "reason": "PI approved"},
         idempotency_key="curate-note-alpha",
         actor="pi",
+        machine_authored=False,
     )
     curate_done = run_next_job(vault, machine="test-machine")
 
@@ -183,6 +186,7 @@ def test_worker_runs_digest_and_note_construction_operation_jobs(tmp_path: Path)
         },
         idempotency_key="link-note-alpha",
         actor="pi",
+        machine_authored=False,
     )
     link_done = run_next_job(vault, machine="test-machine")
 
@@ -217,6 +221,7 @@ def test_worker_records_copi_interview_operation_jobs(tmp_path: Path) -> None:
         },
         idempotency_key="copi-interview-alpha",
         actor="pi",
+        machine_authored=False,
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -284,6 +289,7 @@ def test_worker_runs_gap_analysis_operation_jobs(tmp_path: Path) -> None:
         payload={"seed_terms": ["new area"], "dense_threshold": 1},
         idempotency_key="gap-analysis",
         actor="pi",
+        machine_authored=False,
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -348,6 +354,7 @@ def test_worker_runs_project_scoped_gap_analysis(tmp_path: Path) -> None:
         payload={"project_path": "project-alpha", "seed_terms": [], "dense_threshold": 2},
         idempotency_key="project-gap-analysis",
         actor="pi",
+        machine_authored=False,
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -407,6 +414,7 @@ def test_worker_runs_frame_paper_operation(tmp_path: Path) -> None:
         },
         idempotency_key="frame-paper",
         actor="pi",
+        machine_authored=False,
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -484,6 +492,7 @@ def test_curate_note_link_worker_branch_threads_proposal_ref(tmp_path: Path) -> 
         },
         idempotency_key="link-proposed",
         actor="pi",
+        machine_authored=False,
     )
     proposed = run_next_job(vault, machine="test-machine")
     enqueue_operation(
@@ -496,6 +505,7 @@ def test_curate_note_link_worker_branch_threads_proposal_ref(tmp_path: Path) -> 
         },
         idempotency_key="link-original",
         actor="pi",
+        machine_authored=False,
     )
     original = run_next_job(vault, machine="test-machine")
 
@@ -518,6 +528,7 @@ def test_frame_paper_with_proposal_ref_emits_one_frame_proposal_accept(tmp_path:
         payload=_frame_paper_payload(proposal_ref="  inbox/candidate-frame-y.md  "),
         idempotency_key="frame-paper-proposed",
         actor="pi",
+        machine_authored=False,
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -540,6 +551,7 @@ def test_frame_paper_without_proposal_ref_emits_nothing(tmp_path: Path) -> None:
         payload=_frame_paper_payload(),
         idempotency_key="frame-paper-original",
         actor="pi",
+        machine_authored=False,
     )
     first = run_next_job(vault, machine="test-machine")
     enqueue_operation(
@@ -548,6 +560,7 @@ def test_frame_paper_without_proposal_ref_emits_nothing(tmp_path: Path) -> None:
         payload=_frame_paper_payload(proposal_ref="   "),
         idempotency_key="frame-paper-blank",
         actor="pi",
+        machine_authored=False,
     )
     second = run_next_job(vault, machine="test-machine")
 
@@ -594,6 +607,7 @@ def test_worker_runs_project_argument_analysis_operation_jobs(tmp_path: Path) ->
         payload={"project_path": "project-alpha"},
         idempotency_key="project-argument",
         actor="pi",
+        machine_authored=False,
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -619,6 +633,7 @@ def test_worker_runs_project_argument_analysis_operation_jobs(tmp_path: Path) ->
         payload={"project_path": "project-alpha"},
         idempotency_key="project-argument-canvas",
         actor="pi",
+        machine_authored=False,
     )
     canvas_done = run_next_job(vault, machine="test-machine")
 
@@ -642,6 +657,7 @@ def test_worker_runs_checked_search_index_rebuild_operation_jobs(tmp_path: Path)
         "rebuild-checked-search-index",
         idempotency_key="rebuild-search",
         actor="pi",
+        machine_authored=False,
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -665,6 +681,7 @@ def test_worker_runs_answer_query_operation_jobs(tmp_path: Path) -> None:
         payload={"query": "alpha", "k": 3},
         idempotency_key="answer-query",
         actor="pi",
+        machine_authored=False,
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -684,6 +701,7 @@ def test_worker_rejects_unparseable_answer_query_trace_flag(tmp_path: Path) -> N
         payload={"query": "alpha", "trace": "perhaps"},
         idempotency_key="answer-query-invalid-trace",
         actor="pi",
+        machine_authored=False,
     )
 
     done = run_next_job(vault, machine="test-machine")
@@ -703,6 +721,7 @@ def test_worker_accepts_false_answer_query_trace_flag_without_trace(tmp_path: Pa
         payload={"query": "alpha", "trace": "false"},
         idempotency_key="answer-query-false-trace",
         actor="pi",
+        machine_authored=False,
     )
 
     done = run_next_job(vault, machine="test-machine")
@@ -746,6 +765,7 @@ def test_worker_does_not_fail_open_for_untyped_export_readiness_opt_out(
         payload={"project_path": "project-alpha", "allow_unready": allow_unready},
         idempotency_key=f"export-project-{allow_unready}",
         actor="operation",
+        machine_authored=False,
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -770,6 +790,7 @@ def test_worker_runs_seeded_error_verdict_in_disposable_fixture(tmp_path: Path) 
         payload={"mode": "live", "target_operation_id": "compile-source-digest"},
         idempotency_key="seeded-verdict",
         actor="operation",
+        machine_authored=False,
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -841,6 +862,7 @@ def test_seeded_error_verdict_resolves_target_operation_runner(
         payload={"mode": "live", "target_operation_id": "compile-source-digest"},
         idempotency_key="seeded-target-runner",
         actor="operation",
+        machine_authored=False,
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -864,6 +886,7 @@ def test_worker_seeded_error_verdict_requires_alpha15_bundle(tmp_path: Path) -> 
         payload={"mode": "test"},
         idempotency_key="seeded-no-removed-fallback",
         actor="pi",
+        machine_authored=False,
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -893,6 +916,7 @@ def test_worker_runs_cascade_rollback_operation_jobs(tmp_path: Path) -> None:
         },
         idempotency_key="rollback-worker",
         actor="pi",
+        machine_authored=False,
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -917,6 +941,7 @@ def test_worker_runs_attention_resolution_operation_jobs(tmp_path: Path) -> None
         payload={"target_id": "notes/attention.md", "reason": "PI saw it"},
         idempotency_key="ack-attention",
         actor="pi",
+        machine_authored=False,
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -949,6 +974,7 @@ def test_worker_runs_observe_pi_edits_operation_jobs(tmp_path: Path) -> None:
         "observe-pi-edits",
         idempotency_key="observe-pi",
         actor="integrity",
+        machine_authored=False,
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -1043,6 +1069,7 @@ def test_observe_pi_edits_propagates_scan_side_demotion(tmp_path: Path) -> None:
         "observe-pi-edits",
         idempotency_key="observe-source-edit",
         actor="integrity",
+        machine_authored=False,
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -1099,6 +1126,7 @@ def test_observe_pi_edits_quarantines_changed_tracked_projection(tmp_path: Path)
         "observe-pi-edits",
         idempotency_key="observe-projection-edit",
         actor="integrity",
+        machine_authored=False,
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -1127,6 +1155,7 @@ def test_worker_runs_mark_checked_operation_jobs(tmp_path: Path) -> None:
         "observe-pi-edits",
         idempotency_key="observe-pi",
         actor="integrity",
+        machine_authored=False,
     )
     run_next_job(vault, machine="test-machine")
 
@@ -1136,6 +1165,7 @@ def test_worker_runs_mark_checked_operation_jobs(tmp_path: Path) -> None:
         payload={"target_path": "notes/pi.md", "check": "memoria-runtime"},
         idempotency_key="mark-pi-checked",
         actor="pi",
+        machine_authored=False,
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -1177,6 +1207,7 @@ def test_mark_checked_emits_accept_disposition_with_the_target_doc_type(tmp_path
             payload={"target_path": rel},
             idempotency_key=key,
             actor="pi",
+            machine_authored=False,
         )
         done = run_next_job(vault, machine="test-machine")
         assert done is not None and done["status"] == "done", done
@@ -1207,6 +1238,7 @@ def test_mark_checked_disposition_survives_an_unnormalized_target_path(tmp_path:
         payload={"target_path": "./notes/pi.md"},
         idempotency_key="mark-unnormalized",
         actor="pi",
+        machine_authored=False,
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -1237,6 +1269,7 @@ def test_worker_runs_update_work_operation_jobs(tmp_path: Path) -> None:
         },
         idempotency_key="update-alpha",
         actor="pi",
+        machine_authored=False,
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -1283,7 +1316,14 @@ def _seed_work(vault: Path, work_id: str, **fields: object) -> None:
 
 
 def _run_update_work(vault: Path, key: str, payload: dict) -> dict:
-    enqueue_operation(vault, "update-work", payload=payload, idempotency_key=key, actor="pi")
+    enqueue_operation(
+        vault,
+        "update-work",
+        payload=payload,
+        idempotency_key=key,
+        actor="pi",
+        machine_authored=False,
+    )
     done = run_next_job(vault, machine="test-machine")
     assert done is not None and done["status"] == "done", done
     return done
@@ -1420,6 +1460,7 @@ def test_update_work_preserves_unrecognized_topics_from_catalog_row(tmp_path: Pa
         payload={"work_id": "legacy", "methodology": ["rct"]},
         idempotency_key="preserve-catalog-work",
         actor="pi",
+        machine_authored=False,
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -1455,6 +1496,7 @@ def test_worker_runs_references_bib_projection_operation_jobs(tmp_path: Path) ->
         "regenerate-references-bib",
         idempotency_key="references-bib",
         actor="pi",
+        machine_authored=False,
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -1562,6 +1604,7 @@ def test_worker_runs_each_served_curate_note_link(tmp_path: Path, relation: str)
         },
         idempotency_key=f"served-link-{relation}",
         actor="pi",
+        machine_authored=False,
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -1582,7 +1625,12 @@ def test_worker_curate_note_link_carries_warrant_to_the_edge(tmp_path: Path) -> 
         "target_path": "notes/target.md",
     }
     enqueue_operation(
-        vault, "curate-note-link", payload=payload, idempotency_key="link-no-warrant", actor="pi"
+        vault,
+        "curate-note-link",
+        payload=payload,
+        idempotency_key="link-no-warrant",
+        actor="pi",
+        machine_authored=False,
     )
     bare = run_next_job(vault, machine="test-machine")
     enqueue_operation(
@@ -1591,6 +1639,7 @@ def test_worker_curate_note_link_carries_warrant_to_the_edge(tmp_path: Path) -> 
         payload={**payload, "warrant": "the trial licenses this step"},
         idempotency_key="link-warrant",
         actor="pi",
+        machine_authored=False,
     )
     warranted = run_next_job(vault, machine="test-machine")
 
@@ -1615,6 +1664,7 @@ def test_worker_rejects_tension_curate_note_link(tmp_path: Path) -> None:
         },
         idempotency_key="served-link-tension",
         actor="pi",
+        machine_authored=False,
     )
     failed = run_next_job(vault, machine="test-machine")
 
@@ -1658,6 +1708,7 @@ def _update_standing(vault: Path, work_id: str, standing: str, key: str) -> dict
         payload={"work_id": work_id, "standing": standing},
         idempotency_key=key,
         actor="pi",
+        machine_authored=False,
     )
     done = run_next_job(vault, machine="test-machine")
     assert done is not None and done["status"] == "done", done
@@ -1743,6 +1794,7 @@ def test_worker_runs_fork_project_canvas_operation_jobs(tmp_path: Path) -> None:
         payload={"project_path": "project-alpha"},
         idempotency_key="fork-setup-render",
         actor="pi",
+        machine_authored=False,
     )
     rendered = run_next_job(vault, machine="test-machine")
     assert rendered is not None and rendered["status"] == "done"
@@ -1755,6 +1807,7 @@ def test_worker_runs_fork_project_canvas_operation_jobs(tmp_path: Path) -> None:
         # Not PI-protected: the plugin's fork command reaches the worker as an
         # ordinary agent enqueue, exactly like the render it forks from.
         actor="agent",
+        machine_authored=False,
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -1775,6 +1828,7 @@ def test_worker_runs_fork_project_canvas_operation_jobs(tmp_path: Path) -> None:
         payload={"name": "no-project"},
         idempotency_key="fork-canvas-no-project",
         actor="agent",
+        machine_authored=False,
     )
     refused = run_next_job(vault, machine="test-machine")
 

@@ -698,6 +698,7 @@ def test_worker_digest_related_works_ranks_through_the_queue_and_honors_k(
         payload={"hub_path": "hubs/framing.md", "k": 1},
         idempotency_key="floor-k-clamp",
         actor="agent",
+        machine_authored=False,
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -730,6 +731,7 @@ def test_digest_related_works_defaults_to_the_top_five_candidates(tmp_path: Path
         payload={"hub_path": "hubs/framing.md"},
         idempotency_key="floor-k-default",
         actor="agent",
+        machine_authored=False,
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -752,6 +754,7 @@ def test_worker_digest_related_works_refuses_an_invalid_k(tmp_path: Path, bad_k:
         payload={"hub_path": "hubs/framing.md", "k": bad_k},
         idempotency_key="floor-k-invalid",
         actor="agent",
+        machine_authored=False,
     )
     done = run_next_job(vault, machine="test-machine")
 

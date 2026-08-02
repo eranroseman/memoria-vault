@@ -480,6 +480,7 @@ def test_context_builder_failure_records_failed_request_without_mutation(
         workspace,
         "create-concept",
         actor="agent",
+        machine_authored=False,
         payload={
             "target_path": "notes/invalid-context.md",
             "content": "---\ntype: note\ntitle: Invalid context\ntags: []\nlinks: {}\n---\nBody.\n",
@@ -510,6 +511,7 @@ def test_worker_binds_exact_context_to_running_request_before_dispatch(
         payload={"run_id": "bound-run"},
         idempotency_key="bound-request",
         actor="agent",
+        machine_authored=False,
     )
     seen: dict[str, Any] = {}
 
@@ -815,6 +817,17 @@ def test_request_creation_interfaces_require_actor(
         call(tmp_path)
 
 
+def test_enqueue_operation_requires_an_explicit_authorship_claim(tmp_path: Path) -> None:
+    """machine_authored gates a content-security transform; forgetting it must be loud (#1601)."""
+    with pytest.raises(TypeError, match="machine_authored"):
+        worker.enqueue_operation(
+            tmp_path,
+            "create-concept",
+            payload={},
+            actor="pi",
+        )
+
+
 def test_agent_enveloped_create_concept_lands_agent_actor(tmp_path, capsys) -> None:
     workspace = init_cli_workspace(tmp_path, capsys)
     from memoria_vault.engine import api as engine_api
@@ -909,6 +922,7 @@ def _run_input_backed_create(
         workspace,
         "create-concept",
         actor=actor,
+        machine_authored=False,
         idempotency_key=request_id,
         input_refs=[{"id": "catalog/sources/source-a/source.md", "role": "source"}],
         output_intents=[{"id": target, "kind": "concept"}],
@@ -1017,6 +1031,7 @@ def test_attention_resolution_rejects_non_pi_before_mutation(
         workspace,
         operation_id,
         actor="agent",
+        machine_authored=False,
         idempotency_key=f"agent-{operation_id}",
         payload={"target_id": target, "reason": "agent may not decide"},
     )
@@ -1070,6 +1085,7 @@ def test_protected_operation_rejects_wrong_actor_before_payload_validation(
         tmp_path,
         operation_id,
         actor=actor,
+        machine_authored=False,
         idempotency_key=f"wrong-{operation_id}-{actor}",
     )
 
@@ -1099,6 +1115,7 @@ def test_protected_operation_accepts_its_authorized_actor_before_payload_validat
         workspace,
         operation_id,
         actor=actor,
+        machine_authored=False,
         idempotency_key=f"authorized-{operation_id}",
     )
 
@@ -1119,6 +1136,7 @@ def test_attention_resolution_accepts_pi_and_records_pi(
         workspace,
         operation_id,
         actor="pi",
+        machine_authored=False,
         idempotency_key=f"pi-{operation_id}",
         payload={"target_id": "inbox/attention/pi.md", "reason": "PI decision"},
     )
@@ -1160,6 +1178,7 @@ def test_resolve_evidence_operation_records_pi_disposition(
         workspace,
         "resolve-evidence",
         actor="pi",
+        machine_authored=False,
         idempotency_key="pi-resolve-evidence",
         payload={
             "evidence_id": evidence_id,
@@ -1195,6 +1214,7 @@ def test_resolve_evidence_operation_requires_evidence_id(
         workspace,
         "resolve-evidence",
         actor="pi",
+        machine_authored=False,
         idempotency_key="pi-resolve-evidence-missing-id",
         payload={"decision": "accept"},
     )
@@ -1214,6 +1234,7 @@ def test_resolve_evidence_operation_rejects_unknown_evidence_id(
         workspace,
         "resolve-evidence",
         actor="pi",
+        machine_authored=False,
         idempotency_key="pi-resolve-evidence-unknown-id",
         payload={"evidence_id": "ev-0011aabb", "decision": "accept"},
     )
@@ -1277,6 +1298,7 @@ def test_observe_pi_edits_rejects_non_integrity_request_before_mutation(
         "observe-pi-edits",
         idempotency_key="pi-scan-authority",
         actor="pi",
+        machine_authored=False,
     )
 
     result = worker.run_request(workspace, request["job_id"], machine="scanner")
@@ -1308,6 +1330,7 @@ def test_integrity_scan_keeps_nested_external_edit_actor_pi(
         "observe-pi-edits",
         idempotency_key="nested-pi-scan",
         actor="integrity",
+        machine_authored=False,
     )
 
     result = worker.run_request(workspace, request["job_id"], machine="scanner")

@@ -51,6 +51,7 @@ def test_resolve_attention_emits_disposition(
         workspace,
         "resolve-attention",
         actor="pi",
+        machine_authored=False,
         idempotency_key=f"pi-resolve-{outcome}",
         payload={"target_id": "inbox/attention/pi.md", "outcome": outcome, "reason": "PI decision"},
     )
@@ -108,6 +109,7 @@ def _resolve_attention_job(vault: Path, key: str, **payload: str) -> dict:
         vault,
         "resolve-attention",
         actor="pi",
+        machine_authored=False,
         idempotency_key=key,
         payload=dict(payload),
     )
@@ -229,6 +231,7 @@ def test_acknowledge_attention_emits_no_disposition(
         workspace,
         "acknowledge-attention",
         actor="pi",
+        machine_authored=False,
         idempotency_key="pi-ack",
         payload={"target_id": "inbox/attention/pi.md", "reason": "ack"},
     )

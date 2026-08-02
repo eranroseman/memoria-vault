@@ -216,6 +216,7 @@ def test_enqueue_operation_persists_unified_request_envelope(tmp_path: Path) -> 
         provenance={"surface": "workspace-scan", "source": "pytest"},
         schedule_id="manual-scan",
         actor="pi",
+        machine_authored=False,
     )
 
     envelope = job["request_envelope"]

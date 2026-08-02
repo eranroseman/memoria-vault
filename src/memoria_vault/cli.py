@@ -1435,6 +1435,7 @@ def _cmd_new_note(args: argparse.Namespace) -> int:
             idempotency_key=args.idempotency_key,
             schedule_id=args.schedule_id,
             actor=args.actor,
+            machine_authored=False,
         ),
         args,
     )
@@ -1454,6 +1455,7 @@ def _cmd_new_hub(args: argparse.Namespace) -> int:
             idempotency_key=args.idempotency_key,
             schedule_id=args.schedule_id,
             actor=args.actor,
+            machine_authored=False,
         ),
         args,
     )
@@ -1471,6 +1473,7 @@ def _cmd_new_project(args: argparse.Namespace) -> int:
         idempotency_key=args.idempotency_key,
         schedule_id=args.schedule_id,
         actor=args.actor,
+        machine_authored=False,
     )
     if result.get("ok"):
         # Spec §5 gap resolution 1: once per vault, so project-framed - init-done is a
@@ -2810,6 +2813,7 @@ def _cmd_eval_select_models(args: argparse.Namespace) -> int:
             },
             idempotency_key=f"select-model-{operation_id}-{args.mode}",
             actor="operation",
+            machine_authored=False,
             provenance={"surface": "memoria-cli", "command": "eval-select-models"},
         )
         verdict = run_request(workspace, request["job_id"], machine="memoria-cli")
@@ -3382,6 +3386,7 @@ def _queue_import_enrichment(
         primary_target=f"catalog/sources/{work_id}",
         causal_refs=[parent_request_id],
         actor="operation",
+        machine_authored=False,
         provenance={"surface": "memoria-cli", "command": "work-import"},
         schedule_id=args.schedule_id,
     )

@@ -306,6 +306,7 @@ def test_resolver_sees_projects_from_the_production_create_concept_writer(vault:
         tags=[],
         extra={},
         actor="pi",
+        machine_authored=False,
     )
     assert made["ok"] is True
 

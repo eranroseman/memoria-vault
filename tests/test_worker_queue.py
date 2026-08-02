@@ -119,6 +119,7 @@ def test_worker_create_concept_operation_materializes_unchecked(tmp_path: Path) 
         output_intents=[{"id": "notes/agent.md", "kind": "note"}],
         primary_target="notes/agent.md",
         actor="agent",
+        machine_authored=False,
     )
 
     done = run_next_job(vault, machine="test-machine")
@@ -148,6 +149,7 @@ def test_worker_create_concept_rejects_generic_work_bypass(tmp_path: Path) -> No
         output_intents=[{"id": "digests/bypass.md", "kind": "work"}],
         primary_target="digests/bypass.md",
         actor="agent",
+        machine_authored=False,
     )
 
     failed = run_next_job(vault, machine="test-machine")
@@ -219,6 +221,7 @@ def test_enqueue_operation_binds_idempotency_to_the_complete_request_identity(
         "precondition_hashes": {"notes/input.md": "sha256:original"},
         "causal_refs": [{"id": "journal:original"}],
         "actor": "pi",
+        "machine_authored": False,
         "provenance": {"surface": "pytest"},
         "schedule_id": "original-schedule",
     }
@@ -286,6 +289,7 @@ def test_enqueue_request_rejects_reused_key_across_job_kinds(tmp_path: Path) -> 
             output_intents=[{"id": target, "kind": "trusted_write"}],
             primary_target=target,
             actor="agent",
+            machine_authored=False,
             provenance={"surface": "worker"},
         )
 
@@ -307,6 +311,7 @@ def test_concurrent_conflicting_enqueues_commit_one_request_identity(tmp_path: P
                 payload={"query": "alpha"},
                 idempotency_key="concurrent-bound-request",
                 actor=actor,
+                machine_authored=False,
             )
         except ValueError as exc:
             return "conflict", str(exc)
@@ -333,6 +338,7 @@ def test_request_identity_distinguishes_json_boolean_from_number(tmp_path: Path)
         payload={"enabled": True},
         idempotency_key="typed-request",
         actor="pi",
+        machine_authored=False,
     )
 
     with pytest.raises(ValueError, match="idempotency key is already bound"):
@@ -342,6 +348,7 @@ def test_request_identity_distinguishes_json_boolean_from_number(tmp_path: Path)
             payload={"enabled": 1},
             idempotency_key="typed-request",
             actor="pi",
+            machine_authored=False,
         )
 
     assert state.request_job(vault, "typed-request") == first
@@ -355,6 +362,7 @@ def test_request_identity_normalizes_tuples_to_persisted_json_arrays(tmp_path: P
         payload={"terms": ("alpha", "beta")},
         idempotency_key="normalized-request",
         actor="pi",
+        machine_authored=False,
     )
     retry = enqueue_operation(
         vault,
@@ -362,6 +370,7 @@ def test_request_identity_normalizes_tuples_to_persisted_json_arrays(tmp_path: P
         payload={"terms": ("alpha", "beta")},
         idempotency_key="normalized-request",
         actor="pi",
+        machine_authored=False,
     )
 
     assert retry == first
@@ -376,6 +385,7 @@ def test_claim_and_supersede_race_has_exactly_one_winner(tmp_path: Path) -> None
         payload={"query": "original"},
         idempotency_key="race-source",
         actor="pi",
+        machine_authored=False,
     )
     barrier = threading.Barrier(2)
 
@@ -394,6 +404,7 @@ def test_claim_and_supersede_race_has_exactly_one_winner(tmp_path: Path) -> None
                 idempotency_key="race-successor",
                 causal_refs=["race-source"],
                 actor="pi",
+                machine_authored=False,
                 supersede_request_id="race-source",
             )
         except ValueError:
@@ -420,6 +431,7 @@ def test_exact_retry_cannot_supersede_an_unrelated_pending_request(tmp_path: Pat
         payload={"query": "existing"},
         idempotency_key="existing-request",
         actor="pi",
+        machine_authored=False,
     )
     unrelated = enqueue_operation(
         vault,
@@ -427,6 +439,7 @@ def test_exact_retry_cannot_supersede_an_unrelated_pending_request(tmp_path: Pat
         payload={"query": "unrelated"},
         idempotency_key="unrelated-request",
         actor="pi",
+        machine_authored=False,
     )
 
     with pytest.raises(ValueError, match="idempotency key is already bound"):
@@ -436,6 +449,7 @@ def test_exact_retry_cannot_supersede_an_unrelated_pending_request(tmp_path: Pat
             payload={"query": "existing"},
             idempotency_key="existing-request",
             actor="pi",
+            machine_authored=False,
             supersede_request_id="unrelated-request",
         )
 
@@ -451,6 +465,7 @@ def test_agent_and_self_supersession_are_rejected_without_mutation(tmp_path: Pat
         payload={"query": "source"},
         idempotency_key="protected-source",
         actor="pi",
+        machine_authored=False,
     )
 
     with pytest.raises(ValueError, match="supersession requires PI actor authority"):
@@ -460,6 +475,7 @@ def test_agent_and_self_supersession_are_rejected_without_mutation(tmp_path: Pat
             payload={"query": "agent successor"},
             idempotency_key="agent-successor",
             actor="agent",
+            machine_authored=False,
             supersede_request_id="protected-source",
         )
     with pytest.raises(ValueError, match="cannot supersede itself"):
@@ -469,6 +485,7 @@ def test_agent_and_self_supersession_are_rejected_without_mutation(tmp_path: Pat
             payload={"query": "source"},
             idempotency_key="protected-source",
             actor="pi",
+            machine_authored=False,
             supersede_request_id="protected-source",
         )
 
@@ -486,6 +503,7 @@ def test_worker_runs_prompt_operation_manifest_jobs(tmp_path: Path) -> None:
         payload={"input_ref": "notes/claim.md"},
         idempotency_key="analyze-claims",
         actor="pi",
+        machine_authored=False,
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -705,6 +723,7 @@ def test_worker_requires_valid_operation_policy_before_dispatch(
         payload={"query": "alpha"},
         idempotency_key="unchecked-policy",
         actor="pi",
+        machine_authored=False,
     )
     done = run_next_job(vault, machine="test-machine")
 

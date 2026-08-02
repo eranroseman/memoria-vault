@@ -267,6 +267,7 @@ def test_capture_source_stages_doi_unchecked_without_references(tmp_path: Path) 
         payload=doi_payload(),
         idempotency_key="capture-alpha",
         actor="pi",
+        machine_authored=False,
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -356,6 +357,7 @@ def test_enrich_source_requires_all_doi_providers(tmp_path: Path) -> None:
         payload=doi_payload(),
         idempotency_key="capture-alpha",
         actor="pi",
+        machine_authored=False,
     )
     run_next_job(vault, machine="test-machine")
 
@@ -370,6 +372,7 @@ def test_enrich_source_requires_all_doi_providers(tmp_path: Path) -> None:
         },
         idempotency_key="enrich-alpha",
         actor="pi",
+        machine_authored=False,
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -409,6 +412,7 @@ def test_enrich_source_replays_optional_semantic_scholar_payload(tmp_path: Path)
         payload=doi_payload(),
         idempotency_key="capture-alpha",
         actor="pi",
+        machine_authored=False,
     )
     run_next_job(vault, machine="test-machine")
     payloads = {**provider_payloads(), "semanticscholar": semantic_scholar_payload()}
@@ -419,6 +423,7 @@ def test_enrich_source_replays_optional_semantic_scholar_payload(tmp_path: Path)
         payload={"work_id": "source-alpha", "provider_payloads": payloads},
         idempotency_key="enrich-alpha",
         actor="pi",
+        machine_authored=False,
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -462,6 +467,7 @@ def test_enrich_source_writes_payloads_provenance_and_references(tmp_path: Path)
         payload=doi_payload(),
         idempotency_key="capture-alpha",
         actor="pi",
+        machine_authored=False,
     )
     run_next_job(vault, machine="test-machine")
 
@@ -471,6 +477,7 @@ def test_enrich_source_writes_payloads_provenance_and_references(tmp_path: Path)
         payload={"work_id": "source-alpha", "provider_payloads": provider_payloads()},
         idempotency_key="enrich-alpha",
         actor="pi",
+        machine_authored=False,
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -564,6 +571,7 @@ def test_enrich_source_replays_provider_payload_blobs(tmp_path: Path) -> None:
         payload=doi_payload(),
         idempotency_key="capture-alpha",
         actor="pi",
+        machine_authored=False,
     )
     run_next_job(vault, machine="test-machine")
     enqueue_operation(
@@ -572,6 +580,7 @@ def test_enrich_source_replays_provider_payload_blobs(tmp_path: Path) -> None:
         payload={"work_id": "source-alpha", "provider_payloads": provider_payloads()},
         idempotency_key="enrich-alpha",
         actor="pi",
+        machine_authored=False,
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -608,6 +617,7 @@ def test_enrich_source_conflict_degrades_without_human_checked_bypass(tmp_path: 
         payload=doi_payload(),
         idempotency_key="capture-alpha",
         actor="pi",
+        machine_authored=False,
     )
     run_next_job(vault, machine="test-machine")
 
@@ -620,6 +630,7 @@ def test_enrich_source_conflict_degrades_without_human_checked_bypass(tmp_path: 
         },
         idempotency_key="enrich-alpha",
         actor="pi",
+        machine_authored=False,
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -666,6 +677,7 @@ def test_enrich_source_conflict_degrades_without_human_checked_bypass(tmp_path: 
         },
         idempotency_key="accept-degraded-alpha",
         actor="pi",
+        machine_authored=False,
     )
     failed = run_next_job(vault, machine="test-machine")
 
@@ -683,7 +695,12 @@ def test_enrich_source_blocks_abstract_only_text_without_acquired_full_text(
         "text_status": "abstract-only",
     }
     enqueue_operation(
-        vault, "capture-source", payload=payload, idempotency_key="capture-alpha", actor="pi"
+        vault,
+        "capture-source",
+        payload=payload,
+        idempotency_key="capture-alpha",
+        actor="pi",
+        machine_authored=False,
     )
     run_next_job(vault, machine="test-machine")
     enqueue_operation(
@@ -692,6 +709,7 @@ def test_enrich_source_blocks_abstract_only_text_without_acquired_full_text(
         payload={"work_id": "source-alpha", "provider_payloads": provider_payloads()},
         idempotency_key="enrich-alpha",
         actor="pi",
+        machine_authored=False,
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -715,7 +733,12 @@ def test_enrich_source_acquires_replayed_full_text(tmp_path: Path) -> None:
         "text_status": "abstract-only",
     }
     enqueue_operation(
-        vault, "capture-source", payload=payload, idempotency_key="capture-alpha", actor="pi"
+        vault,
+        "capture-source",
+        payload=payload,
+        idempotency_key="capture-alpha",
+        actor="pi",
+        machine_authored=False,
     )
     run_next_job(vault, machine="test-machine")
     full_text = "Acquired alpha full text about framing, methods, outcomes, gaps, and impact."
@@ -729,6 +752,7 @@ def test_enrich_source_acquires_replayed_full_text(tmp_path: Path) -> None:
         },
         idempotency_key="enrich-alpha",
         actor="pi",
+        machine_authored=False,
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -753,7 +777,12 @@ def test_enrich_source_fetches_allowed_open_access_text(tmp_path: Path, monkeypa
         "text_status": "abstract-only",
     }
     enqueue_operation(
-        vault, "capture-source", payload=payload, idempotency_key="capture-alpha", actor="pi"
+        vault,
+        "capture-source",
+        payload=payload,
+        idempotency_key="capture-alpha",
+        actor="pi",
+        machine_authored=False,
     )
     run_next_job(vault, machine="test-machine")
     html = (
@@ -787,6 +816,7 @@ def test_enrich_source_fetches_allowed_open_access_text(tmp_path: Path, monkeypa
         payload={"work_id": "source-alpha", "provider_payloads": provider_payloads()},
         idempotency_key="enrich-alpha",
         actor="pi",
+        machine_authored=False,
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -805,7 +835,12 @@ def test_enrich_source_tries_next_open_access_text_url(tmp_path: Path, monkeypat
         "text_status": "abstract-only",
     }
     enqueue_operation(
-        vault, "capture-source", payload=payload, idempotency_key="capture-alpha", actor="pi"
+        vault,
+        "capture-source",
+        payload=payload,
+        idempotency_key="capture-alpha",
+        actor="pi",
+        machine_authored=False,
     )
     run_next_job(vault, machine="test-machine")
     providers = provider_payloads()
@@ -844,6 +879,7 @@ def test_enrich_source_tries_next_open_access_text_url(tmp_path: Path, monkeypat
         payload={"work_id": "source-alpha", "provider_payloads": providers},
         idempotency_key="enrich-alpha",
         actor="pi",
+        machine_authored=False,
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -863,7 +899,12 @@ def test_enrich_source_fetches_open_access_locations_list(tmp_path: Path, monkey
         "text_status": "abstract-only",
     }
     enqueue_operation(
-        vault, "capture-source", payload=payload, idempotency_key="capture-alpha", actor="pi"
+        vault,
+        "capture-source",
+        payload=payload,
+        idempotency_key="capture-alpha",
+        actor="pi",
+        machine_authored=False,
     )
     run_next_job(vault, machine="test-machine")
     providers = provider_payloads()
@@ -902,6 +943,7 @@ def test_enrich_source_fetches_open_access_locations_list(tmp_path: Path, monkey
         payload={"work_id": "source-alpha", "provider_payloads": providers},
         idempotency_key="enrich-alpha",
         actor="pi",
+        machine_authored=False,
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -921,7 +963,12 @@ def test_enrich_source_fetches_openalex_open_access_location(tmp_path: Path, mon
         "text_status": "abstract-only",
     }
     enqueue_operation(
-        vault, "capture-source", payload=payload, idempotency_key="capture-alpha", actor="pi"
+        vault,
+        "capture-source",
+        payload=payload,
+        idempotency_key="capture-alpha",
+        actor="pi",
+        machine_authored=False,
     )
     run_next_job(vault, machine="test-machine")
     providers = provider_payloads()
@@ -970,6 +1017,7 @@ def test_enrich_source_fetches_openalex_open_access_location(tmp_path: Path, mon
         payload={"work_id": "source-alpha", "provider_payloads": providers},
         idempotency_key="enrich-alpha",
         actor="pi",
+        machine_authored=False,
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -989,7 +1037,12 @@ def test_enrich_source_fetches_crossref_full_text_link(tmp_path: Path, monkeypat
         "text_status": "abstract-only",
     }
     enqueue_operation(
-        vault, "capture-source", payload=payload, idempotency_key="capture-alpha", actor="pi"
+        vault,
+        "capture-source",
+        payload=payload,
+        idempotency_key="capture-alpha",
+        actor="pi",
+        machine_authored=False,
     )
     run_next_job(vault, machine="test-machine")
     providers = provider_payloads()
@@ -1034,6 +1087,7 @@ def test_enrich_source_fetches_crossref_full_text_link(tmp_path: Path, monkeypat
         payload={"work_id": "source-alpha", "provider_payloads": providers},
         idempotency_key="enrich-alpha",
         actor="pi",
+        machine_authored=False,
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -1052,6 +1106,7 @@ def test_enrich_source_blocks_retracted_doi(tmp_path: Path) -> None:
         payload=doi_payload(),
         idempotency_key="capture-alpha",
         actor="pi",
+        machine_authored=False,
     )
     run_next_job(vault, machine="test-machine")
 
@@ -1064,6 +1119,7 @@ def test_enrich_source_blocks_retracted_doi(tmp_path: Path) -> None:
         },
         idempotency_key="enrich-alpha",
         actor="pi",
+        machine_authored=False,
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -1128,6 +1184,7 @@ def test_enrich_source_output_states_keyless_degradation(tmp_path: Path) -> None
         payload=doi_payload(),
         idempotency_key="capture-alpha",
         actor="pi",
+        machine_authored=False,
     )
     run_next_job(vault, machine="test-machine")
     enqueue_operation(
@@ -1136,6 +1193,7 @@ def test_enrich_source_output_states_keyless_degradation(tmp_path: Path) -> None
         payload={"work_id": "source-alpha", "provider_payloads": provider_payloads()},
         idempotency_key="enrich-alpha",
         actor="pi",
+        machine_authored=False,
     )
 
     done = run_next_job(vault, machine="test-machine")
@@ -1314,7 +1372,12 @@ def test_a_paused_enrich_source_commits_no_empty_path_on_the_blocked_run(tmp_pat
     """
     vault = workspace(tmp_path)
     enqueue_operation(
-        vault, "capture-source", payload=doi_payload(), idempotency_key="capture-alpha", actor="pi"
+        vault,
+        "capture-source",
+        payload=doi_payload(),
+        idempotency_key="capture-alpha",
+        actor="pi",
+        machine_authored=False,
     )
     run_next_job(vault, machine="test-machine")
     set_attention_config(vault, "producers:\n  enrich-source: paused\n")
@@ -1330,6 +1393,7 @@ def test_a_paused_enrich_source_commits_no_empty_path_on_the_blocked_run(tmp_pat
         },
         idempotency_key="enrich-alpha",
         actor="pi",
+        machine_authored=False,
     )
     done = run_next_job(vault, machine="test-machine")
 
