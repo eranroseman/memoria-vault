@@ -70,6 +70,7 @@ This page summarizes `src/memoria_vault/cli.py`; use `--help` for exact flags.
 | `memoria check` | Mark a Concept checked as the PI, or run integrity-owned workspace checks when no target is given. |
 | `memoria show/list [--type note\|work\|hub\|project]/export` | Inspect and export Concepts; `--type` filters to exactly one type per invocation — `list --type work` enumerates only catalog Works, never merged with note/hub/project Concepts. |
 | `memoria project ask/trace/gaps/frame-paper/slice/compose/verify/resolve-evidence/promote/explore/suggest-hubs/export` | Query, frame, write, verify, record evidence-review dispositions, promote, explore, and export project-level knowledge. Framing, evidence dispositions, and promotion are PI-only. |
+| `memoria review list/show/accept/reject/edit/defer/stats` | Work the evidence-set review queue: list and inspect held evidence sets, record one of the four dispositions, and read the review telemetry summary. Engine-direct and PI-only; dispositions go through the same seam as `memoria project resolve-evidence`. See [Evidence-set review](../analysis-and-surfaces/evidence-review.md). |
 | `memoria steering show/edit` | Show effective steering—derived from active projects, hubs, and unresolved question notes—with per-token provenance; edit the PI-owned `steering.md` watch/mute override. |
 | `memoria vocab list/add/rename/merge` | Read controlled vocabulary; mutations are PI-only. |
 | `memoria journal tail/show/verify` | Inspect journal entries or verify the authoritative hash chain, live-tip anchor, committed anchor prefix, and JSONL export subset. |
@@ -135,6 +136,13 @@ This roster mirrors the live argparse tree:
 - `memoria request resume`
 - `memoria request retry`
 - `memoria request show`
+- `memoria review accept`
+- `memoria review defer`
+- `memoria review edit`
+- `memoria review list`
+- `memoria review reject`
+- `memoria review show`
+- `memoria review stats`
 - `memoria secrets list`
 - `memoria secrets set`
 - `memoria serve`
@@ -210,7 +218,8 @@ detail.
 ## Request controls
 
 All request controls are PI-only, as are `memoria project resolve-evidence`,
-`memoria steering edit`, and vocabulary mutations.
+`memoria review accept`/`reject`/`edit`/`defer`, `memoria steering edit`, and
+vocabulary mutations.
 
 | Control | Accepts | Effect |
 | --- | --- | --- |

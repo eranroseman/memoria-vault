@@ -20,7 +20,14 @@ const {
   parseHandshake,
 } = require("./handshake");
 const { computeNextPollDelay, computePill, formatAsOf } = require("./pill");
-const { materialize, moveSelection, renderBlock, renderView, sortCards } = require("./viewspec");
+const {
+  collapseAnalysis,
+  materialize,
+  moveSelection,
+  renderBlock,
+  renderView,
+  sortCards,
+} = require("./viewspec");
 
 const DEFAULT_SETTINGS = {
   enabled: false,
@@ -35,6 +42,11 @@ const STATUS_PATH = "/v1/status";
 const ATTENTION_VIEW_PATH = "/v1/views/attention";
 const OPERATION_PATH = "/operation/run";
 const VIEW_TYPE_ATTENTION = "memoria-attention";
+const VIEW_TYPE_EVIDENCE_REVIEW = "memoria-evidence-review";
+const EVIDENCE_REVIEW_VIEW_PATH = "/v1/views/evidence-review";
+// "" is the unfiltered queue; the other three are the engine's whole routing
+// vocabulary (`EVIDENCE_REVIEW_ROUTING_TYPES`), which the view refuses outside.
+const EVIDENCE_ROUTING_FACETS = ["", "implicit", "multi-hop", "incomplete"];
 
 module.exports = class MemoriaObsidianPlugin extends Plugin {
   async onload() {
@@ -72,6 +84,15 @@ module.exports = class MemoriaObsidianPlugin extends Plugin {
       id: "open-attention",
       name: "Memoria: Open attention pane",
       callback: () => this.activateAttentionView(),
+    });
+    this.registerView(
+      VIEW_TYPE_EVIDENCE_REVIEW,
+      (leaf) => new EvidenceReviewView(leaf, this),
+    );
+    this.addCommand({
+      id: "open-evidence-review",
+      name: "Memoria: Open evidence review",
+      callback: () => this.activateEvidenceReviewView(),
     });
     this.addCommand({
       id: "relate",
@@ -470,11 +491,13 @@ module.exports = class MemoriaObsidianPlugin extends Plugin {
       this.missingCredential = String((summary.missing_required_credentials || [])[0] || "");
       this.linkRelations = Array.isArray(summary.link_relations) ? summary.link_relations : [];
       this.connectionStatus = "connected";
-      for (const leaf of this.app.workspace.getLeavesOfType
-        ? this.app.workspace.getLeavesOfType(VIEW_TYPE_ATTENTION)
-        : []) {
-        if (leaf.view && typeof leaf.view.refresh === "function") {
-          leaf.view.refresh();
+      for (const viewType of [VIEW_TYPE_ATTENTION, VIEW_TYPE_EVIDENCE_REVIEW]) {
+        for (const leaf of this.app.workspace.getLeavesOfType
+          ? this.app.workspace.getLeavesOfType(viewType)
+          : []) {
+          if (leaf.view && typeof leaf.view.refresh === "function") {
+            leaf.view.refresh();
+          }
         }
       }
     } catch {
@@ -575,19 +598,27 @@ module.exports = class MemoriaObsidianPlugin extends Plugin {
     }
   }
 
-  async activateAttentionView() {
+  async activateView(viewType) {
     const existing = this.app.workspace.getLeavesOfType
-      ? this.app.workspace.getLeavesOfType(VIEW_TYPE_ATTENTION)
+      ? this.app.workspace.getLeavesOfType(viewType)
       : [];
     const leaf =
       existing[0] || (this.app.workspace.getRightLeaf && this.app.workspace.getRightLeaf(false));
     if (!leaf) {
       return;
     }
-    await leaf.setViewState({ type: VIEW_TYPE_ATTENTION, active: true });
+    await leaf.setViewState({ type: viewType, active: true });
     if (this.app.workspace.revealLeaf) {
       this.app.workspace.revealLeaf(leaf);
     }
+  }
+
+  async activateAttentionView() {
+    await this.activateView(VIEW_TYPE_ATTENTION);
+  }
+
+  async activateEvidenceReviewView() {
+    await this.activateView(VIEW_TYPE_EVIDENCE_REVIEW);
   }
 };
 
@@ -713,6 +744,179 @@ class AttentionView extends ItemView {
         actionEl.getAttribute("data-operation-id"),
         payload,
       );
+      await this.refresh();
+      return;
+    }
+    const linkEl = event.target.closest("a[data-ref]");
+    if (linkEl) {
+      this.plugin.app.workspace.openLinkText(linkEl.getAttribute("data-ref"), "", false);
+      return;
+    }
+    const rowEl = event.target.closest(".memoria-row");
+    if (rowEl) {
+      this.toggleExpand(Number(rowEl.getAttribute("data-row-index")));
+    }
+  }
+}
+
+// V2 spec §1: only a top-level evidence card is a queue row. An SRD-gap card
+// is already a whole normalized U3 card and carries no evidence decision, so it
+// is drawn as itself rather than folded into the row/expand machinery.
+// `review_kind` is the card's own claim about what it is, written on every
+// evidence card and on nothing else; `kind_line` is a display string, so it is
+// deliberately not consulted here.
+const isEvidenceCard = (block) =>
+  Boolean(block) && block.kind === "card" && block.review_kind === "evidence-set";
+
+class EvidenceReviewView extends ItemView {
+  constructor(leaf, plugin) {
+    super(leaf);
+    this.plugin = plugin;
+    this.view = null;
+    this.cards = [];
+    this.extras = [];
+    this.selected = 0;
+    this.expandedRef = "";
+    this.analysisOpenRef = "";
+    this.facetRouting = "";
+  }
+
+  getViewType() {
+    return VIEW_TYPE_EVIDENCE_REVIEW;
+  }
+
+  getDisplayText() {
+    return "Memoria Evidence Review";
+  }
+
+  getIcon() {
+    return "scale";
+  }
+
+  async onOpen() {
+    this.contentEl.addClass("memoria-evidence-review");
+    this.contentEl.tabIndex = 0;
+    this.registerDomEvent(this.contentEl, "keydown", (event) => this.onKey(event));
+    this.registerDomEvent(this.contentEl, "click", (event) => this.onClick(event));
+    await this.refresh();
+  }
+
+  viewPath() {
+    return this.facetRouting
+      ? `${EVIDENCE_REVIEW_VIEW_PATH}?routing_type=${encodeURIComponent(this.facetRouting)}`
+      : EVIDENCE_REVIEW_VIEW_PATH;
+  }
+
+  async refresh() {
+    try {
+      const payload = await this.plugin.authedJson(this.viewPath());
+      this.view = payload.view || null;
+    } catch (error) {
+      this.contentEl.empty();
+      this.contentEl.createDiv({
+        cls: "memoria-block-unknown",
+        text: `Memoria evidence review unavailable: ${String(error.message || error)}`,
+      });
+      return;
+    }
+    const blocks =
+      this.view && this.view.version === "view-spec.v1" ? this.view.blocks || [] : [];
+    // Server queue order is the review order (spec §6) — never re-sorted.
+    this.cards = blocks.filter(isEvidenceCard);
+    this.extras = blocks.filter((block) => !isEvidenceCard(block));
+    this.selected = Math.max(0, Math.min(this.selected, this.cards.length - 1));
+    this.render();
+  }
+
+  render() {
+    const root = this.contentEl;
+    root.empty();
+    const header = root.createDiv({ cls: "memoria-attention-header" });
+    header.createSpan({ text: "EVIDENCE REVIEW" });
+    const facet = header.createEl("button", {
+      cls: "memoria-action",
+      text: this.facetRouting ? `routing: ${this.facetRouting}` : "routing: all",
+    });
+    facet.setAttribute("data-cycle-routing", "1");
+    header.createSpan({
+      cls: "memoria-attention-age",
+      text: `as of ${formatAsOf(this.plugin.lastPollAt)}`,
+    });
+    if (!this.view || this.view.version !== "view-spec.v1") {
+      for (const tree of renderView(this.view)) {
+        materialize(tree, root);
+      }
+      return;
+    }
+    this.cards.forEach((card, index) => {
+      const row = root.createDiv({
+        cls: index === this.selected ? "memoria-row is-selected" : "memoria-row",
+      });
+      row.createSpan({ cls: "memoria-row-title", text: String(card.title || "") });
+      row.createSpan({ cls: "memoria-row-age", text: String(card.age_label || "") });
+      row.setAttribute("data-row-index", String(index));
+      const ref = String(card.ref || "");
+      if (ref && ref === this.expandedRef) {
+        materialize(collapseAnalysis(renderBlock(card), this.analysisOpenRef === ref), root);
+      }
+    });
+    // The payload puts SRD-gap cards after the evidence queue and they stay
+    // there: they are context for the queue, not the work at the top of it.
+    for (const extra of this.extras) {
+      materialize(renderBlock(extra), root);
+    }
+  }
+
+  toggleExpand(index) {
+    this.selected = index;
+    const ref = String((this.cards[index] || {}).ref || "");
+    this.expandedRef = this.expandedRef === ref ? "" : ref;
+    // Independence-first: analysis re-collapses on every expand (spec §3).
+    this.analysisOpenRef = "";
+    this.render();
+  }
+
+  onKey(event) {
+    if (event.key === "j" || event.key === "k") {
+      this.selected = moveSelection(this.cards.length, this.selected, event.key);
+      event.preventDefault();
+      this.render();
+      return;
+    }
+    if (event.key === "Enter" && this.cards.length) {
+      event.preventDefault();
+      this.toggleExpand(this.selected);
+    }
+  }
+
+  async onClick(event) {
+    const facetEl = event.target.closest("button[data-cycle-routing]");
+    if (facetEl) {
+      const at = EVIDENCE_ROUTING_FACETS.indexOf(this.facetRouting);
+      this.facetRouting = EVIDENCE_ROUTING_FACETS[(at + 1) % EVIDENCE_ROUTING_FACETS.length];
+      await this.refresh();
+      return;
+    }
+    const toggleEl = event.target.closest("button[data-toggle-analysis]");
+    if (toggleEl) {
+      this.analysisOpenRef = this.analysisOpenRef === this.expandedRef ? "" : this.expandedRef;
+      this.render();
+      return;
+    }
+    const actionEl = event.target.closest("button[data-operation-id]");
+    if (actionEl) {
+      const payload = JSON.parse(actionEl.getAttribute("data-payload") || "{}");
+      await this.plugin.enqueueNamedOperation(
+        actionEl.getAttribute("data-operation-id"),
+        payload,
+      );
+      // Edit records "I will repair the marker", which is work in the draft:
+      // the deep link is how that decision reaches the block it is about.
+      // No `expandedRef` guard: an action button only exists inside the
+      // expanded card, so there is no state in which it is empty here.
+      if (payload.decision === "edit") {
+        this.plugin.app.workspace.openLinkText(this.expandedRef, "", false);
+      }
       await this.refresh();
       return;
     }

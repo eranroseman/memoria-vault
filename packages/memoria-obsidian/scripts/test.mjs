@@ -119,6 +119,95 @@ const ATTENTION_VIEW_JSON = {
   },
 };
 
+// The evidence-review view payload (V2R-B's binding row grammar): one nested
+// card per evidence row, plus a trailing SRD-gap card that is a whole U3 card
+// and not an evidence row. The reviewable row carries the four `resolve-evidence`
+// actions and parent-owned analysis; the cure row carries neither, which is the
+// pair the pane's read-only handling has to tell apart.
+const EVIDENCE_REVIEW_VIEW_JSON = {
+  ok: true,
+  api_version: "engine-read-api.v1",
+  view: {
+    version: "view-spec.v1",
+    kind: "evidence-review",
+    blocks: [
+      {
+        kind: "card",
+        id: "ev-0011aabb",
+        ref: "projects/project-alpha/draft.md#^blk-a1b2",
+        title: "Implicit synthesis claim",
+        kind_line: "evidence-review",
+        review_kind: "evidence-set",
+        evidence_id: "ev-0011aabb",
+        project: "projects/project-alpha/project.md",
+        routing_type: "implicit",
+        reviewable: true,
+        disposition: "open",
+        item_count: 1,
+        age_days: 0,
+        age_s: 0,
+        age_label: "0d",
+        tipped_by: "implicit derivation",
+        certainty: "possible",
+        blocks: [
+          {
+            kind: "evidence-list",
+            id: "ev-0011aabb-grounds",
+            ref: "projects/project-alpha/draft.md#^blk-a1b2",
+            items: [{ ref: "source-span:work-alpha:3", kind: "source-span", resolves: true }],
+          },
+          { kind: "text", id: "ev-0011aabb-routing", text: "implicit" },
+          {
+            kind: "action-row",
+            id: "ev-0011aabb-actions",
+            actions: [
+              { label: "Accept", operation_id: "resolve-evidence", payload: { evidence_id: "ev-0011aabb", decision: "accept" } },
+              { label: "Reject", operation_id: "resolve-evidence", payload: { evidence_id: "ev-0011aabb", decision: "reject" } },
+              { label: "Edit", operation_id: "resolve-evidence", payload: { evidence_id: "ev-0011aabb", decision: "edit" } },
+              { label: "Defer", operation_id: "resolve-evidence", payload: { evidence_id: "ev-0011aabb", decision: "defer" } },
+            ],
+          },
+        ],
+      },
+      {
+        kind: "card",
+        id: "ev-0022ccdd",
+        ref: "projects/project-alpha/draft.md#^blk-c3d4",
+        title: "Drifted claim text",
+        kind_line: "evidence-review",
+        review_kind: "evidence-set",
+        evidence_id: "ev-0022ccdd",
+        project: "projects/project-alpha/project.md",
+        routing_type: "",
+        reviewable: false,
+        disposition: "open",
+        item_count: 0,
+        age_days: 9,
+        age_s: 777600,
+        age_label: "9d",
+        cure: "repair the draft marker, then re-verify",
+        blocks: [
+          { kind: "evidence-list", id: "ev-0022ccdd-grounds", items: [] },
+          { kind: "text", id: "ev-0022ccdd-routing", text: "evidence-text-drift" },
+        ],
+      },
+      {
+        kind: "card",
+        id: "srd-gap-1",
+        ref: "attention/srd-gap-1.md",
+        title: "SRD gap: no falsifier recorded",
+        kind_line: "srd-gap",
+        age_label: "9d",
+        blocks: [{ kind: "text", id: "srd-gap-1-body", text: "Record a falsifier." }],
+      },
+      // Transport hands the pane whatever JSON arrived, so a malformed payload
+      // can put a non-object where a block belongs. It fails visible next to
+      // the queue rather than throwing on the way to classifying it.
+      null,
+    ],
+  },
+};
+
 // The subset of Obsidian's element API the pane uses. `closest` is real enough
 // to answer the three selectors the click handler asks for and to answer them
 // by walking parents, because "which control was clicked" is the decision that
@@ -1428,6 +1517,340 @@ try {
     servedRoster,
     "the header's modal is wired to the same plugin, roster and all",
   );
+
+  // 28) Evidence-review pane (V2 spec sections 1-3): a second view on the same
+  // infrastructure, reading its own path, keeping the server's queue order, and
+  // putting the machine's analysis behind a disclosure the PI has to open.
+  respond = (options) =>
+    options.url.includes("/v1/views/evidence-review")
+      ? { status: 200, json: EVIDENCE_REVIEW_VIEW_JSON }
+      : { status: 200, json: SUMMARY_JSON };
+  assert.ok(plugin.views["memoria-evidence-review"], "evidence review view registered");
+  const reviewView = plugin.views["memoria-evidence-review"]({});
+  assert.equal(reviewView.getViewType(), "memoria-evidence-review");
+  assert.equal(reviewView.getDisplayText(), "Memoria Evidence Review");
+  assert.ok(plugin.commands.includes("open-evidence-review"));
+  const reviewCommand = plugin.commandRoster.find((command) => command.id === "open-evidence-review");
+  assert.equal(reviewCommand.name, "Memoria: Open evidence review");
+  let reviewOpens = 0;
+  plugin.activateEvidenceReviewView = async () => {
+    reviewOpens += 1;
+  };
+  reviewCommand.callback();
+  assert.equal(reviewOpens, 1, "the command opens the evidence-review pane");
+  // The attention command must still open the attention pane: two panes wired
+  // to one activator is exactly what a copy-paste second view produces.
+  assert.equal(opens, 1, "the review command does not open the attention pane");
+
+  plugin.lastPollAt = Date.UTC(2026, 0, 2, 3, 35); // 09:05 in the pinned zone
+  const reviewFrom = requests.length;
+  await reviewView.onOpen();
+  const reviewRoot = reviewView.contentEl;
+  assert.ok(reviewRoot.hasClass("memoria-evidence-review"));
+  assert.deepEqual(
+    requests.slice(reviewFrom).map((request) => request.url),
+    ["http://127.0.0.1:43210/v1/views/evidence-review"],
+    "the pane reads its own view, unfiltered, and nothing else",
+  );
+  const reviewRowTitles = () =>
+    withClass(reviewRoot, "memoria-row-title").map((node) => node.text);
+  const reviewCardTitles = () =>
+    withClass(reviewRoot, "memoria-card-title").map((node) => node.text);
+  // Spec section 6: the batch order *is* the review order. The payload lists the
+  // 0d row first and the 9d row second, which is the order `sortCards` would
+  // reverse — so a pane that sorted like the attention pane fails here.
+  assert.deepEqual(reviewRowTitles(), ["Implicit synthesis claim", "Drifted claim text"]);
+  assert.deepEqual(
+    withClass(reviewRoot, "memoria-row-age").map((node) => node.text),
+    ["0d", "9d"],
+  );
+  // The SRD-gap card is not an evidence row: it stays a whole card, drawn after
+  // the queue, with no row of its own to select or expand.
+  assert.deepEqual(reviewCardTitles(), ["SRD gap: no falsifier recorded"]);
+  assert.deepEqual(
+    withClass(reviewRoot, "memoria-card-kind").map((node) => node.text),
+    ["srd-gap"],
+  );
+  assert.deepEqual(
+    withClass(reviewRoot, "memoria-block-unknown").map((node) => node.text),
+    ["Unknown block type: null"],
+    "a malformed block is drawn labeled, never dropped and never fatal",
+  );
+  assert.deepEqual(
+    withClass(reviewRoot, "memoria-attention-header")[0].children.map((child) => child.text),
+    ["EVIDENCE REVIEW", "routing: all", "as of 09:05"],
+  );
+
+  // 28a) Expanding a reviewable row: evidence, routing, and the four actions
+  // render before a collapsed analysis disclosure. Nothing about the machine's
+  // opinion is visible until the PI asks for it.
+  reviewView.onKey({ key: "Enter", preventDefault() {} });
+  const expandedClasses = () =>
+    withClass(reviewRoot, "memoria-card")[0].children.map((node) => node.cls);
+  assert.deepEqual(expandedClasses(), [
+    "memoria-card-kind",
+    "memoria-card-title",
+    "memoria-evidence",
+    "memoria-block-text",
+    "memoria-action-row",
+    "memoria-analysis-toggle",
+    "memoria-analysis is-collapsed",
+  ]);
+  const actionButtons = () =>
+    withClass(reviewRoot, "memoria-action").filter((node) => node.getAttribute("data-operation-id"));
+  assert.deepEqual(
+    actionButtons().map((node) => [
+      node.text,
+      node.getAttribute("data-operation-id"),
+      JSON.parse(node.getAttribute("data-payload")).decision,
+    ]),
+    [
+      ["Accept", "resolve-evidence", "accept"],
+      ["Reject", "resolve-evidence", "reject"],
+      ["Edit", "resolve-evidence", "edit"],
+      ["Defer", "resolve-evidence", "defer"],
+    ],
+  );
+  // Spec section 2 field 7: four equals. A pre-selected action is a verdict.
+  assert.deepEqual(
+    actionButtons().map((node) => node.cls),
+    ["memoria-action", "memoria-action", "memoria-action", "memoria-action"],
+  );
+
+  // 28b) The disclosure opens and closes on its own control, and a fresh expand
+  // re-collapses it — independence-first by construction, not by habit.
+  const analysisToggle = () => withClass(reviewRoot, "memoria-analysis-toggle")[0];
+  assert.equal(analysisToggle().text, "Show analysis (machine)");
+  await reviewView.onClick(clickOn(analysisToggle()));
+  assert.deepEqual(expandedClasses().slice(-2), ["memoria-analysis-toggle", "memoria-analysis"]);
+  assert.equal(analysisToggle().text, "Hide analysis");
+  assert.deepEqual(
+    withClass(reviewRoot, "memoria-card-tipped")[0].children.map((node) => node.text),
+    ["tipped by: implicit derivation", "possible"],
+  );
+  // The same control closes it: a disclosure that only opens is a one-way
+  // door, and the PI cannot put the machine's opinion back out of view.
+  await reviewView.onClick(clickOn(analysisToggle()));
+  assert.deepEqual(
+    expandedClasses().slice(-2),
+    ["memoria-analysis-toggle", "memoria-analysis is-collapsed"],
+  );
+  assert.equal(analysisToggle().text, "Show analysis (machine)");
+  await reviewView.onClick(clickOn(analysisToggle()));
+  reviewView.onKey({ key: "Enter", preventDefault() {} });
+  assert.deepEqual(reviewCardTitles(), ["SRD gap: no falsifier recorded"], "Enter collapses");
+  reviewView.onKey({ key: "Enter", preventDefault() {} });
+  assert.deepEqual(
+    expandedClasses().slice(-2),
+    ["memoria-analysis-toggle", "memoria-analysis is-collapsed"],
+    "re-expanding a row re-collapses its analysis",
+  );
+
+  // 28c) An action enqueues the payload the server serialized, then re-reads.
+  const acceptButton = actionButtons()[0];
+  let reviewPostedFrom = requests.length;
+  await reviewView.onClick(clickOn(acceptButton));
+  const reviewPosted = requests
+    .slice(reviewPostedFrom)
+    .filter((request) => request.url.endsWith("/operation/run"))
+    .map((request) => JSON.parse(request.body));
+  assert.deepEqual(
+    reviewPosted.map((body) => body.operation_id),
+    ["resolve-evidence", "empirical-event-record"],
+  );
+  assert.deepEqual(reviewPosted[0].payload, { evidence_id: "ev-0011aabb", decision: "accept" });
+  assert.ok(
+    requests
+      .slice(reviewPostedFrom)
+      .some((request) => request.url.includes("/v1/views/evidence-review")),
+    "a disposition re-reads the queue rather than leaving a decided row standing",
+  );
+
+  // The re-read keeps the row open, so the PI sees what the decision did to the
+  // row they were reading rather than losing their place in the queue.
+  assert.deepEqual(actionButtons().length, 4, "the decided row stays expanded");
+
+  // 28d) Edit is the one action that also takes the PI to the draft block: the
+  // decision it records is "I will fix the marker", which needs the marker.
+  const openedFrom = opened.length;
+  await reviewView.onClick(clickOn(actionButtons()[0]));
+  assert.deepEqual(opened.slice(openedFrom), [], "Accept does not navigate away from the queue");
+  await reviewView.onClick(clickOn(actionButtons()[2]));
+  assert.deepEqual(opened.slice(openedFrom), [
+    ["projects/project-alpha/draft.md#^blk-a1b2", "", false],
+  ]);
+
+  // 28e) The permanently blocked row is read-only: no actions to press and no
+  // analysis to open, so the pane cannot invite a decision that cannot be made.
+  reviewView.onKey({ key: "j", preventDefault() {} });
+  reviewView.onKey({ key: "Enter", preventDefault() {} });
+  assert.deepEqual(expandedClasses(), [
+    "memoria-card-kind",
+    "memoria-card-title",
+    "memoria-evidence",
+    "memoria-block-text",
+  ]);
+  assert.deepEqual(actionButtons(), []);
+  assert.deepEqual(withClass(reviewRoot, "memoria-analysis-toggle"), []);
+
+  // 28f) The routing facet cycles through the queue's three routing types and
+  // back to the unfiltered queue, carrying the canonical `routing_type` key.
+  const facetButton = () =>
+    withClass(withClass(reviewRoot, "memoria-attention-header")[0], "memoria-action")[0];
+  const facetUrls = [];
+  for (const expected of ["implicit", "multi-hop", "incomplete", "all"]) {
+    reviewPostedFrom = requests.length;
+    await reviewView.onClick(clickOn(facetButton()));
+    facetUrls.push(requests.slice(reviewPostedFrom).at(-1).url);
+    assert.equal(facetButton().text, `routing: ${expected}`);
+  }
+  assert.deepEqual(facetUrls, [
+    "http://127.0.0.1:43210/v1/views/evidence-review?routing_type=implicit",
+    "http://127.0.0.1:43210/v1/views/evidence-review?routing_type=multi-hop",
+    "http://127.0.0.1:43210/v1/views/evidence-review?routing_type=incomplete",
+    "http://127.0.0.1:43210/v1/views/evidence-review",
+  ]);
+
+  // 28g) A failed read says why, in place of the rows, naming this pane.
+  respond = () => ({ status: 503, json: { ok: true } });
+  await reviewView.refresh();
+  assert.deepEqual(
+    withClass(reviewRoot, "memoria-block-unknown").map((node) => node.text),
+    ["Memoria evidence review unavailable: HTTP 503"],
+  );
+  assert.deepEqual(withClass(reviewRoot, "memoria-row"), []);
+
+  // 28i) The same three claims the attention pane makes about its rows, made
+  // again here: a copied render loop inherits none of them. A row click reaches
+  // the row its `data-row-index` names, a shrinking queue clamps the selection
+  // rather than pointing past the end, and a key the pane does not own keeps
+  // its default.
+  respond = (options) =>
+    options.url.includes("/v1/views/evidence-review")
+      ? { status: 200, json: EVIDENCE_REVIEW_VIEW_JSON }
+      : { status: 200, json: SUMMARY_JSON };
+  await reviewView.refresh();
+  let reviewPrevented = 0;
+  reviewView.onKey({
+    key: "x",
+    preventDefault() {
+      reviewPrevented += 1;
+    },
+  });
+  assert.equal(reviewPrevented, 0, "an unhandled key keeps its default");
+  reviewView.onKey({
+    key: "j",
+    preventDefault() {
+      reviewPrevented += 1;
+    },
+  });
+  reviewView.onKey({
+    key: "k",
+    preventDefault() {
+      reviewPrevented += 1;
+    },
+  });
+  assert.equal(reviewPrevented, 2, "j/k are the pane's own keys, taken from Obsidian");
+  // 28e left the second row expanded, so the first click on it collapses; the
+  // second re-expands it. Index 1 both times, because a handler that ignored
+  // `data-row-index` and defaulted to 0 would satisfy a click on the first row.
+  await reviewView.onClick(clickOn(withClass(reviewRoot, "memoria-row-title")[1]));
+  assert.deepEqual(reviewCardTitles(), ["SRD gap: no falsifier recorded"]);
+  await reviewView.onClick(clickOn(withClass(reviewRoot, "memoria-row-title")[1]));
+  assert.deepEqual(reviewCardTitles(), ["Drifted claim text", "SRD gap: no falsifier recorded"]);
+  assert.deepEqual(
+    withClass(reviewRoot, "is-selected").flatMap((row) =>
+      withClass(row, "memoria-row-title").map((node) => node.text),
+    ),
+    ["Drifted claim text"],
+  );
+  respond = () => ({
+    status: 200,
+    json: {
+      ok: true,
+      view: {
+        version: "view-spec.v1",
+        kind: "evidence-review",
+        blocks: [EVIDENCE_REVIEW_VIEW_JSON.view.blocks[0]],
+      },
+    },
+  });
+  await reviewView.refresh();
+  assert.deepEqual(
+    withClass(reviewRoot, "is-selected").flatMap((row) =>
+      withClass(row, "memoria-row-title").map((node) => node.text),
+    ),
+    ["Implicit synthesis claim"],
+    "a queue that shrank under the selection re-selects a row that exists",
+  );
+  // A payload carrying no `view` at all — what an engine answering this path
+  // with a summary-shaped body sends. It is labeled `null`, not `undefined`,
+  // because the pane normalizes an absent view before it renders one.
+  respond = () => ({ status: 200, json: { ok: true, api_version: "engine-read-api.v1" } });
+  await reviewView.refresh();
+  assert.deepEqual(
+    withClass(reviewRoot, "memoria-block-unknown").map((node) => node.text),
+    ["Unknown view-spec version: null"],
+  );
+  assert.deepEqual(withClass(reviewRoot, "memoria-row"), []);
+  respond = () => ({
+    status: 200,
+    json: { ok: true, view: { version: "view-spec.v1", kind: "evidence-review", blocks: [] } },
+  });
+  await reviewView.refresh();
+  reviewPrevented = 0;
+  reviewView.onKey({
+    key: "Enter",
+    preventDefault() {
+      reviewPrevented += 1;
+    },
+  });
+  assert.equal(reviewView.selected, 0, "an empty queue selects nothing");
+  // Nothing to expand means the keystroke is not the pane's to swallow.
+  assert.equal(reviewPrevented, 0, "Enter on an empty queue keeps its default");
+  assert.deepEqual(withClass(reviewRoot, "memoria-row"), []);
+
+  // 28j) Both activators really open their own view type. Every assertion
+  // above about the two commands runs against a stubbed activator, so the one
+  // line that names a view type in each is otherwise unproven — and a second
+  // pane copied from the first is exactly where that line goes wrong.
+  const opener = new PluginClass();
+  await opener.onload();
+  const viewStates = [];
+  const revealed = [];
+  const fakeLeaf = {
+    async setViewState(state) {
+      viewStates.push(state);
+    },
+  };
+  opener.app.workspace.getRightLeaf = () => fakeLeaf;
+  opener.app.workspace.revealLeaf = (leaf) => revealed.push(leaf);
+  await opener.activateAttentionView();
+  await opener.activateEvidenceReviewView();
+  assert.deepEqual(viewStates, [
+    { type: "memoria-attention", active: true },
+    { type: "memoria-evidence-review", active: true },
+  ]);
+  assert.deepEqual(revealed, [fakeLeaf, fakeLeaf]);
+  // A workspace with nowhere to put the leaf is not a crash.
+  opener.app.workspace.getRightLeaf = () => null;
+  await opener.activateEvidenceReviewView();
+  assert.equal(viewStates.length, 2);
+
+  // 28h) The poll refreshes both panes. A refresh loop pinned to the attention
+  // view alone leaves an open review queue showing decided rows forever.
+  respond = null;
+  const bothPanes = new PluginClass();
+  await bothPanes.onload();
+  bothPanes._execFile = okHandshake();
+  assert.equal(await bothPanes.runHandshake(), true);
+  const refreshedTypes = [];
+  bothPanes.app.workspace.getLeavesOfType = (type) => [
+    { view: { refresh: () => refreshedTypes.push(type) } },
+  ];
+  await bothPanes.poll();
+  assert.deepEqual(refreshedTypes, ["memoria-attention", "memoria-evidence-review"]);
+
 } finally {
   globalThis.setTimeout = realSetTimeout;
   delete globalThis.document;

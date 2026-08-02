@@ -297,6 +297,7 @@ def test_memoria_obsidian_registers_minimal_proof_commands() -> None:
 
     for command_id in (
         "open-attention",
+        "open-evidence-review",
         "relate",
         "connect",
         "show-attention",
