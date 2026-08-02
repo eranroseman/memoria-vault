@@ -1,6 +1,6 @@
 """Read-API scope walk — U1 checklist letter (c).
 
-Spec: docs/superpowers/specs/2026-07-17-u1-read-api-design.md §6(c).
+Design record: design-history/23-alpha.23.md §3 (U1).
 Driven by the registry's own `scope` field: every read row declaring
 optional-read-scope refuses out-of-scope reads under a startup read_scope;
 workspace-scope rows are exempt by that same field. Probe targets come from

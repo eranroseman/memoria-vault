@@ -744,8 +744,8 @@ def test_cli_explore_acceptance_five_groups_versus_counts_and_depth_cap(
     §9 states its criteria about `memoria explore`, so the acceptance record is
     only worth what the *command* produces — the read envelope, the exit codes,
     a payload that survives JSON, and the refusal front. The counts below are
-    measured, not copied from the plan; see the 2026-08-02 amendment in
-    `docs/superpowers/plans/2026-07-17-r2-retrieval-modes.md` task E.3.
+    measured, not copied from the plan; see the 2026-08-02 amendment narrated
+    in design-history/23-alpha.23.md §3 (R2).
     """
     vault = _fixture_vault(tmp_path)
     ordered_a = [

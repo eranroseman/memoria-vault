@@ -1,6 +1,6 @@
 """Read-API auth walk — U1 checklist letter (b).
 
-Spec: docs/superpowers/specs/2026-07-17-u1-read-api-design.md §6(b), §2, §5.
+Design record: design-history/23-alpha.23.md §3 (U1).
 Every HTTP_ROUTES route requires the per-boot bearer token — shipped
 behavior (http_transport.py Handler._handle), pinned here registry-driven
 via http_routes() so new rows join the walk automatically. The sole
