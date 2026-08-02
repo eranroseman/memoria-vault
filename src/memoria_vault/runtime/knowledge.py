@@ -2207,6 +2207,137 @@ def write_project_argument_canvas(
     }
 
 
+def fork_project_canvas(
+    vault: Path,
+    project_path: str,
+    *,
+    context: OperationContext,
+    name: str = "scratch",
+    commit: bool = False,
+) -> dict[str, Any]:
+    """Copy the generated argument canvas to an editable, non-authoritative scratch."""
+    validate_operation_context(vault, context)
+    vault = Path(vault)
+    policy = load_operation_policy(vault, "fork-project-canvas")
+    _require_tool(policy, "trusted_writer")
+    project_rel = _project_rel(vault, project_path)
+    canvas_rel = _project_canvas_rel(project_rel)
+    canvas_path = vault / canvas_rel
+    if not canvas_path.is_file():
+        raise FileNotFoundError(canvas_path)
+    slug = re.sub(r"[^a-z0-9]+", "-", str(name).lower()).strip("-") or "scratch"
+    # `scratch-<slug>`, never a bare `<slug>`: the fork staleness read finds
+    # forks by globbing `scratch-*.canvas`, so a differently shaped filename is
+    # a fork nothing can diff.
+    scratch_rel = f"{posixpath.dirname(canvas_rel)}/scratch-{slug}.canvas"
+    require_policy_path(policy, scratch_rel)
+    scratch_path = vault / scratch_rel
+    if scratch_path.exists():
+        raise ValueError(f"scratch canvas already exists: {scratch_rel}")
+    canvas = json.loads(canvas_path.read_text(encoding="utf-8"))
+    canvas["nodes"] = [
+        node for node in canvas.get("nodes") or [] if node.get("id") != CANVAS_BANNER_NODE_ID
+    ]
+    scratch_path.write_text(json.dumps(canvas, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    event = None
+    commit_id = ""
+    if commit:
+        event = append_journal_event(
+            vault,
+            {
+                "event": "run",
+                "workflow": "fork-project-canvas",
+                "status": "done",
+                "inputs": [canvas_rel],
+                "outputs": [scratch_rel],
+            },
+            context=context,
+        )
+        commit_id = commit_writer_changes(
+            vault,
+            f"fork project canvas {slug}",
+            [scratch_rel],
+            context=context,
+        )
+    return {
+        "project_path": project_rel,
+        "source_canvas_path": canvas_rel,
+        "scratch_canvas_path": scratch_rel,
+        "event": event,
+        "commit": commit_id,
+    }
+
+
+def project_canvas_fork_status(vault: Path, project_path: str) -> dict[str, Any]:
+    """Diff every scratch canvas fork against the current generated canvas."""
+    vault = Path(vault)
+    project_rel = _project_rel(vault, project_path)
+    canvas_rel = _project_canvas_rel(project_rel)
+    # The live render, never the on-disk `argument.canvas`: the question the
+    # badge answers is "has the graph moved under this fork", and an on-disk
+    # comparison would answer "did the fork copy correctly" instead.
+    generated_edges, _generated_unresolved = _canvas_edge_keys(
+        render_project_argument_canvas(vault, project_rel)
+    )
+    forks: list[dict[str, Any]] = []
+    for scratch_path in sorted((vault / posixpath.dirname(canvas_rel)).glob("scratch-*.canvas")):
+        scratch_rel = scratch_path.relative_to(vault).as_posix()
+        try:
+            scratch = json.loads(scratch_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            scratch = None
+        if not isinstance(scratch, dict):
+            forks.append({"path": scratch_rel, "error": "unreadable scratch canvas"})
+            continue
+        scratch_edges, unresolved = _canvas_edge_keys(scratch)
+        added = sorted(scratch_edges - generated_edges)
+        removed = sorted(generated_edges - scratch_edges)
+        forks.append(
+            {
+                "path": scratch_rel,
+                "added": [
+                    {
+                        "source_note_path": source,
+                        "link_type": link_type,
+                        "target_path": target,
+                    }
+                    for source, link_type, target in added
+                ],
+                "removed_count": len(removed),
+                "diff_count": len(added) + len(removed),
+                "unresolved": unresolved,
+            }
+        )
+    return {"project_path": project_rel, "canvas_path": canvas_rel, "forks": forks}
+
+
+def _canvas_edge_keys(
+    canvas: dict[str, Any],
+) -> tuple[set[tuple[str, str, str]], list[dict[str, str]]]:
+    files = {
+        str(node.get("id")): str(node.get("file"))
+        for node in canvas.get("nodes") or []
+        if isinstance(node, dict) and node.get("type") == "file" and node.get("file")
+    }
+    keys: set[tuple[str, str, str]] = set()
+    unresolved: list[dict[str, str]] = []
+    for edge in canvas.get("edges") or []:
+        if not isinstance(edge, dict):
+            continue
+        edge_id = str(edge.get("id") or "")
+        label = str(edge.get("label") or "").strip().lower()
+        if label not in LINK_RELATIONS:
+            unresolved.append({"edge_id": edge_id, "reason": "unknown relation label"})
+            continue
+        source = files.get(str(edge.get("fromNode")))
+        target = files.get(str(edge.get("toNode")))
+        if not source or not target:
+            unresolved.append({"edge_id": edge_id, "reason": "edge endpoint is not a file node"})
+            continue
+        keys.add((source, label, target))
+    return keys, unresolved
+
+
 def propose_project_slice(
     vault: Path,
     project_path: str,
@@ -4309,7 +4440,10 @@ def _require_tool(policy: dict[str, Any], tool: str) -> None:
 
 
 def _unique_note_rel(vault: Path, title: str) -> str:
-    slug = safe_filename(title.lower().replace(" ", "-")).strip("._-") or "note"
+    # U3 §7 filename rule, machine side only: pure kebab, never `safe_filename`'s
+    # underscore substitution. PI-authored names (create-concept's target_path)
+    # are untouched.
+    slug = re.sub(r"[^a-z0-9]+", "-", title.lower()).strip("-") or "note"
     base = f"notes/{slug}.md"
     candidate = base
     index = 1

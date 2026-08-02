@@ -2,8 +2,8 @@
   "db": {
     "catalog_sources": 2,
     "concept_edges": 0,
-    "concepts": 11,
-    "event_log": 14,
+    "concepts": 10,
+    "event_log": 11,
     "operation_requests": 12,
     "passages": 0
   },
@@ -24,7 +24,7 @@
     ".memoria/journal-head": "776ffc904b67",
     ".memoria/journal/e2e.jsonl": "752aff868f8e",
     ".memoria/journal/floor-seed.jsonl": "a9f73a80ac4c",
-    ".memoria/journal/floor.jsonl": "9b7e5c7e1731",
+    ".memoria/journal/floor.jsonl": "d5ada1032cb5",
     ".memoria/locks/worker.lock": "e3b0c44298fc",
     ".memoria/overrides.jsonl": "e3b0c44298fc",
     ".memoria/patterns/_preamble.md": "f058d859a55a",
@@ -66,10 +66,10 @@
     "notes/floor-work.md": "6657185d5f04",
     "notes/package-support.md": "ad4e6d3829ba",
     "notes/package-thesis.md": "2d4b7f3b860b",
-    "notes/summarize-for-recall-floor_summarize-for-recall.md": "ea5dbd80c0a6",
     "projects.base": "d02510f92ffb",
     "projects/package-gate/argument.canvas": "2b0941646313",
     "projects/package-gate/project.md": "99298bfaf067",
+    "projects/package-gate/scratch-review.canvas": "cbfa9c10c638",
     "sources.base": "215137c8013e",
     "steering.md": "a857248d6174",
     "system/manifest.jsonl": "e3b0c44298fc",
@@ -87,9 +87,6 @@
     "run",
     "run",
     "check-fired",
-    "run",
-    "model_call",
-    "derived",
     "run"
   ]
 }

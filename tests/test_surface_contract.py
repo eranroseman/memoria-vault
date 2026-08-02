@@ -46,6 +46,7 @@ def test_surface_contract_registry_is_minimal_and_unique() -> None:
         "explore.read",
         "project.slice.read",
         "project.draft.read",
+        "project.canvas.forks",
         "context.read",
         "cockpit.read",
         "trace.revert_preview",
@@ -166,6 +167,7 @@ def test_surface_contract_matches_current_http_and_mcp_bindings() -> None:
         ("GET", "/journal/event"),
         ("GET", "/project/slice"),
         ("GET", "/project/draft"),
+        ("GET", "/project/canvas/forks"),
         ("GET", "/exploration"),
         ("POST", "/operation/run"),
     }
@@ -328,6 +330,7 @@ def test_surface_contract_job_mapping_is_pinned() -> None:
         "explore.read": "read",
         "project.slice.read": "project",
         "project.draft.read": "project",
+        "project.canvas.forks": "project",
         "context.read": "read",
         "cockpit.read": "project",
         "trace.revert_preview": "project",

@@ -92,6 +92,7 @@ Only `GET` and `POST` are implemented.
 | `GET` | `/journal/event` | `event_id`, `read_scope` or `scope` | `read_journal_event(...)` |
 | `GET` | `/project/slice` | `project_path`, `read_scope` or `scope` | `read_slice(...)` |
 | `GET` | `/project/draft` | `project_path`, `read_scope` or `scope` | `read_draft(...)` |
+| `GET` | `/project/canvas/forks` | `project_path`, `read_scope` or `scope` | `read_canvas_forks(...)` |
 | `GET` | `/exploration` | `limit`, `read_scope` or `scope` | `read_exploration(...)` |
 | `POST` | `/operation/run` | JSON object; see below | `run_operation(...)` |
 | `POST` | `/v1/shutdown` | bearer token plus exactly one matching `X-Memoria-Boot-Id` header | Stop this boot instance and return `{"ok": true, "stopping": true}`. |

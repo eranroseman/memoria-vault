@@ -367,6 +367,10 @@ def test_http_transport_new_read_routes_call_engine(
         "memoria_vault.runtime.http_transport.engine_api.read_draft", record("draft")
     )
     monkeypatch.setattr(
+        "memoria_vault.runtime.http_transport.engine_api.read_canvas_forks",
+        record("canvas_forks"),
+    )
+    monkeypatch.setattr(
         "memoria_vault.runtime.http_transport.engine_api.read_exploration",
         record("exploration"),
     )
@@ -376,6 +380,7 @@ def test_http_transport_new_read_routes_call_engine(
         "/journal/event?event_id=1",
         "/project/slice?project_path=projects/alpha/project.md",
         "/project/draft?project_path=projects/alpha/project.md",
+        "/project/canvas/forks?project_path=projects/alpha/project.md",
         "/exploration?limit=2",
     ):
         response, http_status = _dispatch(workspace, "GET", path, dict, read_scope=["projects"])
@@ -387,6 +392,7 @@ def test_http_transport_new_read_routes_call_engine(
         "journal_event",
         "slice",
         "draft",
+        "canvas_forks",
         "exploration",
     ]
     assert seen[0][1]["limit"] == 3
@@ -394,8 +400,9 @@ def test_http_transport_new_read_routes_call_engine(
     assert seen[1][1]["read_scope"] == ["projects"]
     assert seen[2][1]["read_scope"] == ["projects"]
     assert seen[3][1]["read_scope"] == ["projects"]
-    assert seen[4][1]["limit"] == 2
     assert seen[4][1]["read_scope"] == ["projects"]
+    assert seen[5][1]["limit"] == 2
+    assert seen[5][1]["read_scope"] == ["projects"]
 
 
 def test_http_transport_route_status_codes(workspace: Path) -> None:

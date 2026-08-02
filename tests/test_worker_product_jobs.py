@@ -1712,3 +1712,70 @@ def test_update_work_restating_a_standing_is_not_a_transition(tmp_path: Path) ->
 
     assert first["propagation"]["marked"] == {"notes/twice-claim.md": "grounds-lost"}
     assert again["propagation"] == {}
+
+
+def test_worker_runs_fork_project_canvas_operation_jobs(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    for name, body in {
+        "thesis": "type: note\ntitle: Thesis\ntags: []\nstatus: accepted\n",
+        "support": (
+            "type: note\ntitle: Support\ntags: []\nstatus: accepted\n"
+            "links:\n  supports:\n    - notes/thesis.md\n"
+        ),
+    }.items():
+        note = vault / f"notes/{name}.md"
+        note.parent.mkdir(parents=True, exist_ok=True)
+        note.write_text(f"---\n{body}---\nBody.\n", encoding="utf-8")
+        mark_file_status(vault, note.relative_to(vault).as_posix())
+    project = vault / "projects/project-alpha/project.md"
+    project.parent.mkdir(parents=True, exist_ok=True)
+    project.write_text(
+        "---\ntype: project\ntitle: Alpha project\nthesis: notes/thesis.md\n---\nP.\n",
+        encoding="utf-8",
+    )
+    mark_file_status(vault, "projects/project-alpha/project.md", "project")
+
+    enqueue_operation(
+        vault,
+        "render-project-argument-canvas",
+        payload={"project_path": "project-alpha"},
+        idempotency_key="fork-setup-render",
+        actor="pi",
+    )
+    rendered = run_next_job(vault, machine="test-machine")
+    assert rendered is not None and rendered["status"] == "done"
+
+    enqueue_operation(
+        vault,
+        "fork-project-canvas",
+        payload={"project_path": "project-alpha", "name": "review"},
+        idempotency_key="fork-canvas",
+        # Not PI-protected: the plugin's fork command reaches the worker as an
+        # ordinary agent enqueue, exactly like the render it forks from.
+        actor="agent",
+    )
+    done = run_next_job(vault, machine="test-machine")
+
+    assert done is not None
+    assert done["status"] == "done"
+    assert done["project_path"] == "projects/project-alpha/project.md"
+    assert done["source_canvas_path"] == "projects/project-alpha/argument.canvas"
+    assert done["scratch_canvas_path"] == "projects/project-alpha/scratch-review.canvas"
+    assert done["commit"]
+    scratch = json.loads((vault / done["scratch_canvas_path"]).read_text(encoding="utf-8"))
+    generated = json.loads((vault / done["source_canvas_path"]).read_text(encoding="utf-8"))
+    assert scratch["edges"] == generated["edges"]
+    assert all(node["id"] != "memoria-banner" for node in scratch["nodes"])
+
+    enqueue_operation(
+        vault,
+        "fork-project-canvas",
+        payload={"name": "no-project"},
+        idempotency_key="fork-canvas-no-project",
+        actor="agent",
+    )
+    refused = run_next_job(vault, machine="test-machine")
+
+    assert refused is not None
+    assert refused["status"] == "failed"
+    assert "fork-project-canvas requires project_path" in str(refused["error"])

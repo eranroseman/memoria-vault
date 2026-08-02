@@ -311,3 +311,31 @@ def test_memoria_obsidian_registers_minimal_proof_commands() -> None:
         "delete-events",
     ):
         assert f'id: "{command_id}"' in source
+
+
+def test_memoria_obsidian_canvas_surface_is_enqueue_and_read_only() -> None:
+    """The canvas surface adds two commands and one read, and writes nothing.
+
+    Behaviour lives in the node suite; this pins the shape the seed ships —
+    the two operation ids the commands enqueue, the one read route the badge
+    polls, and the per-edge idempotency prefix that makes a re-run coalesce
+    instead of duplicating edges. The no-file-write claims are already swept
+    over every plugin module by `..._uses_memoria_operation_run_only`.
+    """
+    source = (PLUGIN / "main.js").read_text(encoding="utf-8")
+
+    assert "fork-project-canvas" in source
+    assert "/project/canvas/forks" in source
+    assert "curate-note-link" in source
+    assert "graduate:" in source
+    assert "Memoria: Fork canvas to scratch" in source
+    assert "Memoria: Graduate scratch canvas edges" in source
+    assert "this.authedJson(" in source
+    assert "this.forkBadge" in source
+
+
+def test_memoria_obsidian_registers_the_canvas_commands() -> None:
+    source = (PLUGIN / "main.js").read_text(encoding="utf-8")
+
+    for command_id in ("fork-canvas", "graduate-scratch-edges"):
+        assert f'id: "{command_id}"' in source
