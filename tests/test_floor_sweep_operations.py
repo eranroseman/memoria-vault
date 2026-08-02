@@ -19,9 +19,7 @@ from tests.floor_lib import (
     vault_digest,
 )
 
-OPERATION_IDS = sorted(
-    m["frontmatter"]["operation_id"] for m in iter_capability_manifests("operation")
-)
+OPERATION_IDS = sorted(m["frontmatter"]["operation_id"] for m in iter_capability_manifests())
 
 # Known bugs the floor sweep uncovered: the operation is expected (by
 # manifest/design) to complete via the offline deterministic-fixture runner,

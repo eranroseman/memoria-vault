@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import json
 import shutil
 import subprocess
@@ -25,6 +24,7 @@ from memoria_vault.runtime.integrity import (
 )
 from memoria_vault.runtime.knowledge import emit_note_candidates
 from memoria_vault.runtime.operations import compile_source_digest
+from memoria_vault.runtime.policy.audit import sha256_bytes
 from memoria_vault.runtime.trusted_writer import (
     OperationContext,
     commit_writer_changes,
@@ -121,13 +121,7 @@ def prepare_seeded_error_fixture(
     ) or state.request_job(vault, context.request_id)
     if request is None or not isinstance(request.get("request_envelope"), dict):
         raise ValueError(f"seeded verdict request does not exist: {context.request_id}")
-    request_root = (
-        template_root
-        if state.db_path(template_root).is_file()
-        and state.request_job(template_root, context.request_id) is not None
-        else vault
-    )
-    validate_operation_context(request_root, context)
+    validate_operation_context(_fixture_root(vault, template_root, context.request_id), context)
     if state.request_job(vault, context.request_id) is None:
         state.save_request(vault, request["request_envelope"], request)
         state.set_request_running(vault, context.request_id, request)
@@ -277,6 +271,16 @@ def prepare_seeded_error_fixture(
         "conflicting_doi_source": conflicting_doi_source,
         "notes": notes,
     }
+
+
+def _fixture_root(vault: Path, template_root: Path, request_id: str) -> Path:
+    """Return the vault that owns ``request_id`` — the template when it does."""
+    if (
+        state.db_path(template_root).is_file()
+        and state.request_job(template_root, request_id) is not None
+    ):
+        return template_root
+    return vault
 
 
 def _checked_stale_source(vault: Path, *, context: OperationContext) -> dict[str, Any]:
@@ -465,13 +469,7 @@ def run_seeded_error_verdict(
     """Run the seeded-error check against a disposable vault."""
     vault = Path(vault)
     template_root = Path(template_root)
-    context_root = (
-        template_root
-        if state.db_path(template_root).is_file()
-        and state.request_job(template_root, context.request_id) is not None
-        else vault
-    )
-    validate_operation_context(context_root, context)
+    validate_operation_context(_fixture_root(vault, template_root, context.request_id), context)
     operation_id = str(operation_id or DEFAULT_OPERATION_ID).strip() or DEFAULT_OPERATION_ID
     bundle = load_seeded_error_bundle(bundle_path)
     fixture = prepare_seeded_error_fixture(vault, template_root, context=context)
@@ -620,7 +618,7 @@ def _verdict_key(
         **runner,
     }
     payload = json.dumps(identity, sort_keys=True, separators=(",", ":")).encode("utf-8")
-    return "sha256:" + hashlib.sha256(payload).hexdigest()
+    return sha256_bytes(payload)
 
 
 def _matches_expected(finding: dict[str, Any], expected: dict[str, dict[str, Any]]) -> bool:

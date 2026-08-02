@@ -84,10 +84,8 @@ def check_capability_index(vault: Path, *, output_path: str = CAPABILITY_INDEX_P
     return path.is_file() and path.read_text(encoding="utf-8") == render_capability_index(vault)
 
 
-def read_capability_manifest(capability_type: str, capability_id: str) -> dict[str, Any]:
+def read_capability_manifest(capability_id: str) -> dict[str, Any]:
     """Return one packaged capability manifest with text, frontmatter, and display path."""
-    if capability_type != CAPABILITY_TYPE:
-        raise ValueError(f"unsupported capability type: {capability_type or '<missing>'}")
     item = _capability_resource(capability_id)
     return {
         "path": item["path"],
@@ -97,10 +95,8 @@ def read_capability_manifest(capability_type: str, capability_id: str) -> dict[s
     }
 
 
-def iter_capability_manifests(capability_type: str) -> list[dict[str, Any]]:
-    """Return packaged manifests for one capability type."""
-    if capability_type != CAPABILITY_TYPE:
-        raise ValueError(f"unsupported capability type: {capability_type or '<missing>'}")
+def iter_capability_manifests() -> list[dict[str, Any]]:
+    """Return every packaged operation manifest."""
     return list(_capability_resources())
 
 

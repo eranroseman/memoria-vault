@@ -11,6 +11,8 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
 
+from memoria_vault.runtime.paths import path_redirects
+
 _NAME_RE = re.compile(r"[A-Z][A-Z0-9_]*")
 _REDIRECT_ERROR = "secrets path must not redirect through a symlink or junction"
 _NONREGULAR_ERROR = "secrets target must be a regular file"
@@ -77,7 +79,7 @@ def _read_secrets_file_fallback(target: Path) -> tuple[dict[str, str], str]:
     parent = target.parent
     if not parent.exists() and not parent.is_symlink():
         return {}, ""
-    if _path_redirects(parent) or _path_redirects(target):
+    if path_redirects(parent) or path_redirects(target):
         return {}, _read_warning(target, "path redirects through a symlink or junction")
     try:
         mode = target.lstat().st_mode
@@ -277,13 +279,13 @@ def _write_secret_anchored(target: Path, name: str, value: str) -> Path:
 
 @contextmanager
 def _open_secret_parent(parent: Path) -> Iterator[int]:
-    if _path_redirects(parent):
+    if path_redirects(parent):
         raise ValueError(_REDIRECT_ERROR)
     try:
         parent.mkdir(parents=True, exist_ok=True)
     except FileExistsError as exc:
         raise ValueError("secrets parent must be a directory") from exc
-    if _path_redirects(parent):
+    if path_redirects(parent):
         raise ValueError(_REDIRECT_ERROR)
 
     flags = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | getattr(os, "O_CLOEXEC", 0)
@@ -377,13 +379,13 @@ def _unlink_temp_only(parent_fd: int, temp_name: str) -> None:
 
 def _write_secret_fallback(target: Path, name: str, value: str) -> Path:
     parent = target.parent
-    if _path_redirects(parent):
+    if path_redirects(parent):
         raise ValueError(_REDIRECT_ERROR)
     try:
         parent.mkdir(parents=True, exist_ok=True)
     except FileExistsError as exc:
         raise ValueError("secrets parent must be a directory") from exc
-    if _path_redirects(parent):
+    if path_redirects(parent):
         raise ValueError(_REDIRECT_ERROR)
     if not parent.is_dir():
         raise ValueError("secrets parent must be a directory")
@@ -440,7 +442,7 @@ def _create_private_secret_temp_fallback(parent: Path, target_name: str) -> tupl
 
 
 def _reject_redirect_or_nonregular_target_fallback(target: Path) -> None:
-    if _path_redirects(target):
+    if path_redirects(target):
         raise ValueError(_REDIRECT_ERROR)
     try:
         mode = target.lstat().st_mode
@@ -448,10 +450,6 @@ def _reject_redirect_or_nonregular_target_fallback(target: Path) -> None:
         return
     if not stat.S_ISREG(mode):
         raise ValueError(_NONREGULAR_ERROR)
-
-
-def _path_redirects(path: Path) -> bool:
-    return path.is_symlink() or path.is_junction()
 
 
 def _parse_env_text(text: str) -> dict[str, str]:

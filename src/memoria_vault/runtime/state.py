@@ -15,7 +15,7 @@ import subprocess
 import threading
 import time
 from collections import Counter
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Container, Iterable, Mapping, Sequence
 from importlib.resources import files
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -62,7 +62,6 @@ CHECK_STATUSES = frozenset({"unchecked", "checked", "quarantined"})
 WORK_ASPECT_TYPES = frozenset(
     {"context", "key_idea", "method", "outcome", "limitation", "assumption"}
 )
-EVIDENCE_TYPES = frozenset({"single-span", "multi-span", "multi-hop", "implicit", "computed"})
 _CONCEPT_TYPE_MAPS: dict[Path, dict[str, str]] = {}
 _FOLDER_CONCEPT_TYPES: dict[Path, dict[str, str]] = {}
 _DIRECT_EVIDENCE_MARKER_RE = re.compile(
@@ -5055,11 +5054,18 @@ def _cascade_passage_check_status_conn(
     )
 
 
+def _enum(value: str, allowed: Container[str], message: str, *, lower: bool = True) -> str:
+    """Return `value` stripped (and lowered) if `allowed` holds it, else raise `message`."""
+    normalized = value.strip().lower() if lower else value.strip()
+    if normalized not in allowed:
+        raise ValueError(message)
+    return normalized
+
+
 def _check_status(check_status: str) -> str:
-    status = check_status.strip()
-    if status not in CHECK_STATUSES:
-        raise ValueError(f"invalid check_status: {check_status!r}")
-    return status
+    return _enum(
+        check_status, CHECK_STATUSES, f"invalid check_status: {check_status!r}", lower=False
+    )
 
 
 def _work_aspect_type(value: str) -> str:
@@ -5070,10 +5076,7 @@ def _work_aspect_type(value: str) -> str:
 
 
 def _concept_edge_relation(value: str) -> str:
-    relation = value.strip().lower()
-    if relation not in EDGE_RELATIONS:
-        raise ValueError(f"unknown concept edge relation: {value}")
-    return relation
+    return _enum(value, EDGE_RELATIONS, f"unknown concept edge relation: {value}")
 
 
 def concept_edge_id(source_concept_id: str, relation_type: str, target_concept_id: str) -> str:
@@ -5083,24 +5086,18 @@ def concept_edge_id(source_concept_id: str, relation_type: str, target_concept_i
 
 
 def _code_purpose(value: str) -> str:
-    purpose = value.strip().lower()
-    if purpose not in {"grounds", "deliverable", "both"}:
-        raise ValueError(f"invalid code artifact purpose: {value!r}")
-    return purpose
+    message = f"invalid code artifact purpose: {value!r}"
+    return _enum(value, {"grounds", "deliverable", "both"}, message)
 
 
 def _code_artifact_status(value: str) -> str:
-    status = value.strip().lower()
-    if status not in {"draft", "ready", "failed", "retired"}:
-        raise ValueError(f"invalid code artifact status: {value!r}")
-    return status
+    message = f"invalid code artifact status: {value!r}"
+    return _enum(value, {"draft", "ready", "failed", "retired"}, message)
 
 
 def _code_run_state(value: str) -> str:
-    run_state = value.strip().lower()
-    if run_state not in {"pending", "running", "succeeded", "failed", "unavailable"}:
-        raise ValueError(f"invalid code run state: {value!r}")
-    return run_state
+    message = f"invalid code run state: {value!r}"
+    return _enum(value, {"pending", "running", "succeeded", "failed", "unavailable"}, message)
 
 
 def _passage_id(path: str, text_sha256: str) -> str:

@@ -803,7 +803,6 @@ def mark_checked(
     target_path: str,
     *,
     context: OperationContext,
-    check: str = "memoria-runtime",
     checks: Iterable[str] | None = None,
     schemas_dir: Path | None = None,
     frontmatter: dict[str, Any] | None = None,
@@ -813,7 +812,7 @@ def mark_checked(
     validate_operation_context(vault, context)
     vault = Path(vault)
     target = _target_path(target_path)
-    promotion_checks = normalize_promotion_checks([check] if checks is None else checks)
+    promotion_checks = normalize_promotion_checks(checks)
     contract = _load_contract(vault, schemas_dir)
     _bundle_for_target(contract, target)
     output_path = vault / target
@@ -882,7 +881,6 @@ def promote_checked(
     target_path: str,
     *,
     context: OperationContext,
-    check: str = "memoria-runtime",
     checks: Iterable[str] | None = None,
     schemas_dir: Path | None = None,
 ) -> dict[str, Any]:
@@ -890,7 +888,7 @@ def promote_checked(
     validate_operation_context(vault, context)
     vault = Path(vault)
     target = _target_path(target_path)
-    promotion_checks = normalize_promotion_checks([check] if checks is None else checks)
+    promotion_checks = normalize_promotion_checks(checks)
     contract = _load_contract(vault, schemas_dir)
     _bundle_for_target(contract, target)
 
@@ -1360,8 +1358,7 @@ def reconcile_journal_export(vault: Path) -> int:
     vault = Path(vault)
     with state.workspace_lock(vault):
         exported = Counter(
-            (machine, _canonical_journal_event(event))
-            for machine, event in _iter_journal_exports(vault)
+            (machine, _canonical_json(event)) for machine, event in _iter_journal_exports(vault)
         )
         missing: list[tuple[str, dict[str, Any]]] = []
         with state.connect(vault) as conn:
@@ -1375,7 +1372,7 @@ def reconcile_journal_export(vault: Path) -> int:
                 raise ValueError("event_log payload must be a JSON object")
             if event.get("machine") != machine:
                 raise ValueError("event_log payload machine does not match its row")
-            key = (machine, _canonical_journal_event(event))
+            key = (machine, _canonical_json(event))
             if exported[key]:
                 exported[key] -= 1
             else:
@@ -1389,10 +1386,6 @@ def reconcile_journal_export(vault: Path) -> int:
         for machine, event in missing:
             append_jsonl(_journal_path(vault, machine), [event])
         return len(missing)
-
-
-def _canonical_journal_event(event: dict[str, Any]) -> str:
-    return json.dumps(event, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
 
 
 def _normalize_journal_export_tails(vault: Path) -> bool:

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import json
 import os
 import re
@@ -26,6 +25,7 @@ from memoria_vault.runtime.capture import (
 from memoria_vault.runtime.content_security import neutralize_untrusted_markdown
 from memoria_vault.runtime.integrity import record_integrity_check
 from memoria_vault.runtime.paths import safe_filename
+from memoria_vault.runtime.policy.audit import sha256_bytes
 from memoria_vault.runtime.policy.paths import normalize_path
 from memoria_vault.runtime.trusted_writer import (
     OperationContext,
@@ -449,11 +449,9 @@ def _spec_env_names(spec: dict[str, Any]) -> list[str]:
 
 def _valid_env_names(value: Any) -> list[str]:
     values = [value] if isinstance(value, str) else value if isinstance(value, list) else []
-    names: list[str] = []
-    for name in values:
-        if isinstance(name, str) and _ENV_NAME_RE.fullmatch(name) and name not in names:
-            names.append(name)
-    return names
+    return list(
+        dict.fromkeys(n for n in values if isinstance(n, str) and _ENV_NAME_RE.fullmatch(n))
+    )
 
 
 def _write_attention_flag(
@@ -670,7 +668,7 @@ def _fetch_discovered_full_text(policy: dict[str, Any], payloads: dict[str, dict
         try:
             with request.urlopen(req, timeout=20) as resp:
                 raw = resp.read()
-                content_type = _response_content_type(resp)
+                content_type = str(resp.headers.get("Content-Type") or "")
         except (OSError, error.HTTPError):
             continue
         try:
@@ -739,10 +737,6 @@ def _openalex_open_access_locations(payload: dict[str, Any]) -> list[dict[str, A
 
 def _openalex_locations(payload: dict[str, Any]) -> list[dict[str, Any]]:
     return _collect_locations(payload, ("primary_location", "best_oa_location"), "locations")
-
-
-def _response_content_type(resp: Any) -> str:
-    return str(resp.headers.get("Content-Type") or "")
 
 
 def _extract_full_text(url: str, raw: bytes, content_type: str) -> str:
@@ -1291,4 +1285,4 @@ def _hash_json(value: Any) -> str:
 
 
 def _hash_text(value: str) -> str:
-    return "sha256:" + hashlib.sha256(value.encode("utf-8")).hexdigest()
+    return sha256_bytes(value.encode("utf-8"))

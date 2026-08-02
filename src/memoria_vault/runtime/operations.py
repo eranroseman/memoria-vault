@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import json
 import os
 import re
@@ -22,7 +21,7 @@ from memoria_vault.runtime.content_security import (
 )
 from memoria_vault.runtime.hub_candidates import candidate_entry, write_hub_candidates
 from memoria_vault.runtime.paths import safe_filename
-from memoria_vault.runtime.policy.audit import sha256_file
+from memoria_vault.runtime.policy.audit import sha256_bytes, sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path, require_policy_path
 from memoria_vault.runtime.trusted_writer import (
     OperationContext,
@@ -117,7 +116,7 @@ def record_copi_interview_turn(
 
 def load_operation_policy(vault: Path, operation_id: str) -> dict[str, Any]:
     """Load a packaged product operation manifest and require the WP5 policy contract."""
-    manifest = read_capability_manifest("operation", operation_id)
+    manifest = read_capability_manifest(operation_id)
     policy = validate_operation_policy(operation_id, manifest["frontmatter"])
     _validate_manifest_untrusted_fields(operation_id, policy, manifest["text"])
     return policy
@@ -415,7 +414,7 @@ def run_prompt_operation(
     policy = load_operation_policy(vault, operation_id)
     runner = resolve_operation_runner(vault, policy, mode)
     _require_tool(policy, "trusted_writer")
-    manifest = read_capability_manifest("operation", operation_id)
+    manifest = read_capability_manifest(operation_id)
     _frontmatter, pattern = split_frontmatter(manifest["text"])
     if "{{input}}" not in pattern:
         raise ValueError(f"{operation_id} is not a prompt operation")
@@ -445,26 +444,15 @@ def run_prompt_operation(
     output = result["text"]
     model_call = append_journal_event(
         vault,
-        {
-            "event": "model_call",
-            "mode": runner["mode"],
-            "runner": runner["runner"],
-            "provider": runner["provider"],
-            "model": runner["model"],
-            "model_params": runner["params"],
-            "route": "prompt-operation",
-            "purpose": operation_id,
-            "prompt_version": policy["prompt_version"],
-            "prompt_hash": _sha256_text(prompt),
-            "toolset": policy["allowed_tools"],
-            "fallback_used": False,
-            "compression_used": False,
-            "input_hash": _sha256_text(input_text),
-            "output_hash": _sha256_text(output),
-            "usage": result["usage"],
-            "cost_usd": result["cost_usd"],
-            "elapsed_s": result["elapsed_s"],
-        },
+        _model_call_payload(
+            policy,
+            runner,
+            result,
+            route="prompt-operation",
+            purpose=operation_id,
+            prompt_hash=_sha256_text(prompt),
+            input_hash=_sha256_text(input_text),
+        ),
         context=context,
     )
     output_path = f"notes/{safe_filename(operation_id)}-{safe_filename(context.run_id)}.md"
@@ -535,27 +523,16 @@ def run_operation_model_text(
     output = result["text"]
     model_call = append_journal_event(
         Path(vault),
-        {
-            "event": "model_call",
-            "call_id": call_id,
-            "mode": runner["mode"],
-            "runner": runner["runner"],
-            "provider": runner["provider"],
-            "model": runner["model"],
-            "model_params": runner["params"],
-            "route": route,
-            "purpose": purpose,
-            "prompt_version": policy["prompt_version"],
-            "prompt_hash": _sha256_text(prompt),
-            "toolset": policy["allowed_tools"],
-            "fallback_used": False,
-            "compression_used": False,
-            "input_hash": _sha256_text(input_text),
-            "output_hash": _sha256_text(output),
-            "usage": result["usage"],
-            "cost_usd": result["cost_usd"],
-            "elapsed_s": result["elapsed_s"],
-        },
+        _model_call_payload(
+            policy,
+            runner,
+            result,
+            route=route,
+            purpose=purpose,
+            prompt_hash=_sha256_text(prompt),
+            input_hash=_sha256_text(input_text),
+            call_id=call_id,
+        ),
         context=context,
     )
     return {"output": output, "model_call": model_call}
@@ -611,26 +588,15 @@ def compile_source_digest(
     digest_text = digest_result["text"]
     model_call = append_journal_event(
         vault,
-        {
-            "event": "model_call",
-            "mode": runner["mode"],
-            "runner": runner["runner"],
-            "provider": runner["provider"],
-            "model": runner["model"],
-            "model_params": runner["params"],
-            "route": policy.get("route", "digest-compile"),
-            "purpose": "digest_compile",
-            "prompt_version": policy["prompt_version"],
-            "prompt_hash": _sha256_text(digest_prompt),
-            "toolset": policy["allowed_tools"],
-            "fallback_used": False,
-            "compression_used": False,
-            "input_hash": _compile_input_hash(content_path, interviews),
-            "output_hash": _sha256_text(digest_text),
-            "usage": digest_result["usage"],
-            "cost_usd": digest_result["cost_usd"],
-            "elapsed_s": digest_result["elapsed_s"],
-        },
+        _model_call_payload(
+            policy,
+            runner,
+            digest_result,
+            route=policy.get("route", "digest-compile"),
+            purpose="digest_compile",
+            prompt_hash=_sha256_text(digest_prompt),
+            input_hash=_compile_input_hash(content_path, interviews),
+        ),
         context=context,
     )
 
@@ -837,6 +803,46 @@ def digest_related_works(
         "finished": finished,
         "event": event,
         "commit": commit,
+    }
+
+
+def _model_call_payload(
+    policy: dict[str, Any],
+    runner: dict[str, Any],
+    result: dict[str, Any],
+    *,
+    route: str,
+    purpose: str,
+    prompt_hash: str,
+    input_hash: str,
+    call_id: str | None = None,
+) -> dict[str, Any]:
+    """Build the one model-call journal payload every model route records.
+
+    Key insertion order is load-bearing: journal rows are serialized without
+    ``sort_keys`` and the floor goldens hash the resulting bytes, so reordering
+    these keys (including where ``call_id`` lands) drifts every golden.
+    """
+    return {
+        "event": "model_call",
+        **({"call_id": call_id} if call_id is not None else {}),
+        "mode": runner["mode"],
+        "runner": runner["runner"],
+        "provider": runner["provider"],
+        "model": runner["model"],
+        "model_params": runner["params"],
+        "route": route,
+        "purpose": purpose,
+        "prompt_version": policy["prompt_version"],
+        "prompt_hash": prompt_hash,
+        "toolset": policy["allowed_tools"],
+        "fallback_used": False,
+        "compression_used": False,
+        "input_hash": input_hash,
+        "output_hash": _sha256_text(result["text"]),
+        "usage": result["usage"],
+        "cost_usd": result["cost_usd"],
+        "elapsed_s": result["elapsed_s"],
     }
 
 
@@ -1311,4 +1317,4 @@ def _network_target(target_url: str) -> str:
 
 
 def _sha256_text(text: str) -> str:
-    return "sha256:" + hashlib.sha256(text.encode()).hexdigest()
+    return sha256_bytes(text.encode())

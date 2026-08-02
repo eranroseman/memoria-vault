@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any
 
 from memoria_vault.runtime import state
-from memoria_vault.runtime.paths import safe_filename
+from memoria_vault.runtime.paths import path_redirects, safe_filename
 from memoria_vault.runtime.time import now_iso
 from memoria_vault.runtime.vaultio import write_bytes_durable, write_text_durable
 
@@ -52,7 +52,7 @@ def create_backup(
     if runtime_error:
         return _failure(runtime_error)
     raw_target = Path(target).expanduser()
-    if _path_redirects(raw_target):
+    if path_redirects(raw_target):
         return _failure("backup target must not be a symlink")
     target = raw_target.resolve(strict=False)
     if _paths_overlap(vault, target):
@@ -183,7 +183,7 @@ def restore_backup(
     if runtime_error:
         return _failure(runtime_error)
     raw_source = Path(source).expanduser()
-    if _path_redirects(raw_source):
+    if path_redirects(raw_source):
         return _failure("backup source must not be a symlink")
     source = raw_source.resolve(strict=False)
     if _paths_overlap(vault, source):
@@ -239,13 +239,13 @@ def blob_inventory(root: Path) -> dict[str, Any]:
     """Return a deterministic content inventory for one blob tree."""
     root = Path(root)
     entries: list[dict[str, Any]] = []
-    if _path_redirects(root):
+    if path_redirects(root):
         raise ValueError("blob root must not be a symlink")
     if root.exists() and not root.is_dir():
         raise ValueError("blob root must be a directory")
     if root.is_dir():
         for path in sorted(root.rglob("*")):
-            if _path_redirects(path):
+            if path_redirects(path):
                 raise ValueError(f"blob tree contains a symlink: {path.relative_to(root)}")
             if path.is_dir():
                 continue
@@ -328,7 +328,7 @@ def local_backup_status(vault: Path) -> dict[str, Any]:
         return {**stamped, "error": "backup stamp format is invalid"}
     if stamped_files != current["files"] or stamped_hash != current["sha256"]:
         return {**stamped, "error": "backup stamp does not match the current blob inventory"}
-    if target is None or not target.is_absolute() or _path_redirects(target) or not target.is_dir():
+    if target is None or not target.is_absolute() or path_redirects(target) or not target.is_dir():
         return {**stamped, "error": "stamped backup target is missing or invalid"}
     manifest = _read_manifest(target)
     if manifest is None:
@@ -421,7 +421,7 @@ def recover_interrupted_restore(vault: Path) -> dict[str, Any]:
         )
         if verify_journal:
             database = vault / state.DB_REL
-            if _path_redirects(database) or not database.is_file():
+            if path_redirects(database) or not database.is_file():
                 raise ValueError("recovered restore database is missing")
             journal = state.verify_journal_chain(vault)
             if not journal["ok"]:
@@ -696,7 +696,7 @@ def _rebuild_journal_exports(vault: Path) -> None:
 
 def _committed_journal_anchor(vault: Path) -> str | None:
     git_dir = vault / ".git"
-    if _path_redirects(git_dir) or not git_dir.is_dir():
+    if path_redirects(git_dir) or not git_dir.is_dir():
         raise ValueError("workspace Git metadata must be a directory")
     if os.path.lexists(git_dir / "commondir"):
         raise ValueError("workspace Git common-directory indirection is not supported")
@@ -864,13 +864,9 @@ def _runtime_root_error(vault: Path) -> str:
     )
     for rel in runtime_paths:
         path = vault / rel
-        if _path_redirects(path):
+        if path_redirects(path):
             return f"workspace runtime path must not be a symlink: {rel}"
     return ""
-
-
-def _path_redirects(path: Path) -> bool:
-    return path.is_symlink() or path.is_junction()
 
 
 def validate_runtime_root(vault: Path) -> None:
@@ -900,7 +896,7 @@ def validate_workspace_write_targets(vault: Path, relpaths: Iterable[str | Path]
         current = vault
         for index, part in enumerate(rel.parts):
             current /= part
-            if _path_redirects(current):
+            if path_redirects(current):
                 raise ValueError(
                     "workspace write target must not redirect through a symlink or junction: "
                     f"{rel.as_posix()}"
@@ -925,7 +921,7 @@ def _write_backup_transaction(vault: Path, target: Path, rollback: Path, stage: 
         if os.path.lexists(directory)
     ]
     for directory, role, _directory_name in candidates:
-        if _path_redirects(directory) or not directory.is_dir():
+        if path_redirects(directory) or not directory.is_dir():
             raise ValueError(f"backup transaction {role} directory is invalid")
     if not os.path.lexists(stage):
         raise ValueError("backup transaction stage directory is missing")
@@ -952,11 +948,7 @@ def _write_backup_transaction(vault: Path, target: Path, rollback: Path, stage: 
             "phase": "publishing",
             "previous_target": previous_target,
         }
-        write_text_durable(
-            marker,
-            json.dumps(value, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
-        )
-        _fsync_directory(marker.parent)
+        _write_transaction_marker(marker, value)
     except BaseException:
         if not os.path.lexists(marker):
             for directory, _role, _directory_name in reversed(candidates):
@@ -1020,7 +1012,7 @@ def _backup_transaction_sibling(target: Path, value: object, prefix: str, label:
     if not isinstance(value, str) or Path(value).name != value or not value.startswith(prefix):
         raise ValueError(f"backup transaction {label} directory is invalid")
     path = target.parent / value
-    if _path_redirects(path):
+    if path_redirects(path):
         raise ValueError(f"backup transaction {label} directory is invalid")
     return path
 
@@ -1036,7 +1028,7 @@ def _remove_backup_transaction(vault: Path) -> None:
 
 
 def _require_recognized_backup_target(target: Path) -> None:
-    if _path_redirects(target) or not target.is_dir():
+    if path_redirects(target) or not target.is_dir():
         raise ValueError("backup transaction target is missing or invalid")
     manifest = _read_manifest(target)
     if manifest is None or not _is_restorable_backup(target, manifest):
@@ -1064,9 +1056,9 @@ def _preflight_restore_recovery_components(rollback: Path, stage: Path) -> None:
     for _live_rel, rollback_rel, staged_rel in _restore_components():
         saved = rollback / rollback_rel
         staged = stage / staged_rel if staged_rel is not None else None
-        if _path_redirects(saved):
+        if path_redirects(saved):
             raise ValueError(f"restore rollback component must not be a symlink: {rollback_rel}")
-        if staged is not None and _path_redirects(staged):
+        if staged is not None and path_redirects(staged):
             raise ValueError(f"restore stage component must not be a symlink: {staged_rel}")
 
 
@@ -1075,7 +1067,7 @@ def _write_restore_transaction(vault: Path, rollback: Path, stage: Path) -> None
     if runtime_error:
         raise ValueError(runtime_error)
     for role, directory in (("rollback", rollback), ("stage", stage)):
-        if _path_redirects(directory):
+        if path_redirects(directory):
             raise ValueError(f"restore transaction {role} directory must not be a symlink")
         if directory.parent != vault.parent:
             raise ValueError(f"restore transaction {role} directory must be a vault sibling")
@@ -1093,7 +1085,7 @@ def _write_restore_transaction(vault: Path, rollback: Path, stage: Path) -> None
         if live_rel.as_posix() not in present:
             continue
         live = vault / live_rel
-        if _path_redirects(live) or not live.is_file():
+        if path_redirects(live) or not live.is_file():
             raise ValueError(f"restore component must be a regular file: {live_rel}")
         _copy_recovery_component(live, rollback / rollback_rel)
 
@@ -1114,12 +1106,7 @@ def _write_restore_transaction(vault: Path, rollback: Path, stage: Path) -> None
         "phase": "swapping",
         "present": present,
     }
-    marker = vault / RESTORE_TRANSACTION_REL
-    write_text_durable(
-        marker,
-        json.dumps(value, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
-    )
-    _fsync_directory(marker.parent)
+    _write_transaction_marker(vault / RESTORE_TRANSACTION_REL, value)
 
 
 def _read_restore_transaction(vault: Path) -> dict[str, Any] | None:
@@ -1165,7 +1152,7 @@ def _restore_transaction_sibling(
     if not isinstance(value, str) or Path(value).name != value or not value.startswith(prefix):
         raise ValueError(f"restore transaction {label} directory is invalid")
     path = vault.parent / value
-    if _path_redirects(path) or (os.path.lexists(path) and not path.is_dir()):
+    if path_redirects(path) or (os.path.lexists(path) and not path.is_dir()):
         raise ValueError(f"restore transaction {label} directory is missing or invalid")
     if required and not path.is_dir():
         raise ValueError(f"restore transaction {label} directory is missing or invalid")
@@ -1236,11 +1223,7 @@ def _write_transaction_directory_identity(
         "role": role,
         "directory": directory_name or directory.name,
     }
-    write_text_durable(
-        directory / TRANSACTION_DIRECTORY_IDENTITY,
-        json.dumps(value, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
-    )
-    _fsync_directory(directory)
+    _write_transaction_marker(directory / TRANSACTION_DIRECTORY_IDENTITY, value)
 
 
 def _validate_transaction_directory_identity(
@@ -1253,7 +1236,7 @@ def _validate_transaction_directory_identity(
     directory_name: str | None = None,
 ) -> None:
     path = directory / TRANSACTION_DIRECTORY_IDENTITY
-    if _path_redirects(path) or not path.is_file():
+    if path_redirects(path) or not path.is_file():
         raise ValueError(f"transaction {role} directory identity is missing or invalid")
     try:
         value = json.loads(path.read_text(encoding="utf-8"))
@@ -1285,7 +1268,7 @@ def _validate_terminal_transaction_directory(
             vault, directory, role, transaction_format, transaction_id
         )
         return
-    if _path_redirects(directory) or not directory.is_dir() or any(directory.iterdir()):
+    if path_redirects(directory) or not directory.is_dir() or any(directory.iterdir()):
         raise ValueError(f"transaction {role} cleanup directory is not empty")
 
 
@@ -1293,7 +1276,7 @@ def _remove_transaction_directory_identity(directory: Path) -> None:
     path = directory / TRANSACTION_DIRECTORY_IDENTITY
     if not os.path.lexists(path):
         return
-    if _path_redirects(path) or not path.is_file():
+    if path_redirects(path) or not path.is_file():
         raise ValueError("transaction directory identity is not removable")
     path.unlink()
     _fsync_directory(directory)
@@ -1361,7 +1344,7 @@ def _fsync_tree(root: Path) -> None:
 
 
 def _cleanup_directory(path: Path) -> None:
-    if _path_redirects(path):
+    if path_redirects(path):
         raise ValueError(f"recovery directory must not be a symlink: {path.name}")
     if path.is_dir():
         parent = path.parent
@@ -1372,7 +1355,7 @@ def _cleanup_directory(path: Path) -> None:
 def _cleanup_transaction_directory(path: Path) -> None:
     if not os.path.lexists(path):
         return
-    if _path_redirects(path) or not path.is_dir():
+    if path_redirects(path) or not path.is_dir():
         raise ValueError(f"recovery directory must be a directory: {path.name}")
     identity = path / TRANSACTION_DIRECTORY_IDENTITY
     for child in list(path.iterdir()):

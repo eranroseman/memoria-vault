@@ -13,7 +13,6 @@ from memoria_vault.runtime.capabilities import (
     CAPABILITY_INDEX_PATH,
     DEFAULT_RUNNER_POLICY,
     check_capability_index,
-    iter_capability_manifests,
     render_capability_index,
 )
 from memoria_vault.runtime.capabilities import (
@@ -130,7 +129,6 @@ def test_directory_only_capability_manifest_fails_runtime_loader(
     _patch_capability_package(
         tmp_path,
         monkeypatch,
-        "operation",
         {"directory-only/prompt.md": "# Prompt\n"},
     )
     message = (
@@ -151,7 +149,6 @@ def test_same_stem_capability_asset_folder_is_allowed(
     _patch_capability_package(
         tmp_path,
         monkeypatch,
-        "operation",
         {
             "analyze-gaps.md": (
                 "---\n"
@@ -182,18 +179,11 @@ def test_same_stem_capability_asset_folder_is_allowed(
     assert load_operation_policy(Path(), "analyze-gaps")["operation_id"] == "analyze-gaps"
 
 
-def test_only_operation_capabilities_are_supported() -> None:
-    with pytest.raises(ValueError, match="unsupported capability type: adapter"):
-        iter_capability_manifests("adapter")
-
-
 def _patch_capability_package(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
-    capability_type: str,
     files: dict[str, str],
 ) -> None:
-    assert capability_type == "operation"
     home = "operations"
     package_name = f"test_caps_{uuid.uuid4().hex}"
     package_root = tmp_path / "packages"

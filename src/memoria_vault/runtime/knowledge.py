@@ -730,7 +730,7 @@ def analyze_gaps(
         bucket = _bucket(rel, frontmatter)
         if not bucket:
             continue
-        for term in _terms(frontmatter):
+        for term in _frontmatter_gap_terms(frontmatter):
             key = term.lower()
             identity = _gap_identity(rel, bucket)
             if identity not in seen[key][bucket]:
@@ -3305,10 +3305,6 @@ def _bucket(relpath: str, frontmatter: dict[str, Any]) -> str:
     if relpath.startswith("notes/") and concept_type == "note":
         return "notes"
     return ""
-
-
-def _terms(frontmatter: dict[str, Any]) -> list[str]:
-    return _frontmatter_gap_terms(frontmatter)
 
 
 def _frontmatter_gap_terms(frontmatter: dict[str, Any]) -> list[str]:

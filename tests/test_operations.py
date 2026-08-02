@@ -132,7 +132,7 @@ def test_load_operation_policy_requires_untrusted_prompt_fields(monkeypatch) -> 
 
     monkeypatch.setattr(
         "memoria_vault.runtime.operations.read_capability_manifest",
-        lambda _kind, _operation_id: {
+        lambda _operation_id: {
             "frontmatter": policy,
             "text": "---\n---\nFrom {{input}}, write a report.\n",
         },
