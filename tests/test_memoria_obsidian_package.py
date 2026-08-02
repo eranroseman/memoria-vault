@@ -128,6 +128,11 @@ def test_memoria_obsidian_parity_roster_covers_every_shipped_module() -> None:
     as `viewspec.js` did between U3-PLUG.4 and here. Enumerating the package
     rather than the seed is deliberate: the package is where a new module is
     authored, so this fails on the change that creates the gap.
+
+    Stylesheets are covered by the same roster from
+    `..._has_no_hardcoded_colors`, which pins the files its sweep read against
+    this roster; extending the subset check here as well was measured and
+    changed nothing.
     """
     assert {path.name for path in PLUGIN.glob("*.js")} <= set(SEED_PARITY_ARTIFACTS)
 
@@ -210,6 +215,81 @@ def test_memoria_obsidian_uses_memoria_operation_run_only() -> None:
     assert (
         "A `warrant` relation links a license note; Warrant text annotates the selected edge."
     ) in source
+
+
+_COLOR_LITERAL = re.compile(r"#[0-9a-fA-F]{3,8}\b|rgba?\(|hsla?\(")
+
+
+def _hardcoded_colors(name: str, text: str) -> list[str]:
+    """Report every hardcoded color literal in `text`, one line per hit."""
+    return [
+        f"{name}:{number}: hardcoded color {match.group(0)!r}"
+        for number, line in enumerate(text.splitlines(), 1)
+        if (match := _COLOR_LITERAL.search(line))
+    ]
+
+
+def test_memoria_obsidian_color_detector_reports_every_forbidden_literal() -> None:
+    """The sweep below runs over clean sources, so the detector must be shown to bite.
+
+    `findings == []` over files that contain no colors passes just as happily
+    with a pattern that can never match anything: the theme-breaking palette
+    this gate exists to stop would walk straight past a typo in the regex, and
+    nothing in the repository would notice. So the detector is exercised on the
+    forms U3 §9 forbids, against the theme variables it must leave alone, with
+    the reported line numbers pinned -- a lint that names the wrong line costs
+    the reader the search it was supposed to save. Line 2 is why the pattern
+    ends its hex run on a word boundary: no CSS color is longer than eight hex
+    digits, so a longer `#` token is an id or a JS private field and reporting
+    a prefix of it would be a false positive.
+    """
+    source = (
+        "  color: var(--text-muted);\n"
+        "#deadbeefcafe { border-color: var(--interactive-accent); }\n"
+        "  background-color: transparent;\n"
+        "  color: #fff;\n"
+        "  border-color: #1A2b3C;\n"
+        "  outline-color: #aabbccdd;\n"
+        "  color: rgb(0, 0, 0);\n"
+        "  background: rgba(0, 0, 0, 0.5);\n"
+        "  color: hsl(210, 40%, 50%);\n"
+        "  background: hsla(210, 40%, 50%, 0.5);\n"
+        'const dot = element.createSpan({ cls: "memoria-pill-dot" });\n'
+    )
+
+    assert _hardcoded_colors("styles.css", source) == [
+        "styles.css:4: hardcoded color '#fff'",
+        "styles.css:5: hardcoded color '#1A2b3C'",
+        "styles.css:6: hardcoded color '#aabbccdd'",
+        "styles.css:7: hardcoded color 'rgb('",
+        "styles.css:8: hardcoded color 'rgba('",
+        "styles.css:9: hardcoded color 'hsl('",
+        "styles.css:10: hardcoded color 'hsla('",
+    ]
+
+
+def test_memoria_obsidian_has_no_hardcoded_colors() -> None:
+    """U3 acceptance: the plugin contains zero hardcoded colors (theme vars only).
+
+    Scanning the package alone covers the seeded copy too, and that is a chain
+    rather than an omission: every `*.js` and `*.css` here is inside
+    `SEED_PARITY_ARTIFACTS` (`..._parity_roster_covers_every_shipped_module`),
+    and every entry of that roster is compared byte-for-byte against the seed
+    (`..._seed_matches_release_artifacts`), so a color that reaches only the
+    seeded copy breaks parity instead of hiding behind this sweep.
+    """
+    scanned = sorted(PLUGIN.glob("*.js")) + sorted(PLUGIN.glob("*.css"))
+
+    # A sweep that reads no files reports no findings. Pin what it must have read.
+    assert {path.name for path in scanned} == {
+        name for name in SEED_PARITY_ARTIFACTS if name.endswith((".js", ".css"))
+    }
+    findings = [
+        finding
+        for path in scanned
+        for finding in _hardcoded_colors(path.name, path.read_text(encoding="utf-8"))
+    ]
+    assert findings == []
 
 
 def test_memoria_obsidian_registers_minimal_proof_commands() -> None:

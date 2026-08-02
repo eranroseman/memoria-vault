@@ -11264,6 +11264,86 @@ help-text source pin.
      command roster and the help text on the built control; these two are the
      source-side copy that keeps a `main.js` rewrite honest.
 
+### Execution amendment — U3-PLUG.9/.10 as built, and why .11 did not run (2026-08-02)
+
+Recorded by the executor of U3-PLUG.9/.10/.11. It governs those three tasks
+only. Everything landed in `tests/test_memoria_obsidian_package.py`; no product
+file, no roster, and no golden moved.
+
+1. **The drafted lint is split in two, because as drafted it could not fail for
+   the right reason.** The prescribed test sweeps clean sources and asserts
+   `search(...) is None`, which is green for a pattern that matches *nothing* —
+   a typo in the regex silently retires the gate, and the plan's own way of
+   noticing was a temporary hand-edit to `styles.css` that leaves no artifact
+   behind. The detector is therefore a named helper, `_hardcoded_colors(name,
+   text)`, and `test_memoria_obsidian_color_detector_reports_every_forbidden_
+   literal` runs it over an eleven-line synthetic stylesheet, asserting the
+   **exact finding list** — every hex form (3/6/8 digits, mixed case), `rgb(`,
+   `rgba(`, `hsl(`, `hsla(`, the theme variables it must leave alone, and the
+   line number of each hit. One equality kills a never-matching pattern, a
+   match-everything pattern, each dropped alternative, either narrowed hex
+   bound, a dropped `enumerate` start, and a finding that reports the line
+   instead of the literal. Line 2 of the fixture (`#deadbeefcafe { … }`) is why
+   the pattern keeps its `\b`: no CSS color exceeds eight hex digits, so a
+   longer `#` token is an id or a JS private field and reporting a prefix of it
+   is a false positive. Without that line, dropping `\b` survives.
+2. **The sweep pins what it read.** `test_memoria_obsidian_has_no_hardcoded_
+   colors` asserts `{scanned names} == {SEED_PARITY_ARTIFACTS ∩ *.js/*.css}`
+   before asserting `findings == []`. A sweep that globs nothing reports
+   nothing; this is the same vacuous-green shape `MIN_NODE_TESTS` exists for,
+   one layer down. It is what kills "stop reading `*.css`", "stop reading
+   `*.js`", "glob the seed instead of the package", and "drop `styles.css` from
+   the roster" — the last of which was a **survivor before this task**, because
+   the roster-completeness test enumerates `*.js` only.
+3. **Escape class 10 is discharged by a chain, not by a second sweep.** The
+   lint reads `packages/` only. The seeded copy is covered because every `*.js`
+   and `*.css` there is inside `SEED_PARITY_ARTIFACTS` and every entry of that
+   roster is compared byte-for-byte with the seed. This is asserted, not
+   assumed: three mutants put a color into the **seeded** file alone
+   (`styles.css`, `main.js`, `pill.js`) with the package clean, and all three
+   die in the parity test. A second glob over `SEED_PLUGIN` would be a copy of
+   a claim two existing tests already make.
+4. **U3-PLUG.10 had no roster left to move, and its drafted presence loop was
+   not added.** The eight-file tuple, `bundles.BUNDLE_FILES["obsidian"]`, the
+   provenance allowlist, `test_installer_skeleton.py`, `test_package_spine.py`
+   and `test_cli.py` (×2) all landed in U3-PLUG.6 and .5 (see those
+   amendments). What the step still prescribes — four `assert (PLUGIN /
+   module).is_file()` lines — cannot fail: `test_memoria_obsidian_seed_matches_
+   release_artifacts` already calls `read_text()` on all eight package files,
+   so a missing one raises `FileNotFoundError` there first. Adding four
+   assertions that are unreachable by construction is four more of the
+   one-directional pins the U3-PLUG.5 amendment's item 7 already counted as
+   survivors. The task's *product* — "anyone adding a ninth plugin file must
+   extend this tuple" — is instead made true for stylesheets as well as
+   modules by item 2's pin, proved by a mutant that adds `theme.css` to the
+   package and by one that adds `extra.js`.
+5. **One change was written, measured inert, and reverted.** Widening
+   `test_memoria_obsidian_parity_roster_covers_every_shipped_module` to
+   `{*.js} | {*.css} <= roster` looked like the natural home for item 2's
+   coverage. Mutating it straight back out changed no test result, because
+   item 2's pin already subsumes it for both file classes; it was reverted and
+   a docstring line records the measurement rather than the intention. The
+   same mutation shows the pre-existing `<=` pin is now itself redundant for
+   `*.js`; it is kept, unchanged, because it fails with a clearer message and
+   deleting a landed pin is not this task's business.
+6. **Mutation result: 31 single mutations, 29 killed, 2 survivors, both the
+   one-directional-pin shape.** Fourteen mutated the detector (pattern and
+   reporting), four the sweep, three the roster and its completeness check,
+   three put a color in a package file, three put one in the **seeded** file
+   with the package clean, and four added or deleted a shipped file. The two
+   survivors are *deleting* item 2's read-something pin and *deleting* the
+   completeness assertion: each removes an assertion rather than failing one,
+   and the direction that matters is proved — every mutation those two pins
+   exist to catch dies in them. Harness: sha256 whole-file snapshots, an
+   `inflight.json` marker restored at startup, byte-verified restore in
+   `finally`, `__pycache__` dropped after apply and after restore, and a
+   `git status --untracked-files=all` sweep after every mutant (no stray
+   artifact appeared, and package↔seed byte equality was re-verified for all
+   eight files at the end).
+7. **No node suite was added, so `MIN_NODE_TESTS` stays 49 and the floor
+   goldens did not move.** This task ships Python only; `git status` after
+   `python scripts/verify` (`verify: OK`) shows exactly one modified file.
+
 ---
 
 ### Task U3-PLUG.1: Switch the plugin test harness to `node --test`
@@ -13607,7 +13687,10 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
 
 **Steps:**
 
-- [ ] Write the failing test — first prove the detector detects: append to `tests/test_memoria_obsidian_package.py`:
+> **Executed 2026-08-02.** The drafted body was replaced by a detector/sweep
+> split; see the "U3-PLUG.9/.10 as built" amendment, items 1–3.
+
+- [x] Write the failing test — first prove the detector detects: append to `tests/test_memoria_obsidian_package.py`:
   ```python
   _COLOR_LITERAL = re.compile(r"#[0-9a-fA-F]{3,8}\b|rgba?\(|hsla?\(")
 
@@ -13620,11 +13703,11 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
               assert match is None, f"{path.name}:{number}: hardcoded color {match.group(0)!r}"
   ```
   and add `import re` to the imports (after `import json`). Temporarily add `/* #fff */` to the end of `packages/memoria-obsidian/styles.css`.
-- [ ] Run test to verify it fails:
+- [x] Run test to verify it fails:
   `python -m pytest tests/test_memoria_obsidian_package.py::test_memoria_obsidian_has_no_hardcoded_colors -v`
   Expected: `AssertionError: styles.css:<n>: hardcoded color '#fff'`.
-- [ ] Write minimal implementation: delete the `/* #fff */` line again (the real sources are already clean — every task above used theme variables only).
-- [ ] Run test to verify it passes: same command — green. Also `python -m pytest tests/test_memoria_obsidian_package.py -v` (seed parity still green because styles.css is back to the committed state).
+- [x] Write minimal implementation: delete the `/* #fff */` line again (the real sources are already clean — every task above used theme variables only).
+- [x] Run test to verify it passes: same command — green. Also `python -m pytest tests/test_memoria_obsidian_package.py -v` (seed parity still green because styles.css is back to the committed state).
 - [ ] Commit:
   `git add tests/test_memoria_obsidian_package.py`
   `git commit -m "test(obsidian): lint gate — zero hardcoded colors in plugin js/css` (blank line) `Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"`
@@ -13657,7 +13740,7 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
 
 **Steps:**
 
-- [ ] Write the failing test — in `test_memoria_obsidian_seed_matches_release_artifacts`, replace the artifact tuple with:
+- [x] Write the failing test — in `test_memoria_obsidian_seed_matches_release_artifacts`, replace the artifact tuple with:
   ```python
       for artifact in (
           "main.js",
@@ -13675,8 +13758,8 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
       for module in ("handshake.js", "pill.js", "viewspec.js", "relate.js"):
           assert (PLUGIN / module).is_file()
   ```
-- [ ] Run test to verify current state: `python -m pytest tests/test_memoria_obsidian_package.py -v`. If U3-PLUG.6's sync step copied all four modules this passes immediately (that is fine — this task's product is the *pinned roster*, and the red case it guards is a future missing copy); if any module copy is missing it fails naming it — copy it (`cp packages/memoria-obsidian/<module>.js src/memoria_vault/product/workspace_seed/.obsidian/plugins/memoria-obsidian/`), regenerate goldens as in U3-PLUG.6, and re-run.
-- [ ] Run the full gate: `python scripts/verify` — expected: all gates pass (lint, product gates, full pytest incl. floor goldens, smoke, syntax).
+- [x] Run test to verify current state: `python -m pytest tests/test_memoria_obsidian_package.py -v`. If U3-PLUG.6's sync step copied all four modules this passes immediately (that is fine — this task's product is the *pinned roster*, and the red case it guards is a future missing copy); if any module copy is missing it fails naming it — copy it (`cp packages/memoria-obsidian/<module>.js src/memoria_vault/product/workspace_seed/.obsidian/plugins/memoria-obsidian/`), regenerate goldens as in U3-PLUG.6, and re-run.
+- [x] Run the full gate: `python scripts/verify` — expected: all gates pass (lint, product gates, full pytest incl. floor goldens, smoke, syntax).
 - [ ] Commit:
   `git add tests/test_memoria_obsidian_package.py src/memoria_vault/product/workspace_seed/.obsidian/plugins/memoria-obsidian tests/fixtures/floor/goldens`
   `git commit -m "test(obsidian): pin eight-file seed parity roster for the rewritten plugin` (blank line) `Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"`
@@ -13689,6 +13772,43 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
 > newly-activated-relation completion proof in the 2026-07-29 graph-roster/
 > warrant amendment above. Never put the per-boot token in a child process's
 > arguments.
+
+> **NOT EXECUTED (2026-08-02). This task is still open.** It was assigned with
+> U3-PLUG.9/.10 and could not be run: it needs an interactive desktop Obsidian
+> session with a human operator, and it Consumes `memoria` on PATH, which is
+> broken repo-wide right now — the shared `.venv` console script resolves
+> through `__editable__.memoria_vault-*.pth` to
+> `.claude/worktrees/deps/src`, a worktree that no longer exists, so `memoria
+> --version` raises `ModuleNotFoundError: No module named 'memoria_vault'`
+> from any directory. (`python -m pytest` is unaffected: it gets `src/` from
+> the pytest path config, not from the venv.) **Whoever runs this must first
+> reinstall the engine from this branch.** Two steps also need the network
+> (installing a light and a dark community theme) and several need visual
+> judgment no harness can supply. Three preconditions *were* verified
+> statically, so the session need not spend time on them:
+>
+> - The token-privacy step's printed script is correct as written: `memoria
+>   handshake` really takes `--vault` and `--json` (`cli.py:207-212` — note it
+>   is **not** the `--workspace` the other steps use), and `token` really is a
+>   top-level key of the emitted object (`cli.py:1306` spreads
+>   `rendezvous.handshake(...)`, whose `token` is set at
+>   `rendezvous.py:391`).
+> - The claim that step exists to test holds structurally: the plugin keeps
+>   the token in `this.engine` (`main.js:33`, `EMPTY_ENGINE`) and `saveData`
+>   writes `this.settings` only (`main.js:139`), so `data.json` cannot carry
+>   it; and `rendezvous.state_root()` (`rendezvous.py:64-72`) puts the record
+>   under `$XDG_STATE_HOME/memoria/vaults/…`, outside the vault tree. A green
+>   result here is therefore expected — and it is **vacuous unless Obsidian
+>   has actually connected first**, because an unloaded plugin has written no
+>   `data.json` at all.
+> - Every pill/pane/modal wording this checklist asserts matches the shipped
+>   source: `Memoria · connecting…`, `Memoria · N open`, `Memoria · N open ·
+>   as of HH:MM`, `Memoria · engine missing`, `Memoria · server down`
+>   (`pill.js:15-45`), `Memoria queued <operation-id>: <request id>`
+>   (`main.js:449`), the `ATTENTION` header (`main.js:649`), the `Engine
+>   command` setting with no Server URL or token field (`main.js:860`), and
+>   `relate: To note is required` (`relate.js:20`). The checklist can be run
+>   as written.
 
 **Files:** none (checklist executed against a disposable vault under `test-vault/`; results reported in the PR description, not committed as a file).
 
