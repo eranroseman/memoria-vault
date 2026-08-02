@@ -3163,6 +3163,52 @@ Verified CLI surfaces these docs instruct (all at 07bedc74): `memoria new projec
 
 ### Task D.1: tutorial restructure — chapter 01 frames, chapter 02 seeds, chapter 04 reconciles
 
+> **Execution amendment (2026-08-02).** D.2 and D.3 landed **before** D.1, so
+> one printed old-text block no longer existed as written and the
+> `docs/tutorials/README.md` edit was applied as a merge rather than a
+> replacement.
+>
+> 1. **README intro.** The printed old text ends `verified the draft, and made
+>    one workspace customization.`; D.2 had already rewritten that clause to
+>    `verified the draft, and tuned the steering override with watch and mute
+>    entries.` D.1's change is therefore only to the *front* of the sentence —
+>    `captured a source,` becomes `framed a project, installed the seed corpus
+>    (or captured one local source offline),` — with D.2's closing clause kept
+>    verbatim. Applying D.1's printed replacement literally would have reverted
+>    D.2.
+> 2. **README row 07** already carried D.2's text; only rows 01, 02, and 04 were
+>    touched here, exactly as printed.
+> 3. **Line anchors drifted** (`01-system-tour.md` intro is :9-10, the JSON block
+>    ends :63, the bullet list :65-69 at execution time). Every edit was
+>    re-anchored by content; no printed prose changed.
+> 4. **The three `project-words.txt` entries are not needed and were not
+>    added.** The Files list asserts `akari`, `asai`, and `openscholar` are
+>    required cspell entries; measured, they are not. Removing all three and
+>    running `cspell@10.0.1` over the finished `docs/tutorials/02-first-source.md`
+>    reports **0 issues**, because the only occurrences are `OpenScholar` (cspell
+>    splits the camelCase into two known words) and `AkariAsai`, which appears
+>    only inside `https://github.com/AkariAsai/OpenScholar` and is covered by
+>    cspell's URL exemption. `docs/superpowers/**` — where the bare tokens do
+>    appear — is in `cspell.json` `ignorePaths`, and the manifest that carries
+>    the row id is YAML, outside cspell's `files: ["**/*.md"]` scope.
+>
+>    Kill power was confirmed, not assumed: a probe markdown file containing the
+>    bare tokens `Akari`, `Asai`, `akari`, `asai`, `openscholar` reports 5 unknown
+>    words without the entries and 0 with them, so the dictionary reload works and
+>    the 0-issue result on chapter 02 is a real negative, not a stale cache.
+>
+>    Adding them anyway would leave three permanently dead dictionary entries
+>    that silently accept those typos forever, against AGENTS.md's "any addition
+>    must name the expensive, recurring failure it prevents." The repo precedent
+>    for exactly this measurement is
+>    `docs/superpowers/plans/2026-07-15-alpha22-substrate-trust.md:4125` ("verified
+>    via `npx cspell stdin` — no `project-words.txt` change"). If a later page
+>    cites the paper in prose ("Asai et al."), that is when the word earns its
+>    entry.
+>
+>    Consequence for the printed Commit step: `project-words.txt` drops out of the
+>    `git add` list.
+
 **Files:**
 
 - Modify: `docs/tutorials/01-system-tour.md` (intro at :9-10; insert steps 4-5 after the fresh-vault JSON block ending :62; bullet list at :64-68)
@@ -3178,7 +3224,7 @@ Verified CLI surfaces these docs instruct (all at 07bedc74): `memoria new projec
 
 **Steps:**
 
-- [ ] Precondition (order tolerance for M.3 — hold this task if it fails):
+- [x] Precondition (order tolerance for M.3 — hold this task if it fails):
 
   ```bash
   python3 - <<'EOF'
@@ -3198,7 +3244,7 @@ Verified CLI surfaces these docs instruct (all at 07bedc74): `memoria new projec
   EOF
   ```
 
-- [ ] Red state (the failing check — both greps must exit 1 before editing):
+- [x] Red state (the failing check — both greps must exit 1 before editing):
 
   ```bash
   grep -n "memoria seed install" docs/tutorials/02-first-source.md
@@ -3207,7 +3253,7 @@ Verified CLI surfaces these docs instruct (all at 07bedc74): `memoria new projec
 
   Expected: no matches, exit code 1 on each.
 
-- [ ] Edit `docs/tutorials/01-system-tour.md`. Replace the intro (lines 9-10):
+- [x] Edit `docs/tutorials/01-system-tour.md`. Replace the intro (lines 9-10):
 
   old:
 
@@ -3265,7 +3311,7 @@ Verified CLI surfaces these docs instruct (all at 07bedc74): `memoria new projec
   - Steering is derived: framing a project is what aims discovery.
   ```
 
-- [ ] Replace the full contents of `docs/tutorials/02-first-source.md` with (the old `--file` example survives verbatim as the offline path — task binding; **SPEC GAP:** spec §1 names `memoria work add --pdf` as the offline fallback while the shipped chapter exercises `--file`; resolution: keep `--file` as the exercised path and name `--pdf` inline — spec §8 accepts "local-file/-PDF alternative path (arbitrary local content)", so either satisfies):
+- [x] Replace the full contents of `docs/tutorials/02-first-source.md` with (the old `--file` example survives verbatim as the offline path — task binding; **SPEC GAP:** spec §1 names `memoria work add --pdf` as the offline fallback while the shipped chapter exercises `--file`; resolution: keep `--file` as the exercised path and name `--pdf` inline — spec §8 accepts "local-file/-PDF alternative path (arbitrary local content)", so either satisfies):
 
   ````markdown
   ---
@@ -3381,7 +3427,7 @@ Verified CLI surfaces these docs instruct (all at 07bedc74): `memoria new projec
   Next: [03: Connect notes](03-connect-notes.md).
   ````
 
-- [ ] Edit `docs/tutorials/04-draft-section.md`. Replace step 1 (lines 15-25):
+- [x] Edit `docs/tutorials/04-draft-section.md`. Replace step 1 (lines 15-25):
 
   old:
 
@@ -3432,7 +3478,7 @@ Verified CLI surfaces these docs instruct (all at 07bedc74): `memoria new projec
   created it. The slice operation reads only checked project and note state.
   ```
 
-- [ ] Edit `docs/tutorials/README.md`. Replace the intro paragraph (lines 10-12):
+- [x] Edit `docs/tutorials/README.md`. Replace the intro paragraph (lines 10-12):
 
   old:
 
@@ -3479,9 +3525,9 @@ Verified CLI surfaces these docs instruct (all at 07bedc74): `memoria new projec
   | [04: Draft section](04-draft-section.md) | Slice the tutorial project, compose a draft, and verify it |
   ```
 
-- [ ] Edit `project-words.txt`: insert `akari` between `affordances` (line 2) and `amershi` (line 3); insert `asai` between `andrej` (line 4) and `asreview` (line 5); insert `openscholar` between `openalex` (line 183) and `operationalizes` (line 184).
+- [ ] ~~Edit `project-words.txt`~~ — **not needed; see the 2026-08-02 amendment item 4.** cspell reports 0 issues on the finished chapter 02 without these three entries.
 
-- [ ] Green state:
+- [x] Green state:
 
   ```bash
   grep -n "memoria seed install" docs/tutorials/02-first-source.md   # >=1 hit
@@ -3971,6 +4017,41 @@ at the top of D.2 — run them again; hold if they miss).
 
 ### Task D.4: Start here.md co-PI-variant link repoint (order-tolerant) + section gate
 
+> **Execution amendment (2026-08-02) — BRANCH B selected, and NOT DONE:
+> blocked on the floor-golden freeze.** Run at execution time:
+>
+> - `ls "src/memoria_vault/product/workspace_seed/Start here.md"` → the file
+>   exists, so this is **branch B**: BOOT-D.6 has landed. Branch A (the
+>   surfaces-plan amendment note) is now dead and must not be executed — an
+>   amendment telling a future executor how to seed the bullet is worthless once
+>   the bullet is seeded.
+> - `grep -rn "memoria-copi" src/ tests/` → exactly two hits,
+>   `src/memoria_vault/product/workspace_seed/Start here.md:27` and
+>   `tests/test_cli.py:946`. `find . -name SKILL.md` → **no hits anywhere in the
+>   repo**. The seeded pointer is confirmed dangling, so the repoint is still
+>   required; the task is not moot.
+>
+> **The block.** `tests/floor_lib.py:275-300` (`vault_digest`) hashes the redacted
+> bytes of *every* file in the seeded vault, and `Start here.md` is present in
+> **all 36** `tests/fixtures/floor/goldens/*.json` (verified:
+> `grep -l "Start here.md" tests/fixtures/floor/goldens/*.json | wc -l` → 36).
+> Editing one word of the seeded bullet therefore moves all 36 goldens. The
+> golden lane is serialized to one session per wave and this wave's token is held
+> elsewhere, so branch B was **not executed** — neither the seed edit nor the
+> `tests/test_cli.py:946` assertion swap, because landing either without the
+> golden regeneration leaves the floor suites red.
+>
+> **Obligation for whoever holds the next golden token.** Branch B is three
+> coupled edits that must land in one commit: the seeded co-PI bullet, the
+> `test_cli.py` assertion (`.claude/skills/memoria-copi/SKILL.md` →
+> `issues/902`), and one `MEMORIA_FLOOR_UPDATE_GOLDENS=1` regeneration. The
+> accounting is unusually easy to verify: the diff must be exactly 36 files, each
+> changing exactly one line — the `"Start here.md"` hash — with every other hash
+> in every golden byte-identical.
+>
+> The section gate below (`python scripts/verify`) was still run, and passes, over
+> D.1-D.3 as landed.
+
 Spec §3, last bullet: the bootstrap-seeded `Start here.md` link to "the co-PI variant" repoints at the ADR-113 re-deferral note (the #902 comment shipped with the spec PR — already done, do not re-post) until ADR-113's preconditions close, so no seeded link dangles. BOOT-D.6 as currently planned seeds a co-PI bullet pointing at `.claude/skills/memoria-copi/SKILL.md` (`docs/superpowers/plans/2026-07-15-surfaces-bootstrap-and-plugins.md:5376-5378`) and asserts that path in its test (`:5338`) — the U4 plugin that would put a file there is designed but unimplemented.
 
 **Files:**
@@ -3985,7 +4066,7 @@ Spec §3, last bullet: the bootstrap-seeded `Start here.md` link to "the co-PI v
 
 **Steps:**
 
-- [ ] Branch selection (grep-first, run at execution time):
+- [x] Branch selection (grep-first, run at execution time):
 
   ```bash
   ls "src/memoria_vault/product/workspace_seed/Start here.md" 2>/dev/null && echo BRANCH-B || echo BRANCH-A
@@ -4042,7 +4123,7 @@ Spec §3, last bullet: the bootstrap-seeded `Start here.md` link to "the co-PI v
 
   Expected: all pass; `test_workspace_seed_links` accepts the issue URL (external link, exempt from link-text rules).
 
-- [ ] Section gate — run the one correctness command from the repo root:
+- [x] Section gate — run the one correctness command from the repo root:  *(2026-08-02: run at the end of D.1; `verify: OK`. Covers D.1-D.3; branch B is unexecuted, see the amendment above.)*
 
   ```bash
   python scripts/verify

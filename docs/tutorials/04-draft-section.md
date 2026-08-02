@@ -12,16 +12,19 @@ through project operations.
 
 ## Steps
 
-**1. Create a project Concept.**
+**1. Use the tutorial project you framed in Tutorial 01.**
+
+The project already exists — you framed it at the end of
+[01: System tour](01-system-tour.md), and it has been aiming discovery
+ever since. Recover its path if you did not save it:
 
 ```bash
-memoria new project "Tutorial project" \
-  --workspace . \
-  --description "A small project for learning the project WRITE loop."
+memoria list --workspace . --type project --json
 ```
 
-Save the created project path.
-Notice that the path is under `projects/`.
+Save the project path.
+Notice that the path is under `projects/`, and that the WRITE loop reuses
+the framed project instead of creating a new one.
 
 **2. Check the project before checked-read operations use it.**
 
@@ -29,8 +32,8 @@ Notice that the path is under `projects/`.
 memoria check --workspace . <project-path>
 ```
 
-New Concepts start unchecked. The slice operation reads only checked project
-and note state.
+Like every new Concept, the project started unchecked when Tutorial 01
+created it. The slice operation reads only checked project and note state.
 
 **3. Propose a slice.**
 

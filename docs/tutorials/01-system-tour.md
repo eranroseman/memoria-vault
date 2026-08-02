@@ -6,8 +6,9 @@ nav_order: 1
 
 # 01: System tour
 
-This first pass is read-only. You will inspect the workspace shape, the CLI
-surface, and the checked-read boundary before adding research material.
+This first pass inspects the workspace shape, the CLI surface, and the
+checked-read boundary, then closes with the one write that aims everything
+after it: framing your tutorial project.
 
 ## Prerequisites
 
@@ -62,10 +63,35 @@ catalog-backed result is:
 {"api_version": "engine-read-api.v1", "concepts": [], "ok": true}
 ```
 
+**4. Frame your tutorial project.**
+
+```bash
+memoria new project "Tutorial project" \
+  --workspace . \
+  --description "A small project for learning the project WRITE loop."
+```
+
+Save the created project path.
+Notice that the path is under `projects/`. Framing is not paperwork: active
+projects are what aim the system — discovery ranking and the steering
+surface derive directly from them, so the arc frames before it captures.
+
+**5. See the project aim the workspace.**
+
+```bash
+memoria steering show --workspace .
+```
+
+The command renders the effective steering: every token with its
+provenance. Right now each token traces to the project you just framed.
+`steering.md` at the vault root stays thin — it holds only your watch/mute
+overrides, which [07: Customize](07-customize.md) exercises.
+
 ## What you should have seen
 
 - The CLI is the product surface.
 - The workspace is local and git-backed.
 - Checked reads come from engine projections over checked Concepts and catalog rows.
+- Steering is derived: framing a project is what aims discovery.
 
 Next: [02: First source](02-first-source.md).
