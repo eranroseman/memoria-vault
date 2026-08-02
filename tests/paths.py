@@ -23,3 +23,4 @@ from pathlib import Path
 # this (directly, or via tests.helpers' re-export): a file that computes
 # the root from its own __file__ breaks silently when it moves.
 ROOT = Path(__file__).resolve().parents[1]
+WORKSPACE_SEED = ROOT / "src/memoria_vault/product/workspace_seed"

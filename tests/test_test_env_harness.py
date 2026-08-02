@@ -4,7 +4,7 @@ import sys
 
 import pytest
 
-from tests.helpers import ROOT
+from tests.paths import ROOT
 
 pytestmark = pytest.mark.package
 

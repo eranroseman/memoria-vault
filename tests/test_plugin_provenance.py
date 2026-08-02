@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 
 from scripts.checks import plugin_provenance_doctor as doctor
-from tests.helpers import ROOT
+from tests.paths import ROOT
 
 pytestmark = pytest.mark.static
 

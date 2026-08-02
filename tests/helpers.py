@@ -14,13 +14,12 @@ from memoria_vault.runtime import state
 from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.trusted_writer import OperationContext, operation_context_record
 from memoria_vault.runtime.vaultio import read_frontmatter
-from tests.paths import ROOT
+from tests.paths import ROOT, WORKSPACE_SEED
 
 # Re-exported from tests.paths, which is the one place test code derives the
 # repo root -- kept apart from this module (which imports the runtime stack
 # above) so that runtime-free tests can get a Path without pulling the
 # runtime in; see tests/paths.py's docstring for why.
-WORKSPACE_SEED = ROOT / "src/memoria_vault/product/workspace_seed"
 
 LIVE_USAGE = {
     "input_tokens": 17,

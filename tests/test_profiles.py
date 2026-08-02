@@ -2,7 +2,7 @@
 
 import pytest
 
-from tests.helpers import ROOT, WORKSPACE_SEED
+from tests.paths import ROOT, WORKSPACE_SEED
 
 pytestmark = pytest.mark.contract
 
