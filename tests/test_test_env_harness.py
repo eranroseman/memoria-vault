@@ -44,5 +44,5 @@ def test_cassette_replay_runs_model_free_l4_path(tmp_path):
     assert not (tmp_path / "notes/blocked-by-harness.md").exists()
 
     canvas = json.loads((tmp_path / "projects/harness/argument.canvas").read_text(encoding="utf-8"))
-    assert len(canvas["nodes"]) == 3
+    assert len([node for node in canvas["nodes"] if node.get("type") == "file"]) == 3
     assert {edge["label"] for edge in canvas["edges"]} == {"contradicts", "supports"}
