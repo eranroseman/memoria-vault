@@ -36,7 +36,16 @@ from memoria_vault.runtime.operations import (
 from memoria_vault.runtime.operations import run_prompt_operation as _run_prompt_operation
 from memoria_vault.runtime.vaultio import read_frontmatter, split_frontmatter
 from tests.cli_test_helpers import write_runner_provider_config
-from tests.helpers import call_with_context, copy_memoria_dirs, git, init_git, patch_pydantic_ai
+from tests.helpers import (
+    admitted_cards,
+    attention_flow_rows,
+    call_with_context,
+    copy_memoria_dirs,
+    git,
+    init_git,
+    patch_pydantic_ai,
+    set_attention_config,
+)
 
 pytestmark = pytest.mark.contract
 
@@ -616,6 +625,17 @@ def test_compile_source_digest_blocks_checked_sources_without_full_text(
 
     assert f"text_status is {text_status}" in str(exc.value)
     assert "attention_path is inbox/flag-digest-full-text-source-alpha.md" in str(exc.value)
+    assert [
+        (row["card_path"], row["kind"], row["loudness"], row["raised_by"])
+        for row in admitted_cards(vault)
+    ] == [
+        (
+            "inbox/flag-digest-full-text-source-alpha.md",
+            "flag",
+            "alert",
+            "compile-source-digest",
+        )
+    ]
     assert not (vault / "digests/source-alpha.md").exists()
     attention = vault / "inbox/flag-digest-full-text-source-alpha.md"
     attention_fm = read_frontmatter(attention)
@@ -1128,3 +1148,48 @@ def test_run_digest_model_fixture_branch_returns_null_telemetry() -> None:
     assert result["elapsed_s"] == 0.0
     assert "## Synthesis" in result["text"]
     assert "## Hub suggestions" in result["text"]
+
+
+def test_a_paused_compile_source_digest_still_blocks_but_raises_no_card(tmp_path: Path) -> None:
+    """The gate is not the card (issue #1703).
+
+    A paused producer withholds the attention card. It does not buy a digest an
+    unsupported source cannot have, so the refusal still raises -- and the message
+    says why there is nothing to open, rather than naming a path that is not
+    there. The `check-fired` journal row goes with the card for the same reason:
+    its `attention_path` would otherwise point at a file no writer wrote.
+    """
+    vault = workspace(tmp_path)
+    capture_source(
+        vault,
+        "source-alpha",
+        "Alpha Source",
+        "A fixture source.",
+        "Title or abstract fallback only.",
+        text_status="metadata-only",
+        machine="capture-machine",
+    )
+    set_attention_config(vault, "producers:\n  compile-source-digest: paused\n")
+
+    with pytest.raises(ValueError, match="checked digest requires full-text source content") as exc:
+        compile_source_digest(
+            vault,
+            "source-alpha",
+            ["Framing", "Methods", "Outcomes", "Gaps", "Impact"],
+            machine="op-machine",
+            run_id="compile-alpha",
+        )
+
+    assert "producer compile-source-digest is paused" in str(exc.value)
+    assert "attention_path is" not in str(exc.value)
+    assert not (vault / "inbox/flag-digest-full-text-source-alpha.md").exists()
+    assert not (vault / "digests/source-alpha.md").exists()
+    assert admitted_cards(vault) == []
+    assert attention_flow_rows(vault, "producer-run-skipped") == [
+        {"producer": "compile-source-digest", "reason": "paused"}
+    ]
+    assert not [
+        event
+        for event in iter_jsonl(vault / ".memoria/journal/op-machine.jsonl")
+        if event.get("check") == "source-full-text"
+    ]

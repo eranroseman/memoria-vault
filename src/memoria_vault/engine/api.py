@@ -1138,6 +1138,13 @@ def _attention_card(
     where the raw spelling is already lost. The payload is a wire field the plugin
     reads, and this narrows it -- to exactly the vocabulary `inbox.py` writes and
     `integrity.resolve_attention` writes back, never to a new term.
+
+    `routing_class` is `loudness.routing_class` for the same reason and with one
+    hop more at stake (#1670): this payload field is what `resolve_attention` below
+    puts in the `resolve-attention` operation payload, and `integrity` validates it
+    and raises. Raw, a card written `routing_class: Act` could not be resolved at
+    all -- the operation returned `ok: false` and left the card open -- while
+    `lifecycle` folded the same card and journaled its disposition.
     """
     if not path.is_file():
         return None
@@ -1150,7 +1157,7 @@ def _attention_card(
         "title": frontmatter.get("title") or path.stem,
         "kind": frontmatter.get("attention_kind") or "",
         "status": loudness.attention_status(frontmatter),
-        "routing_class": frontmatter.get("routing_class") or "ask",
+        "routing_class": loudness.routing_class(frontmatter),
         "target": frontmatter.get("target") or frontmatter.get("target_id") or "",
         "loudness": frontmatter.get("loudness") or "",
         "check_status": frontmatter.get("check_status") or "unchecked",

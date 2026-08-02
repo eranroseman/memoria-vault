@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from collections import Counter
 from pathlib import Path
 
 import pytest
@@ -832,7 +833,7 @@ def test_a_rebuttal_only_component_reports_conflict_and_never_no_refutation(
         {
             "kind": "conflict",
             "severity": "medium",
-            "advice": "resolve or preserve the contradiction",
+            "advice": "resolve or preserve the challenge",
         },
     ]
     assert result["advisories"] == []
@@ -921,7 +922,7 @@ def test_no_support_gap_replaces_the_unstated_warrant_alias(tmp_path: Path) -> N
         {
             "kind": "conflict",
             "severity": "medium",
-            "advice": "resolve or preserve the contradiction",
+            "advice": "resolve or preserve the challenge",
         },
     ]
 
@@ -1977,3 +1978,79 @@ def test_canvas_edge_labels_conform_to_link_relations(tmp_path: Path) -> None:
 
     labels = {edge["label"] for edge in canvas["edges"]}
     assert labels == set(LINK_RELATIONS)
+
+
+def test_every_argument_gap_row_carries_its_own_advice(tmp_path: Path) -> None:
+    """The premise `_argument_next_action`'s roster rests on (#1681).
+
+    `_project_argument_gaps` takes `advice or _argument_next_action(kind)`, so a
+    `gap_findings` row that carries `advice` never reaches the fallback. Four
+    branches of that fallback -- `unstated-warrant`, `conflict`, `fragility` and
+    `structural` -- named gap kinds that only ever arrive on `gap_findings`, so
+    they were unreachable, their text was a verbatim copy of these rows' `advice`,
+    and a mutation of any of them survived the whole suite. They were deleted.
+
+    This is what holds the deletion honest: it fails the day a gap row is added
+    without `advice`, which is the only way those kinds could reach the fallback
+    again, and it points at the row rather than at the missing branch. The sweep
+    asserts its own coverage first -- a filter that emitted nothing would satisfy
+    an advice-only assertion vacuously (escape class 1).
+    """
+    seen: dict[str, list[str]] = {}
+    for relation_count in range(4):
+        for supports in range(3):
+            for challenges in range(3):
+                for warrant_gap in (None, {"warrant_count": 4}):
+                    counts = Counter(
+                        {"supports": supports, "contradicts": challenges, "extends": 1}
+                    )
+                    for row in knowledge._argument_gap_findings(
+                        counts, relation_count, warrant_gap=warrant_gap
+                    ):
+                        seen.setdefault(str(row["kind"]), []).append(str(row.get("advice") or ""))
+
+    assert set(seen) == {"structural", "no-support", "fragility", "unstated-warrant", "conflict"}
+    assert all(advice.strip() for advices in seen.values() for advice in advices)
+    # The empty-argument payload is the other `gap_findings` producer this reaches.
+    assert all(
+        str(row.get("advice") or "").strip()
+        for row in knowledge._project_argument_empty("p", "t", "missing-thesis")["gap_findings"]
+    )
+
+
+def test_the_advice_less_finding_kinds_are_exactly_what_the_fallback_answers(
+    tmp_path: Path,
+) -> None:
+    """The other half of the same premise: which kinds arrive *without* `advice`.
+
+    `findings` is the only advice-less source `_project_argument_gaps` reads, so its
+    kind roster is the reachable domain of `_argument_next_action`. Two of them get a
+    named action; `thin-argument` and the empty-payload reasons take the fallback.
+    Asserting the roster, not the strings, is what makes a sixth finding kind fail
+    here instead of silently landing on "curate checked notes".
+    """
+    seen = {
+        str(row["kind"])
+        for relation_count in range(4)
+        for supports in range(3)
+        for challenges in range(3)
+        for row in knowledge._argument_findings(
+            Counter({"supports": supports, "contradicts": challenges, "extends": 1}),
+            relation_count,
+        )
+    }
+    empty = {
+        str(row["kind"])
+        for reason in ("missing-thesis", "missing-or-unchecked-thesis")
+        for row in knowledge._project_argument_empty("p", "t", reason)["findings"]
+    }
+
+    assert seen == {"thin-argument", "no-support", "no-refutation"}
+    assert empty == {"missing-thesis", "missing-or-unchecked-thesis"}
+    assert {kind: knowledge._argument_next_action(kind) for kind in seen | empty} == {
+        "no-support": "add supporting evidence notes",
+        "no-refutation": "add or preserve checked counterpoint notes",
+        "thin-argument": "curate checked notes or links around the project thesis",
+        "missing-thesis": "curate checked notes or links around the project thesis",
+        "missing-or-unchecked-thesis": ("curate checked notes or links around the project thesis"),
+    }

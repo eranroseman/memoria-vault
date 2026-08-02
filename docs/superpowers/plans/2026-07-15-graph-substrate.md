@@ -10652,6 +10652,22 @@ cover `tension` at the roster level in `tests/test_edges.py`, not with a
 > respell `_support_count` as `counts["supports"]`, identical while
 > `SUPPORT_RELATIONS` is a singleton and kept as the roster consumer for the day
 > it is not; one is the unreachable branch above).
+>
+> **Amendment 2026-08-02 (issue #1681).** The four unreachable branches this note
+> records — `unstated-warrant`, `conflict`, `fragility`, `structural` — are
+> deleted. This note is the confirmation the issue asked for that no future caller
+> was planned: it states the unreachability is structural, not a gap awaiting a
+> producer. Their text was a verbatim copy of the corresponding `advice` on
+> `_argument_gap_findings`' rows, so the deletion removes a duplicate rather than a
+> behaviour, and the survivor this note counts as equivalent is gone with it.
+> `_argument_next_action` now answers only `no-support` and `no-refutation` plus a
+> fallback, which is exactly the advice-less roster `_argument_findings` and
+> `_project_argument_empty` produce; both halves of that premise are pinned in
+> `tests/test_project_knowledge.py`. Also fixed there: `_argument_gap_why("conflict")`
+> and the matching `advice` said "contradiction" while Graph-R11 had widened the
+> gate to `_challenge_count` (`contradicts`, `rebuttal`, `tension`); both now name
+> the challenge roster, pinned against the rebuttal vault in
+> `tests/test_gap_analysis.py`. Goldens still did not move.
 
 **Files:**
 - Modify: `src/memoria_vault/runtime/subsystems/lib/edges.py` (ERP-A's module; append the config loader)

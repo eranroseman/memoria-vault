@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import shutil
 import subprocess
 import uuid
@@ -207,6 +208,32 @@ def copy_memoria_dirs(vault: Path, *names: str) -> None:
             WORKSPACE_SEED / ".memoria" / name,
             vault / ".memoria" / name,
         )
+
+
+def set_attention_config(vault: Path, body: str) -> None:
+    """Write `.memoria/config/attention.yaml`, the PI's ordering and throttle knobs."""
+    config = Path(vault) / ".memoria/config/attention.yaml"
+    config.parent.mkdir(parents=True, exist_ok=True)
+    config.write_text(body, encoding="utf-8")
+
+
+def attention_flow_rows(vault: Path, event_type: str) -> list[dict[str, str]]:
+    """Analytics-only attention flow rows, in insertion order.
+
+    Insertion order, not `ts`: `now_iso` is second-resolution and `event_id` is a
+    random uuid4, so two rows written in the same second have no stable order of
+    their own and these assertions are about which write admitted, in sequence.
+    """
+    with state.connect(vault) as conn:
+        rows = conn.execute(
+            "SELECT payload_json FROM telemetry_events WHERE event_type = ? ORDER BY rowid",
+            (event_type,),
+        ).fetchall()
+    return [json.loads(str(row["payload_json"])) for row in rows]
+
+
+def admitted_cards(vault: Path) -> list[dict[str, str]]:
+    return attention_flow_rows(vault, "attention-admitted")
 
 
 def git(workspace: Path, *args: str) -> str:

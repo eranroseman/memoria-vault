@@ -16,6 +16,10 @@ from memoria_vault.runtime.vaultio import read_frontmatter
 BLOCK_LOUDNESS = "block"
 ATTENTION_PROJECTION = "attention"
 OPEN_ATTENTION_STATUS = "open"
+# `integrity.resolve_attention` validates against exactly this roster and raises on
+# anything else, so it is the vocabulary a card's `routing_class` may hold.
+ROUTING_CLASSES = frozenset({"act", "ask", "log"})
+DEFAULT_ROUTING_CLASS = "ask"
 
 
 def attention_status(frontmatter: Mapping[str, Any]) -> str:
@@ -42,6 +46,37 @@ def attention_status(frontmatter: Mapping[str, Any]) -> str:
     CLI will not show them.
     """
     return str(frontmatter.get("attention_status") or "").strip().lower()
+
+
+def routing_class(frontmatter: Mapping[str, Any]) -> str:
+    """The one reader of a card's `routing_class`: folded to the roster, else `ask`.
+
+    Third field to diverge this way, after `projection` (#1617) and `attention_status`
+    (#1633), and it diverged for their reason: `lifecycle` folded its own read while
+    `engine.api._attention_card` carried the raw string into the card payload, where
+    no later reader can tell `Act` from `act` because the spelling is already gone.
+
+    Filed as display-only. It was not. The payload field is not only rendered -- it is
+    the `routing_class` `engine.api.resolve_attention` puts in the `resolve-attention`
+    operation payload, which `worker` hands to `integrity.resolve_attention`, which
+    validates against `ROUTING_CLASSES` and raises. So `routing_class: Act` on an open
+    card made `memoria attention resolve` return `ok: false` and leave the card open:
+    if it also carried `loudness: block`, it gated delegation and review-gated
+    promotion with no way to clear it through the CLI, while `lifecycle` folded the
+    same card to `act` and journaled a disposition for it. That is #1633's harm
+    exactly, one hop further from the frontmatter.
+
+    So the fold belongs at every *frontmatter* read, which makes the payload's
+    `routing_class` canonical and both the operation payload and the rendered field
+    correct by construction. Narrowed to exactly the vocabulary
+    `integrity.resolve_attention` accepts, never to a new term.
+
+    `inbox/**` is the one write target the reference actor policy grants a non-PI
+    actor, so `routing_class: " ask "` -- an ordinary YAML quoting accident -- is
+    reachable through the documented perimeter.
+    """
+    written = str(frontmatter.get("routing_class") or "").strip().lower()
+    return written if written in ROUTING_CLASSES else DEFAULT_ROUTING_CLASS
 
 
 def is_open_blocker(frontmatter: dict[str, Any]) -> bool:

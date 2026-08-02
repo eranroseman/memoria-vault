@@ -22,7 +22,14 @@ from memoria_vault.runtime.jsonl import iter_jsonl
 from memoria_vault.runtime.operations import load_operation_policy
 from memoria_vault.runtime.vaultio import read_frontmatter
 from memoria_vault.runtime.worker import enqueue_operation, run_next_job
-from tests.helpers import WORKSPACE_SEED, git, worker_workspace
+from tests.helpers import (
+    WORKSPACE_SEED,
+    admitted_cards,
+    attention_flow_rows,
+    git,
+    set_attention_config,
+    worker_workspace,
+)
 
 pytestmark = pytest.mark.runtime
 
@@ -1203,3 +1210,139 @@ def test_credential_notices_deduplicate_duplicate_branch_providers(monkeypatch) 
         "semanticscholar: adapter off - SEMANTIC_SCHOLAR_API_KEY unset; "
         "set it: memoria secrets set SEMANTIC_SCHOLAR_API_KEY",
     ]
+
+
+_DISCOVERY_EDGE = {
+    "target_id": "https://openalex.org/W999",
+    "target_title": "Discovered Work",
+    "relation_type": "references",
+}
+
+
+def test_both_enrichment_writers_admit_the_card_they_write(tmp_path: Path) -> None:
+    """Two kinds and two bands from one producer (issue #1703).
+
+    `_write_attention_flag` mints a `flag` at `quiet` and `_write_discovery_candidate`
+    a `candidate` at `notice`, so a fix that stamped one kind or one band for both
+    reads differently here rather than identically.
+    """
+    source = {"work_id": "source-alpha"}
+
+    _write_attention_flag(
+        tmp_path, source, check="provider-content", finding="finding", evidence="evidence"
+    )
+    _write_discovery_candidate(tmp_path, source, _DISCOVERY_EDGE)
+    # `_write_discovery_candidate` is shared, and `analyze-gaps` passes its own
+    # `raised_by`. The admission row must carry the producer that called, not this
+    # module's default -- otherwise the flow panel attributes every gap-run
+    # discovery candidate to `enrich-source` and the per-producer counts are wrong
+    # in a way no throttle test can see, because a paused producer writes no row.
+    _write_discovery_candidate(
+        tmp_path, {"work_id": "source-beta"}, _DISCOVERY_EDGE, raised_by="analyze-gaps"
+    )
+
+    assert [
+        (row["card_path"], row["kind"], row["loudness"], row["raised_by"])
+        for row in admitted_cards(tmp_path)
+    ] == [
+        (
+            "inbox/flag-enrichment-source-alpha-provider-content.md",
+            "flag",
+            "quiet",
+            "enrich-source",
+        ),
+        (
+            "inbox/candidate-work-source-alpha-references-https___openalex.org_W999.md",
+            "candidate",
+            "notice",
+            "enrich-source",
+        ),
+        (
+            "inbox/candidate-work-source-beta-references-https___openalex.org_W999.md",
+            "candidate",
+            "notice",
+            "analyze-gaps",
+        ),
+    ]
+
+
+def test_a_paused_enrich_source_writes_neither_card(tmp_path: Path) -> None:
+    """Both writers return "" -- not a path to a file that was never written."""
+    source = {"work_id": "source-alpha"}
+    set_attention_config(tmp_path, "producers:\n  enrich-source: paused\n")
+
+    flag_rel = _write_attention_flag(
+        tmp_path, source, check="provider-content", finding="finding", evidence="evidence"
+    )
+    candidate_rel = _write_discovery_candidate(tmp_path, source, _DISCOVERY_EDGE)
+
+    assert (flag_rel, candidate_rel) == ("", "")
+    assert not list((tmp_path / "inbox").glob("*.md"))
+    assert admitted_cards(tmp_path) == []
+    assert len(attention_flow_rows(tmp_path, "producer-run-skipped")) == 2
+
+
+def test_the_discovery_writer_throttles_the_producer_that_called_it(tmp_path: Path) -> None:
+    """`_write_discovery_candidate` is shared: `analyze-gaps` passes its own
+    `raised_by`. The throttle must follow that argument, not the module's default,
+    or pausing one of the two producers would silently pause both."""
+    source = {"work_id": "source-alpha"}
+    set_attention_config(tmp_path, "producers:\n  analyze-gaps: paused\n")
+
+    default_rel = _write_discovery_candidate(tmp_path, source, _DISCOVERY_EDGE)
+    gap_rel = _write_discovery_candidate(
+        tmp_path, {"work_id": "source-beta"}, _DISCOVERY_EDGE, raised_by="analyze-gaps"
+    )
+
+    assert default_rel
+    assert gap_rel == ""
+    assert [row["raised_by"] for row in admitted_cards(tmp_path)] == ["enrich-source"]
+    assert attention_flow_rows(tmp_path, "producer-run-skipped") == [
+        {"producer": "analyze-gaps", "reason": "paused"}
+    ]
+
+
+def test_a_paused_enrich_source_commits_no_empty_path_on_the_blocked_run(tmp_path: Path) -> None:
+    """The whole blocked run, with the producer paused (#1703).
+
+    `_flag_and_commit` stages what `_write_attention_flag` returns. Paused, that is
+    `""`, and `_commit_relpath` passes an empty string straight through to
+    `git add --` -- so the guard that drops it is load-bearing, not defensive, and
+    the direct-call pause test above cannot reach it because it never runs the
+    caller. The integrity finding is still recorded and the run still ends
+    `needs_human`: a pause withholds the card, never the verdict.
+    """
+    vault = workspace(tmp_path)
+    enqueue_operation(
+        vault, "capture-source", payload=doi_payload(), idempotency_key="capture-alpha", actor="pi"
+    )
+    run_next_job(vault, machine="test-machine")
+    set_attention_config(vault, "producers:\n  enrich-source: paused\n")
+
+    enqueue_operation(
+        vault,
+        "enrich-source",
+        payload={
+            "work_id": "source-alpha",
+            "provider_payloads": {
+                key: value for key, value in provider_payloads().items() if key != "unpaywall"
+            },
+        },
+        idempotency_key="enrich-alpha",
+        actor="pi",
+    )
+    done = run_next_job(vault, machine="test-machine")
+
+    assert done is not None
+    assert done["status"] == "done"
+    assert done["enrichment_status"] == "needs_human"
+    assert done["attention_path"] == ""
+    assert not list((vault / "inbox").glob("*.md"))
+    assert admitted_cards(vault) == []
+    # The verdict survives the withheld card: the check still fired and journaled.
+    events = list(iter_jsonl(vault / ".memoria/journal/test-machine.jsonl"))
+    assert events[-1]["event"] == "check-fired"
+    # Only the journal anchor was staged -- an empty pathspec would have taken the
+    # whole worktree with it.
+    committed = set(git(vault, "show", "--name-only", "--format=", done["commit"]).splitlines())
+    assert committed == {state.JOURNAL_HEAD_REL}

@@ -36,6 +36,7 @@ from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path, require_policy_path
 from memoria_vault.runtime.read_barrier import is_consumable_checked_file
 from memoria_vault.runtime.steering import effective_steering_tokens, relevance_tokens
+from memoria_vault.runtime.subsystems.lib import inbox
 from memoria_vault.runtime.subsystems.lib import schema as schema_lib
 from memoria_vault.runtime.subsystems.lib.edges import (
     CHALLENGE_RELATIONS,
@@ -1296,18 +1297,29 @@ def _argument_gap_kind(finding_kind: str) -> str:
 
 
 def _argument_next_action(finding_kind: str) -> str:
+    """The seed action for a finding that carries no `advice` of its own.
+
+    Two kinds and a fallback, because `_project_argument_gaps` takes `advice or
+    _argument_next_action(kind)` and `findings` is the only advice-less source it
+    reads. `_argument_findings` produces `thin-argument`, `no-support` and
+    `no-refutation`; `_project_argument_empty` produces its own missing-thesis
+    reason as a kind. Everything else arrives on `gap_findings`, where every row
+    from `_argument_gap_findings` carries a non-empty `advice` that wins.
+
+    So this deliberately does *not* mirror the gap roster. It carried
+    `unstated-warrant`, `conflict`, `fragility` and `structural` branches whose
+    text was copied verbatim from those rows' `advice`; nothing reached them, a
+    mutation of any of them survived the whole suite, and a duplicated string that
+    no test can observe drifts from its original in one direction only. Deleted in
+    #1681 after the plan that wrote them confirmed no future caller
+    (`docs/superpowers/plans/2026-07-15-graph-substrate.md`). If a caller ever
+    hands this an advice-less gap kind, the fallback is the honest answer and the
+    fix is to give that row an `advice`, next to the kind that names it.
+    """
     if finding_kind == "no-refutation":
         return "add or preserve checked counterpoint notes"
-    if finding_kind == "conflict":
-        return "resolve or preserve the contradiction"
-    if finding_kind == "fragility":
-        return "add independent support"
     if finding_kind == "no-support":
         return "add supporting evidence notes"
-    if finding_kind == "unstated-warrant":
-        return "state the warrant on a grounding edge or link a warrant note"
-    if finding_kind == "structural":
-        return "seed checked notes around the thesis"
     return "curate checked notes or links around the project thesis"
 
 
@@ -1315,7 +1327,11 @@ def _argument_gap_why(finding_kind: str, argument: dict[str, Any]) -> str:
     if finding_kind == "no-refutation":
         return "The checked project argument has support but no checked counterpoint."
     if finding_kind == "conflict":
-        return "The checked project argument contains a contradiction that needs disposition."
+        # Graph-R11 (#1654) widened the gate to `_challenge_count`, so this fires for
+        # `rebuttal` and `tension` as well as `contradicts`. The classification was
+        # correct from that day; the sentence explaining it named one relation until
+        # #1681. Sentence and gate now describe the same roster.
+        return "The checked project argument carries an unresolved challenge to the thesis."
     if finding_kind == "fragility":
         return "The checked project argument depends on too little independent support."
     if finding_kind == "no-support":
@@ -1414,6 +1430,9 @@ def _write_full_text_gap_attention(
         path = vault / rel
         if path.exists():
             continue
+        band = inbox.throttled(vault, "analyze-gaps", "alert")
+        if band is None:
+            continue
         title = f"Full text needed for {work_id}"
         target = f"catalog/sources/{work_id}"
         text_status = str(source.get("text_status") or gap.get("text_status") or "missing")
@@ -1432,7 +1451,7 @@ def _write_full_text_gap_attention(
                 "agent_recommendation": "issues-found",
                 "target": target,
                 "raised_by": "analyze-gaps",
-                "loudness": "alert",
+                "loudness": band,
                 "created": date.today().isoformat(),
             },
             (
@@ -1441,6 +1460,7 @@ def _write_full_text_gap_attention(
             ),
             create_parent=True,
         )
+        inbox.admit(vault, path, "flag", band, "analyze-gaps")
         paths.append(rel)
     if not paths:
         return [], ""
@@ -1500,6 +1520,8 @@ def _write_gap_discovery_candidates(
                 edge,
                 raised_by="analyze-gaps",
             )
+            if not path:  # `analyze-gaps` is paused, so there is no card to annotate
+                continue
             relevance = _discovery_relevance(steering_tokens, source, edge)
             relevance_by_path[path] = relevance
             changed = _annotate_discovery_candidate(vault, path, relevance)
@@ -1656,6 +1678,9 @@ def _write_tag_candidate_attention(
         path = vault / rel
         if path.exists():
             continue
+        band = inbox.throttled(vault, "analyze-gaps", "notice")
+        if band is None:
+            continue
         refs = [str(ref) for ref in candidate.get("refs") or []]
         target = refs[0] if refs else "catalog/sources"
         write_frontmatter_doc(
@@ -1669,7 +1694,7 @@ def _write_tag_candidate_attention(
                 "target": target,
                 "source_count": len(refs),
                 "raised_by": "analyze-gaps",
-                "loudness": "notice",
+                "loudness": band,
                 "created": date.today().isoformat(),
             },
             f"# Candidate Tag\n\n{phrase}\n\n# Evidence\n\n"
@@ -1677,6 +1702,7 @@ def _write_tag_candidate_attention(
             + "\n",
             create_parent=True,
         )
+        inbox.admit(vault, path, "candidate", band, "analyze-gaps")
         new_paths.append(rel)
     if not new_paths:
         return [], ""
@@ -3671,7 +3697,9 @@ def _argument_gap_findings(
             {
                 "kind": "conflict",
                 "severity": "medium",
-                "advice": "resolve or preserve the contradiction",
+                # Same roster widening as `_argument_gap_why("conflict")`: the gate
+                # above is `_challenge_count`, which counts rebuttals and tensions.
+                "advice": "resolve or preserve the challenge",
             }
         )
     return gaps
