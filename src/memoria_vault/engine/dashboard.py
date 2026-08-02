@@ -21,7 +21,6 @@ table rather than a stub the later task has to find and replace.
 
 from __future__ import annotations
 
-import datetime
 import json
 from collections import Counter
 from pathlib import Path
@@ -44,6 +43,14 @@ DASHBOARD_PANELS: tuple[str, ...] = (
 
 # Open-card age buckets, widest last. `engine.cockpit._flow_panel` reads these
 # three names to name its oldest non-empty bucket.
+#
+# The age itself is not computed here. `engine.api._rank_factors` derives
+# `age_days` from the card's `created:` stamp against a local `date.today()` --
+# the same basis `inbox`'s writers stamp in -- and every card payload carries it,
+# so this panel buckets one number rather than deriving a second one that could
+# drift from the order the list is sorted in. (I1 H.1 shipped a private
+# `_age_days` because A.1 was unlanded; A.1 deleted it, which is what its own
+# section instructed.)
 AGE_BUCKETS = ("0-7d", "8-30d", ">30d")
 
 # The producer whose surfaced candidates panel 6 (spec §4.6, the diversity
@@ -90,7 +97,7 @@ def _attention_flow_panel(vault: Path, cards: list[dict[str, Any]]) -> dict[str,
     open_by_loudness = Counter(card["loudness"] or "notice" for card in open_cards)
     ages: Counter[str] = Counter()
     for card in open_cards:
-        ages[_age_bucket(_age_days(card))] += 1
+        ages[_age_bucket(int(card["rank_factors"]["age_days"]))] += 1
     inflow = _telemetry_day_counts(vault, "attention-admitted")
     drain = _journal_day_counts(vault, "disposition")
     return {
@@ -105,23 +112,6 @@ def _attention_flow_panel(vault: Path, cards: list[dict[str, Any]]) -> dict[str,
         "per_producer": _telemetry_group_counts(vault, "attention-admitted", "raised_by"),
         "skipped_runs": _telemetry_group_counts(vault, "producer-run-skipped", "producer"),
     }
-
-
-def _age_days(card: dict[str, Any]) -> int:
-    """Whole days since the card's `created:` date.
-
-    Same source and same arithmetic as `inbox`'s writers, which stamp
-    `created: date.today().isoformat()` in local time -- so this compares local
-    dates too rather than mixing a UTC today against a local stamp. A card with
-    no parsable `created:` reads as brand new, which understates rather than
-    invents age; a future-dated one reads negative and buckets as newest, which
-    is the same reading and needs no clamp of its own.
-    """
-    created = str(card["frontmatter"].get("created") or "")
-    try:
-        return (datetime.date.today() - datetime.date.fromisoformat(created)).days
-    except ValueError:
-        return 0
 
 
 def _age_bucket(days: int) -> str:

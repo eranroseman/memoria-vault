@@ -540,6 +540,15 @@ def _attention_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]
     _common(list_cmd)
     list_cmd.add_argument("--status")
     list_cmd.add_argument("--kind")
+    list_cmd.add_argument(
+        "--order-by",
+        default="",
+        help=(
+            "Comma-separated ranking factors for this listing "
+            "(priority, loudness, impact, staleness, age); overrides attention.yaml. "
+            "The block pin always sorts first."
+        ),
+    )
     list_cmd.set_defaults(handler=_cmd_attention_list)
     show = attention_sub.add_parser("show", **_surface_help("attention.get"))
     _common(show)
@@ -2290,7 +2299,12 @@ def _cmd_request_retry(args: argparse.Namespace) -> int:
 
 def _cmd_attention_list(args: argparse.Namespace) -> int:
     return _emit(
-        engine_api.read_attention(_workspace(args), status=args.status or "", kind=args.kind or ""),
+        engine_api.read_attention(
+            _workspace(args),
+            status=args.status or "",
+            kind=args.kind or "",
+            order_by=args.order_by or "",
+        ),
         args,
     )
 

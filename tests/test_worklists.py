@@ -126,18 +126,20 @@ def test_emit_report_reads_items_or_rows(tmp_path):
 
 
 def test_emit_worklist_passes_raised_by_and_loudness_through(tmp_path):
+    # `alert`, not `quiet`: `quiet` is the shipped default since I1 A.5, so
+    # passing it would prove the default rather than the pass-through.
     worklists.emit_worklist(
         tmp_path,
         "Bulk import batch",
         [{"title": "One", "item_ref": "doi-10.1234/x"}],
         raised_by="import",
-        loudness="quiet",
+        loudness="alert",
     )
 
     [prompt] = list((tmp_path / "inbox").glob("work-prompt-*.md"))
     frontmatter = _frontmatter(prompt)
     assert frontmatter["raised_by"] == "import"
-    assert frontmatter["loudness"] == "quiet"
+    assert frontmatter["loudness"] == "alert"
 
 
 def test_emit_import_worklist_ranks_duplicates_first_with_honest_denominators(tmp_path):

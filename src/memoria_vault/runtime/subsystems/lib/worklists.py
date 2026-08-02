@@ -68,7 +68,13 @@ def emit_worklist(
     workflow: str = "screen",
     worklist_id: str = "",
     raised_by: str = "worklists",
-    loudness: str = "notice",
+    # I1 spec §3: batch worklists mint at `quiet`. A worklist is bulk-admission
+    # volume by construction, and flood volume in the `notice`+ bands is what the
+    # loudness policy exists to prevent -- `quiet` sorts last and stays counted in
+    # every denominator, so the batch is visible without displacing PI-clearable
+    # holds. `emit_import_worklist` already passed this explicitly; the default now
+    # agrees with it rather than leaving one caller to remember.
+    loudness: str = "quiet",
 ) -> dict[str, Any]:
     """Write a file-backed worklist and one aggregate work-prompt.
 
@@ -175,7 +181,6 @@ def emit_import_worklist(
         workflow="import",
         worklist_id=f"import-{run_id}",
         raised_by="import",
-        loudness="quiet",
     )
 
 
