@@ -551,13 +551,10 @@ def test_trace_and_context_panels_are_both_branch_honest(vault: Path) -> None:
 
     trace = panels["trace"]
     assert trace["source_action"] == "journal.list"
-    # Section T lands engine.cockpit.trace_panel in this module; before that
-    # the panel is a named pending line. Both branches are legal here.
-    if hasattr(cockpit, "trace_panel"):
-        assert {"events", "total", "shown"} <= set(trace)
-    else:
-        assert trace["pending"] == "engine.cockpit.trace_panel (U2 plan section T)"
-        assert "events" not in trace
+    # trace_panel landed (U2 section T); the pending arm below it was dead and a
+    # both-branch assert distinguishes nothing.
+    assert {"events", "total", "shown"} <= set(trace)
+    assert "pending" not in trace
 
     context = panels["context"]
     assert context["source_action"] == "context.read"
@@ -624,16 +621,6 @@ def test_worklist_panel_emits_the_producer_order_whatever_it_is(
     assert cockpit.assemble_triage(vault)["worklist"]["cards"] == ranked
 
 
-def _review_seam_is_live() -> bool:
-    """The live-branch predicate for triage panel 2, stated independently of the
-    composer (raw-counts amendment 2026-07-29 §1): the panel counts V2's queue
-    engine-direct, so it needs the collector *and* the registered row that is the
-    only registry id it may name. Either half alone is not a seam."""
-    return hasattr(engine_api, "evidence_review_queue") and "views.evidence_review" in (
-        actions_by_id()
-    )
-
-
 def _flow_seam_is_live() -> bool:
     """The live-branch predicate for triage panel 3 (registered-only composition
     amendment §2/§3): a registered `dashboard.read` row whose engine is bound. An
@@ -652,15 +639,8 @@ def test_named_pending_triage_panels_name_their_absent_producer(vault: Path) -> 
     """
     panels = cockpit.assemble_triage(vault)
 
-    if _review_seam_is_live():
-        assert "pending" not in panels["review"]
-        assert panels["review"]["source_action"] == "views.evidence_review"
-    else:
-        assert panels["review"]["source_action"] == ""
-        assert panels["review"]["pending"] == (
-            "engine_api.evidence_review_queue + the views.evidence_review registry row "
-            "(V2 plan V2R-B.4)"
-        )
+    assert "pending" not in panels["review"]
+    assert panels["review"]["source_action"] == "views.evidence_review"
     if _flow_seam_is_live():
         assert "pending" not in panels["flow"]
         assert panels["flow"]["source_action"] == "dashboard.read"
@@ -1769,32 +1749,24 @@ def test_triage_screen_states_the_live_counts_its_panels_carry() -> None:
 
 def test_triage_review_and_flow_lines_are_both_branch_honest(vault: Path) -> None:
     """The two seams C.3 composes without owning: V2R-B.4's queue and T.3's
-    dashboard row. Live when present, an honest named line when absent — and the
-    `memoria review` invocation on both branches, because the cockpit links to
-    V2's review flow and never re-hosts it (spec §1 triage 2)."""
+    dashboard row. V2R-B.4's queue has landed, so the review half is pinned live;
+    the dashboard row is still both-branch, live when present and an honest named
+    line when absent. The `memoria review` invocation is asserted either way,
+    because the cockpit links to V2's review flow and never re-hosts it (spec §1
+    triage 2)."""
     panels = cockpit.assemble_triage(vault)
     out = cockpit.render_triage({"screen": "triage", "panels": panels})
 
     review = panels["review"]
-    if _review_seam_is_live():
-        assert review["source_action"] == "views.evidence_review"
-        assert {"open", "counts", "srd_gaps"} <= set(review)
-        body = _panel_body(out, "review queue (views.evidence_review)")
-        assert body[0] == f"  open: {review['open']}  " + (
-            "(" + " ".join(f"{k}={v}" for k, v in review["counts"].items()) + ")"
-            if review["counts"]
-            else "(none)"
-        )
-        assert not any(line.lstrip().startswith("pending:") for line in body)
-    else:
-        assert review["source_action"] == ""
-        body = _panel_body(out, "review queue (no registry row yet)")
-        named = body[: body.index("  hosted by: memoria review (V2)")]
-        # The producer's name is 91 characters, so it is wrapped across lines —
-        # and reassembles to exactly the panel's own value rather than a
-        # truncation of it.
-        assert len(named) > 1
-        assert " ".join(line.strip() for line in named) == f"pending: {review['pending']}"
+    assert review["source_action"] == "views.evidence_review"
+    assert {"open", "counts", "srd_gaps"} <= set(review)
+    body = _panel_body(out, "review queue (views.evidence_review)")
+    assert body[0] == f"  open: {review['open']}  " + (
+        "(" + " ".join(f"{k}={v}" for k, v in review["counts"].items()) + ")"
+        if review["counts"]
+        else "(none)"
+    )
+    assert not any(line.lstrip().startswith("pending:") for line in body)
     assert "  hosted by: memoria review (V2)" in out
 
     flow = panels["flow"]
