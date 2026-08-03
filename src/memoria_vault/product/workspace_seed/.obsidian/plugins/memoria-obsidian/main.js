@@ -567,7 +567,7 @@ module.exports = class MemoriaObsidianPlugin extends Plugin {
   async enqueueNamedOperation(operationId, payload) {
     try {
       const result = await this.postOperation(operationId, payload, "");
-      const requestId = String((result.job && result.job.job_id) || "");
+      const requestId = String((result.job && result.job.request_id) || "");
       new Notice(`Memoria queued ${operationId}: ${requestId}`);
       await this.recordEvent(
         this.baseEvent("operation.queued", {

@@ -793,7 +793,7 @@ def run_operation(
 def _run_saved_request(workspace: Path, job: dict[str, Any], *, machine: str) -> dict[str, Any]:
     if job.get("status") not in {"pending", "running"}:
         return job
-    request_id = str(job["job_id"])
+    request_id = str(job["request_id"])
     try:
         return run_request(workspace, request_id, machine=machine)
     except ValueError as exc:
@@ -1496,11 +1496,11 @@ def _draft_view(draft: dict[str, Any]) -> dict[str, Any]:
     rows = [
         {
             "ref": str(row["block_ref"]),
-            "check_status": "unchecked" if row["state"] != "complete" else "checked",
+            "check_status": "unchecked" if row["completeness_status"] != "complete" else "checked",
             "cells": {
                 "id": row["id"],
                 "type": row["type"],
-                "state": row["state"],
+                "completeness_status": row["completeness_status"],
                 "review_required": row["review_required"],
             },
         }
@@ -1516,7 +1516,7 @@ def _draft_view(draft: dict[str, Any]) -> dict[str, Any]:
                 "title": "Project draft evidence",
                 "check_status": "checked" if ready else "unchecked",
                 "refs": [draft["draft_path"]],
-                "columns": ["id", "type", "state", "review_required"],
+                "columns": ["id", "type", "completeness_status", "review_required"],
                 "rows": rows,
             }
         ],

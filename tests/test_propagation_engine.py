@@ -568,7 +568,7 @@ def _seed_retraction_graph(vault: Path) -> None:
                 "block_ref": "notes/c1.md#^blk-22222222",
                 "items": ["settles-2016#^p0001"],
                 "type": "single-span",
-                "state": "complete",
+                "completeness_status": "complete",
                 "review_required": False,
                 "bind": False,
             }

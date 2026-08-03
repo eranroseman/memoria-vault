@@ -56,7 +56,7 @@ def test_resolve_attention_emits_disposition(
         payload={"target_id": "inbox/attention/pi.md", "outcome": outcome, "reason": "PI decision"},
     )
 
-    result = worker.run_request(workspace, request["job_id"], machine="PI laptop")
+    result = worker.run_request(workspace, request["request_id"], machine="PI laptop")
 
     assert result["status"] == "done"
     dispositions = _events_with_schema(workspace, "disposition.v1")
@@ -66,7 +66,7 @@ def test_resolve_attention_emits_disposition(
     assert dispositions[0]["item_id"] == "inbox/attention/pi.md"
     assert dispositions[0]["actor"] == "pi"
     # request_id is the join key beta.1 client events will reconcile against.
-    assert dispositions[0]["request_id"] == request["job_id"]
+    assert dispositions[0]["request_id"] == request["request_id"]
 
 
 # --- ERP-D.1: `decided-wrong` claim disposition ----------------------------
@@ -113,7 +113,7 @@ def _resolve_attention_job(vault: Path, key: str, **payload: str) -> dict:
         idempotency_key=key,
         payload=dict(payload),
     )
-    return worker.run_request(vault, request["job_id"], machine="PI laptop")
+    return worker.run_request(vault, request["request_id"], machine="PI laptop")
 
 
 def test_decided_wrong_claim_emits_override_and_a_blast_radius_report(
@@ -236,7 +236,7 @@ def test_acknowledge_attention_emits_no_disposition(
         payload={"target_id": "inbox/attention/pi.md", "reason": "ack"},
     )
 
-    worker.run_request(workspace, request["job_id"], machine="PI laptop")
+    worker.run_request(workspace, request["request_id"], machine="PI laptop")
 
     assert _events_with_schema(workspace, "disposition.v1") == []
 

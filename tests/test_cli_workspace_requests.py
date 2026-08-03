@@ -434,7 +434,7 @@ def test_cli_request_controls_reject_agent_for_pi_request_without_mutation(
         actor="pi",
         machine_authored=False,
     )
-    request_id = str(job["job_id"])
+    request_id = str(job["request_id"])
     if request_status == "cancelled":
         state.finish_request(
             workspace,
@@ -494,11 +494,11 @@ def test_cli_request_cancel_rejects_non_pending_status_without_mutation(
     error = "test setup" if status in {"failed", "cancelled"} else ""
     state.finish_request(
         workspace,
-        str(job["job_id"]),
+        str(job["request_id"]),
         status,
         {**job, "status": status, "error": error},
     )
-    before = state.request_detail(state.request_row(workspace, str(job["job_id"])))
+    before = state.request_detail(state.request_row(workspace, str(job["request_id"])))
 
     assert (
         main(
@@ -507,14 +507,14 @@ def test_cli_request_cancel_rejects_non_pending_status_without_mutation(
                 "cancel",
                 "--workspace",
                 str(workspace),
-                str(job["job_id"]),
+                str(job["request_id"]),
                 "--json",
             ]
         )
         == 2
     )
     rejected = json.loads(capsys.readouterr().out)
-    after = state.request_detail(state.request_row(workspace, str(job["job_id"])))
+    after = state.request_detail(state.request_row(workspace, str(job["request_id"])))
 
     assert "requires pending status" in rejected["error"]
     assert after == before
@@ -544,7 +544,7 @@ def test_cli_request_retry_rejects_superseded_source(
                 str(workspace),
                 "--idempotency-key",
                 "successor-request",
-                str(source["job_id"]),
+                str(source["request_id"]),
                 "query=updated",
                 "--json",
             ]
@@ -561,14 +561,14 @@ def test_cli_request_retry_rejects_superseded_source(
                 "retry",
                 "--workspace",
                 str(workspace),
-                str(source["job_id"]),
+                str(source["request_id"]),
                 "--json",
             ]
         )
         == 2
     )
     rejected = json.loads(capsys.readouterr().out)
-    source_after = state.request_job(workspace, str(source["job_id"]))
+    source_after = state.request_job(workspace, str(source["request_id"]))
 
     assert "superseded by request successor-request" in rejected["error"]
     assert source_after["status"] == "cancelled"
@@ -603,7 +603,7 @@ def test_cli_request_amend_rejects_scope_bearing_payload_change(
                 str(workspace),
                 "--idempotency-key",
                 "scoped-successor",
-                str(source["job_id"]),
+                str(source["request_id"]),
                 "target_path=notes/changed.md",
                 "--json",
             ]
@@ -613,7 +613,7 @@ def test_cli_request_amend_rejects_scope_bearing_payload_change(
     rejected = json.loads(capsys.readouterr().out)
 
     assert "scope-bearing field" in rejected["error"]
-    assert state.request_job(workspace, str(source["job_id"]))["status"] == "pending"
+    assert state.request_job(workspace, str(source["request_id"]))["status"] == "pending"
     assert state.request_job(workspace, "scoped-successor") is None
 
 
@@ -641,7 +641,7 @@ def test_cli_request_amend_rejects_integrity_only_source_without_superseding(
                 str(workspace),
                 "--idempotency-key",
                 "integrity-successor",
-                str(source["job_id"]),
+                str(source["request_id"]),
                 "reason=corrected",
                 "--json",
             ]
@@ -651,7 +651,7 @@ def test_cli_request_amend_rejects_integrity_only_source_without_superseding(
     rejected = json.loads(capsys.readouterr().out)
 
     assert "integrity actor authority" in rejected["error"]
-    assert state.request_job(workspace, str(source["job_id"]))["status"] == "pending"
+    assert state.request_job(workspace, str(source["request_id"]))["status"] == "pending"
     assert state.request_job(workspace, "integrity-successor") is None
 
 
@@ -680,7 +680,7 @@ def test_cli_request_answer_retry_repairs_missing_lifecycle_event(
         str(workspace),
         "--idempotency-key",
         "event-successor",
-        str(source["job_id"]),
+        str(source["request_id"]),
         "note=ready",
         "--json",
     ]
@@ -731,7 +731,7 @@ def test_cli_request_transition_retry_repairs_missing_lifecycle_event(
     if action == "retry":
         state.finish_request(
             workspace,
-            str(job["job_id"]),
+            str(job["request_id"]),
             "failed",
             {**job, "status": "failed", "error": "test failure"},
         )
@@ -740,7 +740,7 @@ def test_cli_request_transition_retry_repairs_missing_lifecycle_event(
         action,
         "--workspace",
         str(workspace),
-        str(job["job_id"]),
+        str(job["request_id"]),
         "--json",
     ]
     append_event = trusted_writer.append_explicit_journal_event
@@ -766,7 +766,7 @@ def test_cli_request_transition_retry_repairs_missing_lifecycle_event(
               AND json_extract(payload_json, '$.request_id') = ?
               AND json_extract(payload_json, ?) = 1
             """,
-            (event_type, str(job["job_id"]), f"$.{attempt_key}"),
+            (event_type, str(job["request_id"]), f"$.{attempt_key}"),
         ).fetchone()[0]
     assert events == 1
     assert main(command) == 2
@@ -802,7 +802,7 @@ def test_cli_request_cancel_and_retry_use_canonical_request_id(
         == 0
     )
     capsys.readouterr()
-    assert state.request_job(workspace, str(job["job_id"]))["status"] == "cancelled"
+    assert state.request_job(workspace, str(job["request_id"]))["status"] == "cancelled"
     assert (
         main(
             [
@@ -818,7 +818,7 @@ def test_cli_request_cancel_and_retry_use_canonical_request_id(
     )
     capsys.readouterr()
 
-    assert state.request_job(workspace, str(job["job_id"]))["status"] == "pending"
+    assert state.request_job(workspace, str(job["request_id"]))["status"] == "pending"
     assert (
         main(
             [
@@ -837,8 +837,8 @@ def test_cli_request_cancel_and_retry_use_canonical_request_id(
     )
     successor = json.loads(capsys.readouterr().out)
 
-    assert successor["supersedes_request_id"] == str(job["job_id"])
-    assert successor["request"]["causal_refs"] == [{"id": str(job["job_id"])}]
+    assert successor["supersedes_request_id"] == str(job["request_id"])
+    assert successor["request"]["causal_refs"] == [{"id": str(job["request_id"])}]
     with state.connect(workspace) as conn:
         request_ids = {
             json.loads(row["payload_json"])["request_id"]
@@ -846,7 +846,7 @@ def test_cli_request_cancel_and_retry_use_canonical_request_id(
                 "SELECT payload_json FROM event_log WHERE event_type LIKE 'request_%'"
             )
         }
-    assert request_ids == {str(job["job_id"])}
+    assert request_ids == {str(job["request_id"])}
 
 
 def test_cli_request_retry_repairs_event_after_retried_job_finishes(
@@ -869,7 +869,7 @@ def test_cli_request_retry_repairs_event_after_retried_job_finishes(
     )
     state.finish_request(
         workspace,
-        str(job["job_id"]),
+        str(job["request_id"]),
         "failed",
         {**job, "status": "failed", "error": "test failure"},
     )
@@ -878,7 +878,7 @@ def test_cli_request_retry_repairs_event_after_retried_job_finishes(
         "retry",
         "--workspace",
         str(workspace),
-        str(job["job_id"]),
+        str(job["request_id"]),
         "--json",
     ]
     append_event = trusted_writer.append_explicit_journal_event
@@ -890,12 +890,12 @@ def test_cli_request_retry_repairs_event_after_retried_job_finishes(
     assert main(command) == 2
     capsys.readouterr()
     monkeypatch.setattr(trusted_writer, "append_explicit_journal_event", append_event)
-    result = run_request(workspace, str(job["job_id"]), machine="test-machine")
+    result = run_request(workspace, str(job["request_id"]), machine="test-machine")
     assert result["status"] == "done"
 
     assert main(command) == 0
     capsys.readouterr()
-    assert state.request_job(workspace, str(job["job_id"]))["status"] == "done"
+    assert state.request_job(workspace, str(job["request_id"]))["status"] == "done"
     with state.connect(workspace) as conn:
         events = conn.execute(
             """
@@ -930,7 +930,7 @@ def test_cli_request_amend_rejects_fork_from_superseded_source(
         str(workspace),
         "--idempotency-key",
         "fork-successor-one",
-        str(source["job_id"]),
+        str(source["request_id"]),
         "query=first",
         "--json",
     ]
@@ -946,7 +946,7 @@ def test_cli_request_amend_rejects_fork_from_superseded_source(
                 str(workspace),
                 "--idempotency-key",
                 "fork-successor-two",
-                str(source["job_id"]),
+                str(source["request_id"]),
                 "query=second",
                 "--json",
             ]
@@ -1366,7 +1366,7 @@ def test_cli_wires_maintenance_and_pi_commands(
         machine_authored=False,
     )
     original_before = state.request_detail(
-        state.request_row(workspace, str(original_job["job_id"]))
+        state.request_row(workspace, str(original_job["request_id"]))
     )
     answer_command = [
         "request",
@@ -1637,9 +1637,11 @@ def test_cli_workspace_scan_fixture_quarantines_generated_projection(
     assert scan["quarantine"]["findings"][0]["target_id"] == "index.md"
     assert "index.md" in scan["regeneration"]["changed"]
     assert scan["result"]["observed_count"] == 0
-    assert scan["job"]["job_id"] == "projection-scan"
-    assert scan["quarantine_job"]["job_id"] == "projection-scan_trace-integrity-scan"
-    assert scan["regeneration_job"]["job_id"] == "projection-scan_regenerate-tracked-projections"
+    assert scan["job"]["request_id"] == "projection-scan"
+    assert scan["quarantine_job"]["request_id"] == "projection-scan_trace-integrity-scan"
+    assert (
+        scan["regeneration_job"]["request_id"] == "projection-scan_regenerate-tracked-projections"
+    )
     assert (workspace / "index.md").is_file()
     assert "direct-write-generated-projection fixture" not in (workspace / "index.md").read_text(
         encoding="utf-8"

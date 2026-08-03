@@ -338,7 +338,7 @@ def test_evidence_review_queue_resolves_grounds_previews_for_every_ref_kind(matr
             "resolves": True,
             "expansion": {
                 "evidence_type": "implicit",
-                "state": "evidence-incomplete",
+                "completeness_status": "evidence-incomplete",
                 "item_count": 0,
             },
         }
@@ -606,7 +606,7 @@ def test_resolve_item_previews_reports_code_grounds_completeness(tmp_path: Path)
         exit_status=0,
         sandbox_backend="bwrap",
         sandbox_profile_hash="sha256:" + "0" * 64,
-        run_state="succeeded",
+        run_status="succeeded",
     )
     stale = "sha256:" + "0" * 64
 
@@ -625,7 +625,7 @@ def test_resolve_item_previews_reports_code_grounds_completeness(tmp_path: Path)
             "artifact_id": "analysis",
             "output_sha256": output_hash,
             "resolves": True,
-            "state": "complete",
+            "completeness_status": "complete",
         },
         {
             "ref": f"code-grounds:run-1:analysis:{stale}",
@@ -634,7 +634,7 @@ def test_resolve_item_previews_reports_code_grounds_completeness(tmp_path: Path)
             "artifact_id": "analysis",
             "output_sha256": stale,
             "resolves": False,
-            "state": "evidence-incomplete",
+            "completeness_status": "evidence-incomplete",
         },
     ]
 

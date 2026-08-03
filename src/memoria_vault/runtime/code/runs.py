@@ -14,8 +14,8 @@ def verify_code_run(vault: Path, run_id: str) -> dict[str, Any]:
     row = state.code_run(vault, run_id)
     if row is None:
         return {"ready": False, "reason": "missing-code-run"}
-    if row["state"] != "succeeded":
-        return {"ready": False, "reason": row["state"]}
+    if row["run_status"] != "succeeded":
+        return {"ready": False, "reason": row["run_status"]}
     for relpath, expected in row["output_hashes"].items():
         path = Path(vault) / normalize_path(relpath)
         if not path.is_file() or sha256_file(path) != expected:

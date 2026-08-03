@@ -45,7 +45,7 @@ def _row(**overrides: Any) -> dict[str, Any]:
         "block_ref": BLOCK_REF,
         "items": [],
         "type": "implicit",
-        "state": "evidence-incomplete",
+        "completeness_status": "evidence-incomplete",
         "review_required": True,
         "run_id": "",
         "block_text_sha256": state._block_text_sha256_from_text(CONTENT, BLOCK_REF),
@@ -237,7 +237,7 @@ def test_queue_routing_types_follow_type_then_incomplete_state() -> None:
 
 
 def test_queue_skips_complete_unflagged_rows() -> None:
-    complete = _span_row(state="complete")
+    complete = _span_row(completeness_status="complete")
 
     assert _queue([_draft([complete])]) == []
 
@@ -479,7 +479,7 @@ def test_queue_facets_omit_an_unrouted_row_from_the_routing_denominator() -> Non
     # routing type: it is a real read-only queue row and a real facet total,
     # but it belongs to no routing bucket.
     drifted = CONTENT.replace("A single-span claim.", "A silently edited claim.")
-    queue = _queue([_draft([_span_row(state="complete")], drifted)])
+    queue = _queue([_draft([_span_row(completeness_status="complete")], drifted)])
 
     assert queue[0]["routing_type"] == ""
     assert evidence_review.queue_facets(queue) == {
@@ -862,7 +862,7 @@ def test_routing_reason_restates_the_block_for_a_permanently_blocked_row() -> No
     # A complete, unflagged row that drifted has no routing type at all; its
     # only honest reason is the permanent block itself.
     drifted = CONTENT.replace("A single-span claim.", "A silently edited claim.")
-    row = _queue([_draft([_span_row(state="complete")], drifted)])[0]
+    row = _queue([_draft([_span_row(completeness_status="complete")], drifted)])[0]
 
     assert row["routing_type"] == ""
     assert evidence_review.routing_reason(row, []) == (
@@ -901,5 +901,7 @@ def test_analysis_fields_name_the_unresolved_item_as_the_tipping_factor() -> Non
     assert evidence_review.analysis_fields(row, [dict(UNRESOLVED_PREVIEW)]) == {
         "tipped_by": "source-alpha#^p9999"
     }
-    # Without attached previews the honest factor is the state, not a ref.
-    assert evidence_review.analysis_fields(row, []) == {"tipped_by": "state=evidence-incomplete"}
+    # Without attached previews the honest factor is the completeness status, not a ref.
+    assert evidence_review.analysis_fields(row, []) == {
+        "tipped_by": "completeness_status=evidence-incomplete"
+    }

@@ -2768,7 +2768,7 @@ def _verify_project_draft_snapshot(
             )
         if disposed.get(row["id"]) == _evidence_items_sha256(row["items"]):
             continue
-        if row["state"] == "evidence-incomplete":
+        if row["completeness_status"] == "evidence-incomplete":
             findings.append(
                 {
                     "kind": "evidence-incomplete",

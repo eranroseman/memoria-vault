@@ -119,7 +119,9 @@ def _draft_panel(slice_payload: dict[str, Any], draft_payload: dict[str, Any]) -
         "outline_members": len(slice_payload["slice"]["members"]),
         "draft_present": bool(draft["content"]),
         "evidence_states": dict(
-            sorted(Counter(str(row["state"]) for row in draft["evidence_sets"]).items())
+            sorted(
+                Counter(str(row["completeness_status"]) for row in draft["evidence_sets"]).items()
+            )
         ),
         "review_required": sum(1 for row in draft["evidence_sets"] if row["review_required"]),
     }
@@ -160,7 +162,9 @@ def _grounds_panel(draft_payload: dict[str, Any], slice_payload: dict[str, Any])
     return {
         "source_action": "project.draft.read",
         "complete": sum(
-            1 for row in draft_payload["draft"]["evidence_sets"] if row["state"] == "complete"
+            1
+            for row in draft_payload["draft"]["evidence_sets"]
+            if row["completeness_status"] == "complete"
         ),
         "total": len(markers),
         "findings": findings,

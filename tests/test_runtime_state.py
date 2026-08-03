@@ -278,7 +278,7 @@ def test_worker_runs_sqlite_pending_request(tmp_path: Path) -> None:
 
     assert done is not None
     assert done["status"] == "done"
-    assert done["job_id"] == queued["job_id"]
+    assert done["request_id"] == queued["request_id"]
     assert not (vault / ".memoria/queue").exists()
     assert "check_status" not in read_frontmatter(vault / "notes/sqlite-worker.md")
     assert state.concept_check_status(vault, "notes/sqlite-worker.md") == "checked"

@@ -446,7 +446,7 @@ def _evidence_set(evidence_id: str, block_ref: str, items: list[str]) -> dict[st
         "block_ref": block_ref,
         "items": items,
         "type": "single-span",
-        "state": "complete",
+        "completeness_status": "complete",
         "review_required": False,
         "bind": False,
     }

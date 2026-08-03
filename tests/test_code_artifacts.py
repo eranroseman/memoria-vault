@@ -50,7 +50,7 @@ def test_code_artifact_record_and_unavailable_runner_fail_closed(
 
     assert Path(tmp_path, artifact["record_path"]).is_file()
     assert artifact["source_dir"] == "projects/project-alpha/code/analysis/src"
-    assert run["state"] == "unavailable"
+    assert run["run_status"] == "unavailable"
     assert run["timeout_result"] == "test sandbox unavailable"
 
 
@@ -77,7 +77,7 @@ def test_computed_evidence_tracks_code_run_output_hash(tmp_path: Path) -> None:
         exit_status=0,
         sandbox_backend="bwrap",
         sandbox_profile_hash="sha256:" + "0" * 64,
-        run_state="succeeded",
+        run_status="succeeded",
     )
     draft = tmp_path / "projects/project-alpha/draft.md"
     draft.parent.mkdir(parents=True, exist_ok=True)
@@ -89,11 +89,11 @@ def test_computed_evidence_tracks_code_run_output_hash(tmp_path: Path) -> None:
     state.rebuild_evidence_sets_from_markers(tmp_path)
     row = state.evidence_sets(tmp_path)[0]
     assert row["type"] == "computed"
-    assert row["state"] == "complete"
+    assert row["completeness_status"] == "complete"
 
     output.write_text("43\n", encoding="utf-8")
     state.rebuild_evidence_sets_from_markers(tmp_path)
-    assert state.evidence_sets(tmp_path)[0]["state"] == "evidence-incomplete"
+    assert state.evidence_sets(tmp_path)[0]["completeness_status"] == "evidence-incomplete"
 
 
 def test_run_artifact_rejects_unknown_artifact_and_malformed_command(
