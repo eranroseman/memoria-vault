@@ -24,11 +24,14 @@ from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path
 
-# Same re-export contract as workspace_lock above: readers outside `state`
-# use the five public names via `state.` attribute access; some private
-# names are what `_evidence_marker_rows` and `_block_canonical_text_from_text`
-# (below) still call after the markdown/evidence-marker extraction, and others
-# (e.g. `_has_raw_tex_syntax`) are what tests still reach via `state.<name>`.
+# Same re-export contract as workspace_lock below: readers outside `state`
+# use four of these public names via `state.` attribute access
+# (`markdown_code_literals_masked` has no external caller -- only
+# markdown.py's own `markdown_visible_code_literals_masked` calls it); some
+# private names are what `_evidence_marker_rows` and
+# `_block_canonical_text_from_text` (below) still call after the
+# markdown/evidence-marker extraction, and others (e.g. `_has_raw_tex_syntax`)
+# are what tests still reach via `state.<name>`.
 from memoria_vault.runtime.state.markdown import (  # noqa: F401
     _direct_evidence_marker_matches,
     _evidence_marker_occurrences_from_markdown,
@@ -41,14 +44,16 @@ from memoria_vault.runtime.state.markdown import (  # noqa: F401
     markdown_visible_code_literals_masked,
 )
 
-# Private names are re-exported because external code still monkeypatches
-# state.<name> for these lock internals; the package facade keeps them
-# resolvable there after the workspace-lock extraction.
+# workspace_lock is the public context manager, used below in this module.
+# _open_workspace_lock_file is re-exported because
+# tests/test_backup_restore.py still calls it as
+# `state._open_workspace_lock_file(...)`. The other two lock internals
+# (`_workspace_lock_key`, `_workspace_thread_lock`) and the Windows opener
+# (`_open_workspace_lock_file_windows`, monkeypatched on the workspace_lock
+# submodule directly, not through this facade) have no reference through
+# `state.<name>` and are not re-exported.
 from memoria_vault.runtime.state.workspace_lock import (  # noqa: F401
     _open_workspace_lock_file,
-    _open_workspace_lock_file_windows,
-    _workspace_lock_key,
-    _workspace_thread_lock,
     workspace_lock,
 )
 from memoria_vault.runtime.subsystems.lib.edges import EDGE_RELATIONS
