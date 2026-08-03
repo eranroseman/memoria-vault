@@ -357,6 +357,7 @@ def test_runtime_gate_replays_user_facing_commands(
         "capture-source",
         "enrich-source",
         "compile-source-digest",
+        "curate-note-link",
         "answer-query",
         "analyze-gaps",
         "export-project",
