@@ -46,9 +46,25 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq bubblewrap
-          bwrap --unshare-net --dev /dev --proc /proc --ro-bind /usr /usr --ro-bind /bin /bin true \
-            && echo "bwrap: user namespaces available" \
-            || echo "bwrap: FAILED to start — see MEMORIA_REQUIRE_SANDBOX failures below"
+          # Delegate the probe to the product's own execution_availability() so
+          # this step can never drift from what the runtime actually requires.
+          # (A hand-rolled `--ro-bind /usr /usr --ro-bind /bin /bin` probe once
+          # lived here; it printed the same "FAILED to start" message on a
+          # healthy runner as on a broken one, because /bin/true's ELF
+          # interpreter is /lib64/ld-linux-x86-64.so.2 and /lib64 is a
+          # merged-usr symlink the probe never bound — zero information either
+          # way. _base_bwrap_args() binds /usr, /bin, /lib, /lib64 for exactly
+          # this reason.)
+          python3 -c "
+          from pathlib import Path
+          from memoria_vault.runtime.code.runner import execution_availability
+
+          availability = execution_availability(Path('.'))
+          if availability.available:
+              print('bwrap: available')
+          else:
+              print(f'bwrap: unavailable — {availability.reason}')
+          "
       - name: Detect change scope
         id: scope
         if: github.event_name == 'pull_request'
