@@ -205,3 +205,42 @@ def test_live_contract_flags_the_retired_plugin_payloads(tmp_path: Path) -> None
     violations = set(gate.find_violations(tmp_path, gate.CONTRACT))
 
     assert {expected for _, _, _, expected in moved_rules} <= violations
+
+
+# Malformed-contract arms of load_contract (the two or->and survivors).
+
+_VALID = {
+    "search_roots": ["src"],
+    "allow_text_files": [],
+    "rules": [{"kind": "text", "needle": "gone_symbol", "owner": "#1", "reason": "removed"}],
+}
+
+
+def _contract(tmp_path: Path, data: dict) -> Path:
+    path = tmp_path / "contract.json"
+    path.write_text(json.dumps(data), encoding="utf-8")
+    return path
+
+
+def test_a_valid_contract_loads(tmp_path: Path) -> None:
+    contract = gate.load_contract(_contract(tmp_path, _VALID))
+    assert contract.rules[0].needle == "gone_symbol"
+
+
+@pytest.mark.parametrize("bad_roots", ["src", ["src", 7]], ids=["not-a-list", "non-string"])
+def test_search_roots_must_be_a_list_of_strings(tmp_path: Path, bad_roots) -> None:
+    data = dict(_VALID, search_roots=bad_roots)
+
+    with pytest.raises(ValueError, match="search_roots must be a list of strings"):
+        gate.load_contract(_contract(tmp_path, data))
+
+
+@pytest.mark.parametrize("missing", ["needle", "owner", "reason"])
+def test_each_rule_field_is_required_alone(tmp_path: Path, missing: str) -> None:
+    """or->and in the three-way check survives unless each field is dropped alone."""
+    rule = dict(_VALID["rules"][0])
+    rule[missing] = ""
+    data = dict(_VALID, rules=[rule])
+
+    with pytest.raises(ValueError, match="must include needle, owner, and reason"):
+        gate.load_contract(_contract(tmp_path, data))
