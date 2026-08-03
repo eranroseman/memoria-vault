@@ -765,7 +765,6 @@ def _run_operation_job(
             "project_path": result["project_path"],
             "draft_path": result["draft_path"],
             "ready": result["ready"],
-            "ok": result["ok"],
             "verification_status": result["status"],
             "missing": result["missing"],
             "findings": result["findings"],

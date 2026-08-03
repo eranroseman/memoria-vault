@@ -2689,7 +2689,6 @@ def _verify_project_draft_snapshot(
                 "project_path": project_rel,
                 "draft_path": draft_rel,
                 "ready": False,
-                "ok": False,
                 "status": "missing-draft",
                 "missing": ["draft"],
                 "findings": [{"kind": "missing-draft", "severity": "high"}],
@@ -2805,7 +2804,6 @@ def _verify_project_draft_snapshot(
             "project_path": project_rel,
             "draft_path": draft_rel,
             "ready": ok,
-            "ok": ok,
             "status": "verified" if ok else "needs-review",
             "missing": [] if ok else _verification_finding_labels(blocking[:max_findings]),
             "findings": findings,
@@ -3171,7 +3169,7 @@ def render_project_draft_export_markdown(
     """Render a verified project draft with internal evidence markers stripped."""
     vault = Path(vault)
     verification, draft = _verify_project_draft_snapshot(vault, project_path, context=context)
-    if not verification["ok"]:
+    if not verification["ready"]:
         reasons = ", ".join(verification["missing"])
         raise ValueError(f"project draft is not export-ready: {reasons}")
     if draft is None:

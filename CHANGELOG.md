@@ -15,6 +15,10 @@ removed release-please setup, not real releases, and have been deleted.
 
 ### Changed
 
+- Removed the duplicate `ok` key from the `verify-project-draft` result, which
+  held the same value as `ready` and shadowed the read-API envelope's own `ok`.
+  `ready` is the one readiness field; breaking for consumers that read
+  `result.ok`, with no compatibility alias.
 - Renamed the retrieval sense of `engine` to `backend`, reserving `engine` for
   `src/memoria_vault/engine/` per the glossary. `engine` -> `backend` in
   `answer-query`, `evaluate_bm25`, `rebuild-checked-search-index`,
