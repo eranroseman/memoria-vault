@@ -16,7 +16,7 @@ from memoria_vault.runtime.worker import (
     run_request,
 )
 from tests.cli_test_helpers import write_runner_provider_config
-from tests.helpers import mark_file_status
+from tests.helpers import set_concept_verdict
 
 pytestmark = pytest.mark.contract
 
@@ -37,7 +37,7 @@ def test_cli_operation_list_and_run_use_workspace_operation_concepts(
         "---\ntype: digest\ncheck_status: checked\ntitle: Alpha digest\ntags: [sleep]\n---\nBody.\n",
         encoding="utf-8",
     )
-    mark_file_status(workspace, "digests/source-alpha.md", "digest")
+    set_concept_verdict(workspace, "digests/source-alpha.md", "digest")
 
     assert main(["operation", "list", "--workspace", str(workspace), "--json"]) == 0
     listed = json.loads(capsys.readouterr().out)
@@ -120,7 +120,7 @@ def test_cli_workspace_run_reports_schedule_id_for_queue_drain(
         "---\ntype: digest\ncheck_status: checked\ntitle: Alpha digest\ntags: [sleep]\n---\nBody.\n",
         encoding="utf-8",
     )
-    mark_file_status(workspace, "digests/source-alpha.md", "digest")
+    set_concept_verdict(workspace, "digests/source-alpha.md", "digest")
     enqueue_operation(
         workspace,
         "analyze-gaps",
@@ -327,7 +327,7 @@ def test_cli_request_list_show_and_resume_pending_request(
         "---\ntype: digest\ncheck_status: checked\ntitle: Alpha digest\ntags: [sleep]\n---\nBody.\n",
         encoding="utf-8",
     )
-    mark_file_status(workspace, "digests/source-alpha.md", "digest")
+    set_concept_verdict(workspace, "digests/source-alpha.md", "digest")
     enqueue_operation(
         workspace,
         "analyze-gaps",
@@ -1339,7 +1339,7 @@ def test_cli_wires_maintenance_and_pi_commands(
         "Body.\n",
         encoding="utf-8",
     )
-    mark_file_status(workspace, "digests/hub-seed.md", "digest")
+    set_concept_verdict(workspace, "digests/hub-seed.md", "digest")
     assert (
         main(
             [
@@ -1880,7 +1880,7 @@ def test_cli_workspace_rebuild_writes_checked_search_index(
         "---\ntype: note\ncheck_status: checked\ntitle: search\n---\nalpha search\n",
         encoding="utf-8",
     )
-    mark_file_status(workspace, "notes/search.md", "note")
+    set_concept_verdict(workspace, "notes/search.md", "note")
 
     rc = main(
         [

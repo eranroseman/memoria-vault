@@ -12,7 +12,7 @@ from memoria_vault.runtime import grounding, trusted_writer
 from tests.helpers import (
     call_with_context,
     init_cli_workspace,
-    mark_file_status,
+    set_concept_verdict,
     write_checked_concept,
 )
 
@@ -53,7 +53,7 @@ def _derive(vault: Path, rel: str, title: str, note_id: str, *, machine: str) ->
     # (`knowledge._checked_notes_by_path`), so derive-then-check is the only
     # trajectory in which a derived note is ever in a slice -- and it is the
     # ordinary one.
-    mark_file_status(vault, rel, "note")
+    set_concept_verdict(vault, rel, "note")
 
 
 @pytest.fixture

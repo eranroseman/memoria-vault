@@ -313,7 +313,7 @@ def worker_workspace(
     return tmp_path
 
 
-def mark_file_status(
+def set_concept_verdict(
     workspace: Path,
     rel: str,
     concept_type: str = "note",
@@ -349,7 +349,7 @@ def sync_file_verdicts(vault: Path) -> None:
             if fm.get("type") == "source":
                 continue
             rel = path.relative_to(vault).as_posix()
-            mark_file_status(vault, rel, str(fm.get("type") or "note"), str(status))
+            set_concept_verdict(vault, rel, str(fm.get("type") or "note"), str(status))
 
 
 def write_checked_concept(
@@ -363,7 +363,7 @@ def write_checked_concept(
     path = workspace / rel
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(f"---\n{frontmatter}---\n{body}\n", encoding="utf-8")
-    mark_file_status(workspace, rel, concept_type)
+    set_concept_verdict(workspace, rel, concept_type)
 
 
 def write_checked_note(workspace: Path, rel: str, title: str) -> None:
@@ -427,7 +427,7 @@ def write_note(vault: Path, name: str, status: str, body: str) -> Path:
         f"---\ntype: note\ntitle: {name}\ntags: []\nlinks: {{}}\n---\n{body}\n",
         encoding="utf-8",
     )
-    mark_file_status(vault, path.relative_to(vault).as_posix(), "note", status)
+    set_concept_verdict(vault, path.relative_to(vault).as_posix(), "note", status)
     return path
 
 

@@ -23,8 +23,8 @@ from tests.helpers import (
     copy_memoria_dirs,
     git,
     init_git,
-    mark_file_status,
     set_attention_config,
+    set_concept_verdict,
 )
 
 pytestmark = pytest.mark.runtime
@@ -334,7 +334,7 @@ def test_analyze_gaps_emits_unchecked_tag_candidate_attention(tmp_path: Path) ->
         "Personal informatics supports reflection.\n",
         encoding="utf-8",
     )
-    mark_file_status(vault, work_rel, "digest")
+    set_concept_verdict(vault, work_rel, "digest")
 
     result = analyze_gaps(vault, machine="gap-machine")
 
@@ -827,7 +827,7 @@ def _throttled_gap_vault(tmp_path: Path) -> Path:
         "Personal informatics supports reflection.\n",
         encoding="utf-8",
     )
-    mark_file_status(vault, work_rel, "digest")
+    set_concept_verdict(vault, work_rel, "digest")
     return vault
 
 

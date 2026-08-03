@@ -90,7 +90,7 @@ def _project(vault: Path, name: str, *, checked: bool = True) -> None:
     if checked:
         write_checked_concept(vault, f"projects/{name}/project.md", frontmatter, "project")
         return
-    # No `mark_file_status`: an unchecked project is exactly what
+    # No `set_concept_verdict`: an unchecked project is exactly what
     # `_read_project_draft` refuses, and the collector must skip it.
     path = vault / f"projects/{name}/project.md"
     path.parent.mkdir(parents=True, exist_ok=True)
