@@ -53,7 +53,8 @@ The `## Evidence and argument` section is what distinguishes a claim from an ass
 
 The `## Links` section is the most structurally significant convention. The
 required `links:` frontmatter records authored connections (as distinct from
-the *given* `relationships` on entities — that distinction is explained in
+the *given* `work_graph_edges` rows on catalog Works — that distinction is
+explained in
 [Document types and epistemic roles](document-types.md)), and is what makes the
 vault a graph rather than a collection. A note that stands in an authored
 relation to another note has been integrated; one without links has not.

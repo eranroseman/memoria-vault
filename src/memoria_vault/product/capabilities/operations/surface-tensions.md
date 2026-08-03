@@ -29,7 +29,7 @@ id: operations/surface-tensions
 links: {}
 ---
 
-# Pattern
+# Operation
 
 Across checked notes and works, list candidate tensions: pairs that cannot both be
 fully right. Tier-1 must pass the HANS-style high-overlap/opposite-meaning gate

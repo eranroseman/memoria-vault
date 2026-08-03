@@ -96,6 +96,12 @@ planned Maintenance view.
 state, or linter findings. The standalone baseline does not ship `system/dashboards/*.md`;
 `inbox/` and CLI request/attention views carry the action surfaces.
 
+**Cockpit** — `memoria cockpit` (registry row `cockpit.read`), a shipped
+read-only composer over registered read actions: the deep screen (`--project
+<path>`, six fixed panels) or the triage screen (`--triage`: worklist /
+review / flow). It prints a static text photograph, or the same payload via
+`--json`; it holds no state and never writes.
+
 ---
 
 ## Board and delegation
@@ -134,6 +140,18 @@ in `inbox/*.md`; it is not a durable Concept. SQLite holds associated
 request/control history, and per-machine journal JSONL files are derived
 synchronization exports.
 
+**Card** — the read/render form of an attention projection: `read_attention_card`
+(`GET /attention/card`) returns one Inbox item's fields as a single payload for
+a surface to display. Not a separate durable type — it reads the same
+`inbox/*.md` file the Attention projection entry above describes.
+
+**loudness** — the urgency band on an attention card's frontmatter: `quiet`,
+`notice`, `alert`, `block` ([Empirical
+events](../control-and-policy/empirical-events.md#enum-values) mirrors the
+same roster on empirical event payloads). `block` is pull-only: an open block
+card pauses delegation and review-gated promotion until the PI resolves it
+(`src/memoria_vault/runtime/subsystems/lib/loudness.py`).
+
 **Concept** — the umbrella name for every typed document Memoria manages
 (`note`, `hub`, `project`, `digest`, `fulltext`, `code-artifact`): YAML
 frontmatter declaring a schema-backed type, followed by a Markdown body. See
@@ -153,7 +171,7 @@ adopts them.
 `unchecked`, `checked`, or `quarantined`. It lives in SQLite/read API surfaces,
 not Concept frontmatter.
 
-**Links vs relationships** — the two kinds of connection: authored `links:` edges on notes versus given `relationships` edges on catalog entities. The distinction and its rationale are explained in [Wikilink and link conventions](wikilink-and-link-conventions.md); the field contract is specified in [Frontmatter fields](frontmatter.md).
+**Links vs work-graph edges** — the two kinds of connection: authored `links:` frontmatter on Concepts versus given `work_graph_edges` rows (`relation_type` values: `references`, `related`, `topic`, `keyword`, `authorship`, `institution`, `published_in`) discovered for catalog Works. The distinction and its rationale are explained in [Wikilink and link conventions](wikilink-and-link-conventions.md). `links:` is specified in [Frontmatter fields](frontmatter.md#links-and-catalog-resources); `work_graph_edges` is a SQLite table (`src/memoria_vault/runtime/schema.sql`), not Concept frontmatter.
 
 **Document type** — one of the Concept types defined in
 `.memoria/schemas/types/`; the full roster, categories, and folder homes are in
