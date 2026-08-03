@@ -72,3 +72,5 @@ draft export, which refuses naming the finding.
 - The pane's read route: [Local HTTP transport](../commands-and-transports/local-http-transport.md)
 - Export gates and refusal states: [Export routes and formats](../pipelines-and-io/export.md)
 - The works-cited projection behind the fence: [Bibliography](../evidence-and-integrations/bibliography.md)
+- The per-finding disposition flow: [Compose a draft](../../how-to-guides/project/compose-a-draft.md)
+- The tutorial that teaches the queue's other front: [05: Verify evidence](../../tutorials/05-verify-evidence.md)

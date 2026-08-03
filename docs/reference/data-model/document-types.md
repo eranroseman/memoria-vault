@@ -45,3 +45,4 @@ in [Evidence sets](../control-and-policy/evidence-sets.md).
 - The folder tree the homes map into: [On-disk layout](../system/on-disk-layout.md)
 - What enforces the schemas: [Linter: detectors and auto-fix](../analysis-and-surfaces/linter.md) and
   [Policy gate](../control-and-policy/policy-mcp.md)
+- The epistemic reasoning behind the roster: [Document types (explanation)](../../explanation/knowledge/document-types.md)

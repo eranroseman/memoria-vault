@@ -114,3 +114,4 @@ Auto-fix is class-gated at the policy layer: the four classes and their disposit
 - The class gate enforcing auto-fix policy: [Policy gate](../control-and-policy/policy-mcp.md#auto-fix-classes)
 - Where the findings surface: [Dashboards](dashboards.md)
 - Scheduler wiring boundary: [Installer (bootstrap)](../system/installer.md)
+- Running it: [Run the linter](../../how-to-guides/operate/run-the-linter.md)

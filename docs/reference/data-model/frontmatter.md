@@ -214,3 +214,5 @@ checked against the generated `bibliography.bib`.
 - The controlled classification values: [Vocabulary](vocabulary.md)
 - What validates this contract: [Linter: detectors and auto-fix](../analysis-and-surfaces/linter.md)
 - Where the schema files live: [On-disk layout](../system/on-disk-layout.md)
+- Why the type roster looks like this: [Document types (explanation)](../../explanation/knowledge/document-types.md)
+- When validation fails on a note: [Fix broken frontmatter](../../how-to-guides/troubleshooting/fix-broken-frontmatter.md)

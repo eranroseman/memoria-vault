@@ -51,4 +51,5 @@ only when it stays read-only until the PI chooses a durable action.
 ## Related
 
 - Why the posture boundaries are strict: [Why operation postures](../../rationale/boundaries/why-operation-postures.md)
-- Why one conversational front: [Why operation postures](../../rationale/boundaries/why-operation-postures.md)
+- Why one conversational front: [Why one Co-PI fronts everything](../../rationale/boundaries/why-operation-postures.md#why-one-co-pi-fronts-everything)
+- Practicing this posture: [Query the vault](../../../how-to-guides/knowledge/query-the-vault.md)

@@ -51,4 +51,5 @@ Catalog state lives in SQLite and blobs; source digests live under `digests/`.
 - The mechanical counterpart: [Operations](../operations.md)
 - The independent checker downstream: [The Peer-reviewer](peer-reviewer.md)
 - Why the posture boundaries are strict: [Why operation postures](../../rationale/boundaries/why-operation-postures.md)
-- Why intake is separated from verification: [Why operation postures](../../rationale/boundaries/why-operation-postures.md)
+- Why intake is separated from verification: [The independence argument](../../rationale/boundaries/why-operation-postures.md#the-independence-argument)
+- Practicing intake: [Capture and ingest a source](../../../how-to-guides/library/capture-and-ingest.md)

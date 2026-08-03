@@ -90,3 +90,6 @@ invokes it.
 - CLI command surface: [CLI](../commands-and-transports/cli.md)
 - Operation manifests: [Operations](../commands-and-transports/operations.md)
 - Runtime telemetry examples: [Telemetry & logs](../pipelines-and-io/telemetry.md#log-schemas)
+- Working the queue day to day: [Work the action queue](../../how-to-guides/inbox/work-the-action-queue.md)
+- When a request sticks: [Fix a stuck request](../../how-to-guides/troubleshooting/fix-stuck-card.md)
+- Why the states are shaped this way: [Control-plane states](../../explanation/execution/control-plane/states.md)
