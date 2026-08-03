@@ -621,13 +621,17 @@ def test_worklist_panel_emits_the_producer_order_whatever_it_is(
     assert cockpit.assemble_triage(vault)["worklist"]["cards"] == ranked
 
 
-def test_named_pending_triage_panels_name_their_absent_producer(vault: Path) -> None:
-    """Reconciliation amendment (2026-07-29) §2/§3: a panel with no registered
-    producer carries an empty source_action and names what is missing — it never
-    whitelists a future action id nor reaches past the registry.
+def test_triage_review_and_flow_panels_name_their_live_producer(vault: Path) -> None:
+    """Reconciliation amendment (2026-07-29) §2/§3, post-landing half: both
+    triage panels' producers are live against the plain vault fixture, so
+    INT.1's endgame rule applies — the named-pending form is *gone*, not
+    merely joined by real counts. Each panel carries no `pending` key and
+    names the registered action it wraps.
 
-    Both-branch, and the post-landing half is INT.1's endgame rule: once a seam is
-    live the named-pending form must be *gone*, not merely joined by real counts.
+    The absent-producer half this test used to cover is pinned elsewhere by
+    forcing the unbound state through monkeypatch:
+    test_review_panel_stays_pending_until_both_halves_of_the_seam_exist and
+    test_flow_panel_stays_pending_unless_a_registered_row_binds_a_live_engine.
     """
     panels = cockpit.assemble_triage(vault)
 
@@ -1297,34 +1301,27 @@ def test_trace_panel_renders_refs_and_an_honest_shown_of_total(
     assert "refs preview" not in empty
 
 
-def test_trace_panel_pending_line_names_its_absent_producer(vault: Path) -> None:
+def test_trace_panel_line_renders_its_live_producer(vault: Path) -> None:
     panels = cockpit.assemble_deep(vault, PROJECT_REL)
     out = cockpit.render_deep({"screen": "deep", "project": PROJECT_REL, "panels": panels})
     section = out[out.index("recent machine changes (journal.list)") :]
 
-    if "pending" in panels["trace"]:
-        assert f"pending: {panels['trace']['pending']}" in section
-        assert "refs preview" not in section
-    else:
-        assert f"showing {panels['trace']['shown']} of {panels['trace']['total']}" in section
+    assert "pending" not in panels["trace"]
+    assert f"showing {panels['trace']['shown']} of {panels['trace']['total']}" in section
 
 
-def test_context_handoff_block_renders_reserved_or_bundle_with_invocation(
+def test_context_handoff_block_renders_the_bundle_with_invocation(
     vault: Path,
 ) -> None:
     panels = cockpit.assemble_deep(vault, PROJECT_REL)
     out = cockpit.render_deep({"screen": "deep", "project": PROJECT_REL, "panels": panels})
 
     section = out[out.index("context handoff (context.read)") :]
-    if "bundle" in panels["context"]:
-        # live transport: fixed-order bundle lines, the pasteable
-        # invocation line beneath them (spec §1 panel 6)
-        assert "invocation: " in section
-        assert section.rstrip().splitlines()[-1].lstrip().startswith("invocation: ")
-    else:
-        # names the reserved row honestly — the value, not a blank line
-        assert panels["context"]["reserved"]
-        assert f"reserved: {panels['context']['reserved']}" in section
+    # live transport: fixed-order bundle lines, the pasteable
+    # invocation line beneath them (spec §1 panel 6)
+    assert "reserved" not in panels["context"]
+    assert "invocation: " in section
+    assert section.rstrip().splitlines()[-1].lstrip().startswith("invocation: ")
 
 
 def test_context_bundle_renders_in_fixed_key_order_with_the_invocation_last(
