@@ -145,45 +145,67 @@ def test_startup_shell_restore_is_adapter_only_not_core_cli() -> None:
     assert "memoria workspace scan" in surface
 
 
-def test_operation_parity_is_manifest_derived_and_dispatchable(
-    tmp_path: Path, capsys: pytest.CaptureFixture[str]
-) -> None:
-    workspace = tmp_path / "workspace"
-    assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
-    capsys.readouterr()
+def _dispatchable_operation_ids() -> list[str]:
+    """Collection-time operation roster from the package's own manifests.
 
-    manifests = _operation_manifest_rows(workspace)
+    1733: the dispatch sweep is parametrized per operation so xdist spreads
+    ~60 dispatches across workers instead of serializing them in one 128s
+    test. The roster comes from `render_capability_index()` with no
+    workspace, which is safe at collection time; the parity test below
+    pins it against a real workspace's manifests so the two sources cannot
+    silently diverge.
+    """
+    rows = json.loads(render_capability_index())["capabilities"]
+    return sorted(
+        str(fm.get("operation_id") or fm["id"]) for fm in rows if fm.get("type") == "operation"
+    )
+
+
+@pytest.fixture(scope="module")
+def parity_workspace(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    workspace = tmp_path_factory.mktemp("parity") / "workspace"
+    assert main(["init", "--workspace", str(workspace), "--yes", "--quiet"]) == 0
+    return workspace
+
+
+def test_operation_parity_is_manifest_derived(
+    parity_workspace: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    manifests = _operation_manifest_rows(parity_workspace)
     manifest_ids = {row["operation_id"] for row in manifests}
     assert manifest_ids
     assert [row for row in manifests if row["adapter_only"] or row["dropped"]] == []
 
-    assert main(["operation", "list", "--workspace", str(workspace), "--json"]) == 0
+    assert main(["operation", "list", "--workspace", str(parity_workspace), "--json"]) == 0
     listed = json.loads(capsys.readouterr().out)
     listed_ids = {row["operation_id"] for row in listed["operations"]}
     assert listed_ids == manifest_ids
+    # The parametrized dispatch sweep below draws its roster from the package
+    # index at collection time; this equality is what keeps that roster honest.
+    assert set(_dispatchable_operation_ids()) == manifest_ids
 
-    unsupported: dict[str, str] = {}
-    for operation_id in sorted(manifest_ids):
-        rc = main(
-            [
-                "operation",
-                "run",
-                "--workspace",
-                str(workspace),
-                operation_id,
-                "--payload-json",
-                "{}",
-                "--json",
-                "--idempotency-key",
-                f"parity-{operation_id}",
-            ]
-        )
-        output = json.loads(capsys.readouterr().out)
-        error = str((output.get("result") or {}).get("error") or output.get("error") or "")
-        if rc != 0 and "unsupported operation" in error:
-            unsupported[operation_id] = error
 
-    assert unsupported == {}
+@pytest.mark.parametrize("operation_id", _dispatchable_operation_ids())
+def test_operation_is_dispatchable(
+    parity_workspace: Path, capsys: pytest.CaptureFixture[str], operation_id: str
+) -> None:
+    rc = main(
+        [
+            "operation",
+            "run",
+            "--workspace",
+            str(parity_workspace),
+            operation_id,
+            "--payload-json",
+            "{}",
+            "--json",
+            "--idempotency-key",
+            f"parity-{operation_id}",
+        ]
+    )
+    output = json.loads(capsys.readouterr().out)
+    error = str((output.get("result") or {}).get("error") or output.get("error") or "")
+    assert not (rc != 0 and "unsupported operation" in error), error
 
 
 def _operation_manifest_rows(workspace: Path) -> list[dict[str, object]]:
