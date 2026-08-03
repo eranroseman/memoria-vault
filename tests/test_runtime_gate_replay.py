@@ -248,7 +248,7 @@ def test_runtime_gate_replays_user_facing_commands(
         str(workspace),
         "--search",
     )
-    assert rebuild["search"]["engine"] == "bm25"
+    assert rebuild["search"]["backend"] == "bm25"
     assert len(rebuild["search"]["manifest"]["documents"]) >= 1
     search = _run_json(capsys, "doctor", "--workspace", str(workspace), "--check", "search")
     assert search["checks"]["search_checked_root"] is True

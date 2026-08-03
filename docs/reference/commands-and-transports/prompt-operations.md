@@ -12,7 +12,7 @@ contract.
 
 - Prompt operations are package-owned operation manifests in
   `memoria_vault.product.capabilities.operations`.
-- `memoria operation run <pattern-id> --mode test|live` is the core runner: it
+- `memoria operation run <operation-id> --mode test|live` is the core runner: it
   reads checked input refs, selects the manifest-pinned runner branch, records
   request/journal provenance, and stages one unchecked report note.
 - To inspect the available pattern actions, see [System actions](system-actions.md).
@@ -22,9 +22,9 @@ contract.
 
 ## The shipped operations
 
-Eight prompt-operation patterns ship as package-owned operation manifests and
+Nine prompt-operation patterns ship as package-owned operation manifests and
 are runnable when manifest validation passes. Each file stem is its
-`pattern_id`. Deterministic project WRITE operations such as
+`operation_id`. Deterministic project WRITE operations such as
 `write-project-slice`, `compose-project-draft`, `verify-project-draft`, and
 `promote-draft-passage` are also packaged capability manifests, but they are
 not prompt patterns and are listed through `memoria operation list`.
@@ -36,6 +36,7 @@ not prompt patterns and are listed through `memoria operation list`.
 | `compile-source-digest` | Compile source digest | co-pi | synthesize | knowledge | checked-source | `.memoria/staging/digests/` |
 | `compare-and-contrast` | Compare and contrast | librarian | compare | both | two-or-more-notes | `.memoria/staging/notes/` |
 | `extract-claim-stubs` | Extract claim stubs | librarian | extract | library | checked Work or digest | `.memoria/staging/notes/` |
+| `generate-questions` | Generate questions | co-pi | analyze | knowledge | checked-scope | `inbox/` |
 | `propose-note-candidates` | Propose note candidates | co-pi | distill | knowledge | checked-digest | `.memoria/staging/notes/` |
 | `red-team-argument` | Red-team an argument | peer-reviewer | check | project | draft-or-claim | `.memoria/staging/notes/` |
 | `summarize-for-recall` | Summarize for recall | librarian | summarize | both | selection-or-note | `.memoria/staging/notes/` |
@@ -81,7 +82,7 @@ or `standing`.
 
 ## The CLI Runner
 
-`memoria operation run <pattern-id> --mode test|live` loads the checked
+`memoria operation run <operation-id> --mode test|live` loads the checked
 operation, accepts `input_text`, `input_ref`, or `input_refs` in
 `--payload-json`, and runs through the same SQLite request queue as other
 operations. File refs must be checked Concepts under the operation's

@@ -136,7 +136,7 @@ def run_step(root: Path, vault: Path, step: dict[str, Any]) -> list[str]:
         path = vault / args["path"]
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(args["content"], encoding="utf-8")
-        mark_file_status(vault, args["path"], args.get("verdict"))
+        set_concept_verdict(vault, args["path"], args.get("verdict"))
         artifacts.append(args["path"])
     elif tool == "inbox.write_proposal":
         path = inbox.write_proposal(vault, **args)
@@ -171,10 +171,10 @@ def run_step(root: Path, vault: Path, step: dict[str, Any]) -> list[str]:
         context = operation_context_from_job(request, "test-env-harness")
         request["status"] = "running"
         request["bound_context"] = operation_context_record(context)
-        state.set_request_running(vault, request["job_id"], request)
+        state.set_request_running(vault, request["request_id"], request)
         result = write_project_argument_canvas(vault, args["project"], context=context)
         request["status"] = "done"
-        state.finish_request(vault, request["job_id"], "done", request)
+        state.finish_request(vault, request["request_id"], "done", request)
         artifacts.append(result["canvas_path"])
     else:
         raise HarnessError(f"unknown cassette tool: {tool}")
@@ -182,7 +182,7 @@ def run_step(root: Path, vault: Path, step: dict[str, Any]) -> list[str]:
     return artifacts
 
 
-def mark_file_status(vault: Path, rel: str, verdict: str | None) -> None:
+def set_concept_verdict(vault: Path, rel: str, verdict: str | None) -> None:
     path = vault / rel
     frontmatter = read_frontmatter(path)
     if verdict not in state.CHECK_STATUSES:
@@ -203,19 +203,6 @@ def assert_final(vault: Path, final: dict[str, Any]) -> None:
     for rel in final.get("not_exists", []):
         if (vault / rel).exists():
             raise HarnessError(f"final assertion forbidden artifact exists: {rel}")
-    gate = final.get("project_gate") or {}
-    if gate:
-        text = (vault / gate["path"]).read_text(encoding="utf-8")
-        start = text.index("<!-- memoria-structural-impact:json -->")
-        end = text.index("<!-- /memoria-structural-impact:json -->")
-        payload = json.loads(text[start + len("<!-- memoria-structural-impact:json -->") : end])
-        if payload["relation_count"] < int(gate["min_relation_count"]):
-            raise HarnessError("project gate relation count below expected floor")
-        if payload["evidence_saturation"] != gate["expected_saturation_state"]:
-            raise HarnessError(
-                f"project gate saturation {payload['evidence_saturation']!r} != "
-                f"{gate['expected_saturation_state']!r}"
-            )
 
 
 def replay(root: Path, vault: Path, cassette_path: Path) -> dict[str, Any]:

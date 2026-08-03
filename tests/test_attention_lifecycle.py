@@ -64,7 +64,7 @@ def _run(workspace: Path, operation_id: str, payload: dict[str, Any]) -> dict[st
         idempotency_key=f"pi-{operation_id}-{payload['target_id']}",
         payload=payload,
     )
-    result = worker.run_request(workspace, request["job_id"], machine="PI laptop")
+    result = worker.run_request(workspace, request["request_id"], machine="PI laptop")
     assert result["status"] == "done", result
     return result
 

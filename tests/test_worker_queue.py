@@ -547,7 +547,7 @@ def test_worker_cli_enqueues_operation_payload(tmp_path: Path, capsys) -> None:
 
     assert rc == 0
     output = json.loads(capsys.readouterr().out)
-    assert output["job_id"] == "ask-alpha"
+    assert output["request_id"] == "ask-alpha"
     assert output["payload"] == {"query": "alpha", "k": 1}
     assert output["request_envelope"]["actor"] == "agent"
 

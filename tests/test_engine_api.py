@@ -472,7 +472,10 @@ def test_engine_compose_and_read_draft_returns_project_draft_view(workspace: Pat
     assert readback["api_version"] == api.READ_API_VERSION
     assert "%%ev:" in readback["draft"]["content"]
     assert readback["view"]["kind"] == "project-draft"
-    assert readback["view"]["blocks"][0]["rows"][0]["cells"]["state"] == "evidence-incomplete"
+    assert (
+        readback["view"]["blocks"][0]["rows"][0]["cells"]["completeness_status"]
+        == "evidence-incomplete"
+    )
 
 
 def _write_attention(workspace: Path, name: str, *, target: str) -> None:

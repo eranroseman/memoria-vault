@@ -59,7 +59,7 @@ def _write_note(
     `runtime.worker._create_concept_payload`), so reusing one fixed placeholder
     across every seeded note would leave them all sharing a single "unique" id.
 
-    Returns the completed job dict (`done["job_id"]` is the real
+    Returns the completed job dict (`done["request_id"]` is the real
     `operation_requests.request_id` the queue assigned this write — read
     actions that need a genuine request id reuse it via the manifest).
     """
@@ -117,8 +117,8 @@ def _build_floor_seed(workspace: Path) -> dict:
         extra="claim_text: Seeded falsifiable claim.\n",
     )
     # requests.get needs a real, stable operation_requests id: reuse the
-    # note_claim write's own request (job_id == the queue's request_id).
-    manifest["request_id"] = claim_job["job_id"]
+    # note_claim write's own request (request_id == the queue's request_id).
+    manifest["request_id"] = claim_job["request_id"]
     _write_note(
         workspace,
         manifest["note_question"],

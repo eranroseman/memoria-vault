@@ -853,7 +853,7 @@ def analyze_gaps(
         if work_ids := _work_ids_from_seen(seen[key]["sources"]):
             gap["work_ids"] = work_ids
         if key in retrieval:
-            gap["retrieval_engine"] = retrieval[key]["engine"]
+            gap["retrieval_backend"] = retrieval[key]["backend"]
             gap["retrieval_sources"] = retrieval[key]["sources"]
         gaps.append(gap)
     citation_gaps = _citation_neighborhood_gaps(vault)
@@ -1373,7 +1373,7 @@ def _add_search_gap_hits(
     for key, label in sorted(labels.items()):
         answer = answer_query(vault, label, k=5, context=context)
         retrieval[key] = {
-            "engine": answer["engine"],
+            "backend": answer["backend"],
             "sources": answer["sources"],
         }
         for source in answer["sources"]:
@@ -2422,7 +2422,7 @@ def propose_project_slice(
     return {
         "project_path": project_rel,
         "outline_path": _project_outline_rel(project_rel),
-        "retrieval_engine": "bm25",
+        "retrieval_backend": "bm25",
         "query": retrieval_query,
         "members": members,
         "skipped": skipped,
@@ -2485,7 +2485,7 @@ def write_project_outline(
                 "status": "done",
                 "inputs": [proposal["project_path"]],
                 "outputs": outputs,
-                "retrieval_engine": proposal["retrieval_engine"],
+                "retrieval_backend": proposal["retrieval_backend"],
                 "query": proposal["query"],
                 "member_count": len(project_slice["members"]),
             },
@@ -2500,7 +2500,7 @@ def write_project_outline(
     return {
         "project_path": proposal["project_path"],
         "outline_path": outline_rel,
-        "retrieval_engine": proposal["retrieval_engine"],
+        "retrieval_backend": proposal["retrieval_backend"],
         "query": proposal["query"],
         "members": project_slice["members"],
         "edges": project_slice["edges"],
@@ -2689,7 +2689,6 @@ def _verify_project_draft_snapshot(
                 "project_path": project_rel,
                 "draft_path": draft_rel,
                 "ready": False,
-                "ok": False,
                 "status": "missing-draft",
                 "missing": ["draft"],
                 "findings": [{"kind": "missing-draft", "severity": "high"}],
@@ -2768,7 +2767,7 @@ def _verify_project_draft_snapshot(
             )
         if disposed.get(row["id"]) == _evidence_items_sha256(row["items"]):
             continue
-        if row["state"] == "evidence-incomplete":
+        if row["completeness_status"] == "evidence-incomplete":
             findings.append(
                 {
                     "kind": "evidence-incomplete",
@@ -2805,7 +2804,6 @@ def _verify_project_draft_snapshot(
             "project_path": project_rel,
             "draft_path": draft_rel,
             "ready": ok,
-            "ok": ok,
             "status": "verified" if ok else "needs-review",
             "missing": [] if ok else _verification_finding_labels(blocking[:max_findings]),
             "findings": findings,
@@ -3171,7 +3169,7 @@ def render_project_draft_export_markdown(
     """Render a verified project draft with internal evidence markers stripped."""
     vault = Path(vault)
     verification, draft = _verify_project_draft_snapshot(vault, project_path, context=context)
-    if not verification["ok"]:
+    if not verification["ready"]:
         reasons = ", ".join(verification["missing"])
         raise ValueError(f"project draft is not export-ready: {reasons}")
     if draft is None:

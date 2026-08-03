@@ -364,7 +364,8 @@ def test_worker_runs_capture_bibtex_source_operation_jobs(tmp_path: Path) -> Non
     assert tuple(enrich)[:3] == ("pending", "enrich-source", "operation")
     assert json.loads(enrich["causal_refs_json"]) == [{"id": "capture-bibtex-harness"}]
     assert (
-        done["enrichment_job"]["job_id"] == "enrich-doi-10.1000_harness.2026_capture-bibtex-harness"
+        done["enrichment_job"]["request_id"]
+        == "enrich-doi-10.1000_harness.2026_capture-bibtex-harness"
     )
     committed = set(git(vault, "show", "--name-only", "--format=", done["commit"]).splitlines())
     assert committed == {state.JOURNAL_HEAD_REL}
@@ -391,7 +392,7 @@ def test_capture_bibtex_distinct_parents_create_distinct_enrichment_children(
             actor="pi",
             machine_authored=False,
         )
-        results.append(run_request(vault, request["job_id"], machine="test-machine"))
+        results.append(run_request(vault, request["request_id"], machine="test-machine"))
 
     assert [result["status"] for result in results] == ["done", "done"]
     with state.connect(vault) as conn:

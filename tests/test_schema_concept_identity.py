@@ -1,7 +1,8 @@
-"""Schema v16 identity floor: concepts.path, FK parents, and scoped edges.
+"""Concept identity floor: concepts.path, FK parents, and scoped edges.
 
-Fresh installs receive v16 directly, so every test here builds its vault with
-``state.connect(tmp_path)``. There is no migration ladder and no legacy fixture.
+Fresh installs receive the current schema directly, so every test here builds
+its vault with ``state.connect(tmp_path)``. There is no migration ladder and no
+legacy fixture.
 """
 
 from __future__ import annotations

@@ -71,4 +71,4 @@ def test_fsync_dir_raises_when_directory_cannot_be_opened(
     monkeypatch.setattr(vaultio.os, "open", broken_open)
 
     with pytest.raises(OSError, match="injected directory open failure"):
-        vaultio._fsync_dir(tmp_path)
+        vaultio._fsync_directory(tmp_path)

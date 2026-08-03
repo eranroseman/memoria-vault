@@ -15,6 +15,18 @@ removed release-please setup, not real releases, and have been deleted.
 
 ### Changed
 
+- Removed the duplicate `ok` key from the `verify-project-draft` result, which
+  held the same value as `ready` and shadowed the read-API envelope's own `ok`.
+  `ready` is the one readiness field; breaking for consumers that read
+  `result.ok`, with no compatibility alias.
+- Renamed the retrieval sense of `engine` to `backend`, reserving `engine` for
+  `src/memoria_vault/engine/` per the glossary. `engine` -> `backend` in
+  `answer-query`, `evaluate_bm25`, `rebuild-checked-search-index`,
+  `workspace rebuild --search`, and `init --dry-run`. `retrieval_engine` ->
+  `retrieval_backend` in `analyze-gaps` proposals and `write-project-slice`,
+  including its journal event. `search_engine` -> `search_backend` in
+  `doctor --check search`. Breaking for adapters that read those keys; no
+  compatibility alias.
 - Renamed computed-evidence `code-warrant` references to `code-grounds`.
   Retired `code-warrant:` markers are rejected without an alias or upgrade path.
 - The current fresh schema uses `code_artifacts.purpose = grounds`; Memoria does

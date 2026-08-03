@@ -93,10 +93,10 @@ def enqueue_trusted_write(
 ) -> dict[str, Any]:
     """Queue one machine Concept write request for the local worker."""
     vault = Path(vault)
-    job_id = safe_filename(idempotency_key or uuid.uuid4().hex)
+    request_id = safe_filename(idempotency_key or uuid.uuid4().hex)
 
     job = {
-        "job_id": job_id,
+        "request_id": request_id,
         "kind": "trusted_write",
         "status": "pending",
         "created_at": now_iso(),
@@ -104,18 +104,18 @@ def enqueue_trusted_write(
         "content": content,
         "inputs": list(inputs or []),
         "operation": operation,
-        "run_id": run_id or job_id,
+        "run_id": run_id or request_id,
     }
     envelope = state.request_envelope(
-        request_id=job_id,
+        request_id=request_id,
         operation_id=operation,
         args={
             "target_path": target_path,
             "content": content,
             "inputs": list(inputs or []),
-            "run_id": run_id or job_id,
+            "run_id": run_id or request_id,
         },
-        idempotency_key=idempotency_key or job_id,
+        idempotency_key=idempotency_key or request_id,
         input_refs=inputs or [],
         output_intents=[{"id": target_path, "kind": "trusted_write"}],
         primary_target=target_path,
@@ -147,14 +147,14 @@ def enqueue_operation(
 ) -> dict[str, Any]:
     """Queue one operation request for the local worker."""
     vault = Path(vault)
-    job_id = safe_filename(idempotency_key or f"{operation_id}-{uuid.uuid4().hex}")
+    request_id = safe_filename(idempotency_key or f"{operation_id}-{uuid.uuid4().hex}")
     superseded_id = safe_filename(supersede_request_id or "")
     request_provenance = dict(provenance or {"surface": "worker"})
     request_causal_refs = list(causal_refs or [])
     if superseded_id:
         if actor.strip() != "pi":
             raise ValueError("request supersession requires PI actor authority")
-        if superseded_id == job_id:
+        if superseded_id == request_id:
             raise ValueError("request cannot supersede itself")
         bound_source = str(request_provenance.get("supersedes_request_id") or "")
         if bound_source and safe_filename(bound_source) != superseded_id:
@@ -169,7 +169,7 @@ def enqueue_operation(
 
     args = dict(payload or {})
     job = {
-        "job_id": job_id,
+        "request_id": request_id,
         "kind": "operation",
         "status": "pending",
         "created_at": now_iso(),
@@ -177,10 +177,10 @@ def enqueue_operation(
         "payload": args,
     }
     envelope = state.request_envelope(
-        request_id=job_id,
+        request_id=request_id,
         operation_id=operation_id,
         args=args,
-        idempotency_key=idempotency_key or job_id,
+        idempotency_key=idempotency_key or request_id,
         input_refs=input_refs or [],
         output_intents=output_intents or [],
         primary_target=primary_target,
@@ -723,7 +723,7 @@ def _run_operation_job(
             "commit": result["commit"],
             "project_path": result["project_path"],
             "outline_path": result["outline_path"],
-            "retrieval_engine": result["retrieval_engine"],
+            "retrieval_backend": result["retrieval_backend"],
             "query": result["query"],
             "member_count": result["member_count"],
             "edge_count": result["edge_count"],
@@ -765,7 +765,6 @@ def _run_operation_job(
             "project_path": result["project_path"],
             "draft_path": result["draft_path"],
             "ready": result["ready"],
-            "ok": result["ok"],
             "verification_status": result["status"],
             "missing": result["missing"],
             "findings": result["findings"],
@@ -827,7 +826,7 @@ def _run_operation_job(
 
         manifest = rebuild_checked_search_index(vault, context=context)
         return {
-            "engine": manifest["backend"],
+            "backend": manifest["backend"],
             "input_root": manifest["input_root"],
             "document_count": len(manifest["documents"]),
             "documents": manifest["documents"],
@@ -1585,13 +1584,13 @@ def _create_concept_payload(payload: dict[str, Any]) -> tuple[str, str]:
 
 
 def _claim_sqlite_job(vault: Path, job: dict[str, Any]) -> dict[str, Any] | None:
-    job_id = str(job["job_id"])
+    request_id = str(job["request_id"])
     job = {**job, "status": "running", "started_at": now_iso()}
-    return job if state.claim_request(vault, job_id, job) else None
+    return job if state.claim_request(vault, request_id, job) else None
 
 
 def _finish_job(vault: Path, status: str, job: dict[str, Any]) -> None:
-    state.finish_request(vault, str(job["job_id"]), status, job)
+    state.finish_request(vault, str(job["request_id"]), status, job)
 
 
 def _payload_bool(payload: dict[str, Any], key: str, default: bool) -> bool:

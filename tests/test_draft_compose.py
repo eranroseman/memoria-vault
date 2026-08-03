@@ -83,11 +83,11 @@ def test_compose_project_draft_writes_markers_and_rebuilds_evidence_sets(
     implicit = [row for row in rows.values() if not row["items"]]
     assert len(complete) == 1
     assert complete[0]["type"] == "single-span"
-    assert complete[0]["state"] == "complete"
+    assert complete[0]["completeness_status"] == "complete"
     assert complete[0]["review_required"] is False
     assert len(implicit) == 1
     assert implicit[0]["type"] == "implicit"
-    assert implicit[0]["state"] == "evidence-incomplete"
+    assert implicit[0]["completeness_status"] == "evidence-incomplete"
     assert implicit[0]["review_required"] is True
     assert {row["run_id"] for row in rows.values()} == {"compose-project-request-run"}
 

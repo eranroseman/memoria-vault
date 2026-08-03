@@ -35,7 +35,7 @@ The installer copies package-seed artifacts into the runtime vault; package
 repair is the product-file repair path.
 
 Code execution is unavailable unless
-`memoria_vault.runtime.code.runner.execution_availability(vault)` reports a
+`memoria_vault.runtime.code.execution.execution_availability(vault)` reports a
 passing Linux/WSL `bwrap` sandbox proof. Without that proof, code artifacts can
 be recorded, but product execution fails closed.
 

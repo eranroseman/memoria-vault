@@ -1044,7 +1044,7 @@ def test_cli_init_dry_run_reports_runtime_setup_without_mutation(
         "vocabulary": "system/vocabulary.md",
     }
     assert output["search"] == {
-        "engine": "bm25",
+        "backend": "bm25",
         "checked_root": ".memoria/index/search/checked",
         "manifest": ".memoria/index/search/manifest.json",
     }
