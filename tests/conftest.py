@@ -28,15 +28,18 @@ def _prune_stale_scratch(candidate: Path, now: float | None = None) -> int:
         return 0
     clock = _time.time() if now is None else now
     pruned = 0
-    for entry in candidate.iterdir():
-        if not entry.name.startswith(_SCRATCH_PREFIXES):
-            continue
-        try:
-            if clock - entry.stat().st_mtime > _SCRATCH_STALE_SECONDS:
-                shutil.rmtree(entry, ignore_errors=True)
-                pruned += 1
-        except OSError:
-            continue
+    try:
+        for entry in candidate.iterdir():
+            if not entry.name.startswith(_SCRATCH_PREFIXES):
+                continue
+            try:
+                if clock - entry.stat().st_mtime > _SCRATCH_STALE_SECONDS:
+                    shutil.rmtree(entry)
+                    pruned += 1
+            except OSError:
+                continue
+    except OSError:
+        return 0
     return pruned
 
 

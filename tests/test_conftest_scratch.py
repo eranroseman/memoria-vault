@@ -21,7 +21,7 @@ def test_prune_removes_only_stale_memoria_scratch(tmp_path: Path) -> None:
     for d in (stale_seed, stale_xdg, fresh_seed, unrelated):
         d.mkdir()
     two_hours_ago = now - 2 * 3600 - 60
-    for d in (stale_seed, stale_xdg):
+    for d in (stale_seed, stale_xdg, unrelated):
         import os
 
         os.utime(d, (two_hours_ago, two_hours_ago))
@@ -32,8 +32,25 @@ def test_prune_removes_only_stale_memoria_scratch(tmp_path: Path) -> None:
     assert not stale_seed.exists()
     assert not stale_xdg.exists()
     assert fresh_seed.exists(), "a dir younger than the threshold must survive"
-    assert unrelated.exists(), "non-memoria dirs are never touched"
+    assert unrelated.exists(), (
+        "non-memoria dirs are never touched, even when stale -- "
+        "the prefix filter must apply regardless of age"
+    )
 
 
 def test_prune_survives_missing_candidate(tmp_path: Path) -> None:
     assert conftest_module._prune_stale_scratch(tmp_path / "absent") == 0
+
+
+def test_prune_never_raises_when_iterdir_fails(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A PermissionError from iterdir() must not escape -- it would crash
+    conftest import (and therefore every pytest run) at collection time."""
+
+    def raising_iterdir(self: Path):
+        raise PermissionError("simulated unreadable directory")
+
+    monkeypatch.setattr(Path, "iterdir", raising_iterdir)
+
+    assert conftest_module._prune_stale_scratch(tmp_path) == 0
