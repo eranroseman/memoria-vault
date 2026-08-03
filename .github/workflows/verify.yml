@@ -42,6 +42,13 @@ jobs:
         run: |
           python -m pip install --quiet -r requirements-dev.txt
           python -m pip install --quiet -e ".[mcp]"
+      - name: Enable the code-execution sandbox (bubblewrap)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq bubblewrap
+          bwrap --unshare-net --dev /dev --proc /proc --ro-bind /usr /usr --ro-bind /bin /bin true \
+            && echo "bwrap: user namespaces available" \
+            || echo "bwrap: FAILED to start — see MEMORIA_REQUIRE_SANDBOX failures below"
       - name: Detect change scope
         id: scope
         if: github.event_name == 'pull_request'
@@ -86,4 +93,5 @@ jobs:
       - name: Run verify
         env:
           VERIFY_DOCS_ONLY: ${{ steps.scope.outputs.docs_only == 'true' && '1' || '0' }}
+          MEMORIA_REQUIRE_SANDBOX: "1"
         run: python scripts/verify

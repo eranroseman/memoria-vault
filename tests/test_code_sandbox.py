@@ -1,0 +1,141 @@
+"""The bwrap sandbox's isolation properties, each pinned behaviorally.
+
+These execute real code inside the real sandbox. Locally they skip when bwrap
+is unavailable (the pwsh precedent), but under MEMORIA_REQUIRE_SANDBOX=1 (CI) a
+skip becomes a hard failure, so a runner-image change cannot silently return
+this module to never running.
+"""
+
+from __future__ import annotations
+
+import json
+import os
+from pathlib import Path
+
+import pytest
+
+from memoria_vault.runtime.code.records import create_code_artifact
+from memoria_vault.runtime.code.runner import execution_availability, run_artifact
+from memoria_vault.runtime.policy.audit import sha256_file
+
+pytestmark = pytest.mark.runtime
+
+
+@pytest.fixture
+def sandbox_vault(tmp_path: Path) -> Path:
+    availability = execution_availability(tmp_path)
+    if not availability.available:
+        if os.environ.get("MEMORIA_REQUIRE_SANDBOX") == "1":
+            pytest.fail(f"sandbox required but unavailable: {availability.reason}")
+        pytest.skip(f"bwrap sandbox unavailable: {availability.reason}")
+    return tmp_path
+
+
+def _probe_artifact(vault: Path, artifact_id: str, script: str, **kwargs) -> dict:
+    artifact = create_code_artifact(
+        vault,
+        "project-alpha",
+        artifact_id,
+        approved_command=["python3", "main.py"],
+        **kwargs,
+    )
+    source = vault / artifact["source_dir"]
+    source.mkdir(parents=True, exist_ok=True)
+    (source / "main.py").write_text(script, encoding="utf-8")
+    return artifact
+
+
+def _stdout(vault: Path, run: dict) -> str:
+    return (vault / run["stdout_path"]).read_text(encoding="utf-8")
+
+
+def test_sandboxed_code_has_no_network(sandbox_vault: Path) -> None:
+    """--unshare-net is the sandbox's core claim; deleting it fails nowhere else."""
+    _probe_artifact(
+        sandbox_vault,
+        "net-probe",
+        "import socket\n"
+        "try:\n"
+        "    socket.create_connection(('1.1.1.1', 53), timeout=3)\n"
+        "    print('NET_OK')\n"
+        "except OSError as exc:\n"
+        "    print(f'NET_BLOCKED:{type(exc).__name__}')\n",
+    )
+
+    run = run_artifact(sandbox_vault, "net-probe", run_id="net-1")
+
+    out = _stdout(sandbox_vault, run)
+    assert "NET_OK" not in out
+    assert "NET_BLOCKED" in out
+    assert run["state"] == "succeeded"  # blocked network is the *expected* outcome
+
+
+def test_host_environment_does_not_leak_into_the_sandbox(
+    sandbox_vault: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("MEMORIA_SECRET_PROBE", "leak-me")
+    _probe_artifact(
+        sandbox_vault,
+        "env-probe",
+        "import json, os\nprint(json.dumps(sorted(os.environ)))\n",
+    )
+
+    run = run_artifact(sandbox_vault, "env-probe", run_id="env-1")
+
+    keys = set(json.loads(_stdout(sandbox_vault, run)))
+    assert "MEMORIA_SECRET_PROBE" not in keys
+    assert {"HOME", "PATH"} <= keys
+
+
+def test_the_workspace_bind_is_read_only(sandbox_vault: Path) -> None:
+    _probe_artifact(
+        sandbox_vault,
+        "ro-probe",
+        "try:\n"
+        "    open('/workspace/poison.txt', 'w').write('x')\n"
+        "    print('WRITE_OK')\n"
+        "except OSError as exc:\n"
+        "    print(f'WRITE_BLOCKED:{type(exc).__name__}')\n",
+    )
+
+    run = run_artifact(sandbox_vault, "ro-probe", run_id="ro-1")
+
+    assert "WRITE_BLOCKED" in _stdout(sandbox_vault, run)
+    source = sandbox_vault / "projects/project-alpha/code/ro-probe/src"
+    assert not (source / "poison.txt").exists()  # the host side stayed clean
+
+
+def test_outputs_land_on_the_host_and_their_hashes_are_recorded(sandbox_vault: Path) -> None:
+    out_rel = "projects/project-alpha/code/out-probe/outputs/result.txt"
+    _probe_artifact(
+        sandbox_vault,
+        "out-probe",
+        "open('/outputs/result.txt', 'w').write('42\\n')\n",
+        declared_outputs=[out_rel],
+    )
+
+    run = run_artifact(sandbox_vault, "out-probe", run_id="out-1")
+
+    host_file = sandbox_vault / out_rel
+    assert host_file.read_text(encoding="utf-8") == "42\n"
+    assert run["state"] == "succeeded"
+    assert run["output_hashes"] == {out_rel: sha256_file(host_file)}
+
+
+def test_a_run_that_overstays_its_timeout_is_failed_and_says_so(sandbox_vault: Path) -> None:
+    _probe_artifact(sandbox_vault, "slow-probe", "import time\ntime.sleep(60)\n")
+
+    run = run_artifact(sandbox_vault, "slow-probe", run_id="slow-1", timeout_s=2)
+
+    assert run["state"] == "failed"
+    assert run["timeout_result"] == "timeout"
+    assert run["exit_status"] == 124
+
+
+def test_stdout_is_truncated_at_the_declared_cap(sandbox_vault: Path) -> None:
+    _probe_artifact(sandbox_vault, "loud-probe", "print('x' * 1000)\n")
+
+    run = run_artifact(sandbox_vault, "loud-probe", run_id="loud-1", max_output_bytes=64)
+
+    raw = (sandbox_vault / run["stdout_path"]).read_bytes()
+    assert len(raw) <= 64
