@@ -73,9 +73,9 @@ def test_stack_dependencies_stay_small_and_no_orm():
 
 def _state_source() -> str:
     state_dir = ROOT / "src/memoria_vault/runtime/state"
-    return "\n".join(
-        p.read_text(encoding="utf-8") for p in sorted(state_dir.glob("*.py"))
-    )
+    files = sorted(state_dir.rglob("*.py"))
+    assert files, "state source glob found no files; ROOT or state_dir is wrong"
+    return "\n".join(p.read_text(encoding="utf-8") for p in files)
 
 
 def test_runtime_sqlite_schema_is_packaged_resource():

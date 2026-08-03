@@ -33,9 +33,9 @@ def test_rejects_incompatible_schema_version(tmp_path: Path) -> None:
 
 def _state_source() -> str:
     state_dir = ROOT / "src/memoria_vault/runtime/state"
-    return "\n".join(
-        p.read_text(encoding="utf-8") for p in sorted(state_dir.glob("*.py"))
-    )
+    files = sorted(state_dir.rglob("*.py"))
+    assert files, "state source glob found no files; ROOT or state_dir is wrong"
+    return "\n".join(p.read_text(encoding="utf-8") for p in files)
 
 
 def test_state_has_no_schema_migration_ladder() -> None:
