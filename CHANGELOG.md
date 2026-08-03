@@ -15,6 +15,17 @@ removed release-please setup, not real releases, and have been deleted.
 
 ### Changed
 
+- Split the two unrelated concepts that both answered to `integrity`.
+  `memoria_vault.runtime.integrity` — grounds checks, verdict recording, and
+  cascade rollback through the derivation DAG — is now
+  `memoria_vault.runtime.grounding`. The report-only vault linter and the DOI
+  retraction sweep move out from under it to `memoria_vault.runtime.sweeps.linter`
+  and `memoria_vault.runtime.sweeps.retraction`. No compatibility aliases: the
+  old dotted paths are gone, and every published `python -m` invocation changes.
+  The packaged `.githooks/pre-commit` pins the linter's module path, so a vault
+  installed before this change fails its pre-commit hook until reinstalled from
+  the current seed. The product-level `integrity` actor and the `integrity-*`
+  operation ids are unchanged — they name the concept, not the module.
 - Renamed computed-evidence `code-warrant` references to `code-grounds`.
   Retired `code-warrant:` markers are rejected without an alias or upgrade path.
 - The current fresh schema uses `code_artifacts.purpose = grounds`; Memoria does

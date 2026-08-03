@@ -6,8 +6,8 @@ import pytest
 
 from memoria_vault.runtime import state
 from memoria_vault.runtime.capture import capture_source as _capture_source
-from memoria_vault.runtime.integrity import cascade_rollback as _cascade_rollback
-from memoria_vault.runtime.integrity import trace_downstream
+from memoria_vault.runtime.grounding import cascade_rollback as _cascade_rollback
+from memoria_vault.runtime.grounding import trace_downstream
 from memoria_vault.runtime.jsonl import iter_jsonl
 from memoria_vault.runtime.knowledge import emit_note_candidates as _emit_note_candidates
 from memoria_vault.runtime.operations import compile_source_digest as _compile_source_digest

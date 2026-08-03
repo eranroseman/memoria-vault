@@ -642,9 +642,9 @@ def read_revert_preview(
     would understate what the rollback is about to do.
 
     The runtime import is call-time-local, matching the shipped precedent
-    above; `integrity` imports this package's writers.
+    above; `grounding` imports this package's writers.
     """
-    from memoria_vault.runtime.integrity import revert_preview
+    from memoria_vault.runtime.grounding import revert_preview
 
     preview = revert_preview(Path(workspace), event_id)
     # Every return path of `revert_preview` sets `target`, and a non-computable
@@ -1139,7 +1139,7 @@ def _attention_card(
     workspace-export count all compare `card["status"]` to `"open"` a layer away,
     where the raw spelling is already lost. The payload is a wire field the plugin
     reads, and this narrows it -- to exactly the vocabulary `inbox.py` writes and
-    `integrity.resolve_attention` writes back, never to a new term.
+    `grounding.resolve_attention` writes back, never to a new term.
 
     `routing_class` is `loudness.routing_class` for the same reason and with one
     hop more at stake (#1670): this payload field is what `resolve_attention` below

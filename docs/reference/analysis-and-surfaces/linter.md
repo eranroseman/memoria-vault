@@ -12,7 +12,7 @@ its schema contract comes from the YAML schemas under `.memoria/schemas/`.
 
 | Question | Answer |
 | --- | --- |
-| What is it? | Deterministic, zero-LLM Python under `src/memoria_vault/runtime/subsystems/integrity/linter`. |
+| What is it? | Deterministic, zero-LLM Python under `src/memoria_vault/runtime/sweeps/linter`. |
 | What blocks? | The pre-commit hook blocks schema-invalid notes from being committed. |
 | What reports? | A manual or operator-managed scheduled lint run reports everything else, including live in-app edits caught by the next sweep. |
 | What never happens? | Detectors do not auto-move or auto-archive files; findings surface for the PI. |
@@ -21,7 +21,7 @@ its schema contract comes from the YAML schemas under `.memoria/schemas/`.
 
 ## The detectors
 
-`memoria_vault.runtime.subsystems.integrity.linter.detectors` — self-contained (vault tree only), report-only. Constants are **schema-driven**: when `.memoria/schemas/` + PyYAML are available, the type → home map and the legal root folders are derived from `folders.yaml`/`types/*.yaml`; the hardcoded fallbacks keep the operation running without dependencies.
+`memoria_vault.runtime.sweeps.linter.detectors` — self-contained (vault tree only), report-only. Constants are **schema-driven**: when `.memoria/schemas/` + PyYAML are available, the type → home map and the legal root folders are derived from `folders.yaml`/`types/*.yaml`; the hardcoded fallbacks keep the operation running without dependencies.
 
 | Detector | Severity | Catches |
 | --- | --- | --- |
@@ -53,8 +53,8 @@ Detector notes:
 Vault-local CLI entry point (Linux/WSL):
 
 ```bash
-<vault>/.memoria/.venv/bin/python -m memoria_vault.runtime.subsystems.integrity.linter.detectors --vault <vault> [--json] [--gate detector-name]
-<vault>/.memoria/.venv/bin/python -m memoria_vault.runtime.subsystems.integrity.linter.hub_handoff --vault <vault> [--threshold 15] [--json]
+<vault>/.memoria/.venv/bin/python -m memoria_vault.runtime.sweeps.linter.detectors --vault <vault> [--json] [--gate detector-name]
+<vault>/.memoria/.venv/bin/python -m memoria_vault.runtime.sweeps.linter.hub_handoff --vault <vault> [--threshold 15] [--json]
 ```
 
 On Windows, use `<vault>\.memoria\.venv\Scripts\python.exe` instead.
@@ -65,13 +65,13 @@ On Windows, use `<vault>\.memoria\.venv\Scripts\python.exe` instead.
 
 ## The pre-commit hook
 
-The installer wires the package seed's `.githooks/pre-commit` into the deployed vault's `.git/hooks/pre-commit`. On every commit it passes the staged `.md` paths to `memoria_vault.runtime.subsystems.integrity.linter.precommit_check`, which validates each typed document against its schema via the shared loader (`memoria_vault.runtime.subsystems.lib.schema`). Any error blocks the commit (exit 1). Exempt: untyped `system/` infrastructure, vault-root nav pages, and paths outside the vault.
+The installer wires the package seed's `.githooks/pre-commit` into the deployed vault's `.git/hooks/pre-commit`. On every commit it passes the staged `.md` paths to `memoria_vault.runtime.sweeps.linter.precommit_check`, which validates each typed document against its schema via the shared loader (`memoria_vault.runtime.subsystems.lib.schema`). Any error blocks the commit (exit 1). Exempt: untyped `system/` infrastructure, vault-root nav pages, and paths outside the vault.
 
 ---
 
 ## Per-request digests
 
-`memoria_vault.runtime.subsystems.integrity.linter.session_summary` writes the second log from the [quarantine-and-verify with durable, audit-logged crash recovery](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md): a deterministic audit digest, not an LLM summary.
+`memoria_vault.runtime.sweeps.linter.session_summary` writes the second log from the [quarantine-and-verify with durable, audit-logged crash recovery](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md): a deterministic audit digest, not an LLM summary.
 
 | Aspect | Contract |
 | --- | --- |
@@ -82,7 +82,7 @@ The installer wires the package seed's `.githooks/pre-commit` into the deployed 
 | Quiet window | Requests active within the last **24 h** (`--quiet-hours`) wait for a later run. |
 
 ```bash
-<vault>/.memoria/.venv/bin/python -m memoria_vault.runtime.subsystems.integrity.linter.session_summary --vault <vault> [--quiet-hours H]
+<vault>/.memoria/.venv/bin/python -m memoria_vault.runtime.sweeps.linter.session_summary --vault <vault> [--quiet-hours H]
 ```
 
 On Windows, use `<vault>\.memoria\.venv\Scripts\python.exe` instead.

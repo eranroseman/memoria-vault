@@ -23,7 +23,7 @@ from memoria_vault.runtime.capture import (
     render_references_bib,
 )
 from memoria_vault.runtime.content_security import neutralize_untrusted_markdown
-from memoria_vault.runtime.integrity import record_integrity_check
+from memoria_vault.runtime.grounding import record_integrity_check
 from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.audit import sha256_bytes
 from memoria_vault.runtime.policy.paths import normalize_path

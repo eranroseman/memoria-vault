@@ -323,7 +323,7 @@ def _detector_verdict(vault: Path, env: dict[str, str]) -> str:
         [
             _python(),
             "-m",
-            "memoria_vault.runtime.subsystems.integrity.linter.detectors",
+            "memoria_vault.runtime.sweeps.linter.detectors",
             "--vault",
             str(vault),
         ],

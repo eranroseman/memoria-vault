@@ -11,7 +11,7 @@ from typing import Any
 
 from memoria_vault.runtime import state
 from memoria_vault.runtime.capture import capture_source
-from memoria_vault.runtime.integrity import (
+from memoria_vault.runtime.grounding import (
     cascade_rollback,
     check_claim_quote_support,
     check_contradiction_links,

@@ -738,7 +738,7 @@ def test_projection_rejects_nonexistent_context_before_write(
 
 
 def test_explicit_scan_propagation_rejects_blank_machine_at_entry(tmp_path: Path) -> None:
-    from memoria_vault.runtime.integrity import propagate_scan_demotion_explicit
+    from memoria_vault.runtime.grounding import propagate_scan_demotion_explicit
 
     with pytest.raises(ValueError, match="machine"):
         propagate_scan_demotion_explicit(

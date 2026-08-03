@@ -874,7 +874,7 @@ def _run_operation_job(
         outputs = [] if dry_run else [".memoria/eval/last-run.md"]
         return {"outputs": outputs, **result}
     if operation_id == "check-source-metadata":
-        from memoria_vault.runtime.integrity import check_source_metadata
+        from memoria_vault.runtime.grounding import check_source_metadata
 
         result = check_source_metadata(
             vault,
@@ -888,7 +888,7 @@ def _run_operation_job(
             "findings": result["findings"],
         }
     if operation_id == "cascade-rollback":
-        from memoria_vault.runtime.integrity import cascade_rollback
+        from memoria_vault.runtime.grounding import cascade_rollback
 
         target_id = str(payload.get("target_id") or "").strip()
         if not target_id:
@@ -907,7 +907,7 @@ def _run_operation_job(
             "rollback": result,
         }
     if operation_id in {"acknowledge-attention", "resolve-attention"}:
-        from memoria_vault.runtime.integrity import resolve_attention
+        from memoria_vault.runtime.grounding import resolve_attention
 
         target_id = str(payload.get("target_id") or "").strip()
         if not target_id:
@@ -1022,7 +1022,7 @@ def _run_operation_job(
         )
         return {"commit": commit, "check": event}
     if operation_id == "surface-tensions":
-        from memoria_vault.runtime.integrity import surface_tensions
+        from memoria_vault.runtime.grounding import surface_tensions
 
         return surface_tensions(
             vault,
@@ -1292,9 +1292,9 @@ def _require_operation_actor(context: OperationContext) -> None:
 def _run_integrity_finding_operation(
     vault: Path, operation_id: str, payload: dict[str, Any], context: OperationContext
 ) -> dict[str, Any]:
-    from memoria_vault.runtime import integrity
+    from memoria_vault.runtime import grounding
 
-    check = getattr(integrity, INTEGRITY_FINDING_OPERATIONS[operation_id])
+    check = getattr(grounding, INTEGRITY_FINDING_OPERATIONS[operation_id])
     result = check(
         vault,
         context=context,

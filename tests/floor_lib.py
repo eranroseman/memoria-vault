@@ -356,8 +356,8 @@ def assert_golden(name: str, digest: dict) -> None:
 def assert_invariants(vault: Path) -> None:
     """Spec §3.4: invariants over goldens — the always-on battery."""
     from memoria_vault.runtime import projections, state
-    from memoria_vault.runtime.subsystems.integrity.linter import detectors
     from memoria_vault.runtime.subsystems.lib.schema import validate_okf_core_workspace
+    from memoria_vault.runtime.sweeps.linter import detectors
 
     with contextlib.closing(sqlite3.connect(vault / ".memoria/memoria.sqlite")) as conn:
         ok = conn.execute("PRAGMA integrity_check").fetchone()[0]
@@ -554,7 +554,7 @@ OPERATION_REGISTRY: dict[str, dict] = {
     },
     # worker.py:831-849 (`operation_id in {"acknowledge-attention",
     # "resolve-attention"}`) pops target_id, dispatched to
-    # runtime/integrity.py:resolve_attention. acknowledge-attention is a
+    # runtime/grounding/__init__.py:resolve_attention. acknowledge-attention is a
     # PROTECTED_OPERATION_ACTORS "pi"-only op (worker.py:54), and
     # _require_operation_actor (worker.py:308) runs before every operation's
     # own branch — same shape as curate-note-link above: with a real
@@ -681,7 +681,7 @@ OPERATION_REGISTRY: dict[str, dict] = {
     # worker.py:812-830 pops target_id/reason/include_target. cascade-rollback
     # is a PROTECTED_OPERATION_ACTORS "pi"-only op (worker.py:63); same
     # actor-check-fires-first shape as acknowledge-attention above —
-    # confirmed live: refused before runtime/integrity.py:cascade_rollback's
+    # confirmed live: refused before runtime/grounding/__init__.py:cascade_rollback's
     # own body runs, regardless of target validity.
     "cascade-rollback": {
         "payload": {"target_id": "{note_claim}", "reason": "floor sweep cascade rollback"},
@@ -689,7 +689,7 @@ OPERATION_REGISTRY: dict[str, dict] = {
         "reason": "requires PI actor authority",
     },
     # worker.py:798-811 has no required payload keys (shadow/commit both
-    # default). check_source_metadata (runtime/integrity.py:304) scans all
+    # default). check_source_metadata (runtime/grounding/__init__.py:304) scans all
     # checked catalog sources for thin bibliographic metadata; the seed's
     # checked sources don't trip a finding, but an empty-findings run is
     # still a legitimate "done" (commit is "" only because there's nothing
@@ -865,7 +865,7 @@ OPERATION_REGISTRY: dict[str, dict] = {
     # (this one plus the next three) through the same generic
     # `_run_integrity_finding_operation` (worker.py:1126-1142), whose only
     # payload keys are shadow/commit (both optional, defaulting True/False).
-    # check_citation_survival (runtime/integrity.py:561) just checks whether
+    # check_citation_survival (runtime/grounding/__init__.py:561) just checks whether
     # bibliography.bib is current for checked sources — no required payload.
     # Confirmed live: "done", commit "" (no findings, so no commit — see
     # `if findings and commit` in every one of these four check functions).
@@ -874,7 +874,7 @@ OPERATION_REGISTRY: dict[str, dict] = {
         "expect": "done",
     },
     # See integrity-citation-survival-check above for the shared dispatch
-    # path. check_claim_quote_support (runtime/integrity.py:173) flags
+    # path. check_claim_quote_support (runtime/grounding/__init__.py:173) flags
     # checked notes whose claim/quote share no terms; none of the seed's
     # checked notes trip it. Confirmed live: "done".
     "integrity-claim-quote-check": {
@@ -882,7 +882,7 @@ OPERATION_REGISTRY: dict[str, dict] = {
         "expect": "done",
     },
     # See integrity-citation-survival-check above for the shared dispatch
-    # path. check_contradiction_links (runtime/integrity.py:633) flags
+    # path. check_contradiction_links (runtime/grounding/__init__.py:633) flags
     # checked digests with stale `links.contradicts` targets; none exist
     # in the seed. Confirmed live: "done".
     "integrity-contradiction-check": {
@@ -890,7 +890,7 @@ OPERATION_REGISTRY: dict[str, dict] = {
         "expect": "done",
     },
     # See integrity-citation-survival-check above for the shared dispatch
-    # path. check_evidence_integrity (runtime/integrity.py:123) flags
+    # path. check_evidence_integrity (runtime/grounding/__init__.py:123) flags
     # checked notes/digests/works whose declared evidence doesn't resolve
     # through the checked read barrier; none exist in the seed. Confirmed
     # live: "done".
@@ -900,7 +900,7 @@ OPERATION_REGISTRY: dict[str, dict] = {
     },
     # See integrity-citation-survival-check above for the shared
     # `_run_integrity_finding_operation` dispatch path (worker.py:356-366 ->
-    # worker.py:1126-1142). check_link_targets (runtime/integrity.py:886)
+    # worker.py:1126-1142). check_link_targets (runtime/grounding/__init__.py:886)
     # flags checked Concepts whose declared link targets aren't a checked
     # current Concept; none of the seed's checked links trip it. Confirmed
     # live: "done".
@@ -909,7 +909,7 @@ OPERATION_REGISTRY: dict[str, dict] = {
         "expect": "done",
     },
     # See integrity-citation-survival-check above for the shared dispatch
-    # path. check_prompt_injection_markers (runtime/integrity.py:211) flags
+    # path. check_prompt_injection_markers (runtime/grounding/__init__.py:211) flags
     # checked Work text containing seeded prompt-injection markers; the
     # seed's one checked Work (demo-work) carries none. Confirmed live:
     # "done".
@@ -918,7 +918,7 @@ OPERATION_REGISTRY: dict[str, dict] = {
         "expect": "done",
     },
     # See integrity-citation-survival-check above for the shared dispatch
-    # path. check_provenance_checkpoint (runtime/integrity.py:592) flags
+    # path. check_provenance_checkpoint (runtime/grounding/__init__.py:592) flags
     # checked notes/digests depending on checked sources with partial or
     # degraded provider coverage; the seed's checked sources are all "full".
     # Confirmed live: "done".
@@ -927,7 +927,7 @@ OPERATION_REGISTRY: dict[str, dict] = {
         "expect": "done",
     },
     # See integrity-citation-survival-check above for the shared dispatch
-    # path. check_quote_anchor_support (runtime/integrity.py:264) flags
+    # path. check_quote_anchor_support (runtime/grounding/__init__.py:264) flags
     # anchored note quotes absent from their source content; the seed has no
     # anchored quotes. Confirmed live: "done".
     "integrity-quote-anchor-check": {
@@ -1126,7 +1126,7 @@ OPERATION_REGISTRY: dict[str, dict] = {
         "expect": "done",
     },
     # worker.py:925-935 pops optional max_pairs/tier2/mode (all defaulted),
-    # dispatching to integrity.py:surface_tensions. Unlike the six
+    # dispatching to grounding/__init__.py:surface_tensions. Unlike the six
     # run_prompt_operation ids, this path's own Tier-2 judge helper
     # (`_run_tier2_tension_judge`) never calls `stage_concept`/
     # `commit_writer_changes` against a gitignored staging path, so it does

@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from memoria_vault.runtime.subsystems.integrity.linter import precommit_check
+from memoria_vault.runtime.sweeps.linter import precommit_check
 from tests.helpers import WORKSPACE_SEED
 
 pytestmark = pytest.mark.static

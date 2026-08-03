@@ -731,7 +731,7 @@ def _observe_pi_edits_from_status(
             for key in sorted(set(baseline["restriction_keys"]) - set(restriction_keys)):
                 findings.append(_restriction_key_removed_finding(target, key))
     if observed:
-        from memoria_vault.runtime.integrity import (
+        from memoria_vault.runtime.grounding import (
             propagate_scan_demotion,
             propagate_scan_demotion_explicit,
         )

@@ -147,7 +147,7 @@ PY="$VAULT/.memoria/.venv/bin/python"
 hdr "Install checks"
 run "$PY" -c "import memoria_vault; print(memoria_vault.__version__)"
 run "$PY" -m memoria_vault.cli doctor bundle --workspace "$VAULT" --json
-verdict="$("$PY" -m memoria_vault.runtime.subsystems.integrity.linter.detectors --vault "$VAULT" | tail -1)"
+verdict="$("$PY" -m memoria_vault.runtime.sweeps.linter.detectors --vault "$VAULT" | tail -1)"
 say "  detectors: $verdict"
 case "$verdict" in
   *"verdict: PASS"*) ;;

@@ -1,6 +1,6 @@
 """Typed-consequence propagation over the grounding closure and derivation DAG.
 
-The walk is the union EDGES section 5 asks for: `integrity._downstream_events`
+The walk is the union EDGES section 5 asks for: `grounding._downstream_events`
 inverts the derivation DAG and keeps walking only that, while a claim can also
 lose its grounds through a `supports` edge or a cited source's standing. Both
 halves live here, and `consequence_closure` is pure so the decision table
@@ -211,7 +211,7 @@ def closure_inputs(vault: Path) -> ClosureInputs:
         vault, event_types=(EVENT_DERIVED, EVENT_OBSERVED_EXTERNAL_EDIT)
     ):
         # Last event wins: re-deriving an output replaces the inputs that feed
-        # it, exactly as `integrity._latest_derived` folds the same two types.
+        # it, exactly as `grounding._latest_derived` folds the same two types.
         # The two folds stay separate only because C.5 wires integrity to call
         # this module, which a module-scope import back would close into a cycle.
         if output_id := _journal_ref(event.get("output_id")):
@@ -260,7 +260,7 @@ def _frozen_dependents(dependents: dict[str, set[str]]) -> dict[str, tuple[str, 
 def _target_aliases(vault: Path, target: str) -> set[str]:
     """Return every path space rendering of one fallen target.
 
-    A copy of `integrity._trace_aliases`, and it stays a copy: C.5 wires
+    A copy of `grounding._trace_aliases`, and it stays a copy: C.5 wires
     integrity to call this module, so the import back is the one direction that
     is now closed. Twelve duplicated lines is the price of that edge running one
     way.
@@ -329,7 +329,7 @@ def mark_consequence(
     state.set_concept_consequence(vault, target, consequence)
     state.set_concept_flag(vault, target, "stale", reason=reason, trigger_id=trigger)
     target_sha = sha256_file(path) if path.is_file() else EMPTY_SHA256
-    # The event shape mirrors `integrity._flag_descendant` so `rebuild_trace_state`
+    # The event shape mirrors `grounding._flag_descendant` so `rebuild_trace_state`
     # keeps `_known_current_hashes` current: without `output_sha256` the next scan
     # reads this mark as a foreign edit on a file the writer itself just wrote.
     append_event(
