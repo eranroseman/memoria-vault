@@ -312,7 +312,7 @@ def test_a_duplicate_non_ulid_canonical_id_reaches_the_pair_loop(tmp_path: Path)
     share a non-ULID `id` therefore get two independent concept rows, both
     independently checked, so `_checked_tension_rows` yields two rows with
     identical `canonical_id` (`frontmatter.get("id") or frontmatter.get(
-    "work_id") or rel`, integrity.py:1698). Nothing upstream of the pair loop
+    "work_id") or rel`, in `_checked_tension_rows`). Nothing upstream of the pair loop
     ever rejects this pair; the `pair_key[0] == pair_key[1]` arm in
     `tier1_tension_candidates` is what keeps it from being surfaced as a
     tension between a claim and itself.
