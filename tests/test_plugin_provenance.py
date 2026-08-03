@@ -1,4 +1,4 @@
-"""Only the standalone Obsidian proof-adapter package is allowed."""
+"""The seeded .obsidian tree ships exactly its allowlisted files."""
 
 from pathlib import Path
 
@@ -12,13 +12,6 @@ pytestmark = pytest.mark.static
 
 def test_plugin_scope_doctor_accepts_standalone_repo():
     assert doctor.check(ROOT) == []
-
-
-def test_plugin_scope_doctor_allows_memoria_obsidian_package(tmp_path):
-    root = tmp_path / "repo"
-    (root / "packages/memoria-obsidian").mkdir(parents=True)
-
-    assert doctor.check(root) == []
 
 
 def test_plugin_scope_doctor_allows_ring1_view_preference_files(tmp_path):
