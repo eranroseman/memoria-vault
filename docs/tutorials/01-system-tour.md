@@ -15,7 +15,7 @@ after it: framing your tutorial project.
 - A fresh workspace from [Quickstart](../how-to-guides/setup/quickstart.md).
 - A shell opened at the workspace root.
 - The `memoria` command on `PATH`: activate the venv —
-  `source .memoria/.venv/bin/activate` (Linux/macOS/WSL) or
+  `source .memoria/.venv/bin/activate` (Linux/WSL) or
   `.memoria\.venv\Scripts\Activate.ps1` (Windows) — or otherwise ensure
   `memoria` resolves before running the bare `memoria ...` commands below.
 
@@ -90,7 +90,6 @@ overrides, which [07: Customize](07-customize.md) exercises.
 ## What you should have seen
 
 - The CLI is the product surface.
-- The workspace is local and git-backed.
 - Checked reads come from engine projections over checked Concepts and catalog rows.
 - Steering is derived: framing a project is what aims discovery.
 
