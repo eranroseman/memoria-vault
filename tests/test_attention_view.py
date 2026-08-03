@@ -1,8 +1,8 @@
 """Contract tests for the /v1/views/attention engine view payload and route.
 
 The producer here is read by two clients that must agree: the HTTP transport
-(U3-ENG.4) serializes the payload verbatim, and `packages/memoria-obsidian/
-viewspec.js` renders it. Assertions therefore pin the wire keys exactly, and one
+(U3-ENG.4) serializes the payload verbatim, and the seeded plugin's
+`viewspec.js` renders it. Assertions therefore pin the wire keys exactly, and one
 test parses the plugin's own catalog so a kind the renderer cannot draw fails
 here rather than in the pane.
 
@@ -39,7 +39,7 @@ from tests.helpers import ROOT, init_cli_workspace, write_checked_note
 
 pytestmark = pytest.mark.contract
 
-PLUGIN = ROOT / "packages" / "memoria-obsidian"
+PLUGIN = ROOT / "src/memoria_vault/product/workspace_seed/.obsidian/plugins/memoria-obsidian"
 VIEWSPEC_JS = PLUGIN / "viewspec.js"
 RELATE_JS = PLUGIN / "relate.js"
 CREDENTIAL_ENV_NAMES = (
