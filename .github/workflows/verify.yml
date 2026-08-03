@@ -42,6 +42,35 @@ jobs:
         run: |
           python -m pip install --quiet -r requirements-dev.txt
           python -m pip install --quiet -e ".[mcp]"
+      - name: Enable the code-execution sandbox (bubblewrap)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq bubblewrap
+          # Ubuntu 24.04 restricts unprivileged user namespaces via AppArmor. Without
+          # this, bwrap falls back to its setuid path and `--unshare-net` dies at
+          # `loopback: Failed RTM_NEWADDR: Operation not permitted` -- it does not own
+          # the netns it just created. Added only after CI demonstrated that failure;
+          # the probe below is what tells you if it stops being needed.
+          sudo sysctl -qw kernel.apparmor_restrict_unprivileged_userns=0 || true
+          # Delegate the probe to the product's own execution_availability() so
+          # this step can never drift from what the runtime actually requires.
+          # (A hand-rolled `--ro-bind /usr /usr --ro-bind /bin /bin` probe once
+          # lived here; it printed the same "FAILED to start" message on a
+          # healthy runner as on a broken one, because /bin/true's ELF
+          # interpreter is /lib64/ld-linux-x86-64.so.2 and /lib64 is a
+          # merged-usr symlink the probe never bound — zero information either
+          # way. _base_bwrap_args() binds /usr, /bin, /lib, /lib64 for exactly
+          # this reason.)
+          python3 -c "
+          from pathlib import Path
+          from memoria_vault.runtime.code.execution import execution_availability
+
+          availability = execution_availability(Path('.'))
+          if availability.available:
+              print('bwrap: available')
+          else:
+              print(f'bwrap: unavailable — {availability.reason}')
+          "
       - name: Detect change scope
         id: scope
         if: github.event_name == 'pull_request'
@@ -86,4 +115,5 @@ jobs:
       - name: Run verify
         env:
           VERIFY_DOCS_ONLY: ${{ steps.scope.outputs.docs_only == 'true' && '1' || '0' }}
+          MEMORIA_REQUIRE_SANDBOX: "1"
         run: python scripts/verify

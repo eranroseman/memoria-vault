@@ -11,6 +11,7 @@
     "tests"
   ],
   "allow_text_files": [
+    "docs/superpowers/plans/2026-08-02-coverage-repairs.md",
     "scripts/checks/plugin_provenance_doctor.py",
     "scripts/checks/removed_surface_gate.py",
     "scripts/checks/removed_surfaces.json",
@@ -298,6 +299,36 @@
       "needle": "tests/**/test_*obsidian_plugin*.py",
       "owner": "core runtime",
       "reason": "Obsidian plugin tests are excluded with their surface"
+    },
+    {
+      "kind": "text",
+      "needle": "set_session_skill(",
+      "owner": "runtime policy",
+      "reason": "skill-scoped write-deny was never wired to a caller: hook.py builds a fresh PolicyEngine per check, so registered session state could never reach a decision"
+    },
+    {
+      "kind": "text",
+      "needle": "clear_session_skill(",
+      "owner": "runtime policy",
+      "reason": "skill-scoped write-deny was never wired to a caller: hook.py builds a fresh PolicyEngine per check, so registered session state could never reach a decision"
+    },
+    {
+      "kind": "text",
+      "needle": "_session_skill_deny",
+      "owner": "runtime policy",
+      "reason": "skill-scoped write-deny was never wired to a caller: hook.py builds a fresh PolicyEngine per check, so registered session state could never reach a decision"
+    },
+    {
+      "kind": "text",
+      "needle": "compose_skill_deny(",
+      "owner": "runtime policy",
+      "reason": "skill-scoped write-deny was never wired to a caller: hook.py builds a fresh PolicyEngine per check, so registered session state could never reach a decision"
+    },
+    {
+      "kind": "text",
+      "needle": "skill_deny_write",
+      "owner": "runtime policy",
+      "reason": "skill-scoped write-deny was never wired to a caller: hook.py builds a fresh PolicyEngine per check, so registered session state could never reach a decision"
     }
   ]
 }

@@ -28,19 +28,19 @@ PATTERNS = (
 )
 
 
-def _skip(path: Path) -> bool:
-    rel = path.relative_to(ROOT).as_posix()
+def _skip(path: Path, base: Path) -> bool:
+    rel = path.relative_to(base).as_posix()
     return any(rel == part or rel.startswith(part + "/") for part in SKIP_PARTS)
 
 
-def errors() -> list[str]:
+def errors(base: Path = ROOT) -> list[str]:
     out: list[str] = []
     for root_name in SCAN_ROOTS:
-        root = ROOT / root_name
+        root = base / root_name
         if not root.exists():
             continue
         for path in sorted(root.rglob("*")):
-            if path.suffix not in SUFFIXES or _skip(path):
+            if path.suffix not in SUFFIXES or _skip(path, base):
                 continue
             try:
                 lines = path.read_text(encoding="utf-8").splitlines()
@@ -48,7 +48,7 @@ def errors() -> list[str]:
                 continue
             for line_no, line in enumerate(lines, start=1):
                 if any(pattern.search(line) for pattern in PATTERNS):
-                    rel = path.relative_to(ROOT).as_posix()
+                    rel = path.relative_to(base).as_posix()
                     out.append(f"{rel}:{line_no}: checked must not mean approved/verified/trusted")
     return out
 
