@@ -12,6 +12,57 @@ worktrees, except that tasks 4 and 5 both add check-script tests and merge clean
 
 **Tech Stack:** Python 3.12, pytest (+xdist), bubblewrap (bwrap) in CI, AST/mutation verification by hand.
 
+## Execution amendments (2026-08-02)
+
+> Read this before the tasks below. This plan is tracked and is bound for `design-history/` as the frozen
+> record of what was planned — but execution in `.claude/worktrees/covrep` (branch `wip/covrep`) disproved
+> five of its instructions, and the corrections lived only in that worktree's `.superpowers/sdd/progress.md`
+> ledger, which `.gitignore` excludes. This section folds those corrections back into the tracked plan so a
+> future reader does not inherit instructions the branch itself disproved.
+
+1. **Task 7's premise was false.** Its text below asserts the `pair_key[0] == pair_key[1]` guard in
+   `tier1_tension_candidates` is unreachable and instructs deleting it. It is not: `canonical_id = id or
+   work_id or rel`, and only the **ULID** path collapses two files onto one concept row before the pair loop
+   runs. With a non-ULID shared frontmatter `id` (or a shared `work_id`), two rows carry the same
+   `canonical_id` and the pair loop does reach them — deleting the arm turns `candidate_count` from 0 to 1.
+   The guard was untested, not unreachable. It stays; the branch restored it and added
+   `test_a_duplicate_non_ulid_canonical_id_reaches_the_pair_loop`, which kills the deletion.
+
+2. **Task 1 Step 1's CI snippet includes `sudo sysctl kernel.apparmor_restrict_unprivileged_userns=0`.** A PI
+   ruling made before execution dropped it: try bubblewrap in CI without relaxing the kernel's AppArmor
+   hardening first, and add the sysctl only if CI proves it necessary. The branch shipped without it.
+
+3. **Task 2 Step 3's kill-check proves the wrong thing.** It instructs flipping `sha256_file(path) !=
+   expected` to `==`. That mutation makes the guard fire whenever the hash *matches* — true immediately after
+   a successful run — so it trips the pre-tamper sanity assertion (`verify_code_run(...)["ready"] is True`)
+   and the test aborts there, before it ever reaches the tamper assertion the check exists to prove. The
+   mutation that actually kills the tamper test disables mismatch detection outright, without inverting the
+   ready case. Separately, the deleted-output test as specified used `"42\n"` fixture content; because
+   `sha256_file` returns `EMPTY_SHA256` for a missing file rather than raising, a non-empty fixture lets the
+   hash-mismatch comparison catch the deletion first, so the `not path.is_file()` operand the test is named
+   for never actually runs — the fixture needs empty content to exercise that operand.
+
+4. **Task 5 Step 2 says "Create `tests/test_removed_surface_gate.py`"** — the file already existed, with
+   three tests covering `find_violations`. Following the step's snippet verbatim would have overwritten the
+   file and deleted that coverage; the corrected approach appends to the existing file and reuses its
+   established `as gate` import alias. The step's `match=` regexes also needed `(?s)` and raw-string prefixes
+   (the real exit messages contain newlines and periods that `.` does not cross by default), and its assumed
+   module-alias import for `test_schema_doc_drift.py` was wrong — that file imports symbols directly, which
+   the step's own fallback instruction ("follow the file's existing spelling") already covered.
+
+5. **Task 8 never updates `scripts/checks/removed_surfaces.json`.** In this repo, retiring a runtime-policy
+   surface means registering its names in that gate's contract — the prior lane-policy retirement is the
+   precedent, registered under `owner: "runtime policy"`. Task 8's Files list (below) does not include the
+   registry, so the five retired names (`set_session_skill(`, `clear_session_skill(`, `_session_skill_deny`,
+   `compose_skill_deny(`, `skill_deny_write`) went unregistered until a follow-up fix added them; as written,
+   nothing would have stopped a future agent re-adding a half-wired `set_session_skill`.
+
+Also: **Task 6's brief undercounted.** It names two dead-both-branch instances (`_review_seam_is_live`, the
+`hasattr(cockpit, "trace_panel")` block). The branch closed **five** — the other three
+(`_flow_seam_is_live`, a dead trace-panel-pending test, and a structurally impossible `_context_panel`
+branch, whose own docstring says the honest-absence arm was deleted) were found by sweeping the file during
+review, not by following the brief's finding list.
+
 ## Global Constraints
 
 - **The one gate:** every task ends with `PYTEST_XDIST_AUTO_NUM_WORKERS=2 python scripts/verify` →
