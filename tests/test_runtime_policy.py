@@ -12,7 +12,6 @@ from memoria_vault.runtime.policy import (
     POLICY_CONFIG_RELPATH,
     ActorPolicy,
     PolicyEngine,
-    compose_skill_deny,
     decide,
     load_actor_policy,
     normalize_path,
@@ -188,9 +187,7 @@ def test_runtime_policy_core():
         write_scope=[],
     )
 
-    d = lambda p, a, pa, fl=None, sk=None: (
-        decide(p.actor, a, pa, p, flags=fl, skill_deny_write=sk).decision
-    )
+    d = lambda p, a, pa, fl=None: decide(p.actor, a, pa, p, flags=fl).decision
 
     # ---- write decisions --------------------------------------------------- #
     # Every mutating allow is audited -- a write/append/move that passes
@@ -252,17 +249,6 @@ def test_runtime_policy_core():
         "Write fixture mkdir in write_scope -> allow"
     )
     assert d(engineer, "report", "projects/x/code/") == "allow", "Engineer report -> allow"
-
-    # ---- skill-conditional one-way narrowing ------------------------------- #
-    # counter-outline narrows a write-enabled fixture to framing-only; drafts then deny.
-    co_deny = compose_skill_deny({"deny": {"write": ["projects/*/drafts/**"]}})
-    assert co_deny == ["projects/*/drafts/**"], "counter-outline composes a draft-deny"
-    assert d(write_fixture, "write", "projects/x/drafts/d.md", None, co_deny) == "deny", (
-        "Writer+counter-outline: draft write now denied"
-    )
-    assert (
-        d(write_fixture, "write", "projects/x/framing/f.md", None, co_deny) == "allow_with_log"
-    ), "Writer+counter-outline: framing write still allowed (with log)"
 
     # ---- L2 gate-contract: adapter write walls ----------------------------- #
     # Lifted from the protocol's case IDs so the gate contract for librarian /
