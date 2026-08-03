@@ -39,3 +39,4 @@ selected passage; review/check promotion stays separate.
 - Where its drafts live: [The vault](../../architecture/vault.md)
 - Why the posture boundaries are strict: [Why operation postures](../../rationale/boundaries/why-operation-postures.md)
 - Why canonical synthesis belongs to the human: [Why Memoria doesn't pursue full autonomy](../../rationale/boundaries/why-not-autonomous.md)
+- Practicing the draft loop: [Compose a draft](../../../how-to-guides/project/compose-a-draft.md)

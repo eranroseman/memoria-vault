@@ -21,6 +21,16 @@ import argparse
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="memoria")
     sub = parser.add_subparsers(dest="command", required=True)
+
+    # `doctor` both sets a handler (runnable bare) and owns a subparsers
+    # action with a child that also sets a handler -- the real CLI's shape
+    # (src/memoria_vault/cli.py) for a group parser that is also a leaf.
+    doctor = sub.add_parser("doctor")
+    doctor_sub = doctor.add_subparsers(dest="doctor_command")
+    bundle = doctor_sub.add_parser("bundle")
+    bundle.set_defaults(handler=lambda args: None)
+    doctor.set_defaults(handler=lambda args: None)
+
     project = sub.add_parser("project")
     project_sub = project.add_subparsers(dest="project_command", required=True)
     project_sub.add_parser("gaps")
@@ -61,6 +71,35 @@ def test_reading_the_cli_surface_leaves_sys_path_as_it_found_it(tmp_path: Path) 
     gate._load_cli_paths(tmp_path)
 
     assert sys.path == before
+
+
+def test_a_real_memoria_vault_import_does_not_shadow_the_stub_fixture(tmp_path: Path) -> None:
+    """The full-suite poisoning case: a real `memoria_vault` already sits in
+    `sys.modules` (as it does once any other test module imports the real
+    package at collection time) when this fixture's stub needs to win instead.
+
+    `_load_cli_paths` must resolve `from memoria_vault.cli import
+    _build_parser` against the stub -- not the cached real module -- and must
+    leave the real module's `sys.modules` entry exactly as it found it
+    afterwards.
+    """
+    import memoria_vault.cli  # noqa: F401 -- populate sys.modules with the real package
+
+    real_module = sys.modules["memoria_vault"]
+    _init_fixture_repo(tmp_path)
+
+    paths = gate._load_cli_paths(tmp_path)
+
+    assert paths == frozenset(
+        {"doctor", "doctor bundle", "project", "project gaps", "project trace"}
+    )
+    assert sys.modules["memoria_vault"] is real_module
+    assert (
+        Path(sys.modules["memoria_vault"].__file__)
+        .as_posix()
+        .endswith("src/memoria_vault/__init__.py")
+    )
+    assert str(tmp_path) not in sys.modules["memoria_vault"].__file__
 
 
 def test_flags_a_cli_path_and_operation_id_that_do_not_exist(tmp_path: Path) -> None:
@@ -111,3 +150,91 @@ def test_skips_docs_superpowers_and_design_history_archive(tmp_path: Path) -> No
     )
 
     assert gate.find_violations(tmp_path) == []
+
+
+_CLI_DOC = """## Complete command roster
+
+This roster mirrors the live argparse tree:
+
+- `memoria doctor`
+- `memoria doctor bundle`
+- `memoria project gaps`
+- `memoria project trace`
+
+## Next section
+"""
+
+_OPERATIONS_DOC = """## Operation manifest roster
+
+Package-owned operation manifests currently ship these operation IDs:
+
+- `capture-source`
+
+## Detailed action catalogs
+"""
+
+
+def _write_roster_docs(
+    root: Path, cli_doc: str = _CLI_DOC, operations_doc: str = _OPERATIONS_DOC
+) -> None:
+    docs_dir = root / "docs/reference/commands-and-transports"
+    docs_dir.mkdir(parents=True, exist_ok=True)
+    (docs_dir / "cli.md").write_text(cli_doc, encoding="utf-8")
+    (docs_dir / "system-actions.md").write_text(operations_doc, encoding="utf-8")
+
+
+def test_matching_rosters_are_clean(tmp_path: Path) -> None:
+    _init_fixture_repo(tmp_path)
+    _write_roster_docs(tmp_path)
+
+    assert gate.roster_drift_errors(tmp_path) == []
+
+
+def test_missing_roster_entries_fail_in_both_surfaces(tmp_path: Path) -> None:
+    _init_fixture_repo(tmp_path)
+    _write_roster_docs(
+        tmp_path,
+        cli_doc=_CLI_DOC.replace("- `memoria project trace`\n", ""),
+        operations_doc=_OPERATIONS_DOC.replace("- `capture-source`", "- `capture-other`"),
+    )
+
+    assert gate.roster_drift_errors(tmp_path) == [
+        "docs/reference/commands-and-transports/cli.md: roster is missing `memoria project trace`",
+        "docs/reference/commands-and-transports/system-actions.md: roster is missing `capture-source`",
+        "docs/reference/commands-and-transports/system-actions.md: roster lists `capture-other`, which no shipped manifest declares",
+    ]
+
+
+def test_stale_cli_roster_entry_fails(tmp_path: Path) -> None:
+    _init_fixture_repo(tmp_path)
+    _write_roster_docs(
+        tmp_path,
+        cli_doc=_CLI_DOC.replace(
+            "- `memoria project trace`", "- `memoria project trace`\n- `memoria project frobnicate`"
+        ),
+    )
+
+    assert gate.roster_drift_errors(tmp_path) == [
+        "docs/reference/commands-and-transports/cli.md: roster lists `memoria project frobnicate`, "
+        "which the argparse tree does not run",
+    ]
+
+
+def test_a_renamed_roster_heading_fails_loudly_and_names_the_heading(tmp_path: Path) -> None:
+    """A typo'd or renamed roster heading must not crash with a bare
+
+    `ValueError: substring not found` -- the gate should name both the
+    heading it went looking for and the file it looked in.
+    """
+    _init_fixture_repo(tmp_path)
+    _write_roster_docs(
+        tmp_path,
+        cli_doc=_CLI_DOC.replace("## Complete command roster", "## Complete Command Roster"),
+    )
+
+    with pytest.raises(SystemExit) as exc_info:
+        gate.roster_drift_errors(tmp_path)
+
+    message = str(exc_info.value)
+    assert "## Complete command roster" in message
+    assert "docs/reference/commands-and-transports/cli.md" in message

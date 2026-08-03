@@ -109,3 +109,4 @@ input rebuild.
 - Folder homes and skeleton: [Memoria configuration](../system/configuration.md)
 - Checked-only retrieval: [Search](search.md)
 - Trusted writer and journal behavior: [System actions](../commands-and-transports/system-actions.md)
+- The per-source how-to: [Capture and ingest a source](../../how-to-guides/library/capture-and-ingest.md)

@@ -39,9 +39,11 @@ individual-capture step covers sources that need to enter separately.
 **3. Bring each imported Work to a usable catalog state.**
 
 Import records create catalog Works, but missing provider evidence or full text
-can still require enrichment before a source supports checked knowledge. Follow
-the capture guide's enrichment step for those Works. Inclusion in the external
-review does not itself make a Work checked in Memoria.
+can still require enrichment before a source supports checked knowledge. Add
+`--enrich` to the import command in step 2 to queue a DOI enrichment request
+for each newly admitted item that carries a DOI. The capture guide's per-Work
+enrichment then covers only the leftovers. Inclusion in the external review
+does not itself make a Work checked in Memoria.
 
 ## Verify
 

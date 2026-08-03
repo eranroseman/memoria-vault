@@ -97,3 +97,4 @@ repair comes from package-seed refresh, not an in-vault restore baseline.
 - The full stack the vault sits under: [Architecture](README.md)
 - The operations that maintain the vault: [Operations](../execution/operations.md)
 - The write boundary: [Promotion and the write boundary](../knowledge/promotion-and-gated-zones.md)
+- Working the write path day to day: [Work the action queue](../../how-to-guides/inbox/work-the-action-queue.md)

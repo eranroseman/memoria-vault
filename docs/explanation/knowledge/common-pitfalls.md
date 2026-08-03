@@ -38,8 +38,9 @@ export workflows keep looking for the old alias.
 **Why it happens:** the durable Work identity still works, so the graph looks
 healthy. The break appears only at the citation/export edge.
 
-**What prevents it:** pin citekeys in Better BibTeX so the key is treated as an
-identifier, not a metadata derivation. See [Set up Zotero](../../how-to-guides/setup/set-up-zotero.md).
+**What prevents it:** pinned citekeys in Better BibTeX — the key treated as an
+identifier, not a metadata derivation. [Set up Zotero](../../how-to-guides/setup/set-up-zotero.md)
+covers the setting.
 
 ## Vocabulary drift
 
@@ -50,7 +51,7 @@ queries return only part of the corpus.
 **Why it happens:** off-vocabulary values are well-formed strings. They produce
 incomplete results, not errors.
 
-**What prevents it:** maintain the controlled vocabulary and consolidate variants
+**What prevents it:** a maintained controlled vocabulary that absorbs variants
 once the intended term is clear. The staged stabilization model is in
 [Vocabulary discipline](vocabulary-discipline.md).
 
@@ -63,8 +64,8 @@ names no tension, and says nothing about why the finding matters.
 they diverge: summary stores what the source says; synthesis connects it to what
 the vault already knows.
 
-**What prevents it:** make every durable note earn its place through links,
-tensions, or a claim about current work.
+**What prevents it:** a norm that every durable note earns its place through
+links, tensions, or a claim about current work.
 
 ## Distilling before reviewing source state
 
@@ -75,10 +76,9 @@ work.
 **Why it happens:** writing can begin before the source has completed the
 provider/full-text checks that make its record usable.
 
-**What prevents it:** confirm the source is checked before distilling, then set
-any `research_area` or `methodology` classification deliberately with
-`memoria work update`. Those classifications are PI-owned metadata, not an
-automated attention lifecycle.
+**What prevents it:** distilling only from checked sources, with `research_area`
+and `methodology` set deliberately through `memoria work update` — PI-owned
+metadata, not an automated attention lifecycle.
 
 ## Queue accumulation
 
@@ -99,8 +99,8 @@ to parse.
 **Why it happens:** the hub has become an index. Query surfaces already handle
 volume; a hub should curate meaning.
 
-**What prevents it:** prune hard, annotate what remains, or create child hubs
-when a curated list grows past roughly 20-30 entries.
+**What prevents it:** hard pruning, annotation of what remains, and child hubs
+once a curated list grows past roughly 20-30 entries.
 
 ## The automation boundary
 

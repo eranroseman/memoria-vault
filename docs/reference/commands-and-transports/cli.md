@@ -34,6 +34,9 @@ This page summarizes `src/memoria_vault/cli.py`; use `--help` for exact flags.
 | `memoria mcp --workspace <path> --read-scope <path>` | Run the optional [MCPServer stdio transport](mcp-transport.md) with a required engine read scope. |
 | `memoria help` | Show registered surfaces grouped by the five workspace jobs. |
 | `memoria dashboard` | Print the seven raw-count instrumentation panels (attention flow, dispositions, evidence review, reads/staleness, edge writes, exploration, decision rules). Engine-direct and read-only; raw counts with their denominators, never a composite score. The same panels are served over HTTP at `/v1/views/dashboard`. |
+| `memoria cockpit [--project <path>\|--triage]` | Compose the deep-work or triage cockpit screens from registry reads. `--project` selects the deep screen, `--triage` the triage screen; the two never mix. |
+| `memoria context` | Read the situated context bundle for the active session. |
+| `memoria onboard` | Walk from installed engine to the tutorial open in Obsidian. |
 | `memoria eval select-models [--operation <id>] [--mode test\|live]` | Run the seeded-error bar against manifest-declared runner pins and report the selected passing runner. |
 
 ## Work
@@ -42,6 +45,7 @@ This page summarizes `src/memoria_vault/cli.py`; use `--help` for exact flags.
 | --- | --- |
 | `memoria work add` | Add a DOI, URL, PDF, or file; attach supplied text with `--text`. |
 | `memoria work import` | Import portable BibTeX or CSL JSON files. |
+| `memoria seed install` | Install the shipped seed-corpus manifest rows as unchecked catalog Work rows — pinned identifiers, keyless fetches; re-runs skip already admitted rows. PI-only. |
 | `memoria work enrich <work-id>` | Enrich a work from provider replay/payload inputs. |
 | `memoria work digest <work-id> [--mode test\|live]` | Compile a source digest with the selected manifest-pinned runner branch. |
 | `memoria work interview <work-id>` | Record PI-owned source interview responses. |
@@ -74,7 +78,7 @@ This page summarizes `src/memoria_vault/cli.py`; use `--help` for exact flags.
 | `memoria steering show/edit` | Show effective steering—derived from active projects, hubs, and unresolved question notes—with per-token provenance; edit the PI-owned `steering.md` watch/mute override. |
 | `memoria decision-rule set <id> <status>` | Record a pre-registered decision rule as `armed`, `fired`, or `retired` in `.memoria/config/decision-rules.yaml`. PI-only. The first write materializes the whole shipped registry, so the file never carries fewer rules than the engine ships — a hand-edited one-entry file would replace the registry rather than override one row of it. |
 | `memoria vocab list/add/rename/merge` | Read controlled vocabulary; mutations are PI-only. |
-| `memoria journal tail/show/verify` | Inspect journal entries or verify the authoritative hash chain, live-tip anchor, committed anchor prefix, and JSONL export subset. |
+| `memoria journal tail/show/verify/revert-preview` | Inspect journal entries; verify the authoritative hash chain, live-tip anchor, committed anchor prefix, and JSONL export subset; `revert-preview <event-id>` renders the read-only cascade-rollback preview for one event. |
 
 ## Operations And Eval
 
@@ -86,7 +90,8 @@ This page summarizes `src/memoria_vault/cli.py`; use `--help` for exact flags.
 
 ## Complete command roster
 
-This roster mirrors the live argparse tree:
+This roster mirrors the live argparse tree; `scripts/checks/doc_claims_gate.py`
+pins the two equal in both directions:
 
 - `memoria ask`
 - `memoria attention list`
@@ -94,6 +99,8 @@ This roster mirrors the live argparse tree:
 - `memoria attention show`
 - `memoria attention worklist`
 - `memoria check`
+- `memoria cockpit`
+- `memoria context`
 - `memoria dashboard`
 - `memoria decision-rule set`
 - `memoria doctor`
@@ -107,6 +114,7 @@ This roster mirrors the live argparse tree:
 - `memoria handshake`
 - `memoria help`
 - `memoria init`
+- `memoria journal revert-preview`
 - `memoria journal show`
 - `memoria journal tail`
 - `memoria journal verify`
@@ -117,6 +125,7 @@ This roster mirrors the live argparse tree:
 - `memoria new hub`
 - `memoria new note`
 - `memoria new project`
+- `memoria onboard`
 - `memoria operation list`
 - `memoria operation run`
 - `memoria project ask`
@@ -147,6 +156,7 @@ This roster mirrors the live argparse tree:
 - `memoria review stats`
 - `memoria secrets list`
 - `memoria secrets set`
+- `memoria seed install`
 - `memoria serve`
 - `memoria show`
 - `memoria status`
