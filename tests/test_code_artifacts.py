@@ -200,7 +200,11 @@ def test_verify_code_run_refuses_an_output_rewritten_after_the_run(tmp_path: Pat
 
 
 def test_verify_code_run_refuses_an_output_deleted_after_the_run(tmp_path: Path) -> None:
-    output_rel = _succeeded_run(tmp_path)
+    # Content must be empty. sha256_file() returns EMPTY_SHA256 for a missing
+    # file instead of raising, so a non-empty fixture lets the hash
+    # comparison alone catch the deletion (EMPTY_SHA256 != a real hash) and
+    # the `not path.is_file()` operand this test targets never runs.
+    output_rel = _succeeded_run(tmp_path, output_text="")
 
     (tmp_path / output_rel).unlink()
 
