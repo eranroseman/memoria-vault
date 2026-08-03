@@ -360,7 +360,7 @@ def throttled(vault: Path, raised_by: str, loudness: str) -> str | None:
     at all -- which is how `loudness: normal`, a band no reader rosters, shipped
     and stayed. Now every path that sets a card's band passes through here.
     """
-    from memoria_vault.runtime.attention_config import producer_mode
+    from memoria_vault.runtime.attention.config import producer_mode
 
     if loudness not in LOUDNESS:
         raise ValueError(f"loudness must be one of {LOUDNESS}")
