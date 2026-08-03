@@ -20,7 +20,10 @@ from tests.floor_lib import (
     seed_vault,
 )
 
-pytestmark = pytest.mark.floor
+# 1733: the xdist_group pins this module to one worker under --dist
+# loadgroup so its module-scoped seed_vault fixture builds once per run
+# instead of once per worker (~30s per rebuild).
+pytestmark = [pytest.mark.floor, pytest.mark.xdist_group("floor-sweep-reads-seed")]
 
 ACTIONS_BY_ID = actions_by_id()
 READ_ACTIONS = sorted(

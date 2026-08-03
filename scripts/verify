@@ -27,6 +27,7 @@ import os
 import shutil
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -39,6 +40,12 @@ DOCS_ONLY = os.environ.get("VERIFY_DOCS_ONLY") == "1"
 
 # Every registered marker except `live` and `slow`, which the gate never runs.
 PYTEST_MARKERS = "static or unit or contract or runtime or package or floor"
+
+# 1733: N worktrees each taking `-n auto` = all cores thrash each other (same
+# suite measured 190s at load ~3 vs 3,355s at load 18). Half the cores per run
+# keeps two concurrent gates at parity with one greedy one; an explicit
+# PYTEST_XDIST_AUTO_NUM_WORKERS in the environment still wins.
+os.environ.setdefault("PYTEST_XDIST_AUTO_NUM_WORKERS", str(max(2, (os.cpu_count() or 4) // 2)))
 
 # Source of truth for what "verified" means; tests/test_verify_script.py mirrors
 # this roster. Lint runs the manual-stage pre-commit hooks (ruff, ruff-format,
@@ -70,6 +77,15 @@ GATES: list[list[str]] = [
         "auto",
         "-p",
         "xdist",
+        # 1733: the default `--dist load` scatters a module's tests across
+        # workers, so module-scoped fixtures (the ~30s seed_vault builds in
+        # test_floor_sweep_reads / test_read_api_scope_walk) are rebuilt once
+        # per worker. loadgroup pins only the xdist_group-marked modules to a
+        # single worker each (one fixture build per file) while everything
+        # else — notably test_floor_sweep_operations' 60 expensive tests —
+        # keeps free load balancing; a blanket loadfile would serialize them.
+        "--dist",
+        "loadgroup",
         "-m",
         PYTEST_MARKERS,
     ],
@@ -164,8 +180,11 @@ def _hold_single_run_lock(path: Path = LOCK_PATH) -> object | None:
 
 def run(command: list[str]) -> int:
     print(f"== {' '.join(command)}")
+    start = time.perf_counter()
     try:
-        return subprocess.run(command, cwd=ROOT, check=False).returncode
+        code = subprocess.run(command, cwd=ROOT, check=False).returncode
+        print(f"   step time: {time.perf_counter() - start:.1f}s")
+        return code
     except FileNotFoundError:
         # `check=False` swallows a nonzero exit, but not a missing executable --
         # that's exactly the failure the `memoria --version` gate exists to
@@ -213,6 +232,7 @@ def check_powershell() -> int:
 
 def main() -> int:
     _lock = _hold_single_run_lock()  # held for the whole run; released on exit
+    run_start = time.perf_counter()
     if DOCS_ONLY:
         print("== verify: docs-only scope — lint, product gates, and static tests only")
     for command in _gates_for_run(DOCS_ONLY):
@@ -222,9 +242,13 @@ def main() -> int:
     # The JSON and PowerShell syntax checks test code/config, not documentation.
     extra_steps = () if DOCS_ONLY else (check_json, check_powershell)
     for step in extra_steps:
-        if step() != 0:
+        step_start = time.perf_counter()
+        code = step()
+        print(f"   step time: {time.perf_counter() - step_start:.1f}s")
+        if code != 0:
             print("verify: FAILED", file=sys.stderr)
             return 1
+    print(f"verify: total {time.perf_counter() - run_start:.1f}s")
     print("verify: OK")
     return 0
 

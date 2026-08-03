@@ -145,7 +145,7 @@ def test_split_takes_the_terminal_section_when_the_body_quotes_an_opener() -> No
     assert split_candidates_section(quoted + section) == (quoted, section)
 
 
-def test_write_replaces_wholesale_and_body_survives_100_regenerations(
+def test_write_replaces_wholesale_and_body_survives_repeated_regenerations(
     tmp_path: Path,
 ) -> None:
     vault = workspace(tmp_path)
@@ -160,7 +160,12 @@ def test_write_replaces_wholesale_and_body_survives_100_regenerations(
     )
     assert "%%candidates: run=run-a%%" in hub.read_text(encoding="utf-8")
 
-    for round_number in range(100):
+    # 1733: ten rounds, not a hundred. Every defect this test exists to catch
+    # is per-round — a second candidates block, an eroded curated byte, a
+    # shifted delimiter all break the exact-bytes assert by round 2 — and
+    # nothing in the writer branches on round count, so more rounds add only
+    # gate time (the old N=100 was the suite's single slowest test at 144s).
+    for round_number in range(10):
         call_with_context(
             write_hub_candidates,
             vault,
@@ -174,7 +179,7 @@ def test_write_replaces_wholesale_and_body_survives_100_regenerations(
     assert body_of(hub) == CURATED_BODY + (
         "## Candidates\n"
         "%%candidates: run=run-b%%\n"
-        "- [[digests/b.md]] — round 99 %%run=run-b%%\n"
+        "- [[digests/b.md]] — round 9 %%run=run-b%%\n"
         "%%end-candidates%%\n"
     )
     assert state.concept_check_status(vault, "hubs/framing.md") == "unchecked"

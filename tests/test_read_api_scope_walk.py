@@ -32,7 +32,10 @@ from memoria_vault.engine.surface_contract import SURFACE_ACTIONS
 from memoria_vault.runtime.http_transport import _dispatch
 from tests.floor_lib import ARG_TABLE, _fill, seed_vault
 
-pytestmark = pytest.mark.floor
+# 1733: the xdist_group pins this module to one worker under --dist
+# loadgroup so its module-scoped seed_vault fixture builds once per run
+# instead of once per worker (~30s per rebuild).
+pytestmark = [pytest.mark.floor, pytest.mark.xdist_group("read-api-scope-walk-seed")]
 
 # A syntactically valid, non-root scope matching nothing in the seed.
 VOID_SCOPE = ["scope-walk-void"]
