@@ -92,7 +92,6 @@ reported `unscored`, and a result with no computable field is `reported`.
 | `recall_at_k` | Fraction of the task's gold citekeys (frontmatter `references`) in the top-*k* of `retrieved` (default k=3, the rubrics' "top 3" window; `--k`). | `retrieved` reported and the task has `references`. |
 | `support_rate` | Fraction of `cited` citekeys resolving to a real SQLite catalog Work row. | `cited` reported, non-empty. |
 | `fama_clean` | 1.0 when `claims` avoids superseded claims (`status: superseded` or `superseded_by` set); 0.0 otherwise. Offenders appear in `fama_exposed`. | `claims` reported (`[]` counts: no claims used → clean). |
-| `evidence_clean` | 1.0 if reported draft evidence markers resolve to catalog Works, page spans, and checked block anchors; 0.0 when any marker is unresolved or incomplete. | Draft verification or seeded-error tasks report evidence marker ids. |
 
 The task rubric's `self_score` is recorded per task for comparison but never
 aggregated - only the machine metrics trend.
