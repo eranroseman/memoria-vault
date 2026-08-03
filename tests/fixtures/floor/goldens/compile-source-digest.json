@@ -13,7 +13,7 @@
     ".claude/settings.json": "a5730de394f6",
     ".claude/skills/memoria-copi/SKILL.md": "1caa67b306fc",
     ".codex/hooks.json": "85c2c09640da",
-    ".githooks/pre-commit": "9243c0c6f9b7",
+    ".githooks/pre-commit": "5ef8c17956eb",
     ".gitignore": "758d54f27e60",
     ".mcp.json": "55e2389701bb",
     ".memoria/blobs/source-content/demo-work/content.txt": "96617e77d973",

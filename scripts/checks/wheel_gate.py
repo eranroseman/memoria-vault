@@ -49,7 +49,7 @@ _COPY_SKIP_AT_ROOT = {
 
 # The deepest documented ``python -m`` path (audit §4.1). If this import works
 # from the installed wheel, the whole subsystems subtree shipped.
-_DEEP_MODULE = "memoria_vault.runtime.subsystems.integrity.linter.detectors"
+_DEEP_MODULE = "memoria_vault.runtime.subsystems.telemetry.eval.eval_score"
 
 
 def _expected_members() -> set[str]:

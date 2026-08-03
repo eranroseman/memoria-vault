@@ -136,7 +136,7 @@ export, or egress policy.
 | Fork project Canvas | worker operation `fork-project-canvas` + runtime helper (`fork_project_canvas`) | Copies a rendered `argument.canvas` to an editable `projects/<project>/scratch-<name>.canvas` with the generated banner stripped. The scratch canvas is not a tracked projection and is never regenerated, so the PI's hand edits are never overwritten; `project.canvas.forks` diffs it against the live render and hand-drawn edges graduate through `curate-note-link`. |
 | Run prompt operation | worker operation `<pattern-id>` + runtime helper (`run_prompt_operation`) | Reads checked input refs for package-owned prompt-operation manifests such as `analyze-claims`, records request/journal provenance and the raw model-output hash, neutralizes the rendered model output, and stages one unchecked report note under `.memoria/staging/notes/`. |
 
-## Integrity loop (`memoria_vault.runtime.integrity`)
+## Integrity loop (`memoria_vault.runtime.grounding`)
 
 | Action | Performer | What it does |
 | --- | --- | --- |
@@ -155,7 +155,7 @@ export, or egress policy.
 | Cascade rollback | runtime integrity helper (`cascade_rollback`) | Moves machine-derived downstream Concepts to `.memoria/quarantine/`, appends `resolved` plus inverse `derived` events, and leaves PI-derived downstream Concepts live while flagging them with route `ask`. |
 | Run seeded-error verdict | worker operation `run-seeded-error-verdict` + runtime helper (`run_seeded_error_verdict`) | Runs the seeded structural fixture in a disposable workspace and returns the verdict metrics, probe review batch, and live-only license flag. |
 
-## Linter (`memoria_vault.runtime.subsystems.integrity.linter`)
+## Linter (`memoria_vault.runtime.sweeps.linter`)
 
 The registered detectors (slugs, severities, and what each catches) live in [Linter: detectors and auto-fix](../analysis-and-surfaces/linter.md#the-detectors); every detector is report-only.
 

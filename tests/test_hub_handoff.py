@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from memoria_vault.runtime.subsystems.integrity.linter import hub_handoff
+from memoria_vault.runtime.sweeps.linter import hub_handoff
 
 pytestmark = pytest.mark.contract
 
