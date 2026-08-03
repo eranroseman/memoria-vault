@@ -10,7 +10,7 @@ process.env.TZ = "Asia/Kolkata";
 assert.equal(new Date(0).getHours(), 5, "TZ pin did not take effect");
 
 const require = createRequire(import.meta.url);
-const { sanitizeItemId, validateEvent } = require("../schema.js");
+const { sanitizeItemId, validateEvent } = require("../../../src/memoria_vault/product/workspace_seed/.obsidian/plugins/memoria-obsidian/schema.js");
 
 const base = {
   event_id: "11111111-1111-4111-8111-111111111111",
@@ -550,7 +550,7 @@ const realSetTimeout = globalThis.setTimeout;
 const scheduledDelays = [];
 
 try {
-  const PluginClass = require("../main.js");
+  const PluginClass = require("../../../src/memoria_vault/product/workspace_seed/.obsidian/plugins/memoria-obsidian/main.js");
 
   // 1) Handshake: spawn argv, coordinates in memory only, never persisted.
   const plugin = new PluginClass();

@@ -1,4 +1,4 @@
-"""Only the standalone Obsidian proof-adapter package is allowed."""
+"""The seeded .obsidian tree ships exactly its allowlisted files."""
 
 from pathlib import Path
 
@@ -12,13 +12,6 @@ pytestmark = pytest.mark.static
 
 def test_plugin_scope_doctor_accepts_standalone_repo():
     assert doctor.check(ROOT) == []
-
-
-def test_plugin_scope_doctor_allows_memoria_obsidian_package(tmp_path):
-    root = tmp_path / "repo"
-    (root / "packages/memoria-obsidian").mkdir(parents=True)
-
-    assert doctor.check(root) == []
 
 
 def test_plugin_scope_doctor_allows_ring1_view_preference_files(tmp_path):
@@ -69,33 +62,22 @@ def test_plugin_scope_doctor_still_denies_an_unlisted_memoria_obsidian_file(tmp_
     assert doctor.check(root) == []
 
 
-def test_plugin_scope_doctor_flags_removed_payloads(tmp_path):
+def test_plugin_scope_doctor_flags_a_foreign_plugin_directory(tmp_path):
+    """A second plugin dropped into the seeded .obsidian tree is refused wholesale.
+
+    The retired-payload denylist that used to be asserted here moved to
+    removed_surfaces.json; tests/test_removed_surface_gate.py now pins it.
+    What stays is this doctor's own job: nothing ships under the seed's
+    .obsidian tree unless the allowlist names it, foreign plugin dirs included.
+    """
     root = tmp_path / "repo"
     (root / "src/memoria_vault/product/workspace_seed/.obsidian/plugins/extra").mkdir(parents=True)
     (
         root / "src/memoria_vault/product/workspace_seed/.obsidian/plugins/extra/manifest.json"
     ).write_text("{}", encoding="utf-8")
-    (root / "src/memoria_vault/product/workspace_seed/.memoria/plugins").mkdir(parents=True)
-    (root / "src/memoria_vault/product/workspace_seed/system/scripts").mkdir(parents=True)
-    (root / "src/.obsidian").mkdir(parents=True)
-    (root / "packages/obsidian-plugin").mkdir(parents=True)
-    (root / "src/memoria_vault/obsidian_adapter").mkdir(parents=True)
-    (root / "src/memoria_vault/runtime/agent_client.py").parent.mkdir(parents=True)
-    (root / "src/memoria_vault/runtime/agent_client.py").write_text("", encoding="utf-8")
-    (root / "tests").mkdir(parents=True)
-    (root / "tests/test_memoria_inspector.py").write_text("", encoding="utf-8")
-    (root / "tests/test_obsidian_plugin.py").write_text("", encoding="utf-8")
 
     findings = doctor.check(root)
 
-    assert {finding.split(":", 1)[0] for finding in findings} == {
-        "packages/obsidian-plugin",
-        "src/memoria_vault/obsidian_adapter",
-        "src/memoria_vault/product/workspace_seed/.memoria/plugins",
-        "src/memoria_vault/product/workspace_seed/.obsidian/plugins/extra/manifest.json",
-        "src/memoria_vault/product/workspace_seed/system/scripts",
-        "src/memoria_vault/runtime/agent_client.py",
-        "src/.obsidian",
-        "tests/test_memoria_inspector.py",
-        "tests/test_obsidian_plugin.py",
-    }
+    assert [finding.split(":", 1)[0] for finding in findings] == [
+        "src/memoria_vault/product/workspace_seed/.obsidian/plugins/extra/manifest.json"
+    ]

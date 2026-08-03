@@ -81,8 +81,8 @@ For the full flag list, see [Installer (bootstrap)](docs/reference/system/instal
 - **Python 3.12+ with venv support** for the workspace-local runtime package.
 - Contributor prose hooks provision `cspell` and `markdownlint` through
   pre-commit; no root `node_modules/` install is required.
-- **Node 22** only when developing the optional `packages/memoria-obsidian`
-  adapter package.
+- **Node 22** only when developing the Obsidian adapter (node test suite
+  under `packages/memoria-obsidian`).
 - Provider keys only for the flows you use; replay fixtures and local files cover
   offline development.
 

@@ -36,6 +36,7 @@ from memoria_vault.runtime.vaultio import (
     read_frontmatter,
     safe_read,
     split_frontmatter,
+    unique_path,
     write_frontmatter_doc,
     write_text_durable,
 )
@@ -1511,7 +1512,7 @@ def _quarantine_machine_descendant(
 ) -> None:
     source = vault / output_id
     original_sha = sha256_file(source)
-    quarantine_path = _unique_path(vault / ".memoria/quarantine" / output_id)
+    quarantine_path = unique_path(vault / ".memoria/quarantine" / output_id)
     quarantine_path.parent.mkdir(parents=True, exist_ok=True)
     shutil.move(str(source), quarantine_path)
     restore_source = _restore_pre_materialization(vault, output_id)
@@ -1607,7 +1608,7 @@ def _quarantine_catalog_source(
             """,
             (state.resolve_concept_id(conn, source_ref),),
         )
-    quarantine_path = _unique_path(vault / ".memoria/quarantine" / source_ref)
+    quarantine_path = unique_path(vault / ".memoria/quarantine" / source_ref)
     quarantine_path.parent.mkdir(parents=True, exist_ok=True)
     write_text_durable(
         quarantine_path,
@@ -2279,12 +2280,3 @@ def _prompt_injection_marker(text: str) -> str:
         if marker in normalized:
             return marker
     return ""
-
-
-def _unique_path(path: Path) -> Path:
-    candidate = path
-    index = 1
-    while candidate.exists():
-        candidate = path.with_name(f"{path.stem}-{index}{path.suffix}")
-        index += 1
-    return candidate

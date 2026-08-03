@@ -15,7 +15,8 @@ installer, runtime package, packaged workspace seed, and docs are welcome.
 
 **Requirements:** Git, WSL2 or Linux, Python 3.12+ with venv support, and any
 provider keys needed for the flow you are testing. Node 22 is needed only when
-developing the optional `packages/memoria-obsidian` adapter package.
+developing the Obsidian adapter (its node test suite lives under
+`packages/memoria-obsidian`).
 
 ```bash
 git clone https://github.com/eranroseman/memoria-vault.git

@@ -238,6 +238,66 @@
       "needle": "fm.get(\"lane\")",
       "owner": "runtime policy",
       "reason": "old lane frontmatter lookup is retired"
+    },
+    {
+      "kind": "path",
+      "needle": "src/memoria_vault/product/workspace_seed/.memoria/plugins",
+      "owner": "package seed",
+      "reason": "retired baseline-vault plugin payload must not reappear"
+    },
+    {
+      "kind": "path",
+      "needle": "src/.obsidian",
+      "owner": "package seed",
+      "reason": "retired baseline-vault plugin payload must not reappear"
+    },
+    {
+      "kind": "path",
+      "needle": "packages/obsidian-plugin",
+      "owner": "obsidian adapter",
+      "reason": "retired plugin package name must not reappear"
+    },
+    {
+      "kind": "path",
+      "needle": "tests/test_memoria_inspector.py",
+      "owner": "obsidian adapter",
+      "reason": "retired inspector test must not reappear"
+    },
+    {
+      "kind": "glob",
+      "needle": "src/**/agent_client*",
+      "owner": "core runtime",
+      "reason": "agent-client implementation is excluded from core runtime"
+    },
+    {
+      "kind": "glob",
+      "needle": "src/**/obsidian_adapter*",
+      "owner": "core runtime",
+      "reason": "Obsidian adapter implementation is excluded from core runtime"
+    },
+    {
+      "kind": "glob",
+      "needle": "src/**/obsidian_plugin*",
+      "owner": "core runtime",
+      "reason": "Obsidian plugin implementation is excluded from core runtime"
+    },
+    {
+      "kind": "glob",
+      "needle": "tests/**/test_*agent_client*.py",
+      "owner": "core runtime",
+      "reason": "agent-client tests are excluded with their surface"
+    },
+    {
+      "kind": "glob",
+      "needle": "tests/**/test_*obsidian_adapter*.py",
+      "owner": "core runtime",
+      "reason": "Obsidian adapter tests are excluded with their surface"
+    },
+    {
+      "kind": "glob",
+      "needle": "tests/**/test_*obsidian_plugin*.py",
+      "owner": "core runtime",
+      "reason": "Obsidian plugin tests are excluded with their surface"
     }
   ]
 }

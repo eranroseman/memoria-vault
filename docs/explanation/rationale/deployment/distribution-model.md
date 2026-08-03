@@ -16,9 +16,10 @@ The repo holds four kinds of path, each with a different audience. The
 **bootstrap installers** at the repo root (`scripts/install.ps1` /
 `scripts/install.sh`) are run once by end users. The **workspace seed and
 installable package** under `src/memoria_vault/` are read by the CLI
-initializer, operations, and tests. The **Obsidian adapter source** under
-`packages/memoria-obsidian/` has its built release files copied into the
-workspace seed, so new workspaces install the Memoria plugin by default. And
+initializer, operations, and tests. The **Obsidian adapter source** lives in the
+workspace seed itself (`.obsidian/plugins/memoria-obsidian/`), so new
+workspaces install the Memoria plugin by default;
+`packages/memoria-obsidian/` holds only its node test harness. And
 `docs/` is for developers and contributors only - never shipped at runtime.
 See [On-disk layout](../../../reference/system/on-disk-layout.md) for the
 full path inventory.

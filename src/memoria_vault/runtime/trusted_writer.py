@@ -37,6 +37,7 @@ from memoria_vault.runtime.vaultio import (
     read_frontmatter,
     retired_frontmatter_field_errors,
     split_frontmatter,
+    unique_path,
     universal_concept_frontmatter_errors,
     write_bytes_durable,
     write_frontmatter_doc,
@@ -1040,7 +1041,7 @@ def quarantine_untraced(
 
         concept_type = _concept_type_for_quarantine(vault, contract, target)
         quarantined_sha = original_sha
-        quarantine_path = _unique_quarantine_path(vault / ".memoria/quarantine" / target)
+        quarantine_path = unique_path(vault / ".memoria/quarantine" / target)
         quarantine_path.parent.mkdir(parents=True, exist_ok=True)
         shutil.move(str(source_path), quarantine_path)
         if concept_type:
@@ -1565,15 +1566,6 @@ def _head_sha256(vault: Path, target: str) -> str:
     if proc.returncode:
         return EMPTY_SHA256
     return sha256_bytes(proc.stdout)
-
-
-def _unique_quarantine_path(path: Path) -> Path:
-    candidate = path
-    index = 1
-    while candidate.exists():
-        candidate = path.with_name(f"{path.stem}-{index}{path.suffix}")
-        index += 1
-    return candidate
 
 
 def _commit_relpath(vault: Path, path: str | Path) -> str:

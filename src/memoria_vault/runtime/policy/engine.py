@@ -11,7 +11,7 @@ from memoria_vault.runtime.subsystems.lib import loudness
 from memoria_vault.runtime.time import now_iso
 
 from .audit import AUDIT_RELPATH, append_audit, sha256_file
-from .decision import compose_skill_deny, decide, is_review_gated
+from .decision import decide, is_review_gated
 from .model import ActorPolicy
 from .paths import MUTATING_ACTIONS, normalize_path
 from .workspace import load_actor_policy
@@ -23,23 +23,11 @@ class PolicyEngine:
     def __init__(self, workspace: Path):
         self.workspace = workspace
         self._policy_cache: dict[str, ActorPolicy] = {}
-        self._session_skill_deny: dict[str, list[str]] = {}
 
     def policy(self, actor: str) -> ActorPolicy:
         if actor not in self._policy_cache:
             self._policy_cache[actor] = load_actor_policy(self.workspace, actor)
         return self._policy_cache[actor]
-
-    def set_session_skill(self, request_id: str, skill_policy: dict | None) -> None:
-        """Register one loaded skill's additive write-deny policy for a session."""
-        extra = compose_skill_deny(skill_policy)
-        if extra:
-            self._session_skill_deny[request_id] = extra
-        else:
-            self._session_skill_deny.pop(request_id, None)
-
-    def clear_session_skill(self, request_id: str) -> None:
-        self._session_skill_deny.pop(request_id, None)
 
     def _audit_traversal(
         self, actor: str, action: str, path: str, request_id: str, message: str
@@ -138,8 +126,7 @@ class PolicyEngine:
         if review_gated and (denial := self._journal_honored_dispositions()):
             return denial
 
-        skill_deny = self._session_skill_deny.get(request_id)
-        dec = decide(actor, action, npath, policy, flags=flags, skill_deny_write=skill_deny)
+        dec = decide(actor, action, npath, policy, flags=flags)
 
         before_hash = None
         if dec.decision in ("allow", "allow_with_log") and action in MUTATING_ACTIONS:

@@ -12,7 +12,6 @@ from .decision import (
     AUTO_FIX_ALLOWED_CLASSES,
     AUTO_FIX_DENY_CLASSES,
     AUTO_FIX_DRY_RUN_CLASSES,
-    compose_skill_deny,
     decide,
     is_review_gated,
 )
@@ -49,7 +48,6 @@ __all__ = [
     "Decision",
     "PolicyEngine",
     "append_audit",
-    "compose_skill_deny",
     "decide",
     "glob_to_regex",
     "is_review_gated",
