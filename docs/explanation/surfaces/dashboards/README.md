@@ -32,10 +32,10 @@ are the **PI's** unfinished thinking; loose ends and Drift watch are the
 
 ## Dashboard map
 
-- [Daily glance](daily-glance/) — daily attention
-- [Synthesis agenda](synthesis-agenda/) — unfinished thinking
-- [Structural health](structural-health/) — vault integrity
-- [Operational health](operational-health/) — runtime evidence
+- [Daily glance](daily-glance.md) — daily attention
+- [Synthesis agenda](synthesis-agenda.md) — unfinished thinking
+- [Structural health](structural-health.md) — vault integrity
+- [Operational health](operational-health.md) — runtime evidence
 
 ## Related
 
