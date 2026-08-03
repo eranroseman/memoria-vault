@@ -594,13 +594,13 @@ def test_cli_project_gaps_runs_gap_analysis_request(
     assert rc == 0
     assert output["ok"] is True
     gaps = {gap["topic"]: gap for gap in output["result"]["gaps"]}
-    assert gaps["catalog-only"]["gap_type"] == "undigested"
+    assert gaps["catalog-only"]["kind"] == "undigested"
     assert gaps["catalog-only"]["kind"] == "undigested"
     assert gaps["catalog-only"]["why"]
     assert gaps["catalog-only"]["next_actions"]
     assert gaps["catalog-only"]["source_count"] == 1
-    assert gaps["sleep"]["gap_type"] == "undigested"
-    assert gaps["new area"]["gap_type"] == "new-topic"
+    assert gaps["sleep"]["kind"] == "undigested"
+    assert gaps["new area"]["kind"] == "new-topic"
     assert output["result"]["project_path"] == "projects/project-alpha/project.md"
     assert output["result"]["argument_gap_count"] == 2
     assert output["result"]["summary"]["total"] == output["result"]["gap_count"]
@@ -609,10 +609,10 @@ def test_cli_project_gaps_runs_gap_analysis_request(
     assert {
         gap["finding_kind"]
         for gap in output["result"]["gaps"]
-        if gap["gap_type"].startswith("argument-")
+        if gap["kind"].startswith("argument-")
     } == {"thin-argument", "conflict"}
     assert {
-        gap["kind"] for gap in output["result"]["gaps"] if gap["gap_type"].startswith("argument-")
+        gap["kind"] for gap in output["result"]["gaps"] if gap["kind"].startswith("argument-")
     } == {"argument-unsupported", "argument-fragile"}
     with state.connect(workspace) as conn:
         columns = {row["name"] for row in conn.execute("PRAGMA table_info(operation_requests)")}

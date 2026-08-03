@@ -50,7 +50,7 @@ def workspace(tmp_path: Path) -> Path:
 
 def _assert_gap_contract(gap: dict[str, object], kind: str) -> None:
     assert gap["kind"] == kind
-    assert gap["gap_type"] == kind
+    assert gap["kind"] == kind
     assert gap["severity"] in {"high", "medium", "low"}
     assert gap["impact"] in {0, 1, 2}
     assert gap["confidence"] in {0, 1, 2}
@@ -137,15 +137,15 @@ def test_analyze_gaps_names_mismatches_and_seed_terms(tmp_path: Path) -> None:
 
     gaps = {gap["topic"]: gap for gap in result["gaps"]}
     assert set(gaps) == {"sleep", "grounds", "new area"}
-    assert gaps["sleep"]["gap_type"] == "undigested"
+    assert gaps["sleep"]["kind"] == "undigested"
     assert gaps["sleep"]["source_count"] == 1
     assert gaps["sleep"]["digest_count"] == 1
     assert gaps["sleep"]["note_count"] == 0
     _assert_gap_contract(gaps["sleep"], "undigested")
-    assert gaps["grounds"]["gap_type"] == "under-grounded"
+    assert gaps["grounds"]["kind"] == "under-grounded"
     assert gaps["grounds"]["note_count"] == 2
     _assert_gap_contract(gaps["grounds"], "under-grounded")
-    assert gaps["new area"]["gap_type"] == "new-topic"
+    assert gaps["new area"]["kind"] == "new-topic"
     _assert_gap_contract(gaps["new area"], "new-topic")
     assert result["summary"]["total"] == 3
     assert result["summary"]["by_kind"]["under-grounded"] == 1
@@ -215,15 +215,15 @@ def test_analyze_gaps_counts_checked_sqlite_catalog_source_terms(tmp_path: Path)
 
     gaps = {gap["topic"]: gap for gap in result["gaps"]}
     assert set(gaps) == {"Graph-only Keyword", "Graph-only Topic", "catalog-only"}
-    assert gaps["catalog-only"]["gap_type"] == "undigested"
+    assert gaps["catalog-only"]["kind"] == "undigested"
     assert gaps["catalog-only"]["source_count"] == 1
     assert gaps["catalog-only"]["digest_count"] == 0
     assert gaps["catalog-only"]["note_count"] == 0
-    assert gaps["Graph-only Topic"]["gap_type"] == "undigested"
+    assert gaps["Graph-only Topic"]["kind"] == "undigested"
     assert gaps["Graph-only Topic"]["source_count"] == 1
     assert gaps["Graph-only Topic"]["digest_count"] == 0
     assert gaps["Graph-only Topic"]["note_count"] == 0
-    assert gaps["Graph-only Keyword"]["gap_type"] == "undigested"
+    assert gaps["Graph-only Keyword"]["kind"] == "undigested"
     assert gaps["Graph-only Keyword"]["source_count"] == 1
     assert gaps["Graph-only Keyword"]["digest_count"] == 0
     assert gaps["Graph-only Keyword"]["note_count"] == 0
@@ -282,7 +282,7 @@ def test_analyze_gaps_uses_search_graph_for_discovery_candidates(tmp_path: Path)
     )
 
     gap = {row["topic"]: row for row in result["gaps"]}["rare alpha"]
-    assert gap["gap_type"] == "undigested"
+    assert gap["kind"] == "undigested"
     _assert_gap_contract(gap, "undigested")
     assert gap["retrieval_engine"] == "bm25"
     assert gap["retrieval_sources"][0]["path"] == "fulltexts/source-alpha.md"
@@ -784,11 +784,11 @@ def test_analyze_gaps_seeds_project_scope_and_thesis_terms(tmp_path: Path) -> No
     result = analyze_gaps(tmp_path, project_path="project-alpha", dense_threshold=1)
 
     gaps = {gap["topic"]: gap for gap in result["gaps"]}
-    assert gaps["sensemaking"]["gap_type"] == "new-topic"
-    assert gaps["qualitative"]["gap_type"] == "new-topic"
-    assert gaps["patient-generated-data"]["gap_type"] == "under-grounded"
+    assert gaps["sensemaking"]["kind"] == "new-topic"
+    assert gaps["qualitative"]["kind"] == "new-topic"
+    assert gaps["patient-generated-data"]["kind"] == "under-grounded"
     assert gaps["patient-generated-data"]["note_count"] == 1
-    assert gaps["care coordination"]["gap_type"] == "under-grounded"
+    assert gaps["care coordination"]["kind"] == "under-grounded"
 
 
 def _throttled_gap_vault(tmp_path: Path) -> Path:

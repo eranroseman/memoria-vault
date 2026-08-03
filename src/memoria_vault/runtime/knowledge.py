@@ -988,7 +988,6 @@ def _gap_payload(
     score = impact * confidence * actionability
     out = dict(row)
     out["kind"] = kind
-    out["gap_type"] = kind
     out["target"] = target
     out["why"] = why
     out["next_actions"] = [action for action in next_actions if str(action).strip()]
@@ -1018,7 +1017,7 @@ def _gap_summary(gaps: list[dict[str, Any]]) -> dict[str, Any]:
     blocking = 0
     advisories = 0
     for gap in gaps:
-        kind = str(gap.get("kind") or gap.get("gap_type") or "")
+        kind = str(gap.get("kind") or "")
         if kind in by_kind:
             by_kind[kind] += 1
         severity = str(gap.get("severity") or "low")

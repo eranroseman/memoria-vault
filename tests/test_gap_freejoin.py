@@ -61,7 +61,7 @@ def test_analyze_gaps_surfaces_shared_entity_freejoin(
     result = analyze_gaps(tmp_path)
 
     gap = {row["topic"]: row for row in result["gaps"]}[target_title]
-    assert gap["gap_type"] == "undigested"
+    assert gap["kind"] == "undigested"
     assert gap["source_count"] == 2
     assert gap["digest_count"] == 0
     assert gap["note_count"] == 0
