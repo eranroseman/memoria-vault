@@ -67,8 +67,11 @@ def _unresolvable(literal: str) -> str | None:
 
 
 def test_every_dotted_literal_resolves() -> None:
+    paths = sorted((ROOT / "tests").rglob("*.py"))
+    assert paths, "dotted-literal scan found no files; ROOT is wrong"
+
     failures = []
-    for path in sorted((ROOT / "tests").rglob("test_*.py")):
+    for path in paths:
         if path.name == Path(__file__).name:
             continue
         for literal, lineno in _call_string_literals(path):
@@ -93,7 +96,7 @@ def test_the_resolver_accepts_a_live_module_and_attribute() -> None:
     assert _unresolvable("memoria_vault.runtime.state.SCHEMA_VERSION") is None
 
 
-def test_the_collector_sees_call_arguments_not_docstrings() -> None:
+def test_the_collector_sees_call_arguments_not_docstrings(tmp_path: Path) -> None:
     """A dotted literal sitting in a docstring must not be collected.
 
     The docstring text below is deliberately a *pure* dotted literal (no
@@ -109,10 +112,7 @@ def test_the_collector_sees_call_arguments_not_docstrings() -> None:
         '"""memoria_vault.runtime.in_a_docstring"""\n'
         'monkeypatch.setitem(sys.modules, "memoria_vault.runtime.telemetry", None)\n'
     )
-    probe = Path(__file__).parent / "_dotted_probe.py"
+    probe = tmp_path / "_dotted_probe.py"
     probe.write_text(src, encoding="utf-8")
-    try:
-        literals = [text for text, _ in _call_string_literals(probe)]
-    finally:
-        probe.unlink()
+    literals = [text for text, _ in _call_string_literals(probe)]
     assert literals == ["memoria_vault.runtime.telemetry"]
