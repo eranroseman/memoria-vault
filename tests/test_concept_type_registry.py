@@ -14,7 +14,7 @@ from importlib.resources import files
 
 import pytest
 
-from memoria_vault.runtime.subsystems.lib import schema
+from memoria_vault.runtime.vocabulary import schema
 
 pytestmark = pytest.mark.contract
 

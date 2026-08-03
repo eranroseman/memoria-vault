@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Any
 
 from memoria_vault.runtime import state
+from memoria_vault.runtime.attention.inbox import write_finding, write_work_prompt
 from memoria_vault.runtime.content_security import (
     markdown_code_span,
     neutralize_untrusted_markdown,
@@ -23,9 +24,6 @@ from memoria_vault.runtime.jsonl import append_jsonl
 from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.audit import EMPTY_SHA256, sha256_bytes, sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path
-from memoria_vault.runtime.subsystems.lib import schema as schema_lib
-from memoria_vault.runtime.subsystems.lib.edges import parse_typed_wikilinks
-from memoria_vault.runtime.subsystems.lib.inbox import write_finding, write_work_prompt
 from memoria_vault.runtime.time import now_iso
 from memoria_vault.runtime.vaultio import (
     apply_universal_concept_frontmatter,
@@ -42,6 +40,8 @@ from memoria_vault.runtime.vaultio import (
     write_bytes_durable,
     write_frontmatter_doc,
 )
+from memoria_vault.runtime.vocabulary import schema as schema_lib
+from memoria_vault.runtime.vocabulary.edges import parse_typed_wikilinks
 
 EVENT_DERIVED = "derived"
 EVENT_OBSERVED_EXTERNAL_EDIT = "observed_external_edit"

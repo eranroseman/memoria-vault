@@ -66,7 +66,7 @@ from pathlib import Path
 from typing import Any
 
 from memoria_vault.runtime import state
-from memoria_vault.runtime.subsystems.lib.loudness import attention_status, routing_class
+from memoria_vault.runtime.attention.loudness import attention_status, routing_class
 from memoria_vault.runtime.time import now_iso
 from memoria_vault.runtime.trusted_writer import (
     EVENT_RESOLVED,

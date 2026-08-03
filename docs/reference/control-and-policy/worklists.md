@@ -7,7 +7,7 @@ grand_parent: Reference
 
 # Worklists
 
-`memoria_vault.runtime.subsystems.lib.worklists` turns a high-cardinality
+`memoria_vault.runtime.attention.worklists` turns a high-cardinality
 report into one file-backed batch review surface. The operation writes many
 `projection: worklist-item` rows and raises exactly one aggregate Inbox
 `attention_kind: work-prompt` projection for the PI.
@@ -15,7 +15,7 @@ report into one file-backed batch review surface. The operation writes many
 ## Command
 
 ```bash
-python3 -m memoria_vault.runtime.subsystems.lib.worklists --vault <vault> --report report.json --title "Batch title"
+python3 -m memoria_vault.runtime.attention.worklists --vault <vault> --report report.json --title "Batch title"
 ```
 
 | Option | Contract |

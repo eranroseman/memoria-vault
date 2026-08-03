@@ -14,6 +14,7 @@ from typing import Any
 import yaml
 
 from memoria_vault.runtime import state
+from memoria_vault.runtime.attention import inbox
 from memoria_vault.runtime.capabilities import read_capability_manifest
 from memoria_vault.runtime.content_security import (
     neutralize_untrusted_markdown,
@@ -23,7 +24,6 @@ from memoria_vault.runtime.hub_candidates import candidate_entry, write_hub_cand
 from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.audit import sha256_bytes, sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path, require_policy_path
-from memoria_vault.runtime.subsystems.lib import inbox
 from memoria_vault.runtime.trusted_writer import (
     OperationContext,
     append_explicit_journal_event,

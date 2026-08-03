@@ -18,8 +18,8 @@ from memoria_vault.runtime.propagation import (
     consequence_closure,
     hop_consequence,
 )
-from memoria_vault.runtime.subsystems.lib.edges import EDGE_RELATIONS
 from memoria_vault.runtime.trusted_writer import append_explicit_journal_event
+from memoria_vault.runtime.vocabulary.edges import EDGE_RELATIONS
 
 pytestmark = pytest.mark.runtime
 

@@ -30,10 +30,10 @@ import pytest
 from memoria_vault import __version__
 from memoria_vault.engine import api
 from memoria_vault.runtime import state
+from memoria_vault.runtime.attention import inbox
 from memoria_vault.runtime.http_transport import _dispatch, make_http_server
-from memoria_vault.runtime.subsystems.lib import inbox
-from memoria_vault.runtime.subsystems.lib.edges import LINK_RELATIONS, concept_edge_path_records
 from memoria_vault.runtime.vaultio import read_frontmatter
+from memoria_vault.runtime.vocabulary.edges import LINK_RELATIONS, concept_edge_path_records
 from tests.cli_test_helpers import write_runner_provider_config
 from tests.helpers import ROOT, init_cli_workspace, write_checked_note
 

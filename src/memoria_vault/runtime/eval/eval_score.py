@@ -61,10 +61,10 @@ import sys
 from pathlib import Path
 
 from memoria_vault.runtime import state
-from memoria_vault.runtime.jsonl import append_jsonl
-from memoria_vault.runtime.subsystems.telemetry.eval import (
+from memoria_vault.runtime.eval import (
     eval_dispatch,  # sibling: local gold-task loader, frontmatter parser, quarter_of
 )
+from memoria_vault.runtime.jsonl import append_jsonl
 
 METRICS_RELDIR = "system/metrics/eval"
 RUNS_LOG = "runs.jsonl"

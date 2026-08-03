@@ -7,7 +7,7 @@ grand_parent: Reference
 
 # Sweeps
 
-Deterministic maintenance passes under `memoria_vault.runtime.subsystems`.
+Deterministic maintenance passes under `memoria_vault.runtime.sweeps`.
 Retraction sweeps surface review work through Inbox alert projections; they do
 not directly promote Concept files.
 

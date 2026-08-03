@@ -47,9 +47,12 @@ _COPY_SKIP_AT_ROOT = {
     ".ruff_cache",
 }
 
-# The deepest documented ``python -m`` path (audit §4.1). If this import works
-# from the installed wheel, the whole subsystems subtree shipped.
-_DEEP_MODULE = "memoria_vault.runtime.subsystems.telemetry.eval.eval_score"
+# The deepest ``python -m`` path the docs publish (audit §4.1): three nested
+# packages below ``memoria_vault``. ``_check_contents`` proves the bytes are in
+# the zip; this proves the deepest published path still *imports* from the
+# install -- package chain resolved, module-level imports satisfied -- which a
+# file-presence check cannot say.
+_DEEP_MODULE = "memoria_vault.runtime.sweeps.linter.detectors"
 
 
 def _expected_members() -> set[str]:

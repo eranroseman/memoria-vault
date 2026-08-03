@@ -10,7 +10,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from memoria_vault.runtime.subsystems.processing.project.structural_impact_graph import (
+from memoria_vault.runtime.project.structural_impact_graph import (
     RELATIONS,
     Edge,
     Note,

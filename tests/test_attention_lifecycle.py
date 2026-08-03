@@ -15,8 +15,8 @@ import pytest
 from memoria_vault import cli
 from memoria_vault.engine import api as engine_api
 from memoria_vault.runtime import state, worker
-from memoria_vault.runtime.subsystems.lib import inbox as inbox_lib
-from memoria_vault.runtime.subsystems.lib import lifecycle, loudness
+from memoria_vault.runtime.attention import inbox as inbox_lib
+from memoria_vault.runtime.attention import lifecycle, loudness
 from memoria_vault.runtime.trusted_writer import append_explicit_journal_event
 from memoria_vault.runtime.vaultio import frontmatter_doc, read_frontmatter, split_frontmatter
 from tests.helpers import git, init_cli_workspace, init_git

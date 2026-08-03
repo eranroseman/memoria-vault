@@ -14,8 +14,8 @@ from memoria_vault.engine import api as engine_api
 from memoria_vault.engine.empirical_events import READ_EVENT_SCHEMA
 from memoria_vault.engine.surface_contract import actions_by_id
 from memoria_vault.runtime import mcp_transport, retrieval_pipeline, state, worker
+from memoria_vault.runtime.attention.inbox import write_finding
 from memoria_vault.runtime.mcp_transport import make_mcp_app
-from memoria_vault.runtime.subsystems.lib.inbox import write_finding
 from tests.helpers import init_cli_workspace, write_checked_note
 
 pytestmark = pytest.mark.contract

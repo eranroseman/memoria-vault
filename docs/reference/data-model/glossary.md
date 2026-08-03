@@ -150,7 +150,7 @@ a surface to display. Not a separate durable type — it reads the same
 events](../control-and-policy/empirical-events.md#enum-values) mirrors the
 same roster on empirical event payloads). `block` is pull-only: an open block
 card pauses delegation and review-gated promotion until the PI resolves it
-(`src/memoria_vault/runtime/subsystems/lib/loudness.py`).
+(`src/memoria_vault/runtime/attention/loudness.py`).
 
 **Concept** — the umbrella name for every typed document Memoria manages
 (`note`, `hub`, `project`, `digest`, `fulltext`, `code-artifact`): YAML

@@ -1356,7 +1356,7 @@ def test_analyze_project_argument_ignores_a_link_target_that_escapes_its_folder(
 ) -> None:
     """The report follows only normalized local targets — `notes/../thesis.md` is not one.
 
-    Before the parsers converged on `lib.edges`, this note's link resolved back to
+    Before the parsers converged on `vocabulary.edges`, this note's link resolved back to
     `notes/thesis.md` and counted as an edge, while the validator rejected the same
     string as escaping the workspace.
     """
@@ -1961,7 +1961,7 @@ def test_canvas_edge_labels_conform_to_link_relations(tmp_path: Path) -> None:
     the canvas and the frontmatter graph are held to one enum — and it is what
     lets the fork diff key on `(source, label, target)` at all.
     """
-    from memoria_vault.runtime.subsystems.lib.edges import LINK_RELATIONS
+    from memoria_vault.runtime.vocabulary.edges import LINK_RELATIONS
 
     _md(
         tmp_path / "projects/project-alpha/project.md",

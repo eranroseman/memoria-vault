@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 from memoria_vault.runtime import state
-from memoria_vault.runtime.subsystems.lib import schema
+from memoria_vault.runtime.vocabulary import schema
 
 pytestmark = pytest.mark.contract
 
