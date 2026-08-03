@@ -4,7 +4,7 @@
 
 **Goal:** Make `scripts/verify` the only living statement of the gate roster — delete the stale prose mirrors, encode docs-only scope as data instead of substring matching, and stop the gitleaks CI job from installing tooling it never uses.
 
-**Architecture:** Three independent, behavior-preserving changes from the 2026-08-03 rethink-audit of the test suite / pre-commit / CI pipeline (migrate steps 1–3). Task 1 deletes roster/marker restatements from `tests/README.md` and `CONTRIBUTING.md` (both currently contradict the code: they say the gate runs `static`/`unit`/`contract` only, while `scripts/verify` runs everything except `live` and `slow`). Task 2 changes `GATES` from `list[list[str]]` to a list of small `Gate` entries carrying a `docs` flag, deleting the `_DOCS_SKIP` substring tuple; `_gates_for_run(docs_only)` keeps its exact signature and output. Task 3 narrows the gitleaks workflow's install line to just the pinned `pre-commit`, keeping `requirements-dev.txt` as the single pin source.
+**Architecture:** Three independent, behavior-preserving changes from the 2026-08-03 rethink-audit of the test suite / pre-commit / CI pipeline (migrate steps 1–3). Task 1 deletes roster/marker restatements from `tests/README.md` and `CONTRIBUTING.md` (both currently contradict the code: they say the gate runs `static`/`unit`/`contract` only, while `scripts/verify` runs every level except `live` — `slow` is orthogonal to level, so slow tests run as part of their level). Task 2 changes `GATES` from `list[list[str]]` to a list of small `Gate` entries carrying a `docs` flag, deleting the `_DOCS_SKIP` substring tuple; `_gates_for_run(docs_only)` keeps its exact signature and output. Task 3 narrows the gitleaks workflow's install line to just the pinned `pre-commit`, keeping `requirements-dev.txt` as the single pin source.
 
 **Tech Stack:** Python 3.12 stdlib (`dataclasses`), pytest (`tests/test_verify_script.py`, marker `static`), pre-commit-managed lint, GitHub Actions YAML.
 
@@ -29,7 +29,7 @@
 - Modify: `CONTRIBUTING.md` (Testing and verification section, lines 57–62)
 - Modify: `scripts/verify` (roster section: `Gate` dataclass, `GATES`, `_gates_for_run`, delete `_DOCS_SKIP`)
 - Modify: `tests/test_verify_script.py` (three joins over `GATES`, one new default-scope test)
-- Modify: `.github/workflows/gitleaks.yml` (one `run:` line)
+- Modify: `.github/workflows/gitleaks.yml` (the `Install pre-commit` step's `run:` block)
 
 No new files. Nothing else in the repo references `GATES`, `_DOCS_SKIP`, or `_gates_for_run` (verified by repo-wide grep; the only reader outside `scripts/verify` is `tests/test_verify_script.py`, via `runpy`, not import).
 
@@ -141,7 +141,8 @@ git commit -m "docs: point level-selection prose at PYTEST_MARKERS instead of re
 
 tests/README.md and CONTRIBUTING.md still described the pre-alpha.21 gate
 (static/unit/contract only, package/runtime 'never in the gate');
-scripts/verify has run everything except live and slow since the widening.
+scripts/verify has run every level except live since the widening, and
+slow is orthogonal to level, so slow tests run as part of their level.
 Delete the restatements rather than correct them — the roster's one
 legitimate mirror is tests/test_verify_script.py.
 
@@ -384,6 +385,12 @@ Replace with:
         run: python -m pip install --quiet "$(grep -E '^pre-commit==' requirements-dev.txt)"
 ```
 
+> **Superseded during execution.** Review showed this single line's zero-match
+> case is silent: `grep` failing inside `"$(...)"` does not trip `-e`, and
+> `pip install ""` exits 0 on current pip, so the job would die two steps later
+> with a misleading `pre-commit: command not found`. The shipped form guards the
+> substitution explicitly — see `.github/workflows/gitleaks.yml`.
+
 Do not touch anything else in the file — the workflow `name:`, job id, and step order are matched by branch protection and the pre-commit cache key.
 
 - [ ] **Step 2: Verify the grep resolves to exactly one requirement**
@@ -427,8 +434,9 @@ Rethink-audit (2026-08-03) migrate steps 1-3.
 
 - docs: tests/README.md + CONTRIBUTING.md pointed at the pre-alpha.21 roster
   (static/unit/contract, package/runtime "never in the gate") while
-  scripts/verify runs everything except live and slow. Restatements deleted;
-  prose now points at PYTEST_MARKERS.
+  scripts/verify runs every level except live (slow is orthogonal to level,
+  so slow tests run as part of their level). Restatements deleted; prose now
+  points at PYTEST_MARKERS.
 - verify: GATES entries carry docs-only scope as a Gate.docs field; the
   _DOCS_SKIP substring tuple is gone. _gates_for_run signature and output
   unchanged (pinned by test_docs_only_scope_narrows_the_roster).

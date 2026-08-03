@@ -29,7 +29,7 @@ jobs:
           # accepts as a no-op, pushing the failure to the next step as a
           # misleading "pre-commit: command not found".
           pin="$(grep -E '^pre-commit==' requirements-dev.txt)" || {
-            echo "::error::no pre-commit== pin found in requirements-dev.txt"
+            echo "::error::no readable pre-commit== pin in requirements-dev.txt"
             exit 1
           }
           python -m pip install --quiet "$pin"

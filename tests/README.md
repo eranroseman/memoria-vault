@@ -22,6 +22,7 @@ deployed vault carries no test code.
 | `contract` | CLI, operations, capability manifests, concept writers, projections |
 | `package` | wheel build/install smoke, e2e smoke, and package-facing helper tests |
 | `runtime` | worker loops, recovery, idempotence, state transitions, long checks |
+| `floor` | promotion-floor sweep — every command x every API on the seeded ephemeral vault |
 | `live` | real external services/providers |
 
 Which levels the gate runs is owned by `PYTEST_MARKERS` in `scripts/verify` —

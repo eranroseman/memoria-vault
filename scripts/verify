@@ -8,12 +8,12 @@ fail) a check whose local tool is absent (e.g. PowerShell), and exits nonzero
 on the first hard failure.
 
 Docs-only narrowing (CI only): when `VERIFY_DOCS_ONLY=1`, the roster drops the
-gates a docs-only diff (`*.md` / `design-history/`) provably cannot affect —
-the unit/contract tests, the e2e smoke, `compileall`, `bash -n`, and the
-JSON/PowerShell syntax checks — and narrows pytest to the `static` marker
-(schema, docs-refs, design-history, spell). CI sets this only for PRs whose
-whole diff is documentation; local runs and the post-merge `main` run always
-execute the full roster.
+entries marked `docs=False` below — the gates a docs-only diff (`*.md` /
+`design-history/`) provably cannot affect — narrows pytest to the `static`
+marker (schema, docs-refs, design-history, spell), and skips the JSON and
+PowerShell syntax checks, which are not roster entries. CI sets this only for
+PRs whose whole diff is documentation; local runs and the post-merge `main` run
+always execute the full roster.
 
 One run per checkout: the e2e smoke resets `<checkout>/test-vault` outright, so
 a second concurrent gate destroys the first one's fixture mid-run. See
@@ -39,7 +39,8 @@ LOCK_PATH = ROOT / ".verify.lock"
 # CI sets this to "1" only for provably docs-only PRs (see the module docstring).
 DOCS_ONLY = os.environ.get("VERIFY_DOCS_ONLY") == "1"
 
-# Every registered marker except `live` and `slow`, which the gate never runs.
+# Every registered level marker except `live`. `slow` is orthogonal — it grades
+# speed within a level, so slow tests ride along with their level's disjunct.
 PYTEST_MARKERS = "static or unit or contract or runtime or package or floor"
 
 # 1733: N worktrees each taking `-n auto` = all cores thrash each other (same
@@ -254,7 +255,9 @@ def main() -> int:
     _lock = _hold_single_run_lock()  # held for the whole run; released on exit
     run_start = time.perf_counter()
     if DOCS_ONLY:
-        print("== verify: docs-only scope — lint, product gates, and static tests only")
+        print(
+            "== verify: docs-only scope — lint, the docs-relevant product gates, and static tests"
+        )
     for command in _gates_for_run(DOCS_ONLY):
         if run(command) != 0:
             print("verify: FAILED", file=sys.stderr)
