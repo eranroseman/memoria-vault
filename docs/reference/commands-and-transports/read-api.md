@@ -43,7 +43,7 @@ CLI, [local HTTP transport](local-http-transport.md), and
 | --- | --- |
 | `read_slice(workspace, project_path)` | Reads `outline.md`, checked members, and computed in-slice links. |
 | `read_draft(workspace, project_path)` | Reads `draft.md`, evidence markers, and derived evidence rows. |
-| `read_canvas_forks(workspace, project_path, read_scope=None)` | Reads the fork status of a project's `argument.canvas`. |
+| `read_canvas_forks(workspace, project_path, read_scope=None)` | Reads a project's canvas fork status: each `scratch-*.canvas` fork diffed against a live re-render, never the on-disk `argument.canvas`. |
 | `compose_draft(...)` | Queues `compose-project-draft`. |
 | `verify_draft(...)` | Queues `verify-project-draft`. The result reports draft readiness in `ready`; the envelope's `ok` reports only whether the operation ran. |
 | `promote_draft_passage(...)` | Queues `promote-draft-passage`. |
