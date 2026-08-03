@@ -35,13 +35,13 @@ import pytest
 from memoria_vault.cli import main
 from memoria_vault.engine import api as engine_api
 from memoria_vault.runtime import propagation
+from memoria_vault.runtime.attention.inbox import write_finding
 from memoria_vault.runtime.attention_config import (
     DEFAULT_ORDER_BY,
     attention_order_by,
     normalize_order_by,
     producer_mode,
 )
-from memoria_vault.runtime.subsystems.lib.inbox import write_finding
 from memoria_vault.runtime.vaultio import (
     frontmatter_doc,
     split_frontmatter,

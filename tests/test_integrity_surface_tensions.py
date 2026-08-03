@@ -6,12 +6,11 @@ from pathlib import Path
 import pytest
 
 from memoria_vault.runtime import state
+from memoria_vault.runtime.grounding import NLI_NOTENOUGHINFO, NLI_REFUTED
+from memoria_vault.runtime.grounding import resolve_attention as _resolve_attention
+from memoria_vault.runtime.grounding import surface_tensions as _surface_tensions
 from memoria_vault.runtime.indexing import rebuild_passage_index_explicit
-from memoria_vault.runtime.integrity import NLI_NOTENOUGHINFO, NLI_REFUTED
-from memoria_vault.runtime.integrity import resolve_attention as _resolve_attention
-from memoria_vault.runtime.integrity import surface_tensions as _surface_tensions
 from memoria_vault.runtime.policy.audit import sha256_file
-from memoria_vault.runtime.subsystems.lib.edges import concept_edge_path_records
 from memoria_vault.runtime.trusted_writer import (
     promote_checked as _promote_checked,
 )
@@ -19,6 +18,7 @@ from memoria_vault.runtime.trusted_writer import (
     stage_concept as _stage_concept,
 )
 from memoria_vault.runtime.vaultio import read_frontmatter
+from memoria_vault.runtime.vocabulary.edges import concept_edge_path_records
 from tests.helpers import call_with_context, copy_memoria_dirs, init_git
 
 pytestmark = pytest.mark.runtime

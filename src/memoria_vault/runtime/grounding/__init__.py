@@ -1,4 +1,4 @@
-"""Integrity check routing and trace rollback helpers."""
+"""Grounding check routing and trace rollback helpers."""
 
 from __future__ import annotations
 
@@ -13,12 +13,11 @@ from pathlib import Path
 from typing import Any
 
 from memoria_vault.runtime import capture, propagation, state
+from memoria_vault.runtime.attention.inbox import write_work_prompt
 from memoria_vault.runtime.backup import local_backup_status
 from memoria_vault.runtime.policy.audit import EMPTY_SHA256, sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path
 from memoria_vault.runtime.read_barrier import is_consumable_checked_file
-from memoria_vault.runtime.subsystems.lib import schema as schema_lib
-from memoria_vault.runtime.subsystems.lib.inbox import write_work_prompt
 from memoria_vault.runtime.time import now_iso
 from memoria_vault.runtime.trusted_writer import (
     EVENT_CHECK_FIRED,
@@ -40,6 +39,7 @@ from memoria_vault.runtime.vaultio import (
     write_frontmatter_doc,
     write_text_durable,
 )
+from memoria_vault.runtime.vocabulary import schema as schema_lib
 
 NLI_SUPPORTED = "SUPPORTED"
 NLI_REFUTED = "REFUTED"
@@ -1409,7 +1409,7 @@ def _write_blast_radius_report(vault: Path, target: str) -> str:
     path: a second `decided-wrong` on the same claim is a second decision, taken
     over a blast radius that may have moved since the first.
     """
-    from memoria_vault.runtime.subsystems.lib import inbox
+    from memoria_vault.runtime.attention import inbox
 
     marks = propagation.compute_consequences(vault, target, trigger="decided-wrong")
     counts = Counter(str(mark["consequence"]) for mark in marks.values())

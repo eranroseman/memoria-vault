@@ -21,8 +21,8 @@ from pathlib import Path
 import pytest
 
 import memoria_vault
-from memoria_vault.runtime.subsystems.lib import inbox as inbox_lib
-from memoria_vault.runtime.subsystems.lib.inbox import (
+from memoria_vault.runtime.attention import inbox as inbox_lib
+from memoria_vault.runtime.attention.inbox import (
     write_finding,
     write_proposal,
     write_work_prompt,

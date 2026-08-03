@@ -18,7 +18,6 @@ from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.audit import sha256_bytes, sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path
 from memoria_vault.runtime.read_barrier import is_consumable_checked_file
-from memoria_vault.runtime.subsystems.lib.edges import thesis_rel
 from memoria_vault.runtime.trusted_writer import OperationContext, validate_operation_context
 from memoria_vault.runtime.vaultio import (
     frontmatter_doc,
@@ -26,6 +25,7 @@ from memoria_vault.runtime.vaultio import (
     parse_frontmatter,
     safe_read,
 )
+from memoria_vault.runtime.vocabulary.edges import thesis_rel
 
 SEARCH_INPUT_ROOT = ".memoria/index/search/checked"
 SEARCH_MANIFEST = ".memoria/index/search/manifest.json"
@@ -265,7 +265,7 @@ def answer_query(
         query,
         hits,
         frontmatter_by_path,
-        engine="bm25",
+        backend="bm25",
         project_context=project_context,
         pipeline_counts=stages.rows(),
         excluded_strata=universe["excluded_strata"],
@@ -311,7 +311,7 @@ def _answer_from_hits(
     hits: list[tuple[str, float]],
     frontmatter_by_path: dict[str, dict[str, Any]],
     *,
-    engine: str,
+    backend: str,
     pipeline_counts: list[dict[str, Any]],
     excluded_strata: dict[str, int],
     project_context: dict[str, Any] | None = None,
@@ -339,7 +339,7 @@ def _answer_from_hits(
                 contradictions.append({"path": path, "contradiction": item})
     answer = {
         "query": query,
-        "engine": engine,
+        "backend": backend,
         "sources": sources,
         "unknowns": (
             [] if sources else [retrieval_pipeline.honest_empty(pipeline_counts, excluded_strata)]
@@ -460,7 +460,7 @@ def evaluate_bm25(
     total = len(results)
     hits = sum(1 for result in results if result["hit"])
     return {
-        "engine": "bm25",
+        "backend": "bm25",
         "documents": len(docs),
         "queries": total,
         "hits": hits,

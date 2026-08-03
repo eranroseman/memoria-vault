@@ -14,8 +14,8 @@ from memoria_vault.engine import api as engine_api
 from memoria_vault.engine.empirical_events import READ_EVENT_SCHEMA
 from memoria_vault.engine.surface_contract import actions_by_id
 from memoria_vault.runtime import mcp_transport, retrieval_pipeline, state, worker
+from memoria_vault.runtime.attention.inbox import write_finding
 from memoria_vault.runtime.mcp_transport import make_mcp_app
-from memoria_vault.runtime.subsystems.lib.inbox import write_finding
 from tests.helpers import init_cli_workspace, write_checked_note
 
 pytestmark = pytest.mark.contract
@@ -432,19 +432,19 @@ def test_mcp_rejects_idempotency_key_bound_to_pending_pi_request(workspace: Path
     app = make_mcp_app(workspace, read_scope=["inbox"], agent_identity="review-agent")
 
     listed = _call(app, "requests", status="pending")
-    detail = _call(app, "request", request_id=request["job_id"])
+    detail = _call(app, "request", request_id=request["request_id"])
     with pytest.raises(tool_error, match="idempotency key is already bound"):
         _call(
             app,
             "operation_run",
             operation_id="create-concept",
             payload={"concept_type": "note"},
-            idempotency_key=request["job_id"],
+            idempotency_key=request["request_id"],
         )
 
     assert [row["request_id"] for row in listed["requests"]] == ["pi-pending-request"]
     assert detail["request"]["actor"] == "pi"
-    assert state.request_job(workspace, request["job_id"])["status"] == "pending"
+    assert state.request_job(workspace, request["request_id"])["status"] == "pending"
     assert "attention_status: open" in attention_path.read_text(encoding="utf-8")
 
 

@@ -136,7 +136,7 @@ export, or egress policy.
 | Fork project Canvas | worker operation `fork-project-canvas` + runtime helper (`fork_project_canvas`) | Copies a rendered `argument.canvas` to an editable `projects/<project>/scratch-<name>.canvas` with the generated banner stripped. The scratch canvas is not a tracked projection and is never regenerated, so the PI's hand edits are never overwritten; `project.canvas.forks` diffs it against the live render and hand-drawn edges graduate through `curate-note-link`. |
 | Run prompt operation | worker operation `<pattern-id>` + runtime helper (`run_prompt_operation`) | Reads checked input refs for package-owned prompt-operation manifests such as `analyze-claims`, records request/journal provenance and the raw model-output hash, neutralizes the rendered model output, and stages one unchecked report note under `.memoria/staging/notes/`. |
 
-## Integrity loop (`memoria_vault.runtime.integrity`)
+## Integrity loop (`memoria_vault.runtime.grounding`)
 
 | Action | Performer | What it does |
 | --- | --- | --- |
@@ -155,7 +155,7 @@ export, or egress policy.
 | Cascade rollback | runtime integrity helper (`cascade_rollback`) | Moves machine-derived downstream Concepts to `.memoria/quarantine/`, appends `resolved` plus inverse `derived` events, and leaves PI-derived downstream Concepts live while flagging them with route `ask`. |
 | Run seeded-error verdict | worker operation `run-seeded-error-verdict` + runtime helper (`run_seeded_error_verdict`) | Runs the seeded structural fixture in a disposable workspace and returns the verdict metrics, probe review batch, and live-only license flag. |
 
-## Linter (`memoria_vault.runtime.subsystems.integrity.linter`)
+## Linter (`memoria_vault.runtime.sweeps.linter`)
 
 The registered detectors (slugs, severities, and what each catches) live in [Linter: detectors and auto-fix](../analysis-and-surfaces/linter.md#the-detectors); every detector is report-only.
 
@@ -166,7 +166,7 @@ The registered detectors (slugs, severities, and what each catches) live in [Lin
 | Session digests | Linter (`session_summary.py`, manual or scheduled run) | Writes one deterministic per-session digest file under `system/logs/sessions/` from the audit log ([the quarantine-and-verify with durable, audit-logged crash recovery decision](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)). |
 | Hub proposal handoff | Linter (`hub_handoff.py`, PI-run) | Converts current `hub-threshold` findings into idempotent local handoff payloads for map work; `hubs/` stays PI-curated. |
 
-## Sweeps (`memoria_vault.runtime.subsystems`)
+## Sweeps and scheduled operations
 
 | Action | Performer | What it does |
 | --- | --- | --- |
@@ -186,4 +186,4 @@ The registered detectors (slugs, severities, and what each catches) live in [Lin
 | Build graph neighborhoods | runtime search/knowledge helpers | Builds checked retrieval documents and first-order graph-neighborhood text for BM25 ask and gap analysis. |
 | Render argument canvas | worker operation `render-project-argument-canvas` | Renders the project argument map as a JSON Canvas artifact from checked project graph state. |
 | Run prompt operations | `memoria operation run` / `engine_api.run_operation` | Runs package-owned prompt operations through the same request, runner, staging, and journal boundary as other worker operations. |
-| Loudness routing and blockers | shared operation helper (`memoria_vault.runtime.subsystems.lib.loudness`) | Interprets loudness metadata on pull-only Inbox attention projections and exposes open block attention items to delegation and policy gates. |
+| Loudness routing and blockers | shared operation helper (`memoria_vault.runtime.attention.loudness`) | Interprets loudness metadata on pull-only Inbox attention projections and exposes open block attention items to delegation and policy gates. |

@@ -28,7 +28,7 @@ def _operation_job(
 ) -> dict[str, Any]:
     args = {} if run_id is None else {"run_id": run_id}
     return {
-        "job_id": request_id,
+        "request_id": request_id,
         "kind": "operation",
         "operation_id": operation_id,
         "payload": dict(args),
@@ -63,7 +63,7 @@ def _saved_operation_context(
         vault,
         envelope,
         {
-            "job_id": context.request_id,
+            "request_id": context.request_id,
             "kind": "operation",
             "operation_id": context.operation_id,
             "bound_context": trusted_writer.operation_context_record(context),
@@ -122,8 +122,8 @@ def test_context_rejects_missing_blank_or_unknown_actor(actor: Any) -> None:
 @pytest.mark.parametrize(
     ("location", "key", "value"),
     [
-        ("job", "job_id", ""),
-        ("job", "job_id", 1),
+        ("job", "request_id", ""),
+        ("job", "request_id", 1),
         ("job", "operation_id", " "),
         ("job", "operation_id", 1),
         ("envelope", "request_id", ""),
@@ -159,7 +159,7 @@ def test_context_rejects_request_id_mismatch() -> None:
             "operation_id": "other-operation",
         },
         {
-            "job_id": "request-1",
+            "request_id": "request-1",
             "kind": "trusted_write",
             "operation": "trusted-write",
             "request_envelope": {
@@ -375,7 +375,7 @@ def test_context_journal_rejects_non_mapping_request_provenance_before_mutation(
         tmp_path,
         envelope,
         {
-            "job_id": context.request_id,
+            "request_id": context.request_id,
             "kind": "operation",
             "operation_id": context.operation_id,
             "bound_context": trusted_writer.operation_context_record(context),
@@ -531,7 +531,7 @@ def test_worker_binds_exact_context_to_running_request_before_dispatch(
 
     monkeypatch.setattr(worker, "_run_job", inspect_dispatch)
 
-    result = worker.run_request(tmp_path, queued["job_id"], machine="agent laptop")
+    result = worker.run_request(tmp_path, queued["request_id"], machine="agent laptop")
 
     assert result["status"] == "done"
     assert seen["bound_context"] == {
@@ -738,7 +738,7 @@ def test_projection_rejects_nonexistent_context_before_write(
 
 
 def test_explicit_scan_propagation_rejects_blank_machine_at_entry(tmp_path: Path) -> None:
-    from memoria_vault.runtime.integrity import propagate_scan_demotion_explicit
+    from memoria_vault.runtime.grounding import propagate_scan_demotion_explicit
 
     with pytest.raises(ValueError, match="machine"):
         propagate_scan_demotion_explicit(
@@ -940,7 +940,7 @@ def _run_input_backed_create(
             "run_id": f"run-{request_id}",
         },
     )
-    return worker.run_request(workspace, queued["job_id"], machine="agent machine")
+    return worker.run_request(workspace, queued["request_id"], machine="agent machine")
 
 
 @pytest.mark.parametrize("actor", ["agent", "operation", "integrity"])
@@ -1042,7 +1042,7 @@ def test_attention_resolution_rejects_non_pi_before_mutation(
         payload={"target_id": target, "reason": "agent may not decide"},
     )
 
-    result = worker.run_request(workspace, request["job_id"], machine="agent machine")
+    result = worker.run_request(workspace, request["request_id"], machine="agent machine")
 
     assert result["status"] == "failed"
     assert "PI" in result["error"]
@@ -1095,7 +1095,7 @@ def test_protected_operation_rejects_wrong_actor_before_payload_validation(
         idempotency_key=f"wrong-{operation_id}-{actor}",
     )
 
-    result = worker.run_request(tmp_path, request["job_id"], machine="agent machine")
+    result = worker.run_request(tmp_path, request["request_id"], machine="agent machine")
 
     assert result["status"] == "failed"
     assert result["error"] == f"{operation_id} requires {required_actor} actor authority"
@@ -1125,7 +1125,7 @@ def test_protected_operation_accepts_its_authorized_actor_before_payload_validat
         idempotency_key=f"authorized-{operation_id}",
     )
 
-    result = worker.run_request(workspace, request["job_id"], machine="authorized machine")
+    result = worker.run_request(workspace, request["request_id"], machine="authorized machine")
 
     label = "PI" if actor == "pi" else actor
     assert f"requires {label} actor authority" not in str(result.get("error") or "")
@@ -1147,11 +1147,11 @@ def test_attention_resolution_accepts_pi_and_records_pi(
         payload={"target_id": "inbox/attention/pi.md", "reason": "PI decision"},
     )
 
-    result = worker.run_request(workspace, request["job_id"], machine="PI laptop")
+    result = worker.run_request(workspace, request["request_id"], machine="PI laptop")
 
     assert result["status"] == "done"
     assert result["resolution"]["actor"] == "pi"
-    assert result["resolution"]["request_id"] == request["job_id"]
+    assert result["resolution"]["request_id"] == request["request_id"]
 
 
 def _seed_composed_evidence_set(workspace: Path) -> str:
@@ -1193,7 +1193,7 @@ def test_resolve_evidence_operation_records_pi_disposition(
         },
     )
 
-    result = worker.run_request(workspace, request["job_id"], machine="PI laptop")
+    result = worker.run_request(workspace, request["request_id"], machine="PI laptop")
 
     assert result["status"] == "done"
     events = [
@@ -1225,7 +1225,7 @@ def test_resolve_evidence_operation_requires_evidence_id(
         payload={"decision": "accept"},
     )
 
-    result = worker.run_request(workspace, request["job_id"], machine="PI laptop")
+    result = worker.run_request(workspace, request["request_id"], machine="PI laptop")
 
     assert result["status"] == "failed"
     assert "resolve-evidence requires evidence_id" in result["error"]
@@ -1244,7 +1244,7 @@ def test_resolve_evidence_operation_rejects_unknown_evidence_id(
         idempotency_key="pi-resolve-evidence-unknown-id",
         payload={"evidence_id": "ev-0011aabb", "decision": "accept"},
     )
-    result = worker.run_request(workspace, request["job_id"], machine="PI laptop")
+    result = worker.run_request(workspace, request["request_id"], machine="PI laptop")
 
     assert result["status"] == "failed"
     assert "unknown evidence id" in result["error"]
@@ -1307,7 +1307,7 @@ def test_observe_pi_edits_rejects_non_integrity_request_before_mutation(
         machine_authored=False,
     )
 
-    result = worker.run_request(workspace, request["job_id"], machine="scanner")
+    result = worker.run_request(workspace, request["request_id"], machine="scanner")
 
     assert result["status"] == "failed"
     assert "integrity" in result["error"]
@@ -1339,7 +1339,7 @@ def test_integrity_scan_keeps_nested_external_edit_actor_pi(
         machine_authored=False,
     )
 
-    result = worker.run_request(workspace, request["job_id"], machine="scanner")
+    result = worker.run_request(workspace, request["request_id"], machine="scanner")
 
     assert result["status"] == "done"
     with state.connect(workspace) as conn:

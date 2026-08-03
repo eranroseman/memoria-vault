@@ -357,7 +357,6 @@ def test_draft_with_zero_evidence_sets_reports_no_evidence_set_finding(
     verification = verify_project_draft(vault, "project-alpha")
 
     assert verification["ready"] is False
-    assert verification["ok"] is False
     assert [finding["kind"] for finding in verification["findings"]] == [
         "no-evidence-set",
         "missing-structural-reference",
@@ -1709,7 +1708,6 @@ def test_archived_source_is_advisory_and_never_blocks_export(tmp_path: Path) -> 
     verification = verify_project_draft(tmp_path, "project-alpha")
 
     assert verification["ready"] is True
-    assert verification["ok"] is True
     assert verification["missing"] == []
     assert verification["findings"] == [
         {
@@ -1734,7 +1732,6 @@ def test_unset_standing_is_current_and_raises_no_standing_finding(tmp_path: Path
     verification = verify_project_draft(tmp_path, "project-alpha")
 
     assert verification["ready"] is True
-    assert verification["ok"] is True
     assert verification["missing"] == []
     assert not any(
         finding["kind"].startswith("evidence-source-") for finding in verification["findings"]
@@ -1770,7 +1767,6 @@ def test_advisory_before_stale_truncation_keeps_stale_readiness_and_missing(
 
     assert [finding["kind"] for finding in verification["findings"]] == ["evidence-source-archived"]
     assert verification["ready"] is False
-    assert verification["ok"] is False
     assert verification["missing"] == [f"evidence-source-stale:{evidence_id}"]
 
 

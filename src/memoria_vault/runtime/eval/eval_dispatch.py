@@ -4,9 +4,9 @@
 Fans the workspace-authored gold set in ``.memoria/eval/`` into one local eval
 payload per ``lifecycle: current`` gold task, routed to the eval role named in
 frontmatter.
-It lives with the sweeps operations because it has exactly their shape — a
-deterministic, no-LLM detector-over-the-vault that creates idempotent work
-intents for the local engine.
+It has the shape of a sweep — a deterministic, no-LLM detector-over-the-vault
+that creates idempotent work intents for the local engine — but it maintains
+nothing, so it lives here rather than under ``runtime/sweeps/``.
 
 Each payload carries ``eval:<task-id>:<quarter>``, so scheduled and on-demand
 re-runs inside the same quarter converge to one task intent. The body wraps the
@@ -145,7 +145,7 @@ def write_last_run(
     lines = [
         "# vault-eval — last dispatch",
         "",
-        "Written by `memoria_vault.runtime.subsystems.telemetry.eval.eval_dispatch` "
+        "Written by `memoria_vault.runtime.eval.eval_dispatch` "
         "using the non-committing eval contract. Do not edit;",
         "the next dispatch overwrites this file.",
         "",

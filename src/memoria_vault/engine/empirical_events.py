@@ -210,7 +210,7 @@ def validate_edge_write_event(payload: dict[str, Any]) -> dict[str, Any]:
     no note path — this row is the I1 touch-budget denominator, so it must stay
     aggregable without carrying vault content into the analytics table.
     """
-    from memoria_vault.runtime.subsystems.lib.edges import EDGE_RELATIONS
+    from memoria_vault.runtime.vocabulary.edges import EDGE_RELATIONS
 
     if not isinstance(payload, dict):
         raise ValueError("edge-write event payload must be an object")

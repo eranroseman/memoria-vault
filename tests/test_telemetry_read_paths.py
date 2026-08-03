@@ -10,7 +10,7 @@ import pytest
 
 from memoria_vault.engine import api as engine_api
 from memoria_vault.runtime import state
-from memoria_vault.runtime.subsystems.lib.inbox import write_finding
+from memoria_vault.runtime.attention.inbox import write_finding
 from memoria_vault.runtime.vaultio import frontmatter_doc
 from tests.helpers import git, init_git
 

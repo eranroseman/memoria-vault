@@ -14,12 +14,12 @@ import argparse
 import sys
 from pathlib import Path
 
-from memoria_vault.runtime.subsystems.integrity.linter.detectors import (
+from memoria_vault.runtime.sweeps.linter.detectors import (
     is_untyped_infra,
     parse_frontmatter,
 )
-from memoria_vault.runtime.subsystems.lib import schema
 from memoria_vault.runtime.vaultio import retired_frontmatter_field_errors
+from memoria_vault.runtime.vocabulary import schema
 
 
 def check_paths(vault: Path, paths: list[str]) -> list[str]:

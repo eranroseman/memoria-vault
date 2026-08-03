@@ -25,7 +25,7 @@ Run it by hand after a large batch ingest, after structural edits, or when a fil
 From the vault root, use the interpreter installed with the vault:
 
 ```bash
-./.memoria/.venv/bin/python -m memoria_vault.runtime.subsystems.integrity.linter.detectors \
+./.memoria/.venv/bin/python -m memoria_vault.runtime.sweeps.linter.detectors \
   --vault . --json
 ```
 

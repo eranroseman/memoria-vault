@@ -62,7 +62,7 @@ def run_artifact(
             command=command,
             cwd=artifact["source_dir"],
             sandbox_backend="bwrap",
-            run_state="unavailable",
+            run_status="unavailable",
             timeout_result=availability.reason,
         )
     return _run_with_bwrap(
@@ -157,7 +157,7 @@ def _run_with_bwrap(
         timeout_result=timeout_result,
         sandbox_backend="bwrap",
         sandbox_profile_hash=sha256_bytes(b"bwrap:v1:no-network"),
-        run_state="succeeded" if proc.returncode == 0 and not timeout_result else "failed",
+        run_status="succeeded" if proc.returncode == 0 and not timeout_result else "failed",
         started_at=started,
         ended_at=now_iso(),
     )

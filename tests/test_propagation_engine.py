@@ -568,7 +568,7 @@ def _seed_retraction_graph(vault: Path) -> None:
                 "block_ref": "notes/c1.md#^blk-22222222",
                 "items": ["settles-2016#^p0001"],
                 "type": "single-span",
-                "state": "complete",
+                "completeness_status": "complete",
                 "review_required": False,
                 "bind": False,
             }
@@ -820,7 +820,7 @@ def test_edge_change_whose_seed_hop_types_nothing_writes_nothing(tmp_path: Path)
 
 
 def test_scan_demotion_wrappers_attach_grounding_consequences(tmp_path: Path) -> None:
-    from memoria_vault.runtime.integrity import (
+    from memoria_vault.runtime.grounding import (
         propagate_scan_demotion,
         propagate_scan_demotion_explicit,
     )

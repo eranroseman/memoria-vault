@@ -23,7 +23,7 @@ after hearing of a retraction in your field.
 **1. Refresh the local dataset** (skippable if your monthly schedule just ran):
 
 ```bash
-python3 -m memoria_vault.runtime.subsystems.integrity.retraction.retraction --refresh
+python3 -m memoria_vault.runtime.sweeps.retraction.retraction --refresh
 ```
 
 Downloads the Retraction Watch CSV to `.memoria/data/retraction_watch.csv`.
@@ -31,7 +31,7 @@ Downloads the Retraction Watch CSV to `.memoria/data/retraction_watch.csv`.
 **2. Run the sweep.**
 
 ```bash
-python3 -m memoria_vault.runtime.subsystems.integrity.retraction.retraction --sweep --vault .
+python3 -m memoria_vault.runtime.sweeps.retraction.retraction --sweep --vault .
 ```
 
 Each retracted checked Work raises one alert attention item.

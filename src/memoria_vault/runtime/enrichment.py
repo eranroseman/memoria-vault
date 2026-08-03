@@ -14,6 +14,7 @@ from urllib import error, parse, request
 import yaml
 
 from memoria_vault.runtime import state
+from memoria_vault.runtime.attention import inbox
 from memoria_vault.runtime.capture import (
     _extract_pdf_pages,
     _html_text,
@@ -23,11 +24,10 @@ from memoria_vault.runtime.capture import (
     render_references_bib,
 )
 from memoria_vault.runtime.content_security import neutralize_untrusted_markdown
-from memoria_vault.runtime.integrity import record_integrity_check
+from memoria_vault.runtime.grounding import record_integrity_check
 from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.audit import sha256_bytes
 from memoria_vault.runtime.policy.paths import normalize_path
-from memoria_vault.runtime.subsystems.lib import inbox
 from memoria_vault.runtime.trusted_writer import (
     OperationContext,
     append_journal_event,

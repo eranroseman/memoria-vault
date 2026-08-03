@@ -23,20 +23,21 @@ from pathlib import Path
 
 import yaml
 
-# Re-exports live one release for external importers, then die by the sweep
-# discipline (EDGES design, section 1). New code imports lib.edges directly;
-# `_normalized_link_target` is not a re-export but this module's own use of the
-# owner's target normalizer, which `_check_links` needs for its reason codes.
-from memoria_vault.runtime.subsystems.lib.edges import (  # noqa: F401
-    LINK_RELATIONS,
-    _normalized_link_target,
-    normalize_link_target,
-    parse_links,
-)
 from memoria_vault.runtime.vaultio import (
     DEFAULT_SKIP_DIRS,
     is_ulid,
     universal_concept_frontmatter_errors,
+)
+
+# Re-exports live one release for external importers, then die by the sweep
+# discipline (EDGES design, section 1). New code imports vocabulary.edges directly;
+# `_normalized_link_target` is not a re-export but this module's own use of the
+# owner's target normalizer, which `_check_links` needs for its reason codes.
+from memoria_vault.runtime.vocabulary.edges import (  # noqa: F401
+    LINK_RELATIONS,
+    _normalized_link_target,
+    normalize_link_target,
+    parse_links,
 )
 
 

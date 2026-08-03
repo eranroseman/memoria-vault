@@ -18,12 +18,12 @@ pytestmark = pytest.mark.contract
 SCHEMA_SQL_SHA256 = "232897433f4458c1a8b91ee748e94e293b44aac0ddc9fed3f7a5174e5207dab0"
 
 
-def test_schema_lands_at_user_version_19(tmp_path: Path) -> None:
+def test_schema_lands_at_user_version_20(tmp_path: Path) -> None:
     # Both sides are literal on purpose: comparing the applied version to
     # `state.SCHEMA_VERSION` alone passes when the constant and the DDL drift together.
     with state.connect(tmp_path) as conn:
-        assert state.SCHEMA_VERSION == 19
-        assert conn.execute("PRAGMA user_version").fetchone()[0] == 19
+        assert state.SCHEMA_VERSION == 20
+        assert conn.execute("PRAGMA user_version").fetchone()[0] == 20
 
 
 def test_schema_sql_is_hash_pinned_to_schema_version() -> None:

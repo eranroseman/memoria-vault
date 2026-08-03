@@ -212,7 +212,7 @@ def write_bytes_durable(path: Path, data: bytes, *, create_parent: bool = False)
             handle.flush()
             os.fsync(handle.fileno())
         os.replace(tmp_path, path)
-        _fsync_dir(path.parent)
+        _fsync_directory(path.parent)
     except BaseException:
         try:
             tmp_path.unlink()
@@ -228,10 +228,10 @@ def append_text_durable(path: Path, text: str, *, create_parent: bool = False) -
         handle.write(text)
         handle.flush()
         os.fsync(handle.fileno())
-    _fsync_dir(path.parent)
+    _fsync_directory(path.parent)
 
 
-def _fsync_dir(path: Path) -> None:
+def _fsync_directory(path: Path) -> None:
     try:
         fd = os.open(path, os.O_RDONLY)
     except OSError:

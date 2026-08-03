@@ -16,5 +16,5 @@ if [ ! -x "$PY" ]; then
 fi
 
 # shellcheck disable=SC2086
-exec "$PY" -m memoria_vault.runtime.subsystems.integrity.linter.precommit_check \
+exec "$PY" -m memoria_vault.runtime.sweeps.linter.precommit_check \
   --vault "$VAULT_ROOT" $staged

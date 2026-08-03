@@ -5,9 +5,9 @@ import datetime
 import pytest
 
 from memoria_vault.runtime import state
+from memoria_vault.runtime.attention import lifecycle
 from memoria_vault.runtime.capture import capture_source as _capture_source
-from memoria_vault.runtime.subsystems.integrity.retraction import retraction as _m
-from memoria_vault.runtime.subsystems.lib import lifecycle
+from memoria_vault.runtime.sweeps.retraction import retraction as _m
 from memoria_vault.runtime.vaultio import (
     frontmatter_doc,
     read_frontmatter,

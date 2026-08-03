@@ -4,7 +4,7 @@ import re
 
 import pytest
 
-from memoria_vault.runtime.subsystems.lib import schema
+from memoria_vault.runtime.vocabulary import schema
 from tests.helpers import ROOT, WORKSPACE_SEED
 
 pytestmark = pytest.mark.package

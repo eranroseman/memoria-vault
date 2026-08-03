@@ -6,8 +6,8 @@ import sqlite3
 from pathlib import Path
 from typing import Any
 
+from memoria_vault.runtime.attention import loudness
 from memoria_vault.runtime.jsonl import iter_jsonl
-from memoria_vault.runtime.subsystems.lib import loudness
 from memoria_vault.runtime.time import now_iso
 
 from .audit import AUDIT_RELPATH, append_audit, sha256_file
@@ -58,8 +58,8 @@ class PolicyEngine:
         """
         # Lazy import: policy is imported by the trusted writer, so a module-level
         # import of the journal path would close the cycle (same pattern as
-        # retraction.py, integrity.py).
-        from memoria_vault.runtime.subsystems.lib import lifecycle
+        # retraction.py, grounding/__init__.py).
+        from memoria_vault.runtime.attention import lifecycle
 
         try:
             lifecycle.journal_unattributed_dispositions(self.workspace)

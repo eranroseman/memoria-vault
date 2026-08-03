@@ -325,7 +325,7 @@ def resolve_item_previews(
                     "artifact_id": ref.artifact_id,
                     "output_sha256": ref.output_sha256,
                     "resolves": resolves,
-                    "state": "complete" if resolves else "evidence-incomplete",
+                    "completeness_status": "complete" if resolves else "evidence-incomplete",
                 }
             )
         elif kind == "evidence-set":
@@ -334,7 +334,7 @@ def resolve_item_previews(
             if nested is not None:
                 preview["expansion"] = {
                     "evidence_type": str(nested["type"]),
-                    "state": str(nested["state"]),
+                    "completeness_status": str(nested["completeness_status"]),
                     "item_count": len(nested["items"]),
                 }
             previews.append(preview)
@@ -380,7 +380,7 @@ def _tipping_factor(row: Mapping[str, Any], previews: Sequence[Mapping[str, Any]
     if routing_type in {"implicit", "multi-hop"}:
         return f"type={routing_type}"
     failing = _first_failing(previews)
-    return str(failing["ref"]) if failing is not None else "state=evidence-incomplete"
+    return str(failing["ref"]) if failing is not None else "completeness_status=evidence-incomplete"
 
 
 def _first_failing(previews: Sequence[Mapping[str, Any]]) -> Mapping[str, Any] | None:
@@ -484,7 +484,7 @@ def _permanent_findings(row: Mapping[str, Any], content: str) -> list[dict[str, 
 
 def _hold_findings(row: Mapping[str, Any]) -> list[dict[str, str]]:
     holds: list[dict[str, str]] = []
-    if str(row["state"]) == "evidence-incomplete":
+    if str(row["completeness_status"]) == "evidence-incomplete":
         holds.append({"kind": "evidence-incomplete"})
     if row["review_required"]:
         holds.append({"kind": "review-required"})
@@ -495,7 +495,7 @@ def _routing_type(row: Mapping[str, Any]) -> str:
     evidence_type = str(row["type"])
     if evidence_type in {"implicit", "multi-hop"}:
         return evidence_type
-    if str(row["state"]) == "evidence-incomplete":
+    if str(row["completeness_status"]) == "evidence-incomplete":
         return "incomplete"
     return ""
 

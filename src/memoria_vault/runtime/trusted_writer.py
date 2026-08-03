@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Any
 
 from memoria_vault.runtime import state
+from memoria_vault.runtime.attention.inbox import write_finding, write_work_prompt
 from memoria_vault.runtime.content_security import (
     markdown_code_span,
     neutralize_untrusted_markdown,
@@ -23,9 +24,6 @@ from memoria_vault.runtime.jsonl import append_jsonl
 from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.audit import EMPTY_SHA256, sha256_bytes, sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path
-from memoria_vault.runtime.subsystems.lib import schema as schema_lib
-from memoria_vault.runtime.subsystems.lib.edges import parse_typed_wikilinks
-from memoria_vault.runtime.subsystems.lib.inbox import write_finding, write_work_prompt
 from memoria_vault.runtime.time import now_iso
 from memoria_vault.runtime.vaultio import (
     apply_universal_concept_frontmatter,
@@ -42,6 +40,8 @@ from memoria_vault.runtime.vaultio import (
     write_bytes_durable,
     write_frontmatter_doc,
 )
+from memoria_vault.runtime.vocabulary import schema as schema_lib
+from memoria_vault.runtime.vocabulary.edges import parse_typed_wikilinks
 
 EVENT_DERIVED = "derived"
 EVENT_OBSERVED_EXTERNAL_EDIT = "observed_external_edit"
@@ -112,7 +112,7 @@ def operation_context_from_job(job: Mapping[str, Any], machine: str | None) -> O
     if actor not in state.ACTORS:
         raise ValueError(f"request envelope actor must be one of {sorted(state.ACTORS)}")
 
-    request_id = _required_context_identifier(job, "job_id", "job request")
+    request_id = _required_context_identifier(job, "request_id", "job request")
     envelope_request_id = _required_context_identifier(envelope, "request_id", "envelope request")
     if request_id != envelope_request_id:
         raise ValueError("job and envelope request identifiers must match")
@@ -732,7 +732,7 @@ def _observe_pi_edits_from_status(
             for key in sorted(set(baseline["restriction_keys"]) - set(restriction_keys)):
                 findings.append(_restriction_key_removed_finding(target, key))
     if observed:
-        from memoria_vault.runtime.integrity import (
+        from memoria_vault.runtime.grounding import (
             propagate_scan_demotion,
             propagate_scan_demotion_explicit,
         )

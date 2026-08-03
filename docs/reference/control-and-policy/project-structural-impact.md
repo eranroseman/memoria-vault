@@ -7,13 +7,13 @@ grand_parent: Reference
 
 # Project structural impact
 
-`memoria_vault.runtime.subsystems.processing.project.structural_impact` computes the thesis-rooted argument graph for one Project and writes a generated Project gate index note. It is deterministic operation code, not a chat skill.
+`memoria_vault.runtime.project.structural_impact` computes the thesis-rooted argument graph for one Project and writes a generated Project gate index note. It is deterministic operation code, not a chat skill.
 
 ## Command
 
 ```bash
-python3 -m memoria_vault.runtime.subsystems.processing.project.structural_impact --vault <vault> --project <project-slug>
-python3 -m memoria_vault.runtime.subsystems.processing.project.structural_impact --vault <vault> --project <project-slug> --dry-run --json
+python3 -m memoria_vault.runtime.project.structural_impact --vault <vault> --project <project-slug>
+python3 -m memoria_vault.runtime.project.structural_impact --vault <vault> --project <project-slug> --dry-run --json
 ```
 
 | Option | Contract |

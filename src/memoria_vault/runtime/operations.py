@@ -14,6 +14,7 @@ from typing import Any
 import yaml
 
 from memoria_vault.runtime import state
+from memoria_vault.runtime.attention import inbox
 from memoria_vault.runtime.capabilities import read_capability_manifest
 from memoria_vault.runtime.content_security import (
     neutralize_untrusted_markdown,
@@ -23,7 +24,6 @@ from memoria_vault.runtime.hub_candidates import candidate_entry, write_hub_cand
 from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.audit import sha256_bytes, sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path, require_policy_path
-from memoria_vault.runtime.subsystems.lib import inbox
 from memoria_vault.runtime.trusted_writer import (
     OperationContext,
     append_explicit_journal_event,
@@ -344,7 +344,7 @@ def resolve_operation_runner(
         raise ValueError(f"{PROVIDER_CONFIG} runner provider {provider} requires url")
     return {
         "mode": run_mode,
-        "runner": str(runner_policy.get("engine") or "pydantic-ai"),
+        "runner": str(runner_policy.get("backend") or "pydantic-ai"),
         "provider": provider,
         "model": str(runner_policy["model"]),
         "base_url": base_url,
@@ -433,16 +433,16 @@ def _validate_runner_policy(operation_id: str, runner_policy: Any) -> dict[str, 
         branch = runner_policy[mode]
         if not isinstance(branch, dict):
             raise ValueError(f"{operation_id} runner.{mode} must be a map")
-        engine = str(branch.get("engine") or "pydantic-ai").strip()
-        if engine not in SUPPORTED_OPERATION_RUNNERS:
-            raise ValueError(f"{operation_id} unsupported operation runner: {engine}")
+        backend = str(branch.get("backend") or "pydantic-ai").strip()
+        if backend not in SUPPORTED_OPERATION_RUNNERS:
+            raise ValueError(f"{operation_id} unsupported operation runner: {backend}")
         provider = str(branch.get("provider") or "").strip()
         model = str(branch.get("model") or "").strip()
         if provider not in RUNNER_PROVIDER_NAMES:
             raise ValueError(f"{operation_id} runner.{mode} provider must be local or gateway")
         if not model:
             raise ValueError(f"{operation_id} runner.{mode}.model must be non-empty")
-        branches[mode] = {**branch, "engine": engine, "provider": provider, "model": model}
+        branches[mode] = {**branch, "backend": backend, "provider": provider, "model": model}
     return branches
 
 

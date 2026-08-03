@@ -56,16 +56,16 @@ from memoria_vault.runtime.state.workspace_lock import (  # noqa: F401
     _open_workspace_lock_file,
     workspace_lock,
 )
-from memoria_vault.runtime.subsystems.lib.edges import EDGE_RELATIONS
 from memoria_vault.runtime.time import now_iso
 from memoria_vault.runtime.vaultio import is_ulid, parse_frontmatter, safe_read, write_text_durable
+from memoria_vault.runtime.vocabulary.edges import EDGE_RELATIONS
 
 if TYPE_CHECKING:
     from memoria_vault.runtime.trusted_writer import OperationContext
 
 DB_REL = ".memoria/memoria.sqlite"
 JOURNAL_HEAD_REL = ".memoria/journal-head"
-SCHEMA_VERSION = 19
+SCHEMA_VERSION = 20
 ACTORS = frozenset({"pi", "agent", "operation", "integrity"})
 REQUEST_STATUSES = frozenset({"pending", "running", "done", "failed", "cancelled"})
 CHECK_STATUSES = frozenset({"unchecked", "checked", "quarantined"})
@@ -396,11 +396,11 @@ def claim_request(vault: Path, request_id: str, job: dict[str, Any]) -> bool:
 
 
 def set_request_running(vault: Path, request_id: str, job: dict[str, Any]) -> None:
-    _set_request_state(vault, request_id, "running", {**job, "status": "running"})
+    _set_request_status(vault, request_id, "running", {**job, "status": "running"})
 
 
 def finish_request(vault: Path, request_id: str, status: str, job: dict[str, Any]) -> None:
-    _set_request_state(vault, request_id, status, job)
+    _set_request_status(vault, request_id, status, job)
 
 
 def recover_running_requests(vault: Path) -> list[str]:
@@ -1788,10 +1788,9 @@ def replace_external_ids(vault: Path, rows: Iterable[dict[str, Any]]) -> None:
                     namespace,
                     value,
                     source_provider,
-                    confidence,
-                    verified_at
+                    confidence
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?)
                 """,
                 (
                     str(row["owner_type"]),
@@ -1800,7 +1799,6 @@ def replace_external_ids(vault: Path, rows: Iterable[dict[str, Any]]) -> None:
                     str(row["value"]),
                     str(row.get("source_provider") or ""),
                     str(row.get("confidence") or "high"),
-                    now_iso(),
                 ),
             )
 
@@ -2514,7 +2512,7 @@ def record_code_run(
     timeout_result: str = "",
     sandbox_backend: str = "",
     sandbox_profile_hash: str = "",
-    run_state: str = "pending",
+    run_status: str = "pending",
     started_at: str | None = None,
     ended_at: str | None = None,
 ) -> dict[str, Any]:
@@ -2540,7 +2538,7 @@ def record_code_run(
                 timeout_result,
                 sandbox_backend,
                 sandbox_profile_hash,
-                state,
+                run_status,
                 started_at,
                 ended_at
             )
@@ -2559,7 +2557,7 @@ def record_code_run(
                 timeout_result = excluded.timeout_result,
                 sandbox_backend = excluded.sandbox_backend,
                 sandbox_profile_hash = excluded.sandbox_profile_hash,
-                state = excluded.state,
+                run_status = excluded.run_status,
                 ended_at = excluded.ended_at
             """,
             (
@@ -2578,7 +2576,7 @@ def record_code_run(
                 timeout_result,
                 sandbox_backend,
                 sandbox_profile_hash,
-                _code_run_state(run_state),
+                _code_run_status(run_status),
                 started_at or now_iso(),
                 ended_at,
             ),
@@ -2659,7 +2657,7 @@ def _replace_evidence_sets_conn(
                 block_ref,
                 items_json,
                 type,
-                state,
+                completeness_status,
                 review_required,
                 run_id,
                 block_text_sha256
@@ -2671,7 +2669,7 @@ def _replace_evidence_sets_conn(
                 normalize_path(str(row["block_ref"])),
                 _json(items),
                 str(row["type"]),
-                str(row["state"]),
+                str(row["completeness_status"]),
                 1 if bool(row.get("review_required")) else 0,
                 str(row.get("run_id") or ""),
                 block_text_sha256,
@@ -2689,8 +2687,8 @@ def evidence_sets(vault: Path) -> list[dict[str, Any]]:
     with connect(vault) as conn:
         rows = conn.execute(
             """
-            SELECT id, block_ref, items_json, type, state, review_required, run_id,
-                   block_text_sha256
+            SELECT id, block_ref, items_json, type, completeness_status, review_required,
+                   run_id, block_text_sha256
             FROM evidence_sets
             ORDER BY block_ref, id
             """
@@ -2849,7 +2847,7 @@ def _init(conn: sqlite3.Connection) -> None:
         raise RuntimeError(f"Memoria DB schema initialization failed: {applied}")
 
 
-def _set_request_state(vault: Path, request_id: str, status: str, job: dict[str, Any]) -> None:
+def _set_request_status(vault: Path, request_id: str, status: str, job: dict[str, Any]) -> None:
     if status not in REQUEST_STATUSES:
         raise ValueError(f"unknown request status: {status}")
     request_id = safe_filename(request_id)
@@ -2909,7 +2907,7 @@ def _evidence_set_row(row: sqlite3.Row) -> dict[str, Any]:
         "block_ref": row["block_ref"],
         "items": json.loads(row["items_json"] or "[]"),
         "type": row["type"],
-        "state": row["state"],
+        "completeness_status": row["completeness_status"],
         "review_required": bool(row["review_required"]),
         "run_id": row["run_id"],
         "block_text_sha256": row["block_text_sha256"],
@@ -2951,7 +2949,7 @@ def _code_run_row(row: sqlite3.Row) -> dict[str, Any]:
         "timeout_result": row["timeout_result"],
         "sandbox_backend": row["sandbox_backend"],
         "sandbox_profile_hash": row["sandbox_profile_hash"],
-        "state": row["state"],
+        "run_status": row["run_status"],
         "started_at": row["started_at"],
         "ended_at": row["ended_at"],
     }
@@ -2991,14 +2989,14 @@ def _evidence_marker_rows(
         marker.evidence_id: tuple(marker.items) for _rel, marker, _bind, _prior in selected
     }
     source_spans = _source_span_pages(vault)
-    states = _evidence_set_states(vault, items_by_id, source_spans=source_spans)
+    completeness = _evidence_set_completeness(vault, items_by_id, source_spans=source_spans)
     rows = []
     for rel, marker, bind, prior_block_ref in selected:
         row = _derived_evidence_row(
             vault,
             rel,
             marker,
-            state_value=states[marker.evidence_id],
+            completeness_value=completeness[marker.evidence_id],
             run_id=run_id,
         )
         if prior_block_ref is not None:
@@ -3035,7 +3033,7 @@ def _derived_evidence_row(
     rel: str,
     marker: EvidenceMarker,
     *,
-    state_value: str,
+    completeness_value: str,
     run_id: str,
 ) -> dict[str, Any]:
     items = list(marker.items)
@@ -3046,7 +3044,7 @@ def _derived_evidence_row(
         "block_ref": block_ref,
         "items": items,
         "type": evidence_type,
-        "state": state_value,
+        "completeness_status": completeness_value,
         "review_required": evidence_type in {"implicit", "multi-hop"},
         "run_id": run_id,
         "block_text_sha256": _block_text_sha256(vault, block_ref),
@@ -3071,17 +3069,17 @@ def derive_evidence_type(items: list[str]) -> str:
     return "single-span" if len(items) == 1 else "multi-span"
 
 
-def _evidence_set_states(
+def _evidence_set_completeness(
     vault: Path,
     items_by_id: dict[str, tuple[str, ...]],
     *,
     source_spans: dict[str, set[str]],
 ) -> dict[str, str]:
     """Resolve completeness bottom-up over nested sets; cycles fail closed."""
-    states: dict[str, str] = {}
+    completeness: dict[str, str] = {}
 
     def visit(evidence_id: str, visiting: frozenset[str]) -> str:
-        known = states.get(evidence_id)
+        known = completeness.get(evidence_id)
         if known is not None:
             return known
         if evidence_id in visiting:
@@ -3103,12 +3101,12 @@ def _evidence_set_states(
                 complete = False
                 break
 
-        states[evidence_id] = "complete" if complete else "evidence-incomplete"
-        return states[evidence_id]
+        completeness[evidence_id] = "complete" if complete else "evidence-incomplete"
+        return completeness[evidence_id]
 
     for evidence_id in sorted(items_by_id):
         visit(evidence_id, frozenset())
-    return states
+    return completeness
 
 
 def evidence_item_closure(
@@ -3444,7 +3442,7 @@ def _registry_concept_type(value: str) -> str:
 
 def _concept_type_map() -> dict[str, str]:
     """Return {document or concept type: registry concept type} from the seed."""
-    from memoria_vault.runtime.subsystems.lib import schema as schema_lib
+    from memoria_vault.runtime.vocabulary import schema as schema_lib
 
     schemas_dir = Path(schema_lib.SCHEMAS_DIR)
     cached = _CONCEPT_TYPE_MAPS.get(schemas_dir)
@@ -3462,7 +3460,7 @@ def _concept_type_map() -> dict[str, str]:
 
 def _folder_concept_types() -> dict[str, str]:
     """Return {bundle folder: registry concept type} from the seeded folder homes."""
-    from memoria_vault.runtime.subsystems.lib import schema as schema_lib
+    from memoria_vault.runtime.vocabulary import schema as schema_lib
 
     schemas_dir = Path(schema_lib.SCHEMAS_DIR)
     cached = _FOLDER_CONCEPT_TYPES.get(schemas_dir)
@@ -3553,8 +3551,8 @@ def _code_artifact_status(value: str) -> str:
     return _enum(value, {"draft", "ready", "failed", "retired"}, message)
 
 
-def _code_run_state(value: str) -> str:
-    message = f"invalid code run state: {value!r}"
+def _code_run_status(value: str) -> str:
+    message = f"invalid code run status: {value!r}"
     return _enum(value, {"pending", "running", "succeeded", "failed", "unavailable"}, message)
 
 

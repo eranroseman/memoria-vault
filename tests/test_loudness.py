@@ -2,7 +2,7 @@
 
 import pytest
 
-from memoria_vault.runtime.subsystems.lib import inbox, loudness
+from memoria_vault.runtime.attention import inbox, loudness
 
 pytestmark = pytest.mark.unit
 
@@ -114,7 +114,7 @@ def test_open_blockers_only_reads_open_block_attention_projections(tmp_path):
 
 def test_batch_worklists_mint_at_quiet(tmp_path):
     """Bulk-admission volume never lands in the `notice`+ bands (spec §3)."""
-    from memoria_vault.runtime.subsystems.lib import worklists
+    from memoria_vault.runtime.attention import worklists
 
     worklists.emit_worklist(tmp_path, "Screen batch", [{"title": "One", "item_ref": "ref-1"}])
 

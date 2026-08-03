@@ -7,8 +7,8 @@ import pytest
 
 from memoria_vault.cli import _build_parser, main
 from memoria_vault.runtime import state
-from memoria_vault.runtime.subsystems.lib.edges import LINK_RELATIONS
 from memoria_vault.runtime.vaultio import read_frontmatter, split_frontmatter
+from memoria_vault.runtime.vocabulary.edges import LINK_RELATIONS
 from tests.helpers import _assert_request_columns, mark_file_status
 
 pytestmark = pytest.mark.contract
@@ -530,7 +530,7 @@ def test_cli_project_slice_writes_outline(
     assert rc == 0
     assert output["ok"] is True
     result = output["result"]
-    assert result["retrieval_engine"] == "bm25"
+    assert result["retrieval_backend"] == "bm25"
     assert result["outline_path"] == "projects/project-alpha/outline.md"
     assert result["member_count"] == 2
     assert {member["path"] for member in result["members"]} == {

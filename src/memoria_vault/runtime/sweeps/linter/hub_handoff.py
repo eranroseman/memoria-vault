@@ -17,7 +17,7 @@ import re
 import sys
 from pathlib import Path
 
-from memoria_vault.runtime.subsystems.integrity.linter import detectors
+from memoria_vault.runtime.sweeps.linter import detectors
 
 _ALLOWED_PATHS = ["notes/maps/"]
 _FINDING_RE = re.compile(r"topic '(.+)' has (\d+) notes")

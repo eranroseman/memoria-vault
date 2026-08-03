@@ -21,7 +21,7 @@ This page summarizes `src/memoria_vault/cli.py`; use `--help` for exact flags.
 | `memoria doctor --check search` | Check local search index state. |
 | `memoria doctor --check runner [--provider local\|gateway] [--repair]` | Check the configured pydantic-ai runner provider; add `--live` for an opt-in model dispatch. `--repair` restores runtime scaffold files and missing view preferences, while preserving existing PI-owned view preferences; it never recreates or overwrites the PI-owned first-init agent/MCP configuration. |
 | `memoria doctor` | Report local runtime checks and backup health. It exits nonzero when blob files lack configured coverage or a current valid local-backup stamp. |
-| `memoria doctor bundle [--redacted]` | Emit a diagnostic bundle and propagate the same failing backup-health status; `--redacted` marks the bundle as redacted for sharing. |
+| `memoria doctor bundle` | Emit a diagnostic bundle and propagate the same failing backup-health status. |
 | `memoria doctor self-test` | Run local runtime self-tests. |
 | `memoria secrets set <NAME>` | Store one named user-scope secret without echoing its value. |
 | `memoria secrets list` | Report credential status and provenance without printing secret values. |

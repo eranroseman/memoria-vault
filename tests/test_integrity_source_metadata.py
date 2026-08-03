@@ -6,7 +6,7 @@ import pytest
 
 from memoria_vault.runtime import state
 from memoria_vault.runtime.capture import capture_source as _capture_source
-from memoria_vault.runtime.integrity import check_source_metadata as _check_source_metadata
+from memoria_vault.runtime.grounding import check_source_metadata as _check_source_metadata
 from memoria_vault.runtime.vaultio import read_frontmatter
 from tests.helpers import (
     call_with_context,

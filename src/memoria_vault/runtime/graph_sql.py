@@ -19,7 +19,7 @@ from typing import Any
 
 from memoria_vault.runtime import propagation, state
 from memoria_vault.runtime.policy.paths import normalize_path
-from memoria_vault.runtime.subsystems.lib.edges import (
+from memoria_vault.runtime.vocabulary.edges import (
     concept_edge_path_pairs,
     projected_edge_endpoints,
 )

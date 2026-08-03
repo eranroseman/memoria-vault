@@ -56,11 +56,11 @@ jq -c 'select(.path == "bibliography.bib")' system/logs/audit.jsonl
 **7. Generate, then read, the latest request summary.**
 
 Session summaries are controlled generated files, not ordinary runtime output.
-Run `src/memoria_vault/runtime/subsystems/integrity/linter/session_summary.py` when
+Run `src/memoria_vault/runtime/sweeps/linter/session_summary.py` when
 you need them:
 
 ```bash
-python3 src/memoria_vault/runtime/subsystems/integrity/linter/session_summary.py --vault .
+python3 src/memoria_vault/runtime/sweeps/linter/session_summary.py --vault .
 ```
 
 The generator leaves a request without a summary until its last audit activity has

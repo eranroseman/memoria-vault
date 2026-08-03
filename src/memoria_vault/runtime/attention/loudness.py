@@ -16,7 +16,7 @@ from memoria_vault.runtime.vaultio import read_frontmatter
 BLOCK_LOUDNESS = "block"
 ATTENTION_PROJECTION = "attention"
 OPEN_ATTENTION_STATUS = "open"
-# `integrity.resolve_attention` validates against exactly this roster and raises on
+# `grounding.resolve_attention` validates against exactly this roster and raises on
 # anything else, so it is the vocabulary a card's `routing_class` may hold.
 ROUTING_CLASSES = frozenset({"act", "ask", "log"})
 DEFAULT_ROUTING_CLASS = "ask"
@@ -58,7 +58,7 @@ def routing_class(frontmatter: Mapping[str, Any]) -> str:
 
     Filed as display-only. It was not. The payload field is not only rendered -- it is
     the `routing_class` `engine.api.resolve_attention` puts in the `resolve-attention`
-    operation payload, which `worker` hands to `integrity.resolve_attention`, which
+    operation payload, which `worker` hands to `grounding.resolve_attention`, which
     validates against `ROUTING_CLASSES` and raises. So `routing_class: Act` on an open
     card made `memoria attention resolve` return `ok: false` and leave the card open:
     if it also carried `loudness: block`, it gated delegation and review-gated
@@ -69,7 +69,7 @@ def routing_class(frontmatter: Mapping[str, Any]) -> str:
     So the fold belongs at every *frontmatter* read, which makes the payload's
     `routing_class` canonical and both the operation payload and the rendered field
     correct by construction. Narrowed to exactly the vocabulary
-    `integrity.resolve_attention` accepts, never to a new term.
+    `grounding.resolve_attention` accepts, never to a new term.
 
     `inbox/**` is the one write target the reference actor policy grants a non-PI
     actor, so `routing_class: " ask "` -- an ordinary YAML quoting accident -- is

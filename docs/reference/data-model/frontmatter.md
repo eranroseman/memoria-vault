@@ -17,7 +17,7 @@ the required Concept-type registry in
 Each type schema must name a registry member; a schema directory without that
 registry is invalid.
 The shared loader/validator is
-`src/memoria_vault/runtime/subsystems/lib/schema.py`; the linter, pre-commit
+`src/memoria_vault/runtime/vocabulary/schema.py`; the linter, pre-commit
 hook, and package-seed tests all read it.
 
 Per-type schemas currently exist for `code-artifact`, `digest`, `fulltext`,
@@ -37,6 +37,7 @@ kinds:
 | `date` | a YAML date or an ISO-8601 date string |
 | `list` | a YAML sequence |
 | `map` | a YAML mapping |
+| `link` | one path-space Concept reference (a single target string, not a relation map); for example `thesis: link` on `types/project.yaml`. Distinct from `links`, the relation-to-targets map below. |
 | `links` | a YAML mapping from one of the six relations — `supports`, `contradicts`, `extends`, `warrant`, `qualifier`, `rebuttal` — to target lists |
 | `ulid` | a valid ULID string |
 | `literal:<value>` | exactly that value; for example, `type: literal:note` |
@@ -44,17 +45,23 @@ kinds:
 
 Validation is closed: fields a type schema does not declare are rejected. The
 `x:` map is the escape hatch for extension data, and `forbidden:` fields are
-reported as retired rather than unknown. A schema example
+reported as retired rather than unknown. Every type schema also names a
+`concept_type`: the `concept-types.yaml` registry member the type belongs to.
+It is not inferable from the type name alone — `fulltext.yaml` names
+`concept_type: work`, `code-artifact.yaml` names `concept_type: project`, and
+`note.yaml` names its own `concept_type: note`. A schema example
 (`types/note.yaml`):
 
 ```yaml
 type: note
 category: notes
+concept_type: note
 enums:
   mode: [claim, question, definition, work]
   question_status: [open, resolved]
   certainty: [reported, contested, unknown, hypothesized]
   item_type: [paper, dataset, repository, web-page, report]
+  consequence: [grounds-lost, warrant-lost, qualifier-regression, rebuttal-strengthened]
 required:
   type: literal:note
   id: ulid
@@ -65,13 +72,16 @@ optional:
   aliases: list
   annotation_ref: map
   archived: bool
+  consequence: enum:consequence
   claim_text: str
   description: str
   extraction_confidence: str
+  generated: map
   item_type: enum:item_type
   mode: enum:mode
   question_status: enum:question_status
   quote: str
+  sources: list
   work_id: str
   temporal_scope: str
   tense: str
@@ -79,9 +89,12 @@ optional:
   qualifier: str
   certainty: enum:certainty
   superseded: bool
+  stale: bool
   reading: str
   anchors: list
   todo: list
+  usage_window: map
+  verified: list
   x: map
 required_when:
   claim_text:

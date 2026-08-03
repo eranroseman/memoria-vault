@@ -19,10 +19,10 @@ from memoria_vault.engine import dashboard as dashboard_module
 from memoria_vault.engine.dashboard import AGE_BUCKETS, DASHBOARD_PANELS
 from memoria_vault.engine.surface_contract import actions_by_id
 from memoria_vault.runtime import state
+from memoria_vault.runtime.attention import inbox
 from memoria_vault.runtime.knowledge import compose_project_draft as _compose_project_draft
 from memoria_vault.runtime.knowledge import resolve_evidence_review as _resolve_evidence_review
 from memoria_vault.runtime.operations import emit_explicit_disposition_event
-from memoria_vault.runtime.subsystems.lib import inbox
 from memoria_vault.runtime.telemetry import record_telemetry_event
 from tests.helpers import (
     ROOT,
@@ -46,7 +46,7 @@ def vault(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> Path:
     worklist excludes.
 
     The worklist cards and the excluded flag are written by the *production*
-    Inbox writers (`runtime.subsystems.lib.inbox`), not by hand-rolled
+    Inbox writers (`runtime.attention.inbox`), not by hand-rolled
     frontmatter, so the worklist panel is proven against the projection shape
     the product actually emits.
 

@@ -59,7 +59,7 @@ const SUMMARY_JSON = {
   engine_version: "0.1.0-alpha.20",
   // `POST /operation/run` answers through the same mock, and the enqueue toast
   // has to name the request id it was handed rather than an empty string.
-  job: { job_id: "req-123" },
+  job: { request_id: "req-123" },
 };
 
 // The full view payload (cross-section contract 3). Its card order is the

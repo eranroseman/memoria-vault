@@ -355,7 +355,7 @@ def test_write_project_outline_proposes_bm25_slice_and_computes_edges(
         limit=2,
     )
 
-    assert result["retrieval_engine"] == "bm25"
+    assert result["retrieval_backend"] == "bm25"
     assert result["outline_path"] == "projects/project-alpha/outline.md"
     assert {member["path"] for member in result["members"]} == {
         "notes/support.md",
@@ -967,9 +967,11 @@ def _register_warrant_threshold(vault: Path, value: str) -> None:
     (config / "edges.yaml").write_text(f"warrant_absence_threshold: {value}\n", encoding="utf-8")
 
 
-def _warrant_edge(source_id: str, source_path: str, target_id: str, target_path: str) -> dict:
+def _warrant_edge(
+    source_concept_id: str, source_path: str, target_id: str, target_path: str
+) -> dict:
     return {
-        "source_concept_id": source_id,
+        "source_concept_id": source_concept_id,
         "relation_type": "warrant",
         "target_concept_id": target_id,
         "target_path": target_path,
@@ -1354,7 +1356,7 @@ def test_analyze_project_argument_ignores_a_link_target_that_escapes_its_folder(
 ) -> None:
     """The report follows only normalized local targets — `notes/../thesis.md` is not one.
 
-    Before the parsers converged on `lib.edges`, this note's link resolved back to
+    Before the parsers converged on `vocabulary.edges`, this note's link resolved back to
     `notes/thesis.md` and counted as an edge, while the validator rejected the same
     string as escaping the workspace.
     """
@@ -1959,7 +1961,7 @@ def test_canvas_edge_labels_conform_to_link_relations(tmp_path: Path) -> None:
     the canvas and the frontmatter graph are held to one enum — and it is what
     lets the fork diff key on `(source, label, target)` at all.
     """
-    from memoria_vault.runtime.subsystems.lib.edges import LINK_RELATIONS
+    from memoria_vault.runtime.vocabulary.edges import LINK_RELATIONS
 
     _md(
         tmp_path / "projects/project-alpha/project.md",

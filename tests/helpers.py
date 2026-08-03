@@ -62,7 +62,7 @@ def operation_context(
         agent_identity,
     )
     job = {
-        "job_id": request_id,
+        "request_id": request_id,
         "kind": "operation",
         "operation_id": operation_id,
         "status": "running",

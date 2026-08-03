@@ -1,7 +1,8 @@
-"""Schema v16 identity floor: concepts.path, FK parents, and scoped edges.
+"""Concept identity floor: concepts.path, FK parents, and scoped edges.
 
-Fresh installs receive v16 directly, so every test here builds its vault with
-``state.connect(tmp_path)``. There is no migration ladder and no legacy fixture.
+Fresh installs receive the current schema directly, so every test here builds
+its vault with ``state.connect(tmp_path)``. There is no migration ladder and no
+legacy fixture.
 """
 
 from __future__ import annotations
@@ -932,8 +933,8 @@ def test_ulid_identity_required_for_note_hub_project() -> None:
     would still catch a bad id from the yaml, so the two layers could silently
     disagree. Looping over all three closes that gap.
     """
-    from memoria_vault.runtime.subsystems.lib.schema import load_types, validate_frontmatter
     from memoria_vault.runtime.vaultio import universal_concept_frontmatter_errors
+    from memoria_vault.runtime.vocabulary.schema import load_types, validate_frontmatter
 
     types = load_types()
     rel_paths = {"note": "notes/x.md", "hub": "hubs/x.md", "project": "projects/x.md"}
@@ -961,8 +962,8 @@ def test_digest_and_fulltext_accept_non_ulid_ids() -> None:
     fresh ULID) and must stay accepted without one — otherwise the guard
     above would be pinning an over-broad rule instead of the actual clause.
     """
-    from memoria_vault.runtime.subsystems.lib.schema import load_types, validate_frontmatter
     from memoria_vault.runtime.vaultio import universal_concept_frontmatter_errors
+    from memoria_vault.runtime.vocabulary.schema import load_types, validate_frontmatter
 
     types = load_types()
     for type_name, rel_path in (("digest", "digests/x.md"), ("fulltext", "fulltexts/x.md")):

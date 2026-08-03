@@ -16,7 +16,6 @@ from memoria_vault.runtime.projections import (
     write_tracked_projections as _write_tracked_projections,
 )
 from memoria_vault.runtime.search_index import answer_query as _answer_query
-from memoria_vault.runtime.subsystems.lib.edges import LINK_RELATIONS, concept_edge_path_records
 from memoria_vault.runtime.trusted_writer import (
     commit_writer_changes as _commit_writer_changes,
 )
@@ -27,6 +26,7 @@ from memoria_vault.runtime.trusted_writer import (
     observe_pi_edit,
 )
 from memoria_vault.runtime.vaultio import read_frontmatter
+from memoria_vault.runtime.vocabulary.edges import LINK_RELATIONS, concept_edge_path_records
 from memoria_vault.runtime.worker import (
     enqueue_integrity_sweep,
     enqueue_operation,
@@ -688,7 +688,7 @@ def test_worker_runs_answer_query_operation_jobs(tmp_path: Path) -> None:
     assert queued["kind"] == "operation"
     assert done is not None
     assert done["status"] == "done"
-    assert done["engine"] == "bm25"
+    assert done["backend"] == "bm25"
     assert done["unknowns"] == []
     assert [source["path"] for source in done["sources"]] == ["notes/checked.md"]
 
@@ -1572,7 +1572,7 @@ def test_scheduled_integrity_sweep_is_daily_idempotent(tmp_path: Path) -> None:
         machine="test-machine",
     )
 
-    assert [job["job_id"] for job in result["jobs"]] == [
+    assert [job["request_id"] for job in result["jobs"]] == [
         "trace-integrity-scan-2026-06-29",
         "check-source-metadata-2026-06-29",
         "integrity-evidence-check-2026-06-29",
@@ -1719,7 +1719,7 @@ def _ground_claim_in(vault: Path, work_id: str, note: str, evidence_id: str) -> 
                 "block_ref": f"notes/{note}.md#^blk-33333333",
                 "items": [f"{work_id}#^p0001"],
                 "type": "single-span",
-                "state": "complete",
+                "completeness_status": "complete",
                 "review_required": False,
                 "bind": False,
             }

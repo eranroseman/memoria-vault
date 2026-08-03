@@ -911,7 +911,7 @@ def test_cli_doctor_search_checks_workspace_local_state(
 
     assert rc == 1
     assert output["ok"] is False
-    assert output["search_engine"] == "bm25"
+    assert output["search_backend"] == "bm25"
     assert output["search_manifest"] == ".memoria/index/search/manifest.json"
     assert output["search_document_count"] == 0
     assert output["checks"]["search_checked_root"] is False

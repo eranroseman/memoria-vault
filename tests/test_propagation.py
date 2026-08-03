@@ -18,8 +18,8 @@ from memoria_vault.runtime.propagation import (
     consequence_closure,
     hop_consequence,
 )
-from memoria_vault.runtime.subsystems.lib.edges import EDGE_RELATIONS
 from memoria_vault.runtime.trusted_writer import append_explicit_journal_event
+from memoria_vault.runtime.vocabulary.edges import EDGE_RELATIONS
 
 pytestmark = pytest.mark.runtime
 
@@ -446,7 +446,7 @@ def _evidence_set(evidence_id: str, block_ref: str, items: list[str]) -> dict[st
         "block_ref": block_ref,
         "items": items,
         "type": "single-span",
-        "state": "complete",
+        "completeness_status": "complete",
         "review_required": False,
         "bind": False,
     }

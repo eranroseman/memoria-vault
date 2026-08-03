@@ -66,7 +66,7 @@ from pathlib import Path
 from typing import Any
 
 from memoria_vault.runtime import state
-from memoria_vault.runtime.subsystems.lib.loudness import attention_status, routing_class
+from memoria_vault.runtime.attention.loudness import attention_status, routing_class
 from memoria_vault.runtime.time import now_iso
 from memoria_vault.runtime.trusted_writer import (
     EVENT_RESOLVED,
@@ -229,7 +229,7 @@ COMPACTION_ACTOR = "integrity"
 # no CHECK and no registry (`runtime/schema.sql:30`), and the house precedent for a
 # subsystem transition is an inline literal in the owning module (`move-reverted` at
 # `runtime/knowledge.py:513`, `workspace-restored` at `runtime/backup.py:792`). Bare
-# `archived` was rejected: it already names a note lifecycle (`integrity.py:1782`), a
+# `archived` was rejected: it already names a note lifecycle (`grounding/__init__.py:1782`), a
 # source standing (`:1800`), a worklist decision (`worklists.py:30`) and a steering
 # flag. A journal event type can never be renamed once rows carry it.
 EVENT_ATTENTION_ARCHIVED = "attention-card-archived"

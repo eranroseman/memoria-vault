@@ -19,12 +19,12 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from memoria_vault.runtime.attention import inbox
 from memoria_vault.runtime.content_security import (
     markdown_code_span,
     neutralize_untrusted_markdown,
     neutralize_untrusted_markdown_fragment,
 )
-from memoria_vault.runtime.subsystems.lib import inbox
 from memoria_vault.runtime.vaultio import frontmatter_doc, write_text_durable
 
 DECISIONS = ("proposed", "include", "exclude", "maybe", "archived")

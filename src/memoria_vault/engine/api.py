@@ -11,6 +11,7 @@ from memoria_vault import __version__
 from memoria_vault.engine.dashboard import DASHBOARD_PANELS, assemble_dashboard
 from memoria_vault.engine.surface_contract import ENGINE_READ_API_VERSION as READ_API_VERSION
 from memoria_vault.runtime import evidence_review, state
+from memoria_vault.runtime.attention import loudness
 from memoria_vault.runtime.attention_config import attention_order_by, normalize_order_by
 from memoria_vault.runtime.capabilities import render_capability_index
 from memoria_vault.runtime.explore import explore_topic
@@ -25,8 +26,6 @@ from memoria_vault.runtime.policy.paths import normalize_path, within_scope
 from memoria_vault.runtime.read_barrier import is_consumable_checked_file
 from memoria_vault.runtime.secrets import credential_report
 from memoria_vault.runtime.steering import effective_steering_tokens
-from memoria_vault.runtime.subsystems.lib import loudness
-from memoria_vault.runtime.subsystems.lib.edges import LINK_RELATIONS
 from memoria_vault.runtime.time import now_iso
 from memoria_vault.runtime.vaultio import (
     apply_universal_concept_frontmatter,
@@ -36,6 +35,7 @@ from memoria_vault.runtime.vaultio import (
     safe_read,
     split_frontmatter,
 )
+from memoria_vault.runtime.vocabulary.edges import LINK_RELATIONS
 from memoria_vault.runtime.worker import enqueue_operation, run_request
 
 JOURNAL_OPERATION_ALIASES = {"work.digest": ("compile-source-digest",)}
@@ -642,9 +642,9 @@ def read_revert_preview(
     would understate what the rollback is about to do.
 
     The runtime import is call-time-local, matching the shipped precedent
-    above; `integrity` imports this package's writers.
+    above; `grounding` imports this package's writers.
     """
-    from memoria_vault.runtime.integrity import revert_preview
+    from memoria_vault.runtime.grounding import revert_preview
 
     preview = revert_preview(Path(workspace), event_id)
     # Every return path of `revert_preview` sets `target`, and a non-computable
@@ -793,7 +793,7 @@ def run_operation(
 def _run_saved_request(workspace: Path, job: dict[str, Any], *, machine: str) -> dict[str, Any]:
     if job.get("status") not in {"pending", "running"}:
         return job
-    request_id = str(job["job_id"])
+    request_id = str(job["request_id"])
     try:
         return run_request(workspace, request_id, machine=machine)
     except ValueError as exc:
@@ -1139,7 +1139,7 @@ def _attention_card(
     workspace-export count all compare `card["status"]` to `"open"` a layer away,
     where the raw spelling is already lost. The payload is a wire field the plugin
     reads, and this narrows it -- to exactly the vocabulary `inbox.py` writes and
-    `integrity.resolve_attention` writes back, never to a new term.
+    `grounding.resolve_attention` writes back, never to a new term.
 
     `routing_class` is `loudness.routing_class` for the same reason and with one
     hop more at stake (#1670): this payload field is what `resolve_attention` below
@@ -1496,11 +1496,11 @@ def _draft_view(draft: dict[str, Any]) -> dict[str, Any]:
     rows = [
         {
             "ref": str(row["block_ref"]),
-            "check_status": "unchecked" if row["state"] != "complete" else "checked",
+            "check_status": "unchecked" if row["completeness_status"] != "complete" else "checked",
             "cells": {
                 "id": row["id"],
                 "type": row["type"],
-                "state": row["state"],
+                "completeness_status": row["completeness_status"],
                 "review_required": row["review_required"],
             },
         }
@@ -1516,7 +1516,7 @@ def _draft_view(draft: dict[str, Any]) -> dict[str, Any]:
                 "title": "Project draft evidence",
                 "check_status": "checked" if ready else "unchecked",
                 "refs": [draft["draft_path"]],
-                "columns": ["id", "type", "state", "review_required"],
+                "columns": ["id", "type", "completeness_status", "review_required"],
                 "rows": rows,
             }
         ],

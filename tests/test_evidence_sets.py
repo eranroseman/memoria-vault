@@ -78,19 +78,19 @@ def test_rebuild_evidence_sets_derives_rows_from_markers(tmp_path: Path) -> None
         "block_ref": "notes/draft.md#^blk-11111111",
         "items": ["source-alpha#^p0001"],
         "type": "single-span",
-        "state": "complete",
+        "completeness_status": "complete",
         "review_required": False,
         "run_id": "compose-1",
         "block_text_sha256": None,
     }
-    assert rows["ev-22222222"]["state"] == "evidence-incomplete"
+    assert rows["ev-22222222"]["completeness_status"] == "evidence-incomplete"
     assert rows["ev-33333333"]["type"] == "multi-hop"
-    assert rows["ev-33333333"]["state"] == "complete"
+    assert rows["ev-33333333"]["completeness_status"] == "complete"
     assert rows["ev-33333333"]["review_required"] is True
     assert rows["ev-44444444"]["type"] == "implicit"
-    assert rows["ev-44444444"]["state"] == "evidence-incomplete"
+    assert rows["ev-44444444"]["completeness_status"] == "evidence-incomplete"
     assert rows["ev-44444444"]["review_required"] is True
-    assert rows["ev-55555555"]["state"] == "evidence-incomplete"
+    assert rows["ev-55555555"]["completeness_status"] == "evidence-incomplete"
 
 
 def _seed_source(vault: Path, work_id: str, text: str) -> None:
@@ -128,7 +128,7 @@ def test_cross_work_two_span_marker_derives_multi_hop_and_requires_review(
 
     assert row["type"] == "multi-hop"
     assert row["review_required"] is True
-    assert row["state"] == "complete"
+    assert row["completeness_status"] == "complete"
 
 
 def test_code_and_span_mix_derives_multi_hop(tmp_path: Path) -> None:
@@ -147,7 +147,7 @@ def test_code_and_span_mix_derives_multi_hop(tmp_path: Path) -> None:
 
     assert row["type"] == "multi-hop"
     assert row["review_required"] is True
-    assert row["state"] == "evidence-incomplete"
+    assert row["completeness_status"] == "evidence-incomplete"
 
 
 def test_same_work_two_span_marker_stays_multi_span(tmp_path: Path) -> None:
@@ -163,7 +163,7 @@ def test_same_work_two_span_marker_stays_multi_span(tmp_path: Path) -> None:
 
     assert row["type"] == "multi-span"
     assert row["review_required"] is False
-    assert row["state"] == "complete"
+    assert row["completeness_status"] == "complete"
 
 
 def test_pure_code_items_derive_computed(tmp_path: Path) -> None:
@@ -181,7 +181,7 @@ def test_pure_code_items_derive_computed(tmp_path: Path) -> None:
 
     assert row["type"] == "computed"
     assert row["review_required"] is False
-    assert row["state"] == "evidence-incomplete"
+    assert row["completeness_status"] == "evidence-incomplete"
 
 
 def test_derive_evidence_type_counts_duplicate_span_items() -> None:
@@ -206,8 +206,8 @@ def test_nested_incomplete_child_flips_parent_incomplete(tmp_path: Path) -> None
     state.rebuild_evidence_sets_from_markers(vault, run_id="compose-1")
     rows = {row["id"]: row for row in state.evidence_sets(vault)}
 
-    assert rows["ev-bbbb0001"]["state"] == "evidence-incomplete"
-    assert rows["ev-bbbb0002"]["state"] == "evidence-incomplete"
+    assert rows["ev-bbbb0001"]["completeness_status"] == "evidence-incomplete"
+    assert rows["ev-bbbb0002"]["completeness_status"] == "evidence-incomplete"
 
 
 def test_mutually_referencing_sets_are_both_incomplete(tmp_path: Path) -> None:
@@ -220,8 +220,8 @@ def test_mutually_referencing_sets_are_both_incomplete(tmp_path: Path) -> None:
     state.rebuild_evidence_sets_from_markers(vault, run_id="compose-1")
     rows = {row["id"]: row for row in state.evidence_sets(vault)}
 
-    assert rows["ev-cccc0001"]["state"] == "evidence-incomplete"
-    assert rows["ev-cccc0002"]["state"] == "evidence-incomplete"
+    assert rows["ev-cccc0001"]["completeness_status"] == "evidence-incomplete"
+    assert rows["ev-cccc0002"]["completeness_status"] == "evidence-incomplete"
 
 
 def test_self_referencing_set_is_incomplete(tmp_path: Path) -> None:
@@ -231,7 +231,7 @@ def test_self_referencing_set_is_incomplete(tmp_path: Path) -> None:
     state.rebuild_evidence_sets_from_markers(vault, run_id="compose-1")
     [row] = state.evidence_sets(vault)
 
-    assert row["state"] == "evidence-incomplete"
+    assert row["completeness_status"] == "evidence-incomplete"
 
 
 def test_healthy_nested_chain_stays_complete(tmp_path: Path) -> None:
@@ -246,8 +246,8 @@ def test_healthy_nested_chain_stays_complete(tmp_path: Path) -> None:
     state.rebuild_evidence_sets_from_markers(vault, run_id="compose-1")
     rows = {row["id"]: row for row in state.evidence_sets(vault)}
 
-    assert rows["ev-eeee0001"]["state"] == "complete"
-    assert rows["ev-eeee0002"]["state"] == "complete"
+    assert rows["ev-eeee0001"]["completeness_status"] == "complete"
+    assert rows["ev-eeee0002"]["completeness_status"] == "complete"
     assert rows["ev-eeee0002"]["type"] == "multi-hop"
 
 

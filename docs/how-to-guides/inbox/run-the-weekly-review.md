@@ -50,7 +50,7 @@ weekly review is the backstop that keeps the queue from aging past a week.
 Run the vault-local Linter and read its JSON report by severity:
 
 ```bash
-./.memoria/.venv/bin/python -m memoria_vault.runtime.subsystems.integrity.linter.detectors \
+./.memoria/.venv/bin/python -m memoria_vault.runtime.sweeps.linter.detectors \
   --vault . --json
 ```
 

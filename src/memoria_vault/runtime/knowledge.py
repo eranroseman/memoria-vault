@@ -19,6 +19,7 @@ from tempfile import TemporaryDirectory
 from typing import Any
 
 from memoria_vault.runtime import state
+from memoria_vault.runtime.attention import inbox
 from memoria_vault.runtime.content_security import (
     has_unterminated_fenced_code_block,
     neutralize_untrusted_markdown,
@@ -36,17 +37,6 @@ from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path, require_policy_path
 from memoria_vault.runtime.read_barrier import is_consumable_checked_file
 from memoria_vault.runtime.steering import effective_steering_tokens, relevance_tokens
-from memoria_vault.runtime.subsystems.lib import inbox
-from memoria_vault.runtime.subsystems.lib import schema as schema_lib
-from memoria_vault.runtime.subsystems.lib.edges import (
-    CHALLENGE_RELATIONS,
-    LINK_RELATIONS,
-    SUPPORT_RELATIONS,
-    concept_edge_path_records,
-    normalize_link_target,
-    thesis_rel,
-    warrant_absence_threshold,
-)
 from memoria_vault.runtime.time import now_iso, parse_iso
 from memoria_vault.runtime.trusted_writer import (
     OperationContext,
@@ -70,6 +60,16 @@ from memoria_vault.runtime.vaultio import (
     split_frontmatter,
     write_frontmatter_doc,
     write_text_durable,
+)
+from memoria_vault.runtime.vocabulary import schema as schema_lib
+from memoria_vault.runtime.vocabulary.edges import (
+    CHALLENGE_RELATIONS,
+    LINK_RELATIONS,
+    SUPPORT_RELATIONS,
+    concept_edge_path_records,
+    normalize_link_target,
+    thesis_rel,
+    warrant_absence_threshold,
 )
 
 GAP_KINDS = {
@@ -853,7 +853,7 @@ def analyze_gaps(
         if work_ids := _work_ids_from_seen(seen[key]["sources"]):
             gap["work_ids"] = work_ids
         if key in retrieval:
-            gap["retrieval_engine"] = retrieval[key]["engine"]
+            gap["retrieval_backend"] = retrieval[key]["backend"]
             gap["retrieval_sources"] = retrieval[key]["sources"]
         gaps.append(gap)
     citation_gaps = _citation_neighborhood_gaps(vault)
@@ -1373,7 +1373,7 @@ def _add_search_gap_hits(
     for key, label in sorted(labels.items()):
         answer = answer_query(vault, label, k=5, context=context)
         retrieval[key] = {
-            "engine": answer["engine"],
+            "backend": answer["backend"],
             "sources": answer["sources"],
         }
         for source in answer["sources"]:
@@ -1832,7 +1832,7 @@ def _contrary_channel_items(vault: Path, *, limit: int) -> list[dict[str, str]]:
 
 
 def _nli_contrary_channel_items(vault: Path, *, limit: int) -> list[dict[str, str]]:
-    from memoria_vault.runtime.integrity import (
+    from memoria_vault.runtime.grounding import (
         NLI_REFUTED,
         tier1_tension_candidates,
     )
@@ -2422,7 +2422,7 @@ def propose_project_slice(
     return {
         "project_path": project_rel,
         "outline_path": _project_outline_rel(project_rel),
-        "retrieval_engine": "bm25",
+        "retrieval_backend": "bm25",
         "query": retrieval_query,
         "members": members,
         "skipped": skipped,
@@ -2485,7 +2485,7 @@ def write_project_outline(
                 "status": "done",
                 "inputs": [proposal["project_path"]],
                 "outputs": outputs,
-                "retrieval_engine": proposal["retrieval_engine"],
+                "retrieval_backend": proposal["retrieval_backend"],
                 "query": proposal["query"],
                 "member_count": len(project_slice["members"]),
             },
@@ -2500,7 +2500,7 @@ def write_project_outline(
     return {
         "project_path": proposal["project_path"],
         "outline_path": outline_rel,
-        "retrieval_engine": proposal["retrieval_engine"],
+        "retrieval_backend": proposal["retrieval_backend"],
         "query": proposal["query"],
         "members": project_slice["members"],
         "edges": project_slice["edges"],
@@ -2689,7 +2689,6 @@ def _verify_project_draft_snapshot(
                 "project_path": project_rel,
                 "draft_path": draft_rel,
                 "ready": False,
-                "ok": False,
                 "status": "missing-draft",
                 "missing": ["draft"],
                 "findings": [{"kind": "missing-draft", "severity": "high"}],
@@ -2768,7 +2767,7 @@ def _verify_project_draft_snapshot(
             )
         if disposed.get(row["id"]) == _evidence_items_sha256(row["items"]):
             continue
-        if row["state"] == "evidence-incomplete":
+        if row["completeness_status"] == "evidence-incomplete":
             findings.append(
                 {
                     "kind": "evidence-incomplete",
@@ -2805,7 +2804,6 @@ def _verify_project_draft_snapshot(
             "project_path": project_rel,
             "draft_path": draft_rel,
             "ready": ok,
-            "ok": ok,
             "status": "verified" if ok else "needs-review",
             "missing": [] if ok else _verification_finding_labels(blocking[:max_findings]),
             "findings": findings,
@@ -3171,7 +3169,7 @@ def render_project_draft_export_markdown(
     """Render a verified project draft with internal evidence markers stripped."""
     vault = Path(vault)
     verification, draft = _verify_project_draft_snapshot(vault, project_path, context=context)
-    if not verification["ok"]:
+    if not verification["ready"]:
         reasons = ", ".join(verification["missing"])
         raise ValueError(f"project draft is not export-ready: {reasons}")
     if draft is None:

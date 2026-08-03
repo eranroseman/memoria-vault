@@ -80,14 +80,14 @@
         "action": "str",
         "argument_against": "str",
         "argument_for": "str",
-        "card_type": "str",
+        "attention_kind": "str",
         "certainty": "str",
         "raised_by": "str",
         "title": "str",
         "what_tipped_it": "str"
       },
       "args": {
-        "card_type": "gap",
+        "attention_kind": "gap",
         "title": "Harness discussion gap",
         "action": "Discuss whether the cassette covers the project handoff path.",
         "argument_for": "The cassette exercises real deterministic operations.",

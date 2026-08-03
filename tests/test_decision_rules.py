@@ -41,6 +41,7 @@ import yaml
 import memoria_vault
 from memoria_vault.engine.dashboard import assemble_dashboard
 from memoria_vault.runtime import state
+from memoria_vault.runtime.attention.inbox import write_finding
 from memoria_vault.runtime.decision_rules import (
     AUTO_PREDICATES,
     DEFAULT_RULES_YAML,
@@ -50,7 +51,6 @@ from memoria_vault.runtime.decision_rules import (
     update_rule_status,
 )
 from memoria_vault.runtime.operations import emit_explicit_disposition_event
-from memoria_vault.runtime.subsystems.lib.inbox import write_finding
 from memoria_vault.runtime.telemetry import record_telemetry_event
 from memoria_vault.runtime.worker import enqueue_operation, run_next_job
 from tests.helpers import git, worker_workspace

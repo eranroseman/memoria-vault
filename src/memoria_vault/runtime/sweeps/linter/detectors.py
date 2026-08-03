@@ -25,15 +25,15 @@ from pathlib import Path
 
 from memoria_vault.runtime import state
 from memoria_vault.runtime.jsonl import append_jsonl
-from memoria_vault.runtime.subsystems.integrity.linter.detectors_audit import (
+from memoria_vault.runtime.sweeps.linter.detectors_audit import (
     Finding,
     audit_log_size,
     audit_unpaired_writes,
     read,
     vault_hash_drift,
 )
-from memoria_vault.runtime.subsystems.lib import schema
 from memoria_vault.runtime.vaultio import parse_frontmatter, retired_frontmatter_field_errors
+from memoria_vault.runtime.vocabulary import schema
 
 # Host and tool state, not vault content. `memoria init` seeds .obsidian, .claude
 # and .codex, so leaving any of them out means the linter flags the product's own
@@ -239,8 +239,8 @@ _WIKI_VAL = re.compile(r"\[\[([^\]|#]+)")
 
 def frontmatter_link_check(vault: Path) -> list[Finding]:
     """Authored connections must resolve: every wikilink inside the
-    `links:` map and the `entity` field points at a real note. Citekeys in
-    `sources` are bibliographic, not note links -- checked by the sweeps, not here."""
+    `links:` map points at a real note. Citekeys in `sources` are
+    bibliographic, not note links -- checked by the sweeps, not here."""
     notes = list(iter_notes(vault))
     stems = {q.stem for q in notes}
     out = []
@@ -256,9 +256,6 @@ def frontmatter_link_check(vault: Path) -> list[Finding]:
                 for v in vals if isinstance(vals, list) else [vals]:
                     if isinstance(v, str):
                         targets += _WIKI_VAL.findall(v) or ([v] if v else [])
-        ent = fm.get("entity")
-        if isinstance(ent, str) and ent:
-            targets += _WIKI_VAL.findall(ent) or [ent]
         for tgt in targets:
             stem = Path(tgt.strip().rstrip("\\")).stem
             if stem and stem not in stems:

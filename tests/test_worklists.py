@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from memoria_vault.runtime.subsystems.lib import worklists
+from memoria_vault.runtime.attention import worklists
 
 pytestmark = pytest.mark.contract
 

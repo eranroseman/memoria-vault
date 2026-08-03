@@ -11,7 +11,7 @@ from pathlib import Path
 import pytest
 
 from memoria_vault.runtime import state
-from memoria_vault.runtime.subsystems.telemetry.eval import eval_dispatch, eval_score
+from memoria_vault.runtime.eval import eval_dispatch, eval_score
 
 pytestmark = pytest.mark.contract
 
@@ -92,7 +92,7 @@ def test_superseded_claims_classification(tmp_path):
 def test_superseded_classification_matches_the_linter_detector(tmp_path):
     """eval_score mirrors fama_exposure's superseded test — parity guarded here
     (same pattern as the eval-role assignee mirror in test_eval.py)."""
-    from memoria_vault.runtime.subsystems.integrity.linter import detectors
+    from memoria_vault.runtime.sweeps.linter import detectors
 
     v = _vault(tmp_path)
     # a downstream project citing every note: the detector flags exactly the superseded set

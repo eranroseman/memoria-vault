@@ -21,12 +21,12 @@ from memoria_vault.runtime.knowledge import (
 )
 from memoria_vault.runtime.operations import compile_source_digest as _compile_source_digest
 from memoria_vault.runtime.read_barrier import is_consumable_checked_file
-from memoria_vault.runtime.subsystems.lib.edges import LINK_RELATIONS, concept_edge_path_records
 from memoria_vault.runtime.trusted_writer import mark_checked as _mark_checked
 from memoria_vault.runtime.trusted_writer import observe_pi_edit_from_head
 from memoria_vault.runtime.trusted_writer import promote_checked as _promote_checked
 from memoria_vault.runtime.trusted_writer import stage_concept as _stage_concept
 from memoria_vault.runtime.vaultio import read_frontmatter
+from memoria_vault.runtime.vocabulary.edges import LINK_RELATIONS, concept_edge_path_records
 from tests.helpers import (
     _md,
     call_with_context,
