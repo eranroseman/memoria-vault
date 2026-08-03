@@ -385,7 +385,7 @@ def test_answer_query_contract_reports_sources_unknowns_and_contradictions(tmp_p
 
     answer = answer_query(vault, "alpha")
 
-    assert answer["engine"] == "bm25"
+    assert answer["backend"] == "bm25"
     assert answer["unknowns"] == []
     assert [source["path"] for source in answer["sources"]] == [
         "notes/superseded.md",
@@ -590,7 +590,7 @@ def test_project_answer_expands_bm25_query_with_project_and_thesis_terms(
 
     answer = answer_query(vault, "status", project_id="project-alpha")
 
-    assert answer["engine"] == "bm25"
+    assert answer["backend"] == "bm25"
     assert answer["project_context"]["retrieval_terms"] == [
         "patient-generated-data",
         "qualitative",

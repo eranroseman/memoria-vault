@@ -853,7 +853,7 @@ def analyze_gaps(
         if work_ids := _work_ids_from_seen(seen[key]["sources"]):
             gap["work_ids"] = work_ids
         if key in retrieval:
-            gap["retrieval_engine"] = retrieval[key]["engine"]
+            gap["retrieval_backend"] = retrieval[key]["backend"]
             gap["retrieval_sources"] = retrieval[key]["sources"]
         gaps.append(gap)
     citation_gaps = _citation_neighborhood_gaps(vault)
@@ -1373,7 +1373,7 @@ def _add_search_gap_hits(
     for key, label in sorted(labels.items()):
         answer = answer_query(vault, label, k=5, context=context)
         retrieval[key] = {
-            "engine": answer["engine"],
+            "backend": answer["backend"],
             "sources": answer["sources"],
         }
         for source in answer["sources"]:
@@ -2422,7 +2422,7 @@ def propose_project_slice(
     return {
         "project_path": project_rel,
         "outline_path": _project_outline_rel(project_rel),
-        "retrieval_engine": "bm25",
+        "retrieval_backend": "bm25",
         "query": retrieval_query,
         "members": members,
         "skipped": skipped,
@@ -2485,7 +2485,7 @@ def write_project_outline(
                 "status": "done",
                 "inputs": [proposal["project_path"]],
                 "outputs": outputs,
-                "retrieval_engine": proposal["retrieval_engine"],
+                "retrieval_backend": proposal["retrieval_backend"],
                 "query": proposal["query"],
                 "member_count": len(project_slice["members"]),
             },
@@ -2500,7 +2500,7 @@ def write_project_outline(
     return {
         "project_path": proposal["project_path"],
         "outline_path": outline_rel,
-        "retrieval_engine": proposal["retrieval_engine"],
+        "retrieval_backend": proposal["retrieval_backend"],
         "query": proposal["query"],
         "members": project_slice["members"],
         "edges": project_slice["edges"],

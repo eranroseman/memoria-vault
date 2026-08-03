@@ -1894,7 +1894,7 @@ def test_cli_workspace_rebuild_writes_checked_search_index(
 
     assert rc == 0
     assert output["ok"] is True
-    assert output["search"]["engine"] == "bm25"
+    assert output["search"]["backend"] == "bm25"
     assert output["search"]["manifest"]["mode"] == "bm25"
     assert output["search"]["manifest"]["documents"][0]["path"] == "notes/search.md"
     assert (workspace / ".memoria/index/search/checked/notes/search.md").is_file()

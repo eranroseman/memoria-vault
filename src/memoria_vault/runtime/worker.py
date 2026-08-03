@@ -723,7 +723,7 @@ def _run_operation_job(
             "commit": result["commit"],
             "project_path": result["project_path"],
             "outline_path": result["outline_path"],
-            "retrieval_engine": result["retrieval_engine"],
+            "retrieval_backend": result["retrieval_backend"],
             "query": result["query"],
             "member_count": result["member_count"],
             "edge_count": result["edge_count"],
@@ -827,7 +827,7 @@ def _run_operation_job(
 
         manifest = rebuild_checked_search_index(vault, context=context)
         return {
-            "engine": manifest["backend"],
+            "backend": manifest["backend"],
             "input_root": manifest["input_root"],
             "document_count": len(manifest["documents"]),
             "documents": manifest["documents"],

@@ -265,7 +265,7 @@ def answer_query(
         query,
         hits,
         frontmatter_by_path,
-        engine="bm25",
+        backend="bm25",
         project_context=project_context,
         pipeline_counts=stages.rows(),
         excluded_strata=universe["excluded_strata"],
@@ -311,7 +311,7 @@ def _answer_from_hits(
     hits: list[tuple[str, float]],
     frontmatter_by_path: dict[str, dict[str, Any]],
     *,
-    engine: str,
+    backend: str,
     pipeline_counts: list[dict[str, Any]],
     excluded_strata: dict[str, int],
     project_context: dict[str, Any] | None = None,
@@ -339,7 +339,7 @@ def _answer_from_hits(
                 contradictions.append({"path": path, "contradiction": item})
     answer = {
         "query": query,
-        "engine": engine,
+        "backend": backend,
         "sources": sources,
         "unknowns": (
             [] if sources else [retrieval_pipeline.honest_empty(pipeline_counts, excluded_strata)]
@@ -460,7 +460,7 @@ def evaluate_bm25(
     total = len(results)
     hits = sum(1 for result in results if result["hit"])
     return {
-        "engine": "bm25",
+        "backend": "bm25",
         "documents": len(docs),
         "queries": total,
         "hits": hits,

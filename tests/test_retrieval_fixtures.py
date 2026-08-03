@@ -359,7 +359,7 @@ def test_shape1_gold_maps_to_document_paths_and_feeds_evaluate_bm25(tmp_path: Pa
 
     baseline = evaluate_bm25(vault, cases)
 
-    assert baseline["engine"] == "bm25"
+    assert baseline["backend"] == "bm25"
     assert baseline["queries"] == 2
     assert baseline["hits"] == 2
     assert baseline["recall_at_k"] == 1.0
