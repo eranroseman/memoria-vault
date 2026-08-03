@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import os
 import shutil
+import sqlite3
 import subprocess
 from contextlib import contextmanager
 from pathlib import Path
@@ -229,6 +230,34 @@ def test_cli_doctor_repair_restores_runtime_seed_files(
     assert provider_config.read_text(encoding="utf-8") == seed_provider_config.read_text(
         encoding="utf-8"
     )
+
+
+def test_cli_doctor_repair_restores_dropped_schema_objects(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Repair heals a damaged current-version DB, not just seed files.
+
+    connect() skips schema.sql when user_version is current, so a dropped
+    table stays dropped until a repair path re-runs the DDL explicitly
+    (state.ensure_schema, reached via _initialize_workspace_files).
+    """
+    workspace = tmp_path / "workspace"
+    assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
+    capsys.readouterr()
+
+    with sqlite3.connect(workspace / state.DB_REL) as conn:
+        conn.execute("DROP TABLE evidence_bindings")
+
+    rc = main(["doctor", "--workspace", str(workspace), "--repair", "--json"])
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    assert output["ok"] is True
+    with state.connect(workspace) as conn:
+        row = conn.execute(
+            "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'evidence_bindings'"
+        ).fetchone()
+    assert row is not None
 
 
 def test_cli_doctor_repair_does_not_overwrite_agent_bundle(

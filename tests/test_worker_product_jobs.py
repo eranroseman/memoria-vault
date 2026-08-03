@@ -775,7 +775,20 @@ def test_worker_does_not_fail_open_for_untyped_export_readiness_opt_out(
     assert error in done["error"]
 
 
-def test_worker_runs_seeded_error_verdict_in_disposable_fixture(tmp_path: Path) -> None:
+def test_worker_runs_seeded_error_verdict_in_disposable_fixture(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The worker hands the verdict a DISPOSABLE fixture vault and cleans it up.
+
+    1733: this ran the full real verdict (~76s) to prove two cheap plumbing
+    facts. The real computation is pinned by the slow-marked unit contract in
+    test_seeded_errors.py and exercised in-gate by the floor sweep's
+    run-seeded-error-verdict case; the runner argument provably never reaches
+    the integrity checks (seeded_errors.py uses it only for identity
+    metadata). A fake verdict keeps both plumbing assertions real: the
+    fixture path it receives must be a throwaway outside the vault, and it
+    must be gone after the job completes.
+    """
     vault = workspace(tmp_path)
     eval_dir = vault / ".memoria/eval"
     eval_dir.mkdir(parents=True)
@@ -783,11 +796,29 @@ def test_worker_runs_seeded_error_verdict_in_disposable_fixture(tmp_path: Path) 
         WORKSPACE_SEED / ".memoria/eval/alpha15-seeded-errors.json",
         eval_dir / "alpha15-seeded-errors.json",
     )
+    seen: dict[str, str] = {}
+
+    def fake_verdict(
+        vault_path: Path,
+        *,
+        template_root: Path,
+        bundle_path: Path,
+        runner: dict,
+        operation_id: str,
+        context,
+    ) -> dict[str, object]:
+        seen["fixture_vault"] = str(vault_path)
+        assert vault_path.is_dir(), "fixture vault must exist when the verdict runs"
+        return {"operation_id": operation_id, "mode": runner["mode"], "passed": True}
+
+    monkeypatch.setattr(
+        "memoria_vault.runtime.seeded_errors.run_seeded_error_verdict", fake_verdict
+    )
 
     queued = enqueue_operation(
         vault,
         "run-seeded-error-verdict",
-        payload={"mode": "live", "target_operation_id": "compile-source-digest"},
+        payload={"mode": "test", "target_operation_id": "compile-source-digest"},
         idempotency_key="seeded-verdict",
         actor="operation",
         machine_authored=False,
@@ -798,14 +829,9 @@ def test_worker_runs_seeded_error_verdict_in_disposable_fixture(tmp_path: Path) 
     assert done is not None
     assert done["status"] == "done"
     assert done["passed"] is True
-    assert done["mode"] == "live"
-    assert done["provider"] == "gateway"
-    assert done["operation_id"] == "compile-source-digest"
-    assert done["non_sandbox_licensed"] is True
-    assert done["verdict_key"].startswith("sha256:")
-    assert done["metrics"]["expected_errors"] == 12
-    assert done["metrics"]["detected_errors"] == 12
-    assert done["metrics"]["residual_errors"] == 0
+    fixture_vault = Path(seen["fixture_vault"])
+    assert not fixture_vault.is_relative_to(vault), "fixture must be outside the real vault"
+    assert not fixture_vault.exists(), "disposable fixture must be cleaned up after the job"
     assert not (vault / "catalog/sources/seed-source/source.md").exists()
 
 

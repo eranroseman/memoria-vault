@@ -640,7 +640,8 @@ def _telemetry_steps(vault: Path) -> list[str]:
 
 def _refuse_telemetry_inserts(vault: Path) -> None:
     # Produced, not mocked, and surgical: only inserts into telemetry_events fail.
-    # (A dropped table is not durable -- state._init re-runs schema.sql per connect.)
+    # (connect() skips the DDL on current DBs, so a dropped table would stay
+    # dropped; the trigger blocks writes without mutating the schema.)
     with state.connect(vault) as conn:
         conn.execute(
             "CREATE TRIGGER telemetry_sink_offline BEFORE INSERT ON telemetry_events"

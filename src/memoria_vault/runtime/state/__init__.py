@@ -104,6 +104,17 @@ def _schema_sql() -> str:
     return files("memoria_vault.runtime").joinpath("schema.sql").read_text(encoding="utf-8")
 
 
+def ensure_schema(vault: Path) -> None:
+    """Re-execute the idempotent DDL against an already-current DB.
+
+    connect() skips schema.sql when user_version is current, so paths that
+    exist to repair damage (init re-init, doctor --repair, journal-driven
+    recovery) must re-run it explicitly.
+    """
+    with connect(vault) as conn:
+        conn.executescript(_schema_sql())
+
+
 def request_envelope(
     *,
     request_id: str,
@@ -2698,6 +2709,10 @@ def rebuild_evidence_bindings_from_journal(vault: Path) -> dict[str, int]:
     """Replay verified first-time evidence mints into the immutable bindings ledger."""
     vault = Path(vault)
     with workspace_lock(vault):
+        # Recovery cannot assume the ledger schema survived — this path exists
+        # precisely for damaged databases (e.g. a dropped evidence_bindings
+        # table). Re-run the idempotent DDL before touching it.
+        ensure_schema(vault)
         verification = verify_journal_chain(vault)
         if not verification["ok"]:
             raise ValueError(
@@ -2815,7 +2830,16 @@ def compact_citation(vault: Path, source_ref: str) -> dict[str, Any]:
 
 def _init(conn: sqlite3.Connection) -> None:
     current = int(conn.execute("PRAGMA user_version").fetchone()[0])
-    if current not in {0, SCHEMA_VERSION}:
+    if current == SCHEMA_VERSION:
+        # 1733: re-running the 445-line schema.sql here cost ~19.6ms on EVERY
+        # connect (heavy tests open 300-700 connections; the CLI pays it per
+        # command). The script is pure IF-NOT-EXISTS DDL, so on a current DB
+        # it was always a semantic no-op. A version mismatch still hard-fails
+        # below, and a dev editing schema.sql must bump SCHEMA_VERSION —
+        # tests/test_schema_version.py hash-pins the DDL to it. Repair paths
+        # that must heal a current DB call ensure_schema() instead.
+        return
+    if current != 0:
         raise RuntimeError(f"unsupported Memoria DB schema version: {current}")
     conn.executescript(_schema_sql())
     applied = int(conn.execute("PRAGMA user_version").fetchone()[0])

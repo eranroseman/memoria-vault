@@ -97,7 +97,7 @@ def test_runtime_gate_replays_user_facing_commands(
         "--idempotency-key",
         "gate-enrich",
     )
-    _run_json(
+    updated = _run_json(
         capsys,
         "work",
         "update",
@@ -106,9 +106,17 @@ def test_runtime_gate_replays_user_facing_commands(
         "doi-10.1000_alpha",
         "--research-area",
         "framing",
+        "--methodology",
+        "rct",
         "--idempotency-key",
         "gate-update",
     )
+    # Folded from the deleted thin-loop test: update writes list-valued
+    # memoria metadata and never invents topics.
+    updated_memoria = updated["result"]["work"]["csl_json"]["memoria"]
+    assert updated_memoria["research_area"] == ["framing"]
+    assert updated_memoria["methodology"] == ["rct"]
+    assert "topics" not in updated_memoria
     _run_json(
         capsys,
         "work",
@@ -282,6 +290,24 @@ def test_runtime_gate_replays_user_facing_commands(
     assert project_answer["result"]["project_context"]["project_path"] == (
         "projects/project-alpha/project.md"
     )
+    gaps = _run_json(
+        capsys,
+        "project",
+        "gaps",
+        "--workspace",
+        str(workspace),
+        "project-alpha",
+        "--seed-term",
+        "new area",
+        "--dense-threshold",
+        "1",
+        "--idempotency-key",
+        "gate-gaps",
+    )
+    assert gaps["result"]["gap_count"] >= 1
+    assert gaps["result"]["project_path"] == "projects/project-alpha/project.md"
+    assert gaps["result"]["argument_gap_count"] >= 1
+
     export = _run_json(
         capsys,
         "project",
@@ -331,7 +357,9 @@ def test_runtime_gate_replays_user_facing_commands(
         "capture-source",
         "enrich-source",
         "compile-source-digest",
+        "curate-note-link",
         "answer-query",
+        "analyze-gaps",
         "export-project",
         "run-seeded-error-verdict",
     } <= requests

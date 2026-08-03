@@ -3688,7 +3688,10 @@ def _initialize_workspace_files(
     for rel in _workspace_plan(workspace):
         (workspace / rel).mkdir(parents=True, exist_ok=True)
     _seed_workspace(workspace, overwrite=overwrite, include_obsidian=include_obsidian)
-    state.connect(workspace).close()
+    # Initializes a fresh DB and heals a damaged current-version one: connect()
+    # skips schema.sql when user_version is current, and init re-init and
+    # doctor --repair both route through here to restore dropped objects.
+    state.ensure_schema(workspace)
     _ensure_control_files(workspace)
     from memoria_vault.runtime.projections import write_tracked_projections_explicit
 

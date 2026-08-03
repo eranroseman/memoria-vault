@@ -1275,10 +1275,10 @@ def _onboarding_steps(workspace: Path) -> list[str]:
 def _refuse_telemetry_inserts(workspace: Path) -> None:
     """Break the telemetry sink for real, at the sink, without breaking anything else.
 
-    `DROP TABLE telemetry_events` is not durable: `state._init` re-runs the whole of
-    `schema.sql` (all `CREATE ... IF NOT EXISTS`) on every connect, so the table comes
-    straight back and the emit succeeds. A `BEFORE INSERT` trigger survives that
-    re-run and refuses only writes to this one table.
+    `connect()` skips the DDL on current DBs, so `DROP TABLE telemetry_events`
+    would stay dropped — but that models a damaged vault, not a refusing sink.
+    A `BEFORE INSERT` trigger blocks writes without mutating the schema and
+    refuses only this one table.
     """
     with state.connect(workspace) as conn:
         conn.execute(

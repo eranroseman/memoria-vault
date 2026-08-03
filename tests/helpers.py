@@ -212,11 +212,34 @@ def capture_pdf_source_checked(
     )
 
 
-def init_cli_workspace(tmp_path: Path, capsys: Any) -> Path:
-    from memoria_vault.cli import main
+_INIT_TEMPLATE: Path | None = None
 
+
+def _init_template_workspace() -> Path:
+    """One real `memoria init` per process; every helper call copies it.
+
+    1733: ~190 call sites ran a real init (0.8-1.9s, ~85% fsync wait) where a
+    copytree is 0.05s. The equivalence pin lives in
+    tests/test_helpers_init_template.py; call sites needing init flags or
+    init-output assertions never used this helper and still run real init.
+    """
+    global _INIT_TEMPLATE
+    if _INIT_TEMPLATE is None or not _INIT_TEMPLATE.exists():
+        import atexit
+        import tempfile
+
+        from memoria_vault.cli import main
+
+        cache = Path(tempfile.mkdtemp(prefix="memoria-init-template-"))
+        atexit.register(shutil.rmtree, cache, ignore_errors=True)
+        assert main(["init", "--workspace", str(cache / "workspace"), "--yes", "--quiet"]) == 0
+        _INIT_TEMPLATE = cache / "workspace"
+    return _INIT_TEMPLATE
+
+
+def init_cli_workspace(tmp_path: Path, capsys: Any) -> Path:
     workspace = tmp_path / "workspace"
-    assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
+    shutil.copytree(_init_template_workspace(), workspace, symlinks=True)
     capsys.readouterr()
     return workspace
 

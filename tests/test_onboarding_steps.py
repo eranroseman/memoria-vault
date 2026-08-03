@@ -118,12 +118,11 @@ def test_emit_onboarding_step_rejects_unknown_steps(tmp_path: Path) -> None:
 def _disable_the_telemetry_sink(vault: Path) -> None:
     """Make every telemetry insert fail for real, at the sink.
 
-    `DROP TABLE telemetry_events` is NOT a durable arrangement: `state._init`
-    re-runs the whole of `schema.sql` (all `CREATE ... IF NOT EXISTS`) on every
-    `state.connect`, so the next connection puts the table straight back and the
-    emit succeeds. A `BEFORE INSERT` trigger survives that re-run, refuses only
-    writes to this one table, and leaves reads and the rest of the vault working
-    — the shape of a sink that is present but refusing.
+    `connect()` skips the DDL on current DBs, so `DROP TABLE telemetry_events`
+    would stay dropped — but that models a damaged vault, not a refusing sink.
+    A `BEFORE INSERT` trigger blocks writes without mutating the schema,
+    refuses only this one table, and leaves reads and the rest of the vault
+    working — the shape of a sink that is present but refusing.
     """
     with state.connect(vault) as conn:
         conn.execute(

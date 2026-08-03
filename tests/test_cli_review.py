@@ -344,9 +344,10 @@ def _record_client_event(vault: Path, *, seconds_ago: int, **fields: Any) -> Non
 def _disable_the_telemetry_sink(vault: Path) -> None:
     """Refuse every telemetry insert for real, at the sink.
 
-    A `BEFORE INSERT` trigger survives `state._init`'s re-run of `schema.sql`
-    (which a dropped table would not), refuses only this one table, and leaves
-    reads and the rest of the vault working: a sink that is present but
+    `connect()` skips the DDL on current DBs, so a dropped table would model a
+    damaged vault, not a refusing sink. A `BEFORE INSERT` trigger blocks
+    writes without mutating the schema, refuses only this one table, and
+    leaves reads and the rest of the vault working: a sink that is present but
     refusing, which is what the CLI has to report honestly.
     """
     with state.connect(vault) as conn:

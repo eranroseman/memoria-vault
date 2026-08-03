@@ -225,6 +225,9 @@ def seed_vault(tmp_path: Path) -> tuple[Path, dict]:
     global _SEED_CACHE
     if _SEED_CACHE is None or not (_SEED_CACHE / "vault").exists():
         cache = Path(tempfile.mkdtemp(prefix="memoria-floor-seed-"))
+        import atexit
+
+        atexit.register(shutil.rmtree, cache, ignore_errors=True)
         manifest = _build_floor_seed(cache / "vault")
         (cache / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
         _SEED_CACHE = cache
