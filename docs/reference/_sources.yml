@@ -15,28 +15,23 @@ pages:
     status: Manual
     owner: docs/reference/analysis-and-surfaces/vault-eval.md
   commands-and-transports/cli.md:
-    status: Guarded mirror
+    status: Manual
     owner: src/memoria_vault/cli.py
-    check: check_reference_rosters
   commands-and-transports/local-http-transport.md:
     status: Manual
     owner: src/memoria_vault/runtime/http_transport.py
-    check: check_reference_rosters
   commands-and-transports/mcp-transport.md:
     status: Manual
     owner: src/memoria_vault/runtime/mcp_transport.py
-    check: check_reference_rosters
   commands-and-transports/operations.md:
     status: Manual
     owner: src/memoria_vault/product/capabilities/operations/*.md
   commands-and-transports/prompt-operations.md:
     status: Manual
     owner: src/memoria_vault/product/capabilities/operations/*.md
-    check: check_reference_rosters
   commands-and-transports/read-api.md:
     status: Manual
     owner: src/memoria_vault/engine/api.py
-    check: check_reference_rosters
   commands-and-transports/system-actions-adapters.md:
     status: Manual
     owner: docs/reference/commands-and-transports/system-actions-adapters.md
@@ -50,16 +45,14 @@ pages:
     status: Manual
     owner: docs/reference/commands-and-transports/system-actions-scheduled.md
   commands-and-transports/system-actions.md:
-    status: Guarded mirror
+    status: Manual
     owner: src/memoria_vault/product/capabilities/operations/*.md
-    check: check_reference_rosters
   control-and-policy/control-plane.md:
     status: Manual
     owner: docs/reference/control-and-policy/control-plane.md
   control-and-policy/empirical-events.md:
-    status: Guarded mirror
+    status: Manual
     owner: src/memoria_vault/engine/empirical_events.py
-    check: check_reference_rosters
   control-and-policy/evidence-sets.md:
     status: Manual
     owner: docs/reference/control-and-policy/evidence-sets.md
@@ -78,18 +71,17 @@ pages:
   data-model/document-types.md:
     status: Source-owned
     owner: src/memoria_vault/product/workspace_seed/.memoria/schemas/types/*.yaml
-    check: check_document_type_reference_mirror
+    check: scripts/checks/schema_doc_drift.py::check_schema_docs
   data-model/frontmatter.md:
     status: Source-owned
     owner: src/memoria_vault/product/workspace_seed/.memoria/schemas/types/*.yaml
-    check: check_document_type_reference_mirror
+    check: scripts/checks/schema_doc_drift.py::check_schema_docs
   data-model/glossary.md:
     status: Manual
     owner: docs/reference/data-model/glossary.md
   data-model/vocabulary.md:
-    status: Guarded mirror
+    status: Manual
     owner: src/memoria_vault/product/workspace_seed/system/vocabulary.md
-    check: check_vocabulary_reference_mirror
   data-model/wikilink-and-link-conventions.md:
     status: Manual
     owner: docs/reference/data-model/wikilink-and-link-conventions.md
