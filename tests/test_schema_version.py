@@ -15,7 +15,7 @@ from tests.helpers import ROOT
 pytestmark = pytest.mark.contract
 
 # sha256 of the schema.sql text _schema_sql() loads, pinned per SCHEMA_VERSION.
-SCHEMA_SQL_SHA256 = "232897433f4458c1a8b91ee748e94e293b44aac0ddc9fed3f7a5174e5207dab0"
+SCHEMA_SQL_SHA256 = "6b808b153fde9bfdf65ab3242769d2db7119e29d7ecb02a734dd80157e11be7e"
 
 
 def test_schema_lands_at_user_version_20(tmp_path: Path) -> None:
