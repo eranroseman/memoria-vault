@@ -15,7 +15,7 @@ TMPFS_MIN_FREE_BYTES = 4 * 1024**3
 # Scratch prefixes this suite creates outside pytest's managed basetemp. Both
 # were leaking permanently (mkdtemp with no cleanup) and 823 accumulated
 # floor-seed dirs were what starved the tmpfs guard below its 4 GiB floor.
-_SCRATCH_PREFIXES = ("memoria-floor-seed-", "memoria-test-xdg-")
+_SCRATCH_PREFIXES = ("memoria-floor-seed-", "memoria-test-xdg-", "memoria-init-template-")
 _SCRATCH_STALE_SECONDS = 2 * 3600  # no healthy run holds one this long
 
 
