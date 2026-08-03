@@ -34,6 +34,10 @@ metadata:
 memoria work import --workspace <vault> --format bibtex --file sources.bib
 ```
 
+Add `--enrich` to queue a DOI enrichment request for each newly admitted item
+that carries a DOI. Reserve the per-Work enrichment in step 4 for rows import
+could not enrich — no DOI, or a queued run that failed.
+
 **3. Confirm the catalog row.**
 
 Use JSON output or `memoria work export` to inspect the Work:
@@ -64,3 +68,4 @@ memoria work enrich --workspace <vault> <work-id>
 
 - Pipeline details: [Ingest routing](../../reference/pipelines-and-io/ingest.md)
 - Trusted writer: [System actions](../../reference/commands-and-transports/system-actions.md)
+- Where captured sources go in the cycle: [The knowledge cycle](../../explanation/knowledge/knowledge-cycle.md)
