@@ -33,7 +33,8 @@ bootstrap is the clone/entry point; installing requires the whole repo. See
 [Bootstrap installer](bootstrap-installer.md) for the installer's design and
 [Installer (bootstrap)](../../../reference/system/installer.md) for the component inventories.
 
-The old `vault-template/` tree was removed in alpha.20. A second source tree had
+The old `vault-template/` tree was removed in
+[alpha.20](https://github.com/eranroseman/memoria-vault/blob/main/design-history/20-alpha.20.md). A second source tree had
 become a retention mechanism for empty directories, historical files, dashboards,
 templates, and broad adapter payloads. The workspace seed keeps files the
 runtime or default Obsidian workspace reads; writable and generated paths are
