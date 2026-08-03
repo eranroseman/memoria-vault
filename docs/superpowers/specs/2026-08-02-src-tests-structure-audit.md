@@ -375,7 +375,21 @@ written rather than silently corrected:
   recorded in `CHANGELOG.md` as ruled, but the deliberation it prompted was
   unnecessary.
 
-The one recommendation still standing is §7's: **the `tests/` mirror was not
-done, and should not be.** `tests/test_testing_levels.py` still globs
-non-recursively, so moving tests into subdirectories would make the level gate
-pass vacuously.
+The `tests/` mirror was not done, and the recommendation stands — but **not
+for the reason §7 gave, and an earlier revision of this section stated the
+reason wrongly.** §7 argued the mirror would silently empty
+`tests/test_testing_levels.py`, whose glob was non-recursive. Stage 4 fixed
+exactly that: both functions now use `rglob` and carry explicit non-vacuity
+assertions, and `tests/paths.py` centralises the root constant that 17 test
+files previously walked out of `__file__`. **Both blockers are gone.**
+
+So the mirror is no longer unsafe, only unjustified, which is a weaker claim
+and worth stating as such:
+
+- it deletes nothing, so AGENTS.md's top-ranked remedy is unavailable to it;
+- the mapping's own confidence field admitted roughly a fifth of the files had
+  no clear home;
+- 149 `git mv`s produce a review in which a move and an edit look alike.
+
+Those are reasons to decline, not reasons it would break. If it is ever
+revisited, the prerequisites are already paid for.
