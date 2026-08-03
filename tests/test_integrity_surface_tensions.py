@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 from memoria_vault.runtime import state
-from memoria_vault.runtime.grounding import NLI_NOTENOUGHINFO, NLI_REFUTED
+from memoria_vault.runtime.grounding import NLI_NOTENOUGHINFO, NLI_REFUTED, _checked_tension_rows
 from memoria_vault.runtime.grounding import resolve_attention as _resolve_attention
 from memoria_vault.runtime.grounding import surface_tensions as _surface_tensions
 from memoria_vault.runtime.indexing import rebuild_passage_index_explicit
@@ -245,37 +245,53 @@ def test_surface_tensions_refuses_tampered_checked_file_before_tier2(tmp_path: P
     assert json.loads(row["args_json"])["target_path"] == left
 
 
-def test_surface_tensions_dedupes_same_canonical_id(tmp_path: Path) -> None:
-    vault = workspace(tmp_path)
+def test_a_duplicate_canonical_id_collapses_at_the_row_layer(tmp_path: Path) -> None:
+    """Two files sharing one frontmatter id yield ONE consumable row -- the
+    identity layer rejects the duplicate before the pair loop ever runs. The
+    old form of this test asserted candidate_count == 0 and credited it to a
+    pair-loop guard that is unreachable (deleting it survived the suite); the
+    zero was real but produced here, one layer down. The distinct-id control
+    proves the fixture itself is candidate-capable, so the collapse is doing
+    the work rather than an overlap threshold or a broken fixture.
+    """
     shared_id = "01ARZ3NDEKTSV4RRFFQ69G5FAV"
-    for rel, body in {
-        "notes/recall-up.md": "The intervention improved recall.",
-        "notes/recall-not-up.md": "The intervention did not improve recall.",
-    }.items():
-        path = vault / rel
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(
-            "---\n"
-            "type: note\n"
-            f"id: {shared_id}\n"
-            f"title: {Path(rel).stem}\n"
-            "tags: []\n"
-            "links: {}\n"
-            "---\n"
-            f"# {Path(rel).stem}\n\n{body}\n",
-            encoding="utf-8",
-        )
-        state.record_observed_file_edit(
-            vault,
-            output_id=rel,
-            concept_type="note",
-            output_sha256=sha256_file(path),
-        )
-        state.set_concept_verdict(vault, rel, "checked")
 
-    result = surface_tensions(vault)
+    def _vault(base: Path, ids: tuple[str, str]) -> Path:
+        vault = workspace(base)
+        for (rel, body), note_id in zip(
+            {
+                "notes/recall-up.md": "The intervention improved recall.",
+                "notes/recall-not-up.md": "The intervention did not improve recall.",
+            }.items(),
+            ids,
+            strict=True,
+        ):
+            path = vault / rel
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(
+                "---\n"
+                "type: note\n"
+                f"id: {note_id}\n"
+                f"title: {Path(rel).stem}\n"
+                "tags: []\n"
+                "links: {}\n"
+                "---\n"
+                f"# {Path(rel).stem}\n\n{body}\n",
+                encoding="utf-8",
+            )
+            state.record_observed_file_edit(
+                vault, output_id=rel, concept_type="note", output_sha256=sha256_file(path)
+            )
+            state.set_concept_verdict(vault, rel, "checked")
+        return vault
 
-    assert result["candidate_count"] == 0
+    duplicated = _vault(tmp_path / "dup", (shared_id, shared_id))
+    assert len(_checked_tension_rows(duplicated)) == 1  # the layer that dedupes
+    assert surface_tensions(duplicated)["candidate_count"] == 0
+
+    distinct = _vault(tmp_path / "distinct", (shared_id, "01BX5ZZKBKACTAV9WEVGEMMVS0"))
+    assert len(_checked_tension_rows(distinct)) == 2  # the control: fixture is pair-capable
+    assert surface_tensions(distinct)["candidate_count"] == 1
 
 
 def _unsorted_pair_vault(tmp_path: Path) -> Path:

@@ -715,7 +715,12 @@ def tier1_tension_candidates(
         for left_index, left in enumerate(rows):
             for right in rows[left_index + 1 :]:
                 pair_key = tuple(sorted((left["canonical_id"], right["canonical_id"])))
-                if pair_key in seen or pair_key[0] == pair_key[1]:
+                # No same-id arm: two rows cannot share a canonical id, because
+                # _checked_tension_rows consumes only files the identity layer
+                # accepted and a duplicated frontmatter id is rejected there
+                # (pinned by test_a_duplicate_canonical_id_collapses_at_the_row_layer).
+                # The arm survived every test in the suite as a mutation target.
+                if pair_key in seen:
                     continue
                 seen.add(pair_key)
                 overlap = _lexical_overlap(left["text"], right["text"])
