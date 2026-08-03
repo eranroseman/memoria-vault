@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import sqlite3
 from pathlib import Path
 from unittest import mock
@@ -13,6 +14,9 @@ from tests.helpers import ROOT
 
 pytestmark = pytest.mark.contract
 
+# sha256 of the schema.sql text _schema_sql() loads, pinned per SCHEMA_VERSION.
+SCHEMA_SQL_SHA256 = "232897433f4458c1a8b91ee748e94e293b44aac0ddc9fed3f7a5174e5207dab0"
+
 
 def test_schema_lands_at_user_version_19(tmp_path: Path) -> None:
     # Both sides are literal on purpose: comparing the applied version to
@@ -20,6 +24,18 @@ def test_schema_lands_at_user_version_19(tmp_path: Path) -> None:
     with state.connect(tmp_path) as conn:
         assert state.SCHEMA_VERSION == 19
         assert conn.execute("PRAGMA user_version").fetchone()[0] == 19
+
+
+def test_schema_sql_is_hash_pinned_to_schema_version() -> None:
+    # connect() skips the DDL on current DBs, so an edit to schema.sql that
+    # ships without a SCHEMA_VERSION bump silently never reaches existing
+    # vaults. Pin the DDL bytes so any edit forces the bump decision.
+    digest = hashlib.sha256(state._schema_sql().encode("utf-8")).hexdigest()
+    assert digest == SCHEMA_SQL_SHA256, (
+        "schema.sql changed: bump SCHEMA_VERSION in"
+        " src/memoria_vault/runtime/state/__init__.py and update this hash —"
+        " existing vaults only receive DDL through a version bump."
+    )
 
 
 def test_rejects_incompatible_schema_version(tmp_path: Path) -> None:
