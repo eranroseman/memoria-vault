@@ -1301,6 +1301,29 @@ def test_content_replacement_restamps_generated(tmp_path: Path) -> None:
     assert rewritten_by == "process:mark-checked"
 
 
+def test_machine_composed_rewrite_under_pi_actor_never_stamps_human(tmp_path: Path) -> None:
+    """A PI-authority CLI run that mechanically regenerates engine-composed
+    content must not sign the result as human authorship: `machine_composed`
+    forces the process actor regardless of the request envelope's actor."""
+    vault = workspace(tmp_path)
+    stage_concept(vault, "notes/alpha.md", note_text(), machine="test-machine")
+    promote_checked(vault, "notes/alpha.md", machine="test-machine")
+
+    mark_checked(
+        vault,
+        "notes/alpha.md",
+        judgment=False,
+        machine_composed=True,
+        body="Engine-regenerated block.\n",
+        actor="pi",
+        machine="test-machine",
+    )
+
+    fm = read_frontmatter(vault / "notes/alpha.md")
+    assert fm["generated"]["by"] == "process:mark-checked"
+    assert not fm["generated"]["by"].startswith("human:")
+
+
 def test_first_promotion_keeps_the_staging_generated_stamp(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
     stage_concept(vault, "notes/alpha.md", note_text(), machine="test-machine")

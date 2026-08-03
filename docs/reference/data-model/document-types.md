@@ -21,6 +21,10 @@ The current schema defines 6 document types: `code-artifact`, `digest`,
 `fulltext`, `hub`, `note`, and `project`.
 Attention and action state are generated request/queue surfaces, not Concept
 types in the vault schema.
+Non-Concept documents still declare a `type` for OKF conformance —
+`attention` on inbox cards, `system` on infrastructure pages, `outline` and
+`draft` on project working documents — without a per-type schema; only the
+six types above are schema-validated Concepts.
 
 For field grammar and validation behavior, see [Frontmatter fields](frontmatter.md).
 

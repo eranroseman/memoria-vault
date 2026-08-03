@@ -376,7 +376,10 @@ def _reserved_file_errors(path: Path, rel: str, *, is_bundle_root: bool) -> list
     if not declares_version or set(fm) != {"okf_version"}:
         return [f"{rel}: reserved index.md frontmatter is limited to okf_version at a bundle root"]
     if str(fm["okf_version"]) != OKF_VERSION:
-        return [f"{rel}: index.md must declare okf_version {OKF_VERSION!r}, not {fm!r}"]
+        return [
+            f"{rel}: index.md must declare okf_version {OKF_VERSION!r},"
+            f" not {fm.get('okf_version')!r}"
+        ]
     return []
 
 

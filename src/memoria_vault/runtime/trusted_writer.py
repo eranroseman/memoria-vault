@@ -823,6 +823,7 @@ def mark_checked(
     *,
     context: OperationContext,
     judgment: bool,
+    machine_composed: bool = False,
     checks: Iterable[str] | None = None,
     schemas_dir: Path | None = None,
     frontmatter: dict[str, Any] | None = None,
@@ -852,6 +853,7 @@ def mark_checked(
         context,
         contract,
         judgment=judgment,
+        machine_composed=machine_composed,
     )
 
 
@@ -1325,6 +1327,7 @@ def _write_checked(
     contract: dict[str, Any],
     *,
     judgment: bool,
+    machine_composed: bool = False,
 ) -> dict[str, Any]:
     """Write one plane-crossing document, stamping OKF fields at the seam.
 
@@ -1356,15 +1359,20 @@ def _write_checked(
     if _replaces_existing_body(output_path, body):
         # Spec 5.2: `generated` is the last meaningful change, and this is the
         # one seam that changes bytes under an already-promoted document.
-        frontmatter["generated"] = {
-            "by": okf_actor(
+        # `machine_composed` marks a body the ENGINE composed at this seam
+        # (e.g. a regenerated hub-candidates block): the request envelope's
+        # `machine_authored` describes only the envelope body, so a PI-actor
+        # CLI run would otherwise stamp `human:pi` on engine-authored bytes.
+        if machine_composed:
+            by = f"process:{context.operation_id or 'engine'}"
+        else:
+            by = okf_actor(
                 context.actor,
                 agent_identity=context.agent_identity,
                 operation_id=context.operation_id,
                 machine_authored=context.machine_authored,
-            ),
-            "at": now_iso(),
-        }
+            )
+        frontmatter["generated"] = {"by": by, "at": now_iso()}
     _validate_concept(contract, target, frontmatter)
     payload_text = frontmatter_doc(frontmatter, body)
     output_sha256 = sha256_bytes(payload_text.encode("utf-8"))
