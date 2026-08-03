@@ -166,7 +166,7 @@ The registered detectors (slugs, severities, and what each catches) live in [Lin
 | Session digests | Linter (`session_summary.py`, manual or scheduled run) | Writes one deterministic per-session digest file under `system/logs/sessions/` from the audit log ([the quarantine-and-verify with durable, audit-logged crash recovery decision](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)). |
 | Hub proposal handoff | Linter (`hub_handoff.py`, PI-run) | Converts current `hub-threshold` findings into idempotent local handoff payloads for map work; `hubs/` stays PI-curated. |
 
-## Sweeps (`memoria_vault.runtime.subsystems`)
+## Sweeps and scheduled operations
 
 | Action | Performer | What it does |
 | --- | --- | --- |
@@ -186,4 +186,4 @@ The registered detectors (slugs, severities, and what each catches) live in [Lin
 | Build graph neighborhoods | runtime search/knowledge helpers | Builds checked retrieval documents and first-order graph-neighborhood text for BM25 ask and gap analysis. |
 | Render argument canvas | worker operation `render-project-argument-canvas` | Renders the project argument map as a JSON Canvas artifact from checked project graph state. |
 | Run prompt operations | `memoria operation run` / `engine_api.run_operation` | Runs package-owned prompt operations through the same request, runner, staging, and journal boundary as other worker operations. |
-| Loudness routing and blockers | shared operation helper (`memoria_vault.runtime.subsystems.lib.loudness`) | Interprets loudness metadata on pull-only Inbox attention projections and exposes open block attention items to delegation and policy gates. |
+| Loudness routing and blockers | shared operation helper (`memoria_vault.runtime.attention.loudness`) | Interprets loudness metadata on pull-only Inbox attention projections and exposes open block attention items to delegation and policy gates. |

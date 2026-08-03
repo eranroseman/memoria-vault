@@ -301,7 +301,7 @@ def check_doi(doi: str, offline: bool = False) -> dict:
 def sweep(vault: Path, offline: bool = True) -> dict:
     """Scan checked SQLite Catalog Work DOIs and write an Inbox alert per hit."""
     from memoria_vault.runtime import state
-    from memoria_vault.runtime.subsystems.lib import inbox as inbox_writer
+    from memoria_vault.runtime.attention import inbox as inbox_writer
 
     checked = hits = 0
     for source in state.catalog_sources(vault):

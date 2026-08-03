@@ -7,9 +7,9 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from memoria_vault.runtime.subsystems.lib.edges import LINK_RELATIONS, strip_wikilink
 from memoria_vault.runtime.vaultio import iter_markdown as iter_vault_markdown
 from memoria_vault.runtime.vaultio import parse_frontmatter, safe_read
+from memoria_vault.runtime.vocabulary.edges import LINK_RELATIONS, strip_wikilink
 
 RELATIONS = tuple(sorted(LINK_RELATIONS))
 
@@ -133,7 +133,7 @@ def substrate_edges(vault: Path, resolver: dict[str, str]) -> list[Edge]:
     dangling link's pending row — is dropped, as the frontmatter resolver
     dropped it before.
     """
-    from memoria_vault.runtime.subsystems.lib.edges import concept_edge_path_records
+    from memoria_vault.runtime.vocabulary.edges import concept_edge_path_records
 
     edges: list[Edge] = []
     for record in concept_edge_path_records(vault, checked_only=False):

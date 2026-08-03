@@ -25,7 +25,6 @@ from pathlib import Path
 
 from memoria_vault.runtime import state
 from memoria_vault.runtime.jsonl import append_jsonl
-from memoria_vault.runtime.subsystems.lib import schema
 from memoria_vault.runtime.sweeps.linter.detectors_audit import (
     Finding,
     audit_log_size,
@@ -34,6 +33,7 @@ from memoria_vault.runtime.sweeps.linter.detectors_audit import (
     vault_hash_drift,
 )
 from memoria_vault.runtime.vaultio import parse_frontmatter, retired_frontmatter_field_errors
+from memoria_vault.runtime.vocabulary import schema
 
 # Host and tool state, not vault content. `memoria init` seeds .obsidian, .claude
 # and .codex, so leaving any of them out means the linter flags the product's own

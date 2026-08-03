@@ -45,9 +45,9 @@ from memoria_vault.engine import api
 from memoria_vault.engine.dashboard import DASHBOARD_PANELS, assemble_dashboard
 from memoria_vault.engine.surface_contract import actions_by_id
 from memoria_vault.runtime import state
+from memoria_vault.runtime.attention.inbox import write_finding, write_proposal
 from memoria_vault.runtime.http_transport import _dispatch, make_http_server
 from memoria_vault.runtime.operations import emit_explicit_disposition_event
-from memoria_vault.runtime.subsystems.lib.inbox import write_finding, write_proposal
 from memoria_vault.runtime.telemetry import record_telemetry_event
 from memoria_vault.runtime.vaultio import frontmatter_doc
 from tests.helpers import init_cli_workspace

@@ -11,7 +11,7 @@ The authoritative document-type contract is the schema directory, not this page:
 
 - Type schemas: `src/memoria_vault/product/workspace_seed/.memoria/schemas/types/*.yaml`
 - Type homes and skeleton folders: `src/memoria_vault/product/workspace_seed/.memoria/schemas/folders.yaml`
-- Loader and validator: `src/memoria_vault/runtime/subsystems/lib/schema.py`
+- Loader and validator: `src/memoria_vault/runtime/vocabulary/schema.py`
 
 Each type schema declares its `category`, `concept_type` registry membership,
 `required` fields, `optional` fields, and `enums`-backed fields, plus optional

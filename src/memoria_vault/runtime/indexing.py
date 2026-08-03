@@ -9,13 +9,13 @@ from typing import Any
 
 from memoria_vault.runtime import state
 from memoria_vault.runtime.policy.paths import normalize_path
-from memoria_vault.runtime.subsystems.lib.edges import parse_links
 from memoria_vault.runtime.trusted_writer import (
     OperationContext,
     rebuild_concept_mirror_from_files,
     validate_operation_context,
 )
 from memoria_vault.runtime.vaultio import is_ulid, parse_frontmatter, safe_read
+from memoria_vault.runtime.vocabulary.edges import parse_links
 
 EMBEDDING_MODEL_ID = "memoria-hash-test-v1"
 VECTOR_DIM = 16

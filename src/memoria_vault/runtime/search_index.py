@@ -18,7 +18,6 @@ from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.audit import sha256_bytes, sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path
 from memoria_vault.runtime.read_barrier import is_consumable_checked_file
-from memoria_vault.runtime.subsystems.lib.edges import thesis_rel
 from memoria_vault.runtime.trusted_writer import OperationContext, validate_operation_context
 from memoria_vault.runtime.vaultio import (
     frontmatter_doc,
@@ -26,6 +25,7 @@ from memoria_vault.runtime.vaultio import (
     parse_frontmatter,
     safe_read,
 )
+from memoria_vault.runtime.vocabulary.edges import thesis_rel
 
 SEARCH_INPUT_ROOT = ".memoria/index/search/checked"
 SEARCH_MANIFEST = ".memoria/index/search/manifest.json"

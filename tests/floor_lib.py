@@ -356,8 +356,8 @@ def assert_golden(name: str, digest: dict) -> None:
 def assert_invariants(vault: Path) -> None:
     """Spec §3.4: invariants over goldens — the always-on battery."""
     from memoria_vault.runtime import projections, state
-    from memoria_vault.runtime.subsystems.lib.schema import validate_okf_core_workspace
     from memoria_vault.runtime.sweeps.linter import detectors
+    from memoria_vault.runtime.vocabulary.schema import validate_okf_core_workspace
 
     with contextlib.closing(sqlite3.connect(vault / ".memoria/memoria.sqlite")) as conn:
         ok = conn.execute("PRAGMA integrity_check").fetchone()[0]
@@ -815,7 +815,7 @@ OPERATION_REGISTRY: dict[str, dict] = {
         "expect": "done",
     },
     # worker.py:791-797 pops dry_run (bool, default False). eval_dispatch.
-    # dispatch (subsystems/telemetry/eval/eval_dispatch.py) reads
+    # dispatch (eval/eval_dispatch.py) reads
     # `.memoria/eval/*.md` gold-task fixtures (none are seeded — the
     # packaged workspace ships only alpha15-seeded-errors.json) and, when
     # there are none, still writes an empty last-run.md — a fully local,

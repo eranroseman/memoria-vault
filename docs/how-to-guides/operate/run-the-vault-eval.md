@@ -47,8 +47,8 @@ state: `.memoria/eval/last-run.md` and, after scoring, `system/metrics/eval/runs
 **4. Score the run.**
 
 ```bash
-python3 -m memoria_vault.runtime.subsystems.telemetry.eval.eval_score --vault . --from-json results.json
-python3 -m memoria_vault.runtime.subsystems.telemetry.eval.eval_score --vault . --quarter previous --from-json results.json
+python3 -m memoria_vault.runtime.eval.eval_score --vault . --from-json results.json
+python3 -m memoria_vault.runtime.eval.eval_score --vault . --quarter previous --from-json results.json
 ```
 
 Add `--k <n>` to change the recall window (default 3) and `--dry-run` to compute without appending to the log.

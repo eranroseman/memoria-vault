@@ -31,8 +31,8 @@ from memoria_vault.runtime import evidence_review, onboarding_steps, state
 from memoria_vault.runtime.decision_rules import RULES_CONFIG, STATUSES, update_rule_status
 from memoria_vault.runtime.evidence_review import EVIDENCE_REVIEW_ROUTING_TYPES
 from memoria_vault.runtime.paths import safe_filename
-from memoria_vault.runtime.subsystems.lib.edges import LINK_RELATIONS
 from memoria_vault.runtime.time import now_iso
+from memoria_vault.runtime.vocabulary.edges import LINK_RELATIONS
 from memoria_vault.runtime.worker import (
     PROTECTED_OPERATION_ACTORS,
     _workspace_lock,
@@ -1745,7 +1745,7 @@ def _finalize_import_run(
     a retry mints a new ``run_id`` and describes itself honestly. A zero-judgment
     run yields no worklist and no card, never a fabricated empty artifact.
     """
-    from memoria_vault.runtime.subsystems.lib.worklists import emit_import_worklist
+    from memoria_vault.runtime.attention.worklists import emit_import_worklist
     from memoria_vault.runtime.telemetry import record_telemetry_event
 
     emitted = emit_import_worklist(
@@ -3047,7 +3047,7 @@ def _compact_resolved_inbox(workspace: Path) -> dict[str, Any]:
     """
     # Lazy, like the journal and projection imports above: the scan path is the only
     # caller and `memoria --help` should not pay for the trusted writer.
-    from memoria_vault.runtime.subsystems.lib import lifecycle
+    from memoria_vault.runtime.attention import lifecycle
 
     try:
         return lifecycle.compact_resolved_cards(workspace)
@@ -3461,7 +3461,7 @@ def _changed_generated_projection_paths(workspace: Path) -> list[str]:
 
 
 def _workspace_plan(workspace: Path) -> list[str]:
-    from memoria_vault.runtime.subsystems.lib import schema
+    from memoria_vault.runtime.vocabulary import schema
 
     return list(schema.load_folders()["skeleton"])
 

@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from memoria_vault.runtime.subsystems.lib import schema
+from memoria_vault.runtime.vocabulary import schema
 from tests.helpers import WORKSPACE_SEED
 
 pytestmark = pytest.mark.contract

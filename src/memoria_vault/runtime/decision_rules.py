@@ -311,7 +311,7 @@ def apply_decision_rule_notices(vault: Path, *, context: OperationContext) -> di
     keys because they can legitimately differ.
     """
     from memoria_vault.engine.dashboard import assemble_dashboard
-    from memoria_vault.runtime.subsystems.lib.inbox import write_finding
+    from memoria_vault.runtime.attention.inbox import write_finding
     from memoria_vault.runtime.trusted_writer import (
         append_journal_event,
         commit_writer_changes,

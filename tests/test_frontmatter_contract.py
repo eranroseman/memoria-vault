@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from memoria_vault.runtime.subsystems.lib import schema
+from memoria_vault.runtime.vocabulary import schema
 
 pytestmark = pytest.mark.contract
 

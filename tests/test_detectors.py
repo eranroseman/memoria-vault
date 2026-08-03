@@ -8,8 +8,8 @@ from pathlib import Path as _Path
 import pytest
 
 from memoria_vault.runtime import state
-from memoria_vault.runtime.subsystems.lib import schema as schema_lib
 from memoria_vault.runtime.sweeps.linter import detectors as _m
+from memoria_vault.runtime.vocabulary import schema as schema_lib
 from tests.helpers import copy_memoria_dirs
 
 pytestmark = pytest.mark.static

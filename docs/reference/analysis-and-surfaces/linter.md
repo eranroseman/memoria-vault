@@ -65,7 +65,7 @@ On Windows, use `<vault>\.memoria\.venv\Scripts\python.exe` instead.
 
 ## The pre-commit hook
 
-The installer wires the package seed's `.githooks/pre-commit` into the deployed vault's `.git/hooks/pre-commit`. On every commit it passes the staged `.md` paths to `memoria_vault.runtime.sweeps.linter.precommit_check`, which validates each typed document against its schema via the shared loader (`memoria_vault.runtime.subsystems.lib.schema`). Any error blocks the commit (exit 1). Exempt: untyped `system/` infrastructure, vault-root nav pages, and paths outside the vault.
+The installer wires the package seed's `.githooks/pre-commit` into the deployed vault's `.git/hooks/pre-commit`. On every commit it passes the staged `.md` paths to `memoria_vault.runtime.sweeps.linter.precommit_check`, which validates each typed document against its schema via the shared loader (`memoria_vault.runtime.vocabulary.schema`). Any error blocks the commit (exit 1). Exempt: untyped `system/` infrastructure, vault-root nav pages, and paths outside the vault.
 
 ---
 

@@ -56,9 +56,9 @@ from memoria_vault.runtime.state.workspace_lock import (  # noqa: F401
     _open_workspace_lock_file,
     workspace_lock,
 )
-from memoria_vault.runtime.subsystems.lib.edges import EDGE_RELATIONS
 from memoria_vault.runtime.time import now_iso
 from memoria_vault.runtime.vaultio import is_ulid, parse_frontmatter, safe_read, write_text_durable
+from memoria_vault.runtime.vocabulary.edges import EDGE_RELATIONS
 
 if TYPE_CHECKING:
     from memoria_vault.runtime.trusted_writer import OperationContext
@@ -3418,7 +3418,7 @@ def _registry_concept_type(value: str) -> str:
 
 def _concept_type_map() -> dict[str, str]:
     """Return {document or concept type: registry concept type} from the seed."""
-    from memoria_vault.runtime.subsystems.lib import schema as schema_lib
+    from memoria_vault.runtime.vocabulary import schema as schema_lib
 
     schemas_dir = Path(schema_lib.SCHEMAS_DIR)
     cached = _CONCEPT_TYPE_MAPS.get(schemas_dir)
@@ -3436,7 +3436,7 @@ def _concept_type_map() -> dict[str, str]:
 
 def _folder_concept_types() -> dict[str, str]:
     """Return {bundle folder: registry concept type} from the seeded folder homes."""
-    from memoria_vault.runtime.subsystems.lib import schema as schema_lib
+    from memoria_vault.runtime.vocabulary import schema as schema_lib
 
     schemas_dir = Path(schema_lib.SCHEMAS_DIR)
     cached = _FOLDER_CONCEPT_TYPES.get(schemas_dir)

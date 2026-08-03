@@ -9,8 +9,8 @@ import pytest
 
 from memoria_vault.engine import api
 from memoria_vault.runtime import state
-from memoria_vault.runtime.subsystems.lib import schema
 from memoria_vault.runtime.vaultio import UNIVERSAL_CONCEPT_TYPES
+from memoria_vault.runtime.vocabulary import schema
 
 pytestmark = pytest.mark.contract
 

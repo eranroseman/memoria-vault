@@ -11,6 +11,7 @@ from memoria_vault import __version__
 from memoria_vault.engine.dashboard import DASHBOARD_PANELS, assemble_dashboard
 from memoria_vault.engine.surface_contract import ENGINE_READ_API_VERSION as READ_API_VERSION
 from memoria_vault.runtime import evidence_review, state
+from memoria_vault.runtime.attention import loudness
 from memoria_vault.runtime.attention_config import attention_order_by, normalize_order_by
 from memoria_vault.runtime.capabilities import render_capability_index
 from memoria_vault.runtime.explore import explore_topic
@@ -25,8 +26,6 @@ from memoria_vault.runtime.policy.paths import normalize_path, within_scope
 from memoria_vault.runtime.read_barrier import is_consumable_checked_file
 from memoria_vault.runtime.secrets import credential_report
 from memoria_vault.runtime.steering import effective_steering_tokens
-from memoria_vault.runtime.subsystems.lib import loudness
-from memoria_vault.runtime.subsystems.lib.edges import LINK_RELATIONS
 from memoria_vault.runtime.time import now_iso
 from memoria_vault.runtime.vaultio import (
     apply_universal_concept_frontmatter,
@@ -36,6 +35,7 @@ from memoria_vault.runtime.vaultio import (
     safe_read,
     split_frontmatter,
 )
+from memoria_vault.runtime.vocabulary.edges import LINK_RELATIONS
 from memoria_vault.runtime.worker import enqueue_operation, run_request
 
 JOURNAL_OPERATION_ALIASES = {"work.digest": ("compile-source-digest",)}

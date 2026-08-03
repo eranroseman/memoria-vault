@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 
 from memoria_vault.runtime import state
-from memoria_vault.runtime.subsystems.lib import edges, schema
+from memoria_vault.runtime.vocabulary import edges, schema
 from tests.helpers import ROOT
 
 pytestmark = pytest.mark.unit

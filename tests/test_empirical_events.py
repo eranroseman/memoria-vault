@@ -329,7 +329,7 @@ def test_edge_write_event_accepts_every_roster_relation_on_both_write_paths(
 ) -> None:
     """The `relation_type` enum IS `EDGE_RELATIONS` -- not a second hand-kept roster."""
     from memoria_vault.engine.empirical_events import validate_edge_write_event
-    from memoria_vault.runtime.subsystems.lib.edges import EDGE_RELATIONS
+    from memoria_vault.runtime.vocabulary.edges import EDGE_RELATIONS
 
     roster = sorted(EDGE_RELATIONS)
 

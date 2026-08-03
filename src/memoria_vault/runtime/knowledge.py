@@ -19,6 +19,7 @@ from tempfile import TemporaryDirectory
 from typing import Any
 
 from memoria_vault.runtime import state
+from memoria_vault.runtime.attention import inbox
 from memoria_vault.runtime.content_security import (
     has_unterminated_fenced_code_block,
     neutralize_untrusted_markdown,
@@ -36,17 +37,6 @@ from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path, require_policy_path
 from memoria_vault.runtime.read_barrier import is_consumable_checked_file
 from memoria_vault.runtime.steering import effective_steering_tokens, relevance_tokens
-from memoria_vault.runtime.subsystems.lib import inbox
-from memoria_vault.runtime.subsystems.lib import schema as schema_lib
-from memoria_vault.runtime.subsystems.lib.edges import (
-    CHALLENGE_RELATIONS,
-    LINK_RELATIONS,
-    SUPPORT_RELATIONS,
-    concept_edge_path_records,
-    normalize_link_target,
-    thesis_rel,
-    warrant_absence_threshold,
-)
 from memoria_vault.runtime.time import now_iso, parse_iso
 from memoria_vault.runtime.trusted_writer import (
     OperationContext,
@@ -70,6 +60,16 @@ from memoria_vault.runtime.vaultio import (
     split_frontmatter,
     write_frontmatter_doc,
     write_text_durable,
+)
+from memoria_vault.runtime.vocabulary import schema as schema_lib
+from memoria_vault.runtime.vocabulary.edges import (
+    CHALLENGE_RELATIONS,
+    LINK_RELATIONS,
+    SUPPORT_RELATIONS,
+    concept_edge_path_records,
+    normalize_link_target,
+    thesis_rel,
+    warrant_absence_threshold,
 )
 
 GAP_KINDS = {

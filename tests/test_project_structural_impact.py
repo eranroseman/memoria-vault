@@ -6,16 +6,16 @@ from pathlib import Path
 import pytest
 
 from memoria_vault.runtime import state
-from memoria_vault.runtime.subsystems.lib.edges import (
+from memoria_vault.runtime.project import structural_impact as impact
+from memoria_vault.runtime.project import (
+    structural_impact_graph as impact_graph,
+)
+from memoria_vault.runtime.vaultio import iter_markdown, parse_frontmatter, safe_read
+from memoria_vault.runtime.vocabulary.edges import (
     concept_edge_path_records,
     normalize_link_target,
     thesis_rel,
 )
-from memoria_vault.runtime.subsystems.processing.project import structural_impact as impact
-from memoria_vault.runtime.subsystems.processing.project import (
-    structural_impact_graph as impact_graph,
-)
-from memoria_vault.runtime.vaultio import iter_markdown, parse_frontmatter, safe_read
 from tests.helpers import copy_memoria_dirs, init_git, operation_context
 
 pytestmark = pytest.mark.contract

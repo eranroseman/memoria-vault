@@ -7,8 +7,8 @@ import pytest
 
 from memoria_vault.cli import _build_parser, main
 from memoria_vault.runtime import state
-from memoria_vault.runtime.subsystems.lib.edges import LINK_RELATIONS
 from memoria_vault.runtime.vaultio import read_frontmatter, split_frontmatter
+from memoria_vault.runtime.vocabulary.edges import LINK_RELATIONS
 from tests.helpers import _assert_request_columns, mark_file_status
 
 pytestmark = pytest.mark.contract

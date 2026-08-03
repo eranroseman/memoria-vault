@@ -7,7 +7,7 @@ from typing import Any
 
 from memoria_vault.runtime import graph_sql, propagation, retrieval_pipeline, state
 from memoria_vault.runtime.search_index import _bm25, _tokens, checked_search_universe
-from memoria_vault.runtime.subsystems.lib.edges import concept_edge_path_pairs
+from memoria_vault.runtime.vocabulary.edges import concept_edge_path_pairs
 
 SEED_K = 5
 DEPTH_CAP = 2

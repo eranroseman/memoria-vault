@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 from memoria_vault.runtime import state
-from memoria_vault.runtime.subsystems.telemetry.eval import eval_dispatch
+from memoria_vault.runtime.eval import eval_dispatch
 from tests.helpers import WORKSPACE_SEED, call_with_context, init_cli_workspace
 
 pytestmark = pytest.mark.contract

@@ -11,7 +11,7 @@ import pytest
 import yaml
 
 from memoria_vault.runtime import state
-from memoria_vault.runtime.subsystems.lib import inbox, loudness
+from memoria_vault.runtime.attention import inbox, loudness
 
 pytestmark = pytest.mark.contract
 

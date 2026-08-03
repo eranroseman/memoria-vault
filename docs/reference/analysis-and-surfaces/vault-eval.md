@@ -46,7 +46,7 @@ broken-reference finding; gold-set rot is caught by machinery already running.
 ## Dispatch
 
 `memoria eval run` /
-`memoria_vault.runtime.subsystems.telemetry.eval.eval_dispatch` creates
+`memoria_vault.runtime.eval.eval_dispatch` creates
 idempotent local eval task plans. It is deterministic and no-LLM; the runtime
 request queue handles serialization and deduplication ([machine judgments are layered proposals, never authorities](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)).
 
@@ -62,7 +62,7 @@ memoria eval run --workspace <vault> --dry-run --json  # print, create nothing
 
 ## Scoring
 
-`memoria_vault.runtime.subsystems.telemetry.eval.eval_score` is the
+`memoria_vault.runtime.eval.eval_score` is the
 deterministic, report-only scorer. It turns each quarter's result payloads into
 machine scores.
 
@@ -102,9 +102,9 @@ test guards parity with [Linter: detectors and auto-fix](linter.md#the-detectors
 **The log.** Each scoring run appends one JSONL line to `system/metrics/eval/runs.jsonl` — timestamp, quarter, k, per-task records, and per-metric aggregates (`mean` + `n`, plus scored/reported/unscored counts). When a quarter produced no result blocks at all, nothing is appended. Optional dashboard/editor views can render the newest line per quarter plus the latest run's per-task breakdown; see [Dashboards](dashboards.md).
 
 ```sh
-python3 -m memoria_vault.runtime.subsystems.telemetry.eval.eval_score --vault <vault> --from-json results.json
-python3 -m memoria_vault.runtime.subsystems.telemetry.eval.eval_score --vault <vault> --quarter previous --from-json results.json
-python3 -m memoria_vault.runtime.subsystems.telemetry.eval.eval_score --vault <vault> --quarter 2026-Q2 --from-json results.json --dry-run
+python3 -m memoria_vault.runtime.eval.eval_score --vault <vault> --from-json results.json
+python3 -m memoria_vault.runtime.eval.eval_score --vault <vault> --quarter previous --from-json results.json
+python3 -m memoria_vault.runtime.eval.eval_score --vault <vault> --quarter 2026-Q2 --from-json results.json --dry-run
 ```
 
 ## Cadence

@@ -16,7 +16,6 @@ from memoria_vault.runtime.projections import (
     write_tracked_projections as _write_tracked_projections,
 )
 from memoria_vault.runtime.search_index import answer_query as _answer_query
-from memoria_vault.runtime.subsystems.lib.edges import LINK_RELATIONS, concept_edge_path_records
 from memoria_vault.runtime.trusted_writer import (
     commit_writer_changes as _commit_writer_changes,
 )
@@ -27,6 +26,7 @@ from memoria_vault.runtime.trusted_writer import (
     observe_pi_edit,
 )
 from memoria_vault.runtime.vaultio import read_frontmatter
+from memoria_vault.runtime.vocabulary.edges import LINK_RELATIONS, concept_edge_path_records
 from memoria_vault.runtime.worker import (
     enqueue_integrity_sweep,
     enqueue_operation,

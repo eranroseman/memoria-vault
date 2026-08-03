@@ -15,6 +15,21 @@ removed release-please setup, not real releases, and have been deleted.
 
 ### Changed
 
+- Retired the `runtime/subsystems/` directory level and its `lib/` child; both
+  were non-names carrying no information. The four remaining members move to
+  homes that say what they hold: `memoria_vault.runtime.vocabulary` (the
+  per-type frontmatter schemas and the concept-relation roster — the names a
+  vault document may legally use), `memoria_vault.runtime.attention` (Inbox
+  card writers, batch worklists, card lifecycle, graded loudness),
+  `memoria_vault.runtime.project` (Project structural impact), and
+  `memoria_vault.runtime.eval` (vault-eval dispatch and scoring). No
+  compatibility aliases: the old dotted paths are gone, and three published
+  `python -m` invocations change —
+  `...subsystems.telemetry.eval.eval_score` to `...eval.eval_score`,
+  `...subsystems.processing.project.structural_impact` to
+  `...project.structural_impact`, and `...subsystems.lib.worklists` to
+  `...attention.worklists`. The packaged `.githooks/pre-commit` pins only the
+  linter's module path, which does not move.
 - Removed the duplicate `ok` key from the `verify-project-draft` result, which
   held the same value as `ready` and shadowed the read-API envelope's own `ok`.
   `ready` is the one readiness field; breaking for consumers that read

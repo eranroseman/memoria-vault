@@ -17,7 +17,7 @@ the required Concept-type registry in
 Each type schema must name a registry member; a schema directory without that
 registry is invalid.
 The shared loader/validator is
-`src/memoria_vault/runtime/subsystems/lib/schema.py`; the linter, pre-commit
+`src/memoria_vault/runtime/vocabulary/schema.py`; the linter, pre-commit
 hook, and package-seed tests all read it.
 
 Per-type schemas currently exist for `code-artifact`, `digest`, `fulltext`,

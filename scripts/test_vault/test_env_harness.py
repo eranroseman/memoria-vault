@@ -72,7 +72,7 @@ def populate_vault(root: Path, vault: Path) -> None:
         rc = cli_main(["init", "--workspace", str(vault), "--yes", "--quiet"])
         if rc != 0:
             raise HarnessError(f"memoria init failed with exit {rc}")
-    from memoria_vault.runtime.subsystems.lib import schema
+    from memoria_vault.runtime.vocabulary import schema
 
     folders = schema.load_folders(vault / ".memoria/schemas")
     for folder in folders["skeleton"]:
@@ -80,7 +80,7 @@ def populate_vault(root: Path, vault: Path) -> None:
 
 
 def validate_typed_note(vault: Path, rel: str) -> None:
-    from memoria_vault.runtime.subsystems.lib import schema
+    from memoria_vault.runtime.vocabulary import schema
 
     path = vault / rel
     fm = read_frontmatter(path)
@@ -125,9 +125,9 @@ def assert_expectations(vault: Path, expect: dict[str, Any], artifacts: list[str
 
 
 def run_step(root: Path, vault: Path, step: dict[str, Any]) -> list[str]:
+    from memoria_vault.runtime.attention import inbox
     from memoria_vault.runtime.knowledge import write_project_argument_canvas
-    from memoria_vault.runtime.subsystems.lib import inbox
-    from memoria_vault.runtime.subsystems.processing.project import structural_impact
+    from memoria_vault.runtime.project import structural_impact
 
     tool = step["tool"]
     args = step.get("args", {})

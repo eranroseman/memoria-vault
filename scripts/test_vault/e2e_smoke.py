@@ -29,7 +29,7 @@ STAGE_LABELS = {
 
 
 def assert_vault_skeleton(root: Path, vault: Path) -> None:
-    from memoria_vault.runtime.subsystems.lib import schema
+    from memoria_vault.runtime.vocabulary import schema
 
     folders = schema.load_folders(vault / ".memoria/schemas")
     missing = [folder for folder in folders["skeleton"] if not (vault / folder).is_dir()]
@@ -228,7 +228,7 @@ def assert_okf_core_conformance(vault: Path) -> None:
     is in scope here, which is what makes the conformance claim a claim about
     the running system rather than about the seed.
     """
-    from memoria_vault.runtime.subsystems.lib import schema
+    from memoria_vault.runtime.vocabulary import schema
 
     errors = schema.validate_okf_core_workspace(vault, vault / ".memoria/schemas")
     assert not errors, f"OKF core conformance: {errors[:5]}"

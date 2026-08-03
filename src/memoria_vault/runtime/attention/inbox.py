@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Any
 
 from memoria_vault.runtime import state
-from memoria_vault.runtime.subsystems.lib.loudness import attention_status
+from memoria_vault.runtime.attention.loudness import attention_status
 from memoria_vault.runtime.vaultio import (
     frontmatter_doc,
     safe_read,

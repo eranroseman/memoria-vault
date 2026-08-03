@@ -9,12 +9,12 @@ import pytest
 from memoria_vault.runtime import graph_sql, indexing, retrieval, state
 from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.search_index import answer_query as _answer_query
-from memoria_vault.runtime.subsystems.lib import edges as edges_lib
-from memoria_vault.runtime.subsystems.lib import schema
 from memoria_vault.runtime.trusted_writer import append_explicit_journal_event
 from memoria_vault.runtime.trusted_writer import promote_checked as _promote_checked
 from memoria_vault.runtime.trusted_writer import stage_concept as _stage_concept
 from memoria_vault.runtime.vaultio import read_frontmatter, safe_read
+from memoria_vault.runtime.vocabulary import edges as edges_lib
+from memoria_vault.runtime.vocabulary import schema
 from tests.helpers import (
     call_with_context,
     copy_memoria_dirs,

@@ -19,7 +19,7 @@ from memoria_vault.engine.surface_contract import (
     http_routes,
     mcp_tools,
 )
-from memoria_vault.runtime.subsystems.lib.inbox import write_finding
+from memoria_vault.runtime.attention.inbox import write_finding
 from tests.cli_test_helpers import cli_command_surface
 from tests.helpers import init_cli_workspace
 
