@@ -40,7 +40,7 @@ operation API, or write-policy boundary.
 | [Setup](setup/) | One-time machine, workspace, optional app adapter, Zotero export, and second-workspace setup |
 | [Using Obsidian](using-obsidian/) | Optional plain-editor guidance and adapter boundary notes |
 | [Library](library/) | Finding, capturing, ingesting, reading, classifying, and archiving sources |
-| [Knowledge](knowledge/) | Writing, linking, promoting, refactoring, querying, and pattern-running over knowledge notes |
+| [Knowledge](knowledge/) | Writing, linking, promoting, and querying knowledge notes |
 | [Project](project/) | Scoping, framing, drafting, verifying, and exporting |
 | [Inbox](inbox/) | Triage, action queue, weekly review, and returning to work |
 | [Operate](operate/) | Terminal-side upkeep: linter, sweeps, search, eval, and logs |
