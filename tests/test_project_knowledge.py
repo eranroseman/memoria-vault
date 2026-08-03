@@ -355,7 +355,7 @@ def test_write_project_outline_proposes_bm25_slice_and_computes_edges(
         limit=2,
     )
 
-    assert result["retrieval_engine"] == "bm25"
+    assert result["retrieval_backend"] == "bm25"
     assert result["outline_path"] == "projects/project-alpha/outline.md"
     assert {member["path"] for member in result["members"]} == {
         "notes/support.md",

@@ -1005,7 +1005,7 @@ def _cmd_doctor(args: argparse.Namespace) -> int:
             "ok": all(checks.values()),
             "workspace": str(workspace),
             "checks": checks,
-            "search_engine": status["engine"],
+            "search_backend": status["backend"],
             "search_manifest": status["manifest"],
             "search_document_count": status["document_count"],
             "repaired": repaired,
@@ -3163,7 +3163,7 @@ def _cmd_workspace_rebuild(args: argparse.Namespace) -> int:
         manifest = rebuild_checked_search_index_explicit(
             workspace, actor=args.actor, machine="memoria-cli"
         )
-        payload["search"] = {"engine": "bm25", "manifest": manifest}
+        payload["search"] = {"backend": "bm25", "manifest": manifest}
     return _emit(payload, args)
 
 
@@ -3491,7 +3491,7 @@ def _init_dry_run_report(
     seed_trees = [target for _, target in _active_seed_trees(include_obsidian=include_obsidian)]
     seed_files = [target for _, target in _active_seed_files(include_obsidian=include_obsidian)]
     search = {
-        "engine": "bm25",
+        "backend": "bm25",
         "checked_root": ".memoria/index/search/checked",
         "manifest": ".memoria/index/search/manifest.json",
     }
@@ -4290,7 +4290,7 @@ def _search_status(workspace: Path) -> dict[str, Any]:
     }
     return {
         "checks": checks,
-        "engine": "bm25",
+        "backend": "bm25",
         "manifest": SEARCH_MANIFEST,
         "document_count": document_count,
     }

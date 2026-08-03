@@ -94,7 +94,7 @@ def test_passage_index_refreshes_stale_file_and_cascades_status(tmp_path: Path) 
     mark_file_status(vault, "notes/alpha.md")
     answer = answer_query(vault, "rarealpha")
 
-    assert answer["engine"] == "bm25"
+    assert answer["backend"] == "bm25"
     assert state.file_index_states(vault)["notes/alpha.md"]["source_sha256"] == sha256_file(path)
     assert state.indexed_passages(vault, checked_only=True)[0]["text"].endswith(
         "rarealpha second version\n"

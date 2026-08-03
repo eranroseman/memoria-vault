@@ -755,7 +755,7 @@ def test_cli_project_slice_writes_outline(
     assert rc == 0
     assert output["ok"] is True
     result = output["result"]
-    assert result["retrieval_engine"] == "bm25"
+    assert result["retrieval_backend"] == "bm25"
     assert result["outline_path"] == "projects/project-alpha/outline.md"
     assert result["member_count"] == 2
     assert {member["path"] for member in result["members"]} == {

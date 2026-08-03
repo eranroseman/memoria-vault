@@ -688,7 +688,7 @@ def test_worker_runs_answer_query_operation_jobs(tmp_path: Path) -> None:
     assert queued["kind"] == "operation"
     assert done is not None
     assert done["status"] == "done"
-    assert done["engine"] == "bm25"
+    assert done["backend"] == "bm25"
     assert done["unknowns"] == []
     assert [source["path"] for source in done["sources"]] == ["notes/checked.md"]
 

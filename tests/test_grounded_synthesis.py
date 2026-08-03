@@ -25,7 +25,7 @@ pytestmark = pytest.mark.contract
 
 WORK_ID = "settles-2016-spaced-repetition"
 
-# The full key set an ask payload may carry. query/engine/sources/unknowns/
+# The full key set an ask payload may carry. query/backend/sources/unknowns/
 # staleness/contradictions/project_context are the shipped answer_query
 # contract (search_index.py _answer_from_hits); pipeline_counts and
 # excluded_strata are the section-4 denominator fields (section P) and
@@ -36,7 +36,7 @@ WORK_ID = "settles-2016-spaced-repetition"
 ALLOWED_ANSWER_KEYS = frozenset(
     {
         "query",
-        "engine",
+        "backend",
         "sources",
         "unknowns",
         "staleness",
