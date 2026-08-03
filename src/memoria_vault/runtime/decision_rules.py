@@ -8,7 +8,7 @@ re-derived once the numbers are in.
 **Where the registry lives.** The seventeen shipped rules are `DEFAULT_RULES_YAML`
 below; `.memoria/config/decision-rules.yaml` is the per-vault override. Absent, the
 shipped registry loads; present, the file *is* the registry. That is the shape the
-other I1-era configs already use -- `attention.yaml` (`runtime/attention_config`),
+other I1-era configs already use -- `attention.yaml` (`runtime/attention/config`),
 `policy.yaml`, `edges.yaml` -- none of which is in `workspace_seed` either, and it
 keeps one source of truth for the rule text while still letting the PI edit a
 threshold, retire a rule, or carry a per-vault `fired` status.

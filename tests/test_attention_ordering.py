@@ -35,13 +35,13 @@ import pytest
 from memoria_vault.cli import main
 from memoria_vault.engine import api as engine_api
 from memoria_vault.runtime import propagation
-from memoria_vault.runtime.attention.inbox import write_finding
-from memoria_vault.runtime.attention_config import (
+from memoria_vault.runtime.attention.config import (
     DEFAULT_ORDER_BY,
     attention_order_by,
     normalize_order_by,
     producer_mode,
 )
+from memoria_vault.runtime.attention.inbox import write_finding
 from memoria_vault.runtime.vaultio import (
     frontmatter_doc,
     split_frontmatter,
@@ -418,16 +418,16 @@ def test_attention_yaml_has_exactly_one_source_of_truth() -> None:
     A seeded `order_by: [priority, loudness, impact, staleness, age]` is a second
     copy of `DEFAULT_ORDER_BY` that is *authoritative* wherever it exists: change
     the constant and every vault seeded before the change keeps the old ranking,
-    silently. `attention_config` has no writer at all, so unlike the decision-rule
+    silently. `attention.config` has no writer at all, so unlike the decision-rule
     registry there is nothing a per-vault file has to store.
     """
     import memoria_vault
-    from memoria_vault.runtime.attention_config import ATTENTION_CONFIG
+    from memoria_vault.runtime.attention.config import ATTENTION_CONFIG
 
     seeded = Path(memoria_vault.__file__).parent / "product/workspace_seed" / ATTENTION_CONFIG
 
     assert not seeded.exists(), (
-        f"{seeded} now exists alongside attention_config.DEFAULT_ORDER_BY, so the "
+        f"{seeded} now exists alongside attention.config.DEFAULT_ORDER_BY, so the "
         "ranking order has two sources that can drift. Keep one: either delete the "
         "constant and load the seeded file, or drop the seed file."
     )

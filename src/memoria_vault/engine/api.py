@@ -12,7 +12,7 @@ from memoria_vault.engine.dashboard import DASHBOARD_PANELS, assemble_dashboard
 from memoria_vault.engine.surface_contract import ENGINE_READ_API_VERSION as READ_API_VERSION
 from memoria_vault.runtime import evidence_review, state
 from memoria_vault.runtime.attention import loudness
-from memoria_vault.runtime.attention_config import attention_order_by, normalize_order_by
+from memoria_vault.runtime.attention.config import attention_order_by, normalize_order_by
 from memoria_vault.runtime.capabilities import render_capability_index
 from memoria_vault.runtime.explore import explore_topic
 from memoria_vault.runtime.knowledge import exploration_channel as _exploration_channel
