@@ -28,6 +28,7 @@ import shutil
 import subprocess
 import sys
 import time
+from dataclasses import dataclass
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -47,71 +48,95 @@ PYTEST_MARKERS = "static or unit or contract or runtime or package or floor"
 # PYTEST_XDIST_AUTO_NUM_WORKERS in the environment still wins.
 os.environ.setdefault("PYTEST_XDIST_AUTO_NUM_WORKERS", str(max(2, (os.cpu_count() or 4) // 2)))
 
+
+@dataclass(frozen=True)
+class Gate:
+    """One verify step.
+
+    `docs` is True unless a docs-only diff (`*.md` / `design-history/`) provably
+    cannot affect the step; False is the explicit opt-out that drops it under
+    `VERIFY_DOCS_ONLY=1`, so a new entry that never considered docs scope still
+    runs there.
+    """
+
+    cmd: list[str]
+    docs: bool = True
+
+
 # Source of truth for what "verified" means; tests/test_verify_script.py mirrors
 # this roster. Lint runs the manual-stage pre-commit hooks (ruff, ruff-format,
 # yamllint, shellcheck, cspell, markdownlint); the commit-stage hooks
 # (gitleaks, no-commit-to-branch) are pinned out of the manual stage so this
 # never trips no-commit-to-branch on the post-merge main run.
-GATES: list[list[str]] = [
-    ["pre-commit", "run", "--hook-stage", "manual", "--all-files"],
-    ["python3", "scripts/checks/schema_doc_drift.py"],
-    ["python3", "scripts/checks/removed_surface_gate.py"],
-    ["python3", "scripts/checks/checked_terminology_gate.py"],
-    ["python3", "scripts/checks/plugin_provenance_doctor.py"],
-    ["python3", "scripts/checks/doc_claims_gate.py"],
-    ["python3", "scripts/checks/control_plane_actor_gate.py"],
-    ["python3", "scripts/checks/wheel_gate.py"],
-    [
-        "env",
-        "PYTEST_DISABLE_PLUGIN_AUTOLOAD=1",
-        "python3",
-        "-m",
-        "pytest",
-        "tests/",
-        "-q",
-        # Parallelize across cores (pytest-xdist); `-p xdist` because plugin
-        # autoload is disabled above. The vault-mutating tests are I/O-bound and
-        # per-test isolated (tmp_path), so this cuts the suite ~3x. `-m` stays
-        # last so the docs-only narrowing can swap the marker for `static`.
-        "-n",
-        "auto",
-        "-p",
-        "xdist",
-        # 1733: the default `--dist load` scatters a module's tests across
-        # workers, so module-scoped fixtures (the ~30s seed_vault builds in
-        # test_floor_sweep_reads / test_read_api_scope_walk) are rebuilt once
-        # per worker. loadgroup pins only the xdist_group-marked modules to a
-        # single worker each (one fixture build per file) while everything
-        # else — notably test_floor_sweep_operations' 60 expensive tests —
-        # keeps free load balancing; a blanket loadfile would serialize them.
-        "--dist",
-        "loadgroup",
-        "-m",
-        PYTEST_MARKERS,
-    ],
-    ["python3", "scripts/test_vault/e2e_smoke.py"],
-    [
-        "python3",
-        "-m",
-        "compileall",
-        "-q",
-        "src/memoria_vault",
-        "scripts/checks",
-        "scripts/test_vault",
-        "scripts/verify",
-    ],
-    [
-        "bash",
-        "-n",
-        "scripts/install.sh",
-        "scripts/test_vault/refresh-test-vault.sh",
-        "scripts/test_vault/install-test-vault-local-llm.sh",
-    ],
+GATES: list[Gate] = [
+    Gate(["pre-commit", "run", "--hook-stage", "manual", "--all-files"]),
+    Gate(["python3", "scripts/checks/schema_doc_drift.py"]),
+    Gate(["python3", "scripts/checks/removed_surface_gate.py"]),
+    Gate(["python3", "scripts/checks/checked_terminology_gate.py"]),
+    Gate(["python3", "scripts/checks/plugin_provenance_doctor.py"]),
+    Gate(["python3", "scripts/checks/doc_claims_gate.py"]),
+    Gate(["python3", "scripts/checks/control_plane_actor_gate.py"]),
+    # a docs-only diff provably cannot change packaging, so the wheel gate is skipped
+    Gate(["python3", "scripts/checks/wheel_gate.py"], docs=False),
+    Gate(
+        [
+            "env",
+            "PYTEST_DISABLE_PLUGIN_AUTOLOAD=1",
+            "python3",
+            "-m",
+            "pytest",
+            "tests/",
+            "-q",
+            # Parallelize across cores (pytest-xdist); `-p xdist` because plugin
+            # autoload is disabled above. The vault-mutating tests are I/O-bound and
+            # per-test isolated (tmp_path), so this cuts the suite ~3x. `-m` stays
+            # last so the docs-only narrowing can swap the marker for `static`.
+            "-n",
+            "auto",
+            "-p",
+            "xdist",
+            # 1733: the default `--dist load` scatters a module's tests across
+            # workers, so module-scoped fixtures (the ~30s seed_vault builds in
+            # test_floor_sweep_reads / test_read_api_scope_walk) are rebuilt once
+            # per worker. loadgroup pins only the xdist_group-marked modules to a
+            # single worker each (one fixture build per file) while everything
+            # else — notably test_floor_sweep_operations' 60 expensive tests —
+            # keeps free load balancing; a blanket loadfile would serialize them.
+            "--dist",
+            "loadgroup",
+            "-m",
+            PYTEST_MARKERS,
+        ]
+    ),
+    Gate(["python3", "scripts/test_vault/e2e_smoke.py"], docs=False),
+    Gate(
+        [
+            "python3",
+            "-m",
+            "compileall",
+            "-q",
+            "src/memoria_vault",
+            "scripts/checks",
+            "scripts/test_vault",
+            "scripts/verify",
+        ],
+        docs=False,
+    ),
+    Gate(
+        [
+            "bash",
+            "-n",
+            "scripts/install.sh",
+            "scripts/test_vault/refresh-test-vault.sh",
+            "scripts/test_vault/install-test-vault-local-llm.sh",
+        ],
+        docs=False,
+    ),
     # 1689: the installed console script is the one surface no other gate
     # exercises through PATH — pytest resolves src/ via path config, so a
     # stale editable install (e.g. pointing at a deleted worktree) keeps
     # every gate green while `memoria` is dead for every CLI-consuming task.
-    ["memoria", "--version"],
+    Gate(["memoria", "--version"], docs=False),
 ]
 
 # Self-skips when the analyzer module is absent (exit 2), so a machine with pwsh
@@ -125,22 +150,17 @@ PSSA_COMMAND = (
 )
 
 
-# Gates a docs-only diff cannot affect: they exercise code, not documentation.
-_DOCS_SKIP = ("e2e_smoke.py", "-m compileall", "bash -n", "memoria --version", "wheel_gate.py")
-
-
 def _gates_for_run(docs_only: bool) -> list[list[str]]:
     """The full roster, or its docs-relevant subset when docs_only is set."""
     if not docs_only:
-        return GATES
+        return [gate.cmd for gate in GATES]
     reduced: list[list[str]] = []
-    for command in GATES:
-        joined = " ".join(command)
-        if any(marker in joined for marker in _DOCS_SKIP):
+    for gate in GATES:
+        if not gate.docs:
             continue
-        if "pytest" in joined:
-            command = ["static" if arg == PYTEST_MARKERS else arg for arg in command]
-        reduced.append(command)
+        # Exact-argument swap; only the pytest gate carries PYTEST_MARKERS, so
+        # every other command passes through unchanged.
+        reduced.append(["static" if arg == PYTEST_MARKERS else arg for arg in gate.cmd])
     return reduced
 
 

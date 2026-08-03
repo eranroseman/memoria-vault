@@ -19,7 +19,7 @@ def _verify_namespace() -> dict:
 
 
 def test_roster_covers_lint_tests_and_product_gates() -> None:
-    flat = [" ".join(cmd) for cmd in _verify_namespace()["GATES"]]
+    flat = [" ".join(gate.cmd) for gate in _verify_namespace()["GATES"]]
 
     assert flat[0] == "pre-commit run --hook-stage manual --all-files"
     for gate in (
@@ -43,7 +43,7 @@ def test_roster_covers_lint_tests_and_product_gates() -> None:
 
 
 def test_retired_doctors_are_absent_from_the_roster() -> None:
-    flat = " ".join(" ".join(cmd) for cmd in _verify_namespace()["GATES"])
+    flat = " ".join(" ".join(gate.cmd) for gate in _verify_namespace()["GATES"])
 
     for retired in (
         "agents_doctor",
@@ -70,7 +70,7 @@ def test_docs_only_scope_narrows_the_roster() -> None:
     docs = [" ".join(cmd) for cmd in gates_for_run(True)]
 
     # Full scope is the unchanged roster.
-    assert full == [" ".join(cmd) for cmd in namespace["GATES"]]
+    assert full == [" ".join(gate.cmd) for gate in namespace["GATES"]]
 
     # Docs scope keeps lint + every product gate.
     assert docs[0] == "pre-commit run --hook-stage manual --all-files"
@@ -94,6 +94,15 @@ def test_docs_only_scope_narrows_the_roster() -> None:
 
     # a docs-only diff provably cannot change packaging, so the wheel gate is skipped
     assert not any("wheel_gate" in d for d in docs)
+
+
+def test_gate_entries_run_under_docs_scope_unless_opted_out() -> None:
+    # Fail-safe default: a new roster entry that never considered docs-only
+    # scope still runs there; docs=False is the explicit "provably cannot be
+    # affected by a docs diff" claim.
+    gate_type = _verify_namespace()["Gate"]
+
+    assert gate_type(["echo", "ok"]).docs is True
 
 
 def test_run_reports_a_missing_executable_instead_of_raising(
