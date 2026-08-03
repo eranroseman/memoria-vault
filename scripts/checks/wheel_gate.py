@@ -70,14 +70,17 @@ def _expected_members() -> set[str]:
         cwd=ROOT,
         text=True,
         capture_output=True,
-        check=False,
+        check=True,
     )
     prefix = SRC.relative_to(ROOT).as_posix() + "/"
     # splitlines, not split(): some package-data filenames contain spaces
     # (e.g. "Start here.md"), and git ls-files separates entries by newline.
-    return {
+    expected = {
         "memoria_vault/" + line.removeprefix(prefix) for line in listing.stdout.splitlines() if line
     }
+    if not expected:
+        sys.exit("wheel-gate: git ls-files returned nothing under src/memoria_vault/")
+    return expected
 
 
 def _ignore_root_only(path: str, names: list[str]) -> set[str]:

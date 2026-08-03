@@ -184,7 +184,7 @@ def check_json() -> int:
         check=False,
     )
     bad: list[str] = []
-    for name in listing.stdout.split():
+    for name in listing.stdout.splitlines():
         try:
             json.loads((ROOT / name).read_text(encoding="utf-8"))
         except (ValueError, OSError) as exc:
