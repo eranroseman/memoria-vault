@@ -209,7 +209,7 @@ closed when adapter policy is missing. See [Policy gate](../control-and-policy/p
 | --- | --- | --- | --- |
 | `agent_recommendation` | `inconclusive` / `issues-found` / `clean` | Peer-reviewer / operations | advisory only |
 | verdict band | `PASS` / `REVIEW` / `FAIL` | Linter operation | structural rollup over the detectors — the rollup rule is owned by [Linter: detectors and auto-fix](../analysis-and-surfaces/linter.md) |
-| `certainty` | `confident` / `likely` / `unsure` | proposing agent | calibrated confidence on an attention projection |
+| `certainty` | `confident` / `likely` / `unsure` | proposing agent | calibrated confidence on an attention projection. Distinct from the note-frontmatter `certainty` enum (`reported` / `contested` / `unknown` / `hypothesized`), the PI-set epistemic status of a claim — see [Frontmatter fields](frontmatter.md). |
 
 ---
 
