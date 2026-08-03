@@ -298,7 +298,9 @@
       "kind": "glob",
       "needle": "tests/**/test_*obsidian_plugin*.py",
       "owner": "core runtime",
-      "reason": "Obsidian plugin tests are excluded with their surface",
+      "reason": "Obsidian plugin tests are excluded with their surface"
+    },
+    {
       "kind": "text",
       "needle": "set_session_skill(",
       "owner": "runtime policy",

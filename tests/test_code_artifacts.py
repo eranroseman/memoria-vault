@@ -154,7 +154,7 @@ def _succeeded_run(tmp_path: Path, output_text: str = "42\n") -> str:
         exit_status=0,
         sandbox_backend="bwrap",
         sandbox_profile_hash="sha256:" + "0" * 64,
-        run_state="succeeded",
+        run_status="succeeded",
     )
     return output_rel
 
@@ -179,7 +179,7 @@ def test_verify_code_run_refuses_a_run_that_did_not_succeed(tmp_path: Path) -> N
         exit_status=1,
         sandbox_backend="bwrap",
         sandbox_profile_hash="sha256:" + "0" * 64,
-        run_state="failed",
+        run_status="failed",
     )
 
     assert verify_code_run(tmp_path, "run-1") == {"ready": False, "reason": "failed"}
