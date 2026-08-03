@@ -30,14 +30,21 @@ Catalog Work rows live in SQLite and provider payloads; they are not `paper`,
 ## Authored links
 
 Knowledge Concepts carry `links:` as the authored relationship map specified by
-the generated [Frontmatter fields](frontmatter.md). The only frontmatter link
-relations are:
+the generated [Frontmatter fields](frontmatter.md). The six frontmatter-legal
+link relations are:
 
 | Link | Direction |
 | --- | --- |
 | `supports` | This Concept supports the linked Concept. |
 | `contradicts` | This Concept contradicts the linked Concept. |
 | `extends` | This Concept builds on the linked Concept. |
+| `warrant` | This Concept licenses the inference the linked Concept makes (Toulmin role). |
+| `qualifier` | This Concept bounds the linked Concept's scope or strength (Toulmin role). |
+| `rebuttal` | This Concept names the condition under which the linked Concept fails (Toulmin role). |
+
+`tension` is a seventh edge relation the machine surfaces and the PI confirms;
+it is never authored in `links:`
+([Frontmatter fields](frontmatter.md#links-and-catalog-resources)).
 
 ```yaml
 links:
@@ -45,6 +52,9 @@ links:
     - notes/target.md
   contradicts: []
   extends: []
+  warrant: []
+  qualifier: []
+  rebuttal: []
 ```
 
 Rules:
