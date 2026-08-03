@@ -74,7 +74,7 @@ def test_sandboxed_code_has_no_network(sandbox_vault: Path) -> None:
     out = _stdout(sandbox_vault, run)
     assert "NET_OK" not in out
     assert "NET_BLOCKED" in out
-    assert run["state"] == "succeeded"  # blocked network is the *expected* outcome
+    assert run["run_status"] == "succeeded"  # blocked network is the *expected* outcome
 
 
 def test_host_environment_does_not_leak_into_the_sandbox(
@@ -125,7 +125,7 @@ def test_outputs_land_on_the_host_and_their_hashes_are_recorded(sandbox_vault: P
 
     host_file = sandbox_vault / out_rel
     assert host_file.read_text(encoding="utf-8") == "42\n"
-    assert run["state"] == "succeeded"
+    assert run["run_status"] == "succeeded"
     assert run["output_hashes"] == {out_rel: sha256_file(host_file)}
 
 
@@ -134,7 +134,7 @@ def test_a_run_that_overstays_its_timeout_is_failed_and_says_so(sandbox_vault: P
 
     run = run_artifact(sandbox_vault, "slow-probe", run_id="slow-1", timeout_s=2)
 
-    assert run["state"] == "failed"
+    assert run["run_status"] == "failed"
     assert run["timeout_result"] == "timeout"
     assert run["exit_status"] == 124
 
