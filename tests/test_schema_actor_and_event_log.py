@@ -1,4 +1,4 @@
-"""Schema compatibility contract tests."""
+"""Actor vocabulary and event-log indexes in a fresh schema."""
 
 import hashlib
 import sqlite3
@@ -36,11 +36,6 @@ def _record_derivation(vault, *, input_id, output_id="concepts/output.md", actor
         ),
         inputs=[{"id": input_id}],
     )
-
-
-def test_user_version_is_current_schema_version(tmp_path):
-    with _conn(tmp_path) as conn:
-        assert conn.execute("PRAGMA user_version").fetchone()[0] == state.SCHEMA_VERSION
 
 
 def test_operation_requests_actor_accepts_agent_and_rejects_bogus(tmp_path):

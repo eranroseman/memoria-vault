@@ -6,8 +6,8 @@ from pathlib import Path
 import pytest
 
 from memoria_vault.runtime import state
+from memoria_vault.runtime.code.execution import Availability, run_artifact
 from memoria_vault.runtime.code.records import create_code_artifact
-from memoria_vault.runtime.code.runner import Availability, run_artifact
 from memoria_vault.runtime.policy.audit import sha256_file
 
 pytestmark = pytest.mark.runtime
@@ -42,7 +42,7 @@ def test_code_artifact_record_and_unavailable_runner_fail_closed(
         declared_outputs=["projects/project-alpha/code/analysis/outputs/result.txt"],
     )
     monkeypatch.setattr(
-        "memoria_vault.runtime.code.runner.execution_availability",
+        "memoria_vault.runtime.code.execution.execution_availability",
         lambda vault: Availability("unsupported", "test sandbox unavailable"),
     )
 
@@ -119,7 +119,7 @@ def test_run_artifact_rejects_unknown_artifact_and_malformed_command(
         approved_command=["python3", ""],
     )
     monkeypatch.setattr(
-        "memoria_vault.runtime.code.runner.execution_availability",
+        "memoria_vault.runtime.code.execution.execution_availability",
         lambda vault: Availability("unsupported", "test sandbox unavailable"),
     )
     for artifact_id in ("empty-argv", "blank-part"):

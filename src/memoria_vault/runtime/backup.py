@@ -18,7 +18,11 @@ from typing import Any
 from memoria_vault.runtime import state
 from memoria_vault.runtime.paths import path_redirects, safe_filename
 from memoria_vault.runtime.time import now_iso
-from memoria_vault.runtime.vaultio import write_bytes_durable, write_text_durable
+from memoria_vault.runtime.vaultio import (
+    _fsync_directory,
+    write_bytes_durable,
+    write_text_durable,
+)
 
 BACKUP_FORMAT = "memoria-workspace-backup"
 BACKUP_VERSION = 1
@@ -1364,22 +1368,6 @@ def _cleanup_transaction_directory(path: Path) -> None:
         _remove_path_durable(child)
     _remove_transaction_directory_identity(path)
     _cleanup_directory(path)
-
-
-def _fsync_directory(path: Path) -> None:
-    try:
-        fd = os.open(path, os.O_RDONLY)
-    except OSError:
-        if os.name == "nt":
-            return
-        raise
-    try:
-        os.fsync(fd)
-    except OSError:
-        if os.name != "nt":
-            raise
-    finally:
-        os.close(fd)
 
 
 def _replaceable_target_error(target: Path) -> str:

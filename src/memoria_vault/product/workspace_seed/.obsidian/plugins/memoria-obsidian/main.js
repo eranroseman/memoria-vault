@@ -243,20 +243,6 @@ module.exports = class MemoriaObsidianPlugin extends Plugin {
     new Notice(`Memoria Concept: ${concept.title || target}`);
   }
 
-  async queueOperation(operationId, payload) {
-    const result = await this.postOperation(operationId, payload, "");
-    await this.recordEvent(
-      this.baseEvent("operation.queued", {
-        workflow: "operation",
-        item_type: "operation",
-        item_id: sanitizeItemId(operationId),
-        outcome: "queued",
-      }),
-    );
-    new Notice(`Memoria operation queued: ${operationId}`);
-    return result;
-  }
-
   async startSession() {
     if (!this.settings.enabled) {
       new Notice("Enable Memoria collection before starting a session.");
@@ -1262,8 +1248,10 @@ class OperationModal extends Modal {
     new Setting(contentEl)
       .addButton((button) =>
         button.setButtonText("Queue").setCta().onClick(async () => {
-          await this.plugin.queueOperation(operationId, JSON.parse(payloadText || "{}"));
-          this.close();
+          const payload = JSON.parse(payloadText || "{}");
+          if (await this.plugin.enqueueNamedOperation(operationId, payload)) {
+            this.close();
+          }
         }),
       );
   }
