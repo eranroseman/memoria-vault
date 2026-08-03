@@ -245,7 +245,7 @@ def derive_work_aspect_rows(
 
 def _structured_aspects(csl_json: dict[str, Any]) -> dict[str, str]:
     memoria = csl_json.get("memoria") if isinstance(csl_json.get("memoria"), dict) else {}
-    raw = memoria.get("aspects") or memoria.get("_aspects") or csl_json.get("_aspects") or {}
+    raw = memoria.get("aspects") or {}
     if not isinstance(raw, dict):
         return {}
     out = {}

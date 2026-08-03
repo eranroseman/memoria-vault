@@ -65,7 +65,7 @@ def test_cli_operation_list_and_run_use_workspace_operation_concepts(
     assert rc == 0
     assert output["ok"] is True
     gaps = {gap["topic"]: gap for gap in output["result"]["gaps"]}
-    assert gaps["sleep"]["gap_type"] == "undigested"
+    assert gaps["sleep"]["kind"] == "undigested"
     assert gaps["sleep"]["kind"] == "undigested"
     with state.connect(workspace) as conn:
         row = conn.execute(
@@ -74,7 +74,7 @@ def test_cli_operation_list_and_run_use_workspace_operation_concepts(
         ).fetchone()
     assert json.loads(row["args_json"])["mode"] == "live"
     assert gaps["sleep"]["score"] == 4
-    assert gaps["new area"]["gap_type"] == "new-topic"
+    assert gaps["new area"]["kind"] == "new-topic"
     assert output["result"]["summary"]["total"] == output["result"]["gap_count"]
     with state.connect(workspace) as conn:
         row = conn.execute(
@@ -363,8 +363,8 @@ def test_cli_request_list_show_and_resume_pending_request(
     assert rc == 0
     assert resumed["result"]["status"] == "done"
     gaps = {gap["topic"]: gap for gap in resumed["result"]["gaps"]}
-    assert gaps["sleep"]["gap_type"] == "undigested"
-    assert gaps["new area"]["gap_type"] == "new-topic"
+    assert gaps["sleep"]["kind"] == "undigested"
+    assert gaps["new area"]["kind"] == "new-topic"
     with state.connect(workspace) as conn:
         row = conn.execute(
             "SELECT status FROM operation_requests WHERE request_id = ?",

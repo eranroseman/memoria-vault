@@ -94,7 +94,7 @@ def test_basic_knowledge_cycle_runs_through_worker_queue(tmp_path: Path) -> None
         {"dense_threshold": 1},
         key="initial-gap-analysis",
     )
-    assert {gap["topic"]: gap["gap_type"] for gap in initial_gaps["gaps"]}[
+    assert {gap["topic"]: gap["kind"] for gap in initial_gaps["gaps"]}[
         "Memory Consolidation"
     ] == "under-grounded"
 

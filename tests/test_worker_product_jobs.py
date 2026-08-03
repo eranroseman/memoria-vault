@@ -305,16 +305,16 @@ def test_worker_runs_gap_analysis_operation_jobs(tmp_path: Path) -> None:
     assert (vault / done["full_text_attention_paths"][0]).is_file()
     assert (vault / done["tag_candidate_paths"][0]).is_file()
     assert done["tag_candidates"][0]["phrase"] == "neural retrieval"
-    assert gaps["catalog-only"]["gap_type"] == "undigested"
+    assert gaps["catalog-only"]["kind"] == "undigested"
     assert gaps["catalog-only"]["kind"] == "undigested"
     assert gaps["catalog-only"]["severity"] == "high"
     assert gaps["catalog-only"]["source_count"] == 1
-    assert gaps["Metadata Only"]["gap_type"] == "full-text-missing"
+    assert gaps["Metadata Only"]["kind"] == "full-text-missing"
     assert gaps["Metadata Only"]["kind"] == "full-text-missing"
     assert gaps["Metadata Only"]["why"]
     assert gaps["Metadata Only"]["next_actions"]
-    assert gaps["sleep"]["gap_type"] == "undigested"
-    assert gaps["new area"]["gap_type"] == "new-topic"
+    assert gaps["sleep"]["kind"] == "undigested"
+    assert gaps["new area"]["kind"] == "new-topic"
 
 
 def test_worker_runs_project_scoped_gap_analysis(tmp_path: Path) -> None:
