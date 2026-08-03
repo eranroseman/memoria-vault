@@ -20,8 +20,8 @@ from pathlib import Path
 
 import pytest
 
+from memoria_vault.runtime.code.execution import execution_availability, run_artifact
 from memoria_vault.runtime.code.records import create_code_artifact
-from memoria_vault.runtime.code.runner import execution_availability, run_artifact
 from memoria_vault.runtime.policy.audit import sha256_file
 
 pytestmark = pytest.mark.runtime

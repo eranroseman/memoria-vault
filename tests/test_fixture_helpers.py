@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 from memoria_vault.runtime import state
-from memoria_vault.runtime.subsystems.lib.edges import CONCEPT_ROOTS
+from memoria_vault.runtime.vocabulary.edges import CONCEPT_ROOTS
 from tests import helpers
 
 pytestmark = pytest.mark.runtime

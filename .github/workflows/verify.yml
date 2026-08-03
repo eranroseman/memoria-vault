@@ -57,7 +57,7 @@ jobs:
           # this reason.)
           python3 -c "
           from pathlib import Path
-          from memoria_vault.runtime.code.runner import execution_availability
+          from memoria_vault.runtime.code.execution import execution_availability
 
           availability = execution_availability(Path('.'))
           if availability.available:

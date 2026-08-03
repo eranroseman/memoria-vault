@@ -12,9 +12,9 @@ from typing import Any
 
 from memoria_vault.runtime import state
 from memoria_vault.runtime.policy.audit import sha256_file
-from memoria_vault.runtime.subsystems.lib.edges import CONCEPT_ROOTS
 from memoria_vault.runtime.trusted_writer import OperationContext, operation_context_record
 from memoria_vault.runtime.vaultio import UNIVERSAL_CONCEPT_BUNDLES, read_frontmatter
+from memoria_vault.runtime.vocabulary.edges import CONCEPT_ROOTS
 from tests.paths import ROOT as ROOT
 from tests.paths import WORKSPACE_SEED
 
