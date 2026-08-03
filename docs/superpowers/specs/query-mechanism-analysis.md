@@ -1,5 +1,7 @@
 # Memoria Query Architecture: Lexical, Semantic, Structural, and Graph Retrieval Over a Unified Store
 
+Date: 2026-07-12. Status: research record — prerequisite analysis.
+
 *Prerequisite analysis for the data-structure design in `data-structure-analysis.md` Part 8. Answers "what is the best way to query the data" — a separate question from, and an input to, "how should the data structure itself be designed to be queryable." Produced via multi-agent research + adversarial verification; kept as its own document per the project owner's direction rather than embedded inline.*
 
 ## 1. Requirements
