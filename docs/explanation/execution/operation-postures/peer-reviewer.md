@@ -40,3 +40,4 @@ an operation, and findings reach the PI the same way - as attention.
 - The proposer it stays independent of: [The Librarian](librarian.md)
 - Why the posture boundaries are strict: [Why operation postures](../../rationale/boundaries/why-operation-postures.md)
 - Why review is human-driven: [Why the review gate is structural](../../rationale/boundaries/why-review-gate-is-structural.md)
+- Practicing verification: [Analyze a project argument](../../../how-to-guides/project/analyze-a-project-argument.md)
