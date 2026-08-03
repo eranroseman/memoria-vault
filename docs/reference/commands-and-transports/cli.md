@@ -86,7 +86,8 @@ This page summarizes `src/memoria_vault/cli.py`; use `--help` for exact flags.
 
 ## Complete command roster
 
-This roster mirrors the live argparse tree:
+This roster mirrors the live argparse tree; `scripts/checks/doc_claims_gate.py`
+pins the two equal in both directions:
 
 - `memoria ask`
 - `memoria attention list`
@@ -94,6 +95,8 @@ This roster mirrors the live argparse tree:
 - `memoria attention show`
 - `memoria attention worklist`
 - `memoria check`
+- `memoria cockpit`
+- `memoria context`
 - `memoria dashboard`
 - `memoria decision-rule set`
 - `memoria doctor`
@@ -107,6 +110,7 @@ This roster mirrors the live argparse tree:
 - `memoria handshake`
 - `memoria help`
 - `memoria init`
+- `memoria journal revert-preview`
 - `memoria journal show`
 - `memoria journal tail`
 - `memoria journal verify`
@@ -117,6 +121,7 @@ This roster mirrors the live argparse tree:
 - `memoria new hub`
 - `memoria new note`
 - `memoria new project`
+- `memoria onboard`
 - `memoria operation list`
 - `memoria operation run`
 - `memoria project ask`
@@ -147,6 +152,7 @@ This roster mirrors the live argparse tree:
 - `memoria review stats`
 - `memoria secrets list`
 - `memoria secrets set`
+- `memoria seed install`
 - `memoria serve`
 - `memoria show`
 - `memoria status`

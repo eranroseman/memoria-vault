@@ -111,3 +111,69 @@ def test_skips_docs_superpowers_and_design_history_archive(tmp_path: Path) -> No
     )
 
     assert gate.find_violations(tmp_path) == []
+
+
+_CLI_DOC = """## Complete command roster
+
+This roster mirrors the live argparse tree:
+
+- `memoria project gaps`
+- `memoria project trace`
+
+## Next section
+"""
+
+_OPERATIONS_DOC = """## Operation manifest roster
+
+Package-owned operation manifests currently ship these operation IDs:
+
+- `capture-source`
+
+## Detailed action catalogs
+"""
+
+
+def _write_roster_docs(
+    root: Path, cli_doc: str = _CLI_DOC, operations_doc: str = _OPERATIONS_DOC
+) -> None:
+    docs_dir = root / "docs/reference/commands-and-transports"
+    docs_dir.mkdir(parents=True, exist_ok=True)
+    (docs_dir / "cli.md").write_text(cli_doc, encoding="utf-8")
+    (docs_dir / "system-actions.md").write_text(operations_doc, encoding="utf-8")
+
+
+def test_matching_rosters_are_clean(tmp_path: Path) -> None:
+    _init_fixture_repo(tmp_path)
+    _write_roster_docs(tmp_path)
+
+    assert gate.roster_drift_errors(tmp_path) == []
+
+
+def test_missing_roster_entries_fail_in_both_surfaces(tmp_path: Path) -> None:
+    _init_fixture_repo(tmp_path)
+    _write_roster_docs(
+        tmp_path,
+        cli_doc=_CLI_DOC.replace("- `memoria project trace`\n", ""),
+        operations_doc=_OPERATIONS_DOC.replace("- `capture-source`", "- `capture-other`"),
+    )
+
+    assert gate.roster_drift_errors(tmp_path) == [
+        "docs/reference/commands-and-transports/cli.md: roster is missing `memoria project trace`",
+        "docs/reference/commands-and-transports/system-actions.md: roster is missing `capture-source`",
+        "docs/reference/commands-and-transports/system-actions.md: roster lists `capture-other`, which no shipped manifest declares",
+    ]
+
+
+def test_stale_cli_roster_entry_fails(tmp_path: Path) -> None:
+    _init_fixture_repo(tmp_path)
+    _write_roster_docs(
+        tmp_path,
+        cli_doc=_CLI_DOC.replace(
+            "- `memoria project trace`", "- `memoria project trace`\n- `memoria project frobnicate`"
+        ),
+    )
+
+    assert gate.roster_drift_errors(tmp_path) == [
+        "docs/reference/commands-and-transports/cli.md: roster lists `memoria project frobnicate`, "
+        "which the argparse tree does not run",
+    ]

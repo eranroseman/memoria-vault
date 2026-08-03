@@ -9,6 +9,10 @@ Deliberately narrow: this is not general prose/symbol checking (docs/explanation
 and docs/how-to-guides describe behavior in ordinary sentences that this script
 has no way to verify). It only catches a doc citing a CLI path or operation id
 that the shipped surface does not actually have.
+
+In the reverse direction, the two roster pages (cli.md, system-actions.md) must
+list the entire shipped surface — a command or manifest the docs omit fails the
+same gate.
 """
 
 from __future__ import annotations
@@ -30,6 +34,13 @@ CLI_PATTERN = re.compile(r"`memoria((?: [a-z][a-z0-9_-]*){1,3})`")
 # token elsewhere on the line is commonly a check name, journal-event name,
 # or enum value, not an operation-id claim.
 OPERATION_ID_PATTERN = re.compile(r"operation `([a-z][a-z0-9]*(?:-[a-z][a-z0-9]*){1,5})`")
+CLI_DOC_REL = "docs/reference/commands-and-transports/cli.md"
+CLI_ROSTER_HEADING = "## Complete command roster"
+OPERATIONS_DOC_REL = "docs/reference/commands-and-transports/system-actions.md"
+OPERATIONS_ROSTER_HEADING = "## Operation manifest roster"
+CLI_ROSTER_ENTRY = re.compile(
+    r"^- `memoria ((?:[a-z][a-z0-9_-]*)(?: [a-z][a-z0-9_-]*){0,3})`$", re.MULTILINE
+)
 
 
 @dataclass(frozen=True)
@@ -89,6 +100,69 @@ def _load_operation_ids(root: Path) -> frozenset[str]:
     return frozenset(ids)
 
 
+def _roster_section(text: str, heading: str) -> str:
+    start = text.index(heading)
+    end = text.find("\n## ", start + len(heading))
+    return text[start : end if end != -1 else len(text)]
+
+
+def _runnable_cli_paths(root: Path) -> frozenset[str]:
+    """Every path the parser will run: a handler is set, or it is a leaf.
+
+    Group parsers (`memoria journal`, bare `memoria seed`) exist only to hold
+    subcommands — required subparsers, no handler — and are not roster entries.
+    """
+    with _importable(root / "src"):
+        from memoria_vault.cli import _build_parser
+
+    def walk(parser: argparse.ArgumentParser, prefix: tuple[str, ...] = ()) -> set[tuple[str, ...]]:
+        subparser_actions = [
+            action for action in parser._actions if isinstance(action, argparse._SubParsersAction)
+        ]
+        paths: set[tuple[str, ...]] = set()
+        if prefix and (parser.get_default("handler") is not None or not subparser_actions):
+            paths.add(prefix)
+        for action in subparser_actions:
+            for name, sub in action.choices.items():
+                paths |= walk(sub, (*prefix, name))
+        return paths
+
+    return frozenset(" ".join(path) for path in walk(_build_parser()))
+
+
+def roster_drift_errors(root: Path = ROOT) -> list[str]:
+    """The reverse direction: the two roster pages must list the whole shipped surface."""
+    root = Path(root).resolve()
+    errors: list[str] = []
+
+    cli_text = (root / CLI_DOC_REL).read_text(encoding="utf-8")
+    documented = frozenset(
+        match.group(1)
+        for match in CLI_ROSTER_ENTRY.finditer(_roster_section(cli_text, CLI_ROSTER_HEADING))
+    )
+    runnable = _runnable_cli_paths(root)
+    for missing in sorted(runnable - documented):
+        errors.append(f"{CLI_DOC_REL}: roster is missing `memoria {missing}`")
+    for stale in sorted(documented - runnable):
+        errors.append(
+            f"{CLI_DOC_REL}: roster lists `memoria {stale}`, which the argparse tree does not run"
+        )
+
+    operations_text = (root / OPERATIONS_DOC_REL).read_text(encoding="utf-8")
+    documented_ids: set[str] = set()
+    for line in _roster_section(operations_text, OPERATIONS_ROSTER_HEADING).splitlines():
+        if line.startswith("- "):
+            documented_ids.update(re.findall(r"`([a-z][a-z0-9-]*)`", line))
+    shipped_ids = _load_operation_ids(root)
+    for missing in sorted(shipped_ids - documented_ids):
+        errors.append(f"{OPERATIONS_DOC_REL}: roster is missing `{missing}`")
+    for stale in sorted(documented_ids - shipped_ids):
+        errors.append(
+            f"{OPERATIONS_DOC_REL}: roster lists `{stale}`, which no shipped manifest declares"
+        )
+    return errors
+
+
 def _iter_docs(root: Path) -> list[Path]:
     docs = []
     for path in sorted((root / "docs").rglob("*.md")):
@@ -125,13 +199,16 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     violations = find_violations(args.root)
-    if violations:
+    drift = roster_drift_errors(args.root)
+    if violations or drift:
         print("doc-claims-gate: FAIL", file=sys.stderr)
         for v in violations:
             print(
                 f"  {v.file}:{v.line}: {v.kind} '{v.claim}' not found in the shipped surface",
                 file=sys.stderr,
             )
+        for error in drift:
+            print(f"  {error}", file=sys.stderr)
         return 1
     print("doc-claims-gate: clean")
     return 0

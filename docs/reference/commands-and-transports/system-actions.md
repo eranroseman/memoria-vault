@@ -14,8 +14,9 @@ commands and review decisions). Where a topic has its own reference page, that
 page is authoritative for the details — this catalog is the map.
 
 This page mirrors the source, not the reverse. Action implementation lives in
-the referenced Python modules, capability manifests, and linked reference pages;
-keep the operation manifest roster in sync by hand.
+the referenced Python modules, capability manifests, and linked reference pages.
+The operation manifest roster below is pinned to the shipped manifests by
+`scripts/checks/doc_claims_gate.py` in both directions.
 
 ## Operation manifest roster
 

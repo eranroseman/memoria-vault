@@ -16,6 +16,10 @@ The site navigation and this index group reference pages by domain. Pages that
 summarize schema-owned contracts name the owning source rather than mirroring
 every field and count.
 
+The Source column: **Source-owned** pages quote schema-owned or generated
+material; **Guarded mirror** pages are pinned to the shipped surface by a drift
+gate in `scripts/verify`; **Manual** pages are maintained by hand.
+
 ## [Vault data model](data-model/)
 
 | File | What it covers | Source |
@@ -24,7 +28,7 @@ every field and count.
 | [Document types](data-model/document-types.md) | Schema-owned document types and owning files | Source-owned |
 | [Vocabulary](data-model/vocabulary.md) | Vocabulary-source values for Work `research_area`/`methodology` metadata and claim-bearing note `topics` | Guarded mirror |
 | [Wikilink and link conventions](data-model/wikilink-and-link-conventions.md) | Wikilink conventions, authored-link vocabulary, hub thresholds | Manual |
-| [Glossary](data-model/glossary.md) | Term definitions, alphabetical | Manual |
+| [Glossary](data-model/glossary.md) | Term definitions, organized by domain | Manual |
 | [OKF compliance contract](data-model/okf-compliance.md) | OKF bundle conformance boundary and typed-frontmatter rule | Manual |
 
 ## [Commands and transports](commands-and-transports/)
@@ -47,7 +51,7 @@ every field and count.
 
 | File | What it covers | Source |
 | --- | --- | --- |
-| [Control plane reference](control-and-policy/control-plane.md) | Request-control commands and state | Manual |
+| [Control plane reference](control-and-policy/control-plane.md) | Request-control commands and state | Guarded mirror |
 | [Empirical events](control-and-policy/empirical-events.md) | Empirical-use event schema, enums, required fields, and privacy boundary | Guarded mirror |
 | [Evidence sets](control-and-policy/evidence-sets.md) | Draft evidence marker and derived-store contract | Manual |
 | [Project structural impact](control-and-policy/project-structural-impact.md) | Project-gate structural-impact command, generated index payload, and write behavior | Manual |
@@ -64,6 +68,7 @@ every field and count.
 | [Retrieval and analysis methods](analysis-and-surfaces/retrieval-and-analysis-methods.md) | Deterministic methods: BM25 retrieval, API calls, and graph algorithms | Manual |
 | [Calibration](analysis-and-surfaces/calibration.md) | Drift-bound threshold contracts and shadow-first score calibration | Manual |
 | [Surfaces and dashboards](analysis-and-surfaces/dashboards.md) | CLI/read-API surface inventory plus planned optional-adapter Maintenance, corpus, and runtime-ops views | Manual |
+| [Evidence-set review](analysis-and-surfaces/evidence-review.md) | Evidence-set hold queue, the four dispositions, and review telemetry | Manual |
 
 ## [Pipelines and I/O](pipelines-and-io/)
 
