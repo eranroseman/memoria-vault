@@ -63,15 +63,33 @@ def _importable(source_root: Path) -> Iterator[None]:
     process never notices, because it already holds `memoria_vault` in
     `sys.modules` -- but any process it spawns afterwards starts clean, imports
     the stub, and dies on a missing submodule with no signal beyond the
-    parent's queue timing out (#1613).
+    parent's queue timing out (#1613). `sys.modules` is snapshotted and cleared
+    of any `memoria_vault*` entries on entry and restored verbatim on exit, so a
+    `memoria_vault` already imported for real elsewhere in the same process
+    (e.g. by another test module collected in the same run) never shadows the
+    stub the import inside this context is meant to resolve.
     """
     entry = str(source_root)
+    snapshot = {
+        name: module
+        for name, module in sys.modules.items()
+        if name == "memoria_vault" or name.startswith("memoria_vault.")
+    }
+    for name in snapshot:
+        del sys.modules[name]
     sys.path.insert(0, entry)
     try:
         yield
     finally:
         with contextlib.suppress(ValueError):
             sys.path.remove(entry)
+        for name in [
+            name
+            for name in sys.modules
+            if name == "memoria_vault" or name.startswith("memoria_vault.")
+        ]:
+            del sys.modules[name]
+        sys.modules.update(snapshot)
 
 
 def _load_cli_paths(root: Path) -> frozenset[str]:
@@ -100,8 +118,11 @@ def _load_operation_ids(root: Path) -> frozenset[str]:
     return frozenset(ids)
 
 
-def _roster_section(text: str, heading: str) -> str:
-    start = text.index(heading)
+def _roster_section(text: str, heading: str, doc_rel: str) -> str:
+    try:
+        start = text.index(heading)
+    except ValueError:
+        raise SystemExit(f"doc-claims-gate: heading {heading!r} not found in {doc_rel}") from None
     end = text.find("\n## ", start + len(heading))
     return text[start : end if end != -1 else len(text)]
 
@@ -138,7 +159,9 @@ def roster_drift_errors(root: Path = ROOT) -> list[str]:
     cli_text = (root / CLI_DOC_REL).read_text(encoding="utf-8")
     documented = frozenset(
         match.group(1)
-        for match in CLI_ROSTER_ENTRY.finditer(_roster_section(cli_text, CLI_ROSTER_HEADING))
+        for match in CLI_ROSTER_ENTRY.finditer(
+            _roster_section(cli_text, CLI_ROSTER_HEADING, CLI_DOC_REL)
+        )
     )
     runnable = _runnable_cli_paths(root)
     for missing in sorted(runnable - documented):
@@ -150,7 +173,10 @@ def roster_drift_errors(root: Path = ROOT) -> list[str]:
 
     operations_text = (root / OPERATIONS_DOC_REL).read_text(encoding="utf-8")
     documented_ids: set[str] = set()
-    for line in _roster_section(operations_text, OPERATIONS_ROSTER_HEADING).splitlines():
+    operations_section = _roster_section(
+        operations_text, OPERATIONS_ROSTER_HEADING, OPERATIONS_DOC_REL
+    )
+    for line in operations_section.splitlines():
         if line.startswith("- "):
             documented_ids.update(re.findall(r"`([a-z][a-z0-9-]*)`", line))
     shipped_ids = _load_operation_ids(root)
