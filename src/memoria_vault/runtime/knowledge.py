@@ -1832,7 +1832,7 @@ def _contrary_channel_items(vault: Path, *, limit: int) -> list[dict[str, str]]:
 
 
 def _nli_contrary_channel_items(vault: Path, *, limit: int) -> list[dict[str, str]]:
-    from memoria_vault.runtime.integrity import (
+    from memoria_vault.runtime.grounding import (
         NLI_REFUTED,
         tier1_tension_candidates,
     )

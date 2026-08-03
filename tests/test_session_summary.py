@@ -5,7 +5,7 @@ from datetime import UTC, datetime
 
 import pytest
 
-from memoria_vault.runtime.subsystems.integrity.linter import session_summary as ss
+from memoria_vault.runtime.sweeps.linter import session_summary as ss
 
 pytestmark = pytest.mark.contract
 

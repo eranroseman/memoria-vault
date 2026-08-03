@@ -23,7 +23,7 @@ nav_order: 3
 Run the Linter operation — report-only, zero-LLM — to confirm and identify the specific error ([Run the Linter](../operate/run-the-linter.md)):
 
 ```bash
-./.memoria/.venv/bin/python -m memoria_vault.runtime.subsystems.integrity.linter.detectors \
+./.memoria/.venv/bin/python -m memoria_vault.runtime.sweeps.linter.detectors \
   --vault .
 ```
 
@@ -83,7 +83,7 @@ Source metadata lives in SQLite catalog rows, not source frontmatter files. Use
 confirm the repaired Concept with the Linter operation:
 
 ```bash
-./.memoria/.venv/bin/python -m memoria_vault.runtime.subsystems.integrity.linter.detectors \
+./.memoria/.venv/bin/python -m memoria_vault.runtime.sweeps.linter.detectors \
   --vault .
 ```
 

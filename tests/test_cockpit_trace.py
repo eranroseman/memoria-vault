@@ -8,7 +8,7 @@ from typing import Any
 import pytest
 
 from memoria_vault.engine import cockpit
-from memoria_vault.runtime import integrity, trusted_writer
+from memoria_vault.runtime import grounding, trusted_writer
 from tests.helpers import (
     call_with_context,
     init_cli_workspace,
@@ -102,7 +102,7 @@ def test_trace_panel_shows_only_previewable_in_slice_derivations_newest_first(
     _derive(vault, CLAIM_ONE, "Claim one", CLAIM_ONE_ID, machine="note-machine")
     _derive(vault, OFF_SLICE, "Off slice", "01JAAAAAAAAAAAAAAAAAAAAAA3", machine="note-machine")
     call_with_context(
-        integrity.record_integrity_check,
+        grounding.record_integrity_check,
         vault,
         CLAIM_TWO,
         check="scan",

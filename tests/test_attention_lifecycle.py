@@ -222,7 +222,7 @@ def test_every_attention_reader_agrees_on_what_an_attention_card_is(
     # lifecycle._closed_cards -- the disposition journal
     journaled = lifecycle.journal_unattributed_dispositions(workspace, machine="test-machine")
     assert [event["target_id"] for event in journaled] == [closed_rel]
-    # integrity.resolve_attention -- writing the closed status back to the card
+    # grounding.resolve_attention -- writing the closed status back to the card
     engine_api.resolve_attention(
         workspace, open_rel, outcome="apply", reason="acknowledged", actor="pi"
     )
@@ -358,7 +358,7 @@ def test_every_routing_class_reader_agrees_on_one_spelling(
     (#1633). The issue filed it as latent and display-only; it was neither. The payload
     field feeds `engine.api.resolve_attention`'s operation payload, so `routing_class:
     Act` on an open `block` card gated delegation and review-gated promotion while
-    `integrity.resolve_attention` rejected the operation that would clear it -- the card
+    `grounding.resolve_attention` rejected the operation that would clear it -- the card
     the CLI could not resolve -- and `lifecycle` folded the same card and journaled a
     disposition for it. Six readers, and the raw one was upstream of four of them.
 
@@ -384,7 +384,7 @@ def test_every_routing_class_reader_agrees_on_one_spelling(
     assert [(row["target_id"], row["routing_class"]) for row in journaled] == [
         (resolved_rel, canonical)
     ]
-    # engine.api.resolve_attention -> worker -> integrity.resolve_attention, which
+    # engine.api.resolve_attention -> worker -> grounding.resolve_attention, which
     # validates the value and raises on anything off the roster. This is the hop the
     # issue missed: unfolded, the operation failed and left the card open.
     resolved = engine_api.resolve_attention(
@@ -994,7 +994,7 @@ def test_a_card_at_a_reused_dedupe_slot_is_journaled_again(
 ) -> None:
     """A dedupe slot is a recurring condition's permanent address, not one card's.
 
-    `integrity.py:853` re-raises this exact slug every time detection degrades. Once
+    `grounding/__init__.py:853` re-raises this exact slug every time detection degrades. Once
     compaction frees the name, the second card is a different card with a different
     decision -- and a disposition set keyed on the path that only grew would read it
     as already disposed of and delete it with no record of its own.
@@ -1079,7 +1079,7 @@ def test_an_operation_resolved_card_stops_holding_its_path_once_archived(
 ) -> None:
     """A PI-attributed row poisons a reused slot exactly as an unattributed one does.
 
-    `integrity.resolve_attention` writes `source: attention` + `resolution: resolved`
+    `grounding.resolve_attention` writes `source: attention` + `resolution: resolved`
     -- the same row the held set reads. Worse than the unattributed case, in fact:
     the journal looks properly attributed while the second disposition is missing.
     """

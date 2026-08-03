@@ -58,7 +58,7 @@ class PolicyEngine:
         """
         # Lazy import: policy is imported by the trusted writer, so a module-level
         # import of the journal path would close the cycle (same pattern as
-        # retraction.py, integrity.py).
+        # retraction.py, grounding/__init__.py).
         from memoria_vault.runtime.subsystems.lib import lifecycle
 
         try:

@@ -6,32 +6,32 @@ import pytest
 
 from memoria_vault.runtime import state
 from memoria_vault.runtime.capture import capture_source as _capture_source
-from memoria_vault.runtime.integrity import (
+from memoria_vault.runtime.grounding import (
     check_claim_quote_support as _check_claim_quote_support,
 )
-from memoria_vault.runtime.integrity import (
+from memoria_vault.runtime.grounding import (
     check_contradiction_links as _check_contradiction_links,
 )
-from memoria_vault.runtime.integrity import (
+from memoria_vault.runtime.grounding import (
     check_evidence_integrity as _check_evidence_integrity,
 )
-from memoria_vault.runtime.integrity import (
+from memoria_vault.runtime.grounding import (
     check_link_targets as _check_link_targets,
 )
-from memoria_vault.runtime.integrity import (
+from memoria_vault.runtime.grounding import (
     check_prompt_injection_markers as _check_prompt_injection_markers,
 )
-from memoria_vault.runtime.integrity import (
+from memoria_vault.runtime.grounding import (
     check_provenance_checkpoint as _check_provenance_checkpoint,
 )
-from memoria_vault.runtime.integrity import (
+from memoria_vault.runtime.grounding import (
     check_quote_anchor_support as _check_quote_anchor_support,
 )
-from memoria_vault.runtime.integrity import (
+from memoria_vault.runtime.grounding import (
     contradiction_tier1_gate,
     route_check,
 )
-from memoria_vault.runtime.integrity import (
+from memoria_vault.runtime.grounding import (
     record_integrity_check as _record_integrity_check,
 )
 from tests.helpers import (
@@ -586,7 +586,7 @@ def test_seeded_vault_has_no_stray_top_level_folders(tmp_path, capsys) -> None:
     next agent host too, rather than shipping the noise and waiting for someone
     to notice.
     """
-    from memoria_vault.runtime.subsystems.integrity.linter import detectors
+    from memoria_vault.runtime.sweeps.linter import detectors
     from tests.helpers import init_cli_workspace
 
     workspace = init_cli_workspace(tmp_path, capsys)

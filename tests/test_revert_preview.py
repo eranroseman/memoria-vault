@@ -29,8 +29,8 @@ from memoria_vault.cli import main
 from memoria_vault.engine import api as engine_api
 from memoria_vault.runtime import backup, state
 from memoria_vault.runtime.capture import capture_source as _capture_source
-from memoria_vault.runtime.integrity import cascade_rollback as _cascade_rollback
-from memoria_vault.runtime.integrity import revert_preview
+from memoria_vault.runtime.grounding import cascade_rollback as _cascade_rollback
+from memoria_vault.runtime.grounding import revert_preview
 from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.trusted_writer import (
     commit_writer_changes as _commit_writer_changes,
@@ -215,7 +215,7 @@ def test_revert_preview_mutates_nothing_that_cascade_rollback_moves(tmp_path: Pa
     # And the preview predicted that outcome rather than deciding it again.
     # MACHINE_PI_CHILD carries actor "pi" but machine_authored=True: authority
     # without authorship, so both sides quarantine it rather than flag it
-    # (#1599) — reverting integrity.py:1236's `and not machine_authored` guard
+    # (#1599) — reverting grounding/__init__.py:1236's `and not machine_authored` guard
     # alone would split preview and rollback here and fail this assertion.
     assert preview["would_quarantine"] == rollback["reverted"] == [CHILD, MACHINE_PI_CHILD]
     assert preview["would_flag"] == rollback["needs_human"] == [PI_NOTE]

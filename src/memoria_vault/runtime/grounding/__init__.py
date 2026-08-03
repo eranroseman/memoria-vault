@@ -1,4 +1,4 @@
-"""Integrity check routing and trace rollback helpers."""
+"""Grounding check routing and trace rollback helpers."""
 
 from __future__ import annotations
 

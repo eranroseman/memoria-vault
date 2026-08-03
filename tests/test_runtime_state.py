@@ -12,8 +12,8 @@ from memoria_vault.runtime.capture import capture_source as _capture_source
 from memoria_vault.runtime.capture import check_references_bib
 from memoria_vault.runtime.capture import write_references_bib as _write_references_bib
 from memoria_vault.runtime.content_security import neutralize_untrusted_markdown
+from memoria_vault.runtime.grounding import check_citation_survival as _check_citation_survival
 from memoria_vault.runtime.indexing import rebuild_passage_index_explicit
-from memoria_vault.runtime.integrity import check_citation_survival as _check_citation_survival
 from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.propagation import CONSEQUENCE_TYPES
 from memoria_vault.runtime.trusted_writer import (

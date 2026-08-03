@@ -16,7 +16,7 @@ def test_floor_seed_builds_and_passes_detectors(tmp_path: Path) -> None:
     assert (vault / manifest["note_question"]).is_file()
     assert (vault / manifest["project"]).is_file()
     assert (vault / ".memoria/memoria.sqlite").is_file()
-    from memoria_vault.runtime.subsystems.integrity.linter import detectors
+    from memoria_vault.runtime.sweeps.linter import detectors
     from scripts.test_vault import e2e_smoke  # noqa: F401
 
     findings = detectors.run_all(vault)

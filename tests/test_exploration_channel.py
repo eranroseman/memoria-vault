@@ -7,7 +7,7 @@ import pytest
 
 from memoria_vault.cli import main
 from memoria_vault.engine import api
-from memoria_vault.runtime import integrity, state
+from memoria_vault.runtime import grounding, state
 from memoria_vault.runtime.knowledge import exploration_channel
 from memoria_vault.runtime.policy.audit import sha256_file
 
@@ -149,12 +149,12 @@ def test_exploration_channel_omits_nli_candidate_when_tier1_gate_is_degraded(
             candidate_comparisons += 1
             raise AssertionError("degraded Tier-1 must not compare candidate pairs")
         return {
-            "verdict": integrity.NLI_NOTENOUGHINFO,
+            "verdict": grounding.NLI_NOTENOUGHINFO,
             "confidence": 0.0,
             "warrant": "fixture HANS failure",
         }
 
-    monkeypatch.setattr(integrity, "_compare_claims", degraded_comparator)
+    monkeypatch.setattr(grounding, "_compare_claims", degraded_comparator)
 
     result = exploration_channel(tmp_path)
 
@@ -191,7 +191,7 @@ def test_exploration_channel_stops_nli_comparisons_at_limit(
         nonlocal candidate_comparisons
         if "Reminder systems" not in premise or "Reminder systems" not in hypothesis:
             return {
-                "verdict": integrity.NLI_REFUTED,
+                "verdict": grounding.NLI_REFUTED,
                 "confidence": 0.9,
                 "warrant": "fixture HANS pass",
             }
@@ -199,12 +199,12 @@ def test_exploration_channel_stops_nli_comparisons_at_limit(
         if candidate_comparisons > 1:
             raise AssertionError("comparison continued after exploration reached its limit")
         return {
-            "verdict": integrity.NLI_REFUTED,
+            "verdict": grounding.NLI_REFUTED,
             "confidence": 0.9,
             "warrant": "fixture first candidate",
         }
 
-    monkeypatch.setattr(integrity, "_compare_claims", comparator)
+    monkeypatch.setattr(grounding, "_compare_claims", comparator)
 
     result = exploration_channel(tmp_path, limit=1)
 

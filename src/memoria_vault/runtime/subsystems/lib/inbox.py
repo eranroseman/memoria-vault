@@ -313,7 +313,7 @@ def _touch_last_seen(path: Path, frontmatter: dict[str, Any], body: str) -> None
     hand-escalated `block` to `alert` and open the gate on a schedule.
 
     It does reformat. This is `split_frontmatter` -> mutate -> `write_frontmatter_doc`,
-    the same round trip `integrity.resolve_attention` performs, so the first touch
+    the same round trip `grounding.resolve_attention` performs, so the first touch
     drops YAML comments, normalizes quoting and reflows indentation. The delta from
     house behaviour is that this one happens unbidden, on the surface the PI is
     invited to edit by hand.
