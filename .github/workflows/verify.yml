@@ -46,6 +46,12 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq bubblewrap
+          # Ubuntu 24.04 restricts unprivileged user namespaces via AppArmor. Without
+          # this, bwrap falls back to its setuid path and `--unshare-net` dies at
+          # `loopback: Failed RTM_NEWADDR: Operation not permitted` -- it does not own
+          # the netns it just created. Added only after CI demonstrated that failure;
+          # the probe below is what tells you if it stops being needed.
+          sudo sysctl -qw kernel.apparmor_restrict_unprivileged_userns=0 || true
           # Delegate the probe to the product's own execution_availability() so
           # this step can never drift from what the runtime actually requires.
           # (A hand-rolled `--ro-bind /usr /usr --ro-bind /bin /bin` probe once
