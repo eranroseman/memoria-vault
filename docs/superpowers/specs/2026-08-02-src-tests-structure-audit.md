@@ -1,7 +1,9 @@
 # `src/` and `tests/` structure — Audit and staged migration plan
 
-Date: 2026-08-02. Status: **audit complete, nothing executed**. Scope was
-re-decided mid-session against the evidence; see §3.
+Date: 2026-08-02. Status: **executed** — every stage in §7 has shipped, and
+§8's three questions are answered there. Written as "audit complete, nothing
+executed"; the record is kept as authored below, with outcomes recorded in §8.
+Scope was re-decided mid-session against the evidence; see §3.
 
 Method: static analysis of the whole package (AST import graph over 90
 modules, fan-in/fan-out, `__init__.py` coverage), twelve parallel agents
@@ -342,13 +344,38 @@ first and the mapping must be regenerated from the post-move tree.
 
 ---
 
-## 8. Open questions
+## 8. Questions, and how they were answered
 
-1. Is stage 1 (the build gate) authorised on its own? It is a strict
-   improvement independent of every structural question here, and it is the
-   only item that makes the others verifiable.
-2. Is stage 5 (`state.py` extraction, 1,600 LOC, zero call-site edits)
-   authorised on its own? It does not depend on any taxonomy decision.
-3. Does the `integrity` collision (§2.2) justify stage 6's blast radius —
-   23 doc call sites plus an accepted break to installed vaults' commit
-   gates — or is the name collision tolerable?
+1. **Stage 1, the build gate — authorised and shipped** (#1734, with stages
+   2-5). `scripts/checks/wheel_gate.py` now builds an artifact and asserts its
+   contents, so packaging failures are visible to `scripts/verify` for the
+   first time. This was the load-bearing item: §2.0 argued nothing else here
+   is verifiable without it.
+2. **Stage 5, the `state.py` extraction — authorised and shipped** (#1734).
+   `runtime/state/` is now a package with `markdown.py` and
+   `workspace_lock.py` split out, exactly as §5.1 specified.
+3. **The `integrity` collision — resolved, but not the way §5.5 proposed**
+   (#1740). §5.5 ruled that the top-level module should *absorb*
+   `subsystems/integrity/`. The naming audit that followed overruled it: the
+   two share zero code and touch disjoint data, so merging them would produce
+   a ~3,500-LOC package whose members share no substrate, output format, or
+   invocation path. They were split into `runtime/grounding/` (grounds checks,
+   cascade rollback) and `runtime/sweeps/` (the report-only linter and the
+   retraction sweep) instead. #1741 then retired `subsystems/` entirely.
+
+Two premises in this document were also overtaken by events, and are left as
+written rather than silently corrected:
+
+- §4.1 counts 23 published `python -m` call sites. The measured figure during
+  execution was 24, and it grew again once stage 1's wheel gate landed and
+  hard-coded a dotted path of its own — a reminder that the blast radius of a
+  rename is not static while the tree is moving.
+- §4.2 treats the shipped githook break as a product decision with a cost.
+  There proved to be no installed vaults, so the cost was zero. The break is
+  recorded in `CHANGELOG.md` as ruled, but the deliberation it prompted was
+  unnecessary.
+
+The one recommendation still standing is §7's: **the `tests/` mirror was not
+done, and should not be.** `tests/test_testing_levels.py` still globs
+non-recursively, so moving tests into subdirectories would make the level gate
+pass vacuously.

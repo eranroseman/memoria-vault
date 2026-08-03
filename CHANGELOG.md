@@ -15,6 +15,24 @@ removed release-please setup, not real releases, and have been deleted.
 
 ### Changed
 
+- **Schema version 19 → 20, and every existing workspace database is
+  incompatible.** Memoria registers no migrations by design (fresh installs
+  only), so a bumped `user_version` refuses the prior database rather than
+  upgrading it; reinstall the vault. Four persisted-identifier
+  renames ride this one bump, because the bump is the entire cost and it is the
+  same whether one column moves or four:
+  `evidence_sets.state` → `completeness_status` (also the read-API payload key
+  and the evidence-review view spec's `columns` list — breaking for adapters
+  that read `state`); `code_runs.state` → `run_status` (the column, the
+  `run_state` parameter and the `_code_run_state` validator had drifted to
+  three spellings for one field); `job_id` → `request_id` everywhere, including
+  the key inside the persisted `job_json` blob and the Obsidian plugin's read
+  of `result.job.job_id` — the schema has always had
+  `operation_requests(request_id PRIMARY KEY)` and no `job_id` column;
+  and `external_ids.verified_at` is **removed** — it was `NOT NULL`, written
+  with an unconditional timestamp at INSERT, and read by nothing, while wearing
+  a name that asserts OKF confirmation semantics it never carried. No
+  compatibility aliases.
 - Retired the `runtime/subsystems/` directory level and its `lib/` child; both
   were non-names carrying no information. The four remaining members move to
   homes that say what they hold: `memoria_vault.runtime.vocabulary` (the
