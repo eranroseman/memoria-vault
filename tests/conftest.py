@@ -12,6 +12,34 @@ import pytest
 # last three basetemp trees, so 4 GB leaves comfortable headroom.
 TMPFS_MIN_FREE_BYTES = 4 * 1024**3
 
+# Scratch prefixes this suite creates outside pytest's managed basetemp. Both
+# were leaking permanently (mkdtemp with no cleanup) and 823 accumulated
+# floor-seed dirs were what starved the tmpfs guard below its 4 GiB floor.
+_SCRATCH_PREFIXES = ("memoria-floor-seed-", "memoria-test-xdg-")
+_SCRATCH_STALE_SECONDS = 2 * 3600  # no healthy run holds one this long
+
+
+def _prune_stale_scratch(candidate: Path, now: float | None = None) -> int:
+    """Remove this suite's own stale scratch dirs so the guard self-heals."""
+    import shutil
+    import time as _time
+
+    if not candidate.is_dir():
+        return 0
+    clock = _time.time() if now is None else now
+    pruned = 0
+    for entry in candidate.iterdir():
+        if not entry.name.startswith(_SCRATCH_PREFIXES):
+            continue
+        try:
+            if clock - entry.stat().st_mtime > _SCRATCH_STALE_SECONDS:
+                shutil.rmtree(entry, ignore_errors=True)
+                pruned += 1
+        except OSError:
+            continue
+    return pruned
+
+
 GIT_ENV_VARS = (
     "GIT_DIR",
     "GIT_WORK_TREE",
@@ -44,6 +72,7 @@ def _tmpfs_tmpdir(candidate: Path = Path("/dev/shm")) -> str | None:
     # writability is the whole platform check.
     if not os.access(candidate, os.W_OK):
         return None
+    _prune_stale_scratch(candidate)
     stats = os.statvfs(candidate)
     if stats.f_bavail * stats.f_frsize < TMPFS_MIN_FREE_BYTES:
         return None
@@ -63,7 +92,12 @@ def pytest_configure() -> None:
         os.environ.pop(key, None)
     os.environ.setdefault("PRE_COMMIT_ALLOW_NO_CONFIG", "1")
     # Secrets hermeticity: never read the developer's ~/.config/memoria/secrets.env.
-    os.environ["XDG_CONFIG_HOME"] = tempfile.mkdtemp(prefix="memoria-test-xdg-")
+    xdg_dir = tempfile.mkdtemp(prefix="memoria-test-xdg-")
+    os.environ["XDG_CONFIG_HOME"] = xdg_dir
+    import atexit
+    import shutil
+
+    atexit.register(shutil.rmtree, xdg_dir, ignore_errors=True)
 
 
 @pytest.fixture(autouse=True)
