@@ -621,14 +621,6 @@ def test_worklist_panel_emits_the_producer_order_whatever_it_is(
     assert cockpit.assemble_triage(vault)["worklist"]["cards"] == ranked
 
 
-def _flow_seam_is_live() -> bool:
-    """The live-branch predicate for triage panel 3 (registered-only composition
-    amendment §2/§3): a registered `dashboard.read` row whose engine is bound. An
-    unbound row is a reservation, not a producer."""
-    row = actions_by_id().get("dashboard.read") or {}
-    return bool(row.get("engine")) and hasattr(engine_api, str(row["engine"]))
-
-
 def test_named_pending_triage_panels_name_their_absent_producer(vault: Path) -> None:
     """Reconciliation amendment (2026-07-29) §2/§3: a panel with no registered
     producer carries an empty source_action and names what is missing — it never
@@ -641,12 +633,8 @@ def test_named_pending_triage_panels_name_their_absent_producer(vault: Path) -> 
 
     assert "pending" not in panels["review"]
     assert panels["review"]["source_action"] == "views.evidence_review"
-    if _flow_seam_is_live():
-        assert "pending" not in panels["flow"]
-        assert panels["flow"]["source_action"] == "dashboard.read"
-    else:
-        assert panels["flow"]["source_action"] == ""
-        assert panels["flow"]["pending"] == "the dashboard.read registry row (U2 plan T.3)"
+    assert "pending" not in panels["flow"]
+    assert panels["flow"]["source_action"] == "dashboard.read"
 
 
 def test_every_panel_source_action_is_registered_or_named_pending(vault: Path) -> None:
@@ -1747,13 +1735,12 @@ def test_triage_screen_states_the_live_counts_its_panels_carry() -> None:
     assert _panel_body(drained, "review queue (views.evidence_review)")[0] == "  open: 0  (none)"
 
 
-def test_triage_review_and_flow_lines_are_both_branch_honest(vault: Path) -> None:
+def test_triage_review_and_flow_lines_render_their_live_producers(vault: Path) -> None:
     """The two seams C.3 composes without owning: V2R-B.4's queue and T.3's
-    dashboard row. V2R-B.4's queue has landed, so the review half is pinned live;
-    the dashboard row is still both-branch, live when present and an honest named
-    line when absent. The `memoria review` invocation is asserted either way,
-    because the cockpit links to V2's review flow and never re-hosts it (spec §1
-    triage 2)."""
+    dashboard row. Both have landed, so both panels are pinned live — no
+    named-pending arm remains to be honest about. The `memoria review`
+    invocation is asserted alongside them, because the cockpit links to V2's
+    review flow and never re-hosts it (spec §1 triage 2)."""
     panels = cockpit.assemble_triage(vault)
     out = cockpit.render_triage({"screen": "triage", "panels": panels})
 
@@ -1770,15 +1757,12 @@ def test_triage_review_and_flow_lines_are_both_branch_honest(vault: Path) -> Non
     assert "  hosted by: memoria review (V2)" in out
 
     flow = panels["flow"]
-    if _flow_seam_is_live():
-        assert flow["source_action"] == "dashboard.read"
-        assert _panel_body(out, "flow (dashboard.read)") == [
-            f"  open {flow['open_total']} | inflow {flow['inflow']} / "
-            f"drain {flow['drain']} | oldest {flow['oldest']}"
-        ]
-    else:
-        assert flow["source_action"] == ""
-        assert _panel_body(out, "flow (no registry row yet)") == [f"  pending: {flow['pending']}"]
+    assert flow["source_action"] == "dashboard.read"
+    assert "pending" not in flow
+    assert _panel_body(out, "flow (dashboard.read)") == [
+        f"  open {flow['open_total']} | inflow {flow['inflow']} / "
+        f"drain {flow['drain']} | oldest {flow['oldest']}"
+    ]
 
 
 def test_triage_screen_never_wraps_an_identifier_mid_token(vault: Path) -> None:
