@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -40,10 +41,12 @@ def test_template_workspace_matches_fresh_init(tmp_path: Path) -> None:
 
     assert _workspace_files(templated) == _workspace_files(fresh)
 
-    # The DB must be live and current, and the vault git repo intact.
+    # The DB must be live and current, and the vault git repo intact and live (not an unborn HEAD).
     with state.connect(templated) as conn:
         assert int(conn.execute("PRAGMA user_version").fetchone()[0]) == state.SCHEMA_VERSION
     assert (templated / ".git").is_dir()
+    result = subprocess.run(["git", "rev-parse", "HEAD"], cwd=templated, check=False)
+    assert result.returncode == 0
 
 
 def test_two_template_workspaces_are_independent(tmp_path: Path) -> None:
