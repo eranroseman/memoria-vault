@@ -73,8 +73,6 @@ def test_connect_skips_schema_script_when_db_is_current(tmp_path: Path) -> None:
 
 
 def test_connect_still_initializes_a_fresh_db(tmp_path: Path) -> None:
-    from memoria_vault.runtime import state
-
     vault = tmp_path / "vault2"
     vault.mkdir()
     with state.connect(vault) as conn:

@@ -358,6 +358,7 @@ def test_runtime_gate_replays_user_facing_commands(
         "enrich-source",
         "compile-source-digest",
         "answer-query",
+        "analyze-gaps",
         "export-project",
         "run-seeded-error-verdict",
     } <= requests
