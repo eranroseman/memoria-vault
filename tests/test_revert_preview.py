@@ -91,7 +91,7 @@ def _vault(tmp_path: Path) -> tuple[Path, str]:
         inputs=[{"id": TARGET, "sha256": sha256_file(vault / TARGET)}],
         machine="pi-machine",
     )
-    call_with_context(_mark_checked, vault, PI_NOTE, machine="pi-machine")
+    call_with_context(_mark_checked, vault, PI_NOTE, judgment=True, machine="pi-machine")
     call_with_context(
         _commit_writer_changes, vault, "observe pi note", [PI_NOTE], machine="pi-machine"
     )

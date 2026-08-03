@@ -38,7 +38,12 @@ from memoria_vault.runtime.trusted_writer import (
 from memoria_vault.runtime.trusted_writer import (
     stage_concept as _stage_concept,
 )
-from memoria_vault.runtime.vaultio import is_ulid, read_frontmatter
+from memoria_vault.runtime.vaultio import (
+    is_ulid,
+    read_frontmatter,
+    split_frontmatter,
+    write_frontmatter_doc,
+)
 from tests.helpers import WORKSPACE_SEED, call_with_context, copy_memoria_dirs, git, init_git
 
 pytestmark = pytest.mark.runtime
@@ -325,7 +330,7 @@ def test_mark_checked_rejects_retired_frontmatter_without_write_or_event(tmp_pat
     before = target.read_text(encoding="utf-8")
 
     with pytest.raises(ValueError, match="retired frontmatter field is ignored: check_status"):
-        mark_checked(vault, "notes/alpha.md", machine="test-machine")
+        mark_checked(vault, "notes/alpha.md", judgment=True, machine="test-machine")
 
     assert target.read_text(encoding="utf-8") == before
     assert events(vault) == []
@@ -566,7 +571,7 @@ def test_observe_pi_edit_backfills_prior_head_and_live_check(tmp_path: Path) -> 
     assert row["check_status"] == "unchecked"
     assert consumable is None
 
-    check_event = mark_checked(vault, "notes/pi.md", machine="test-machine")
+    check_event = mark_checked(vault, "notes/pi.md", judgment=True, machine="test-machine")
 
     assert "check_status" not in read_frontmatter(target)
     assert state.concept_check_status(vault, "notes/pi.md") == "checked"
@@ -1136,19 +1141,32 @@ def test_stage_concept_stamps_generated_and_strips_verified(tmp_path: Path) -> N
 
 
 def test_stage_concept_derives_sources_from_inputs(tmp_path: Path) -> None:
+    """A resolvable bundle file becomes a bundle-relative resource; anything
+    else stays an OKF §5.1 scope descriptor rather than a broken link."""
     vault = workspace(tmp_path)
+    stage_concept(vault, "notes/base.md", note_text(title="Base"), machine="test-machine")
+    promote_checked(vault, "notes/base.md", machine="test-machine")
 
     stage_concept(
         vault,
         "notes/alpha.md",
         note_text(),
-        inputs=[{"id": "catalog/sources/source-a/source.md", "sha256": "sha256:abc"}],
+        inputs=[
+            {"id": "notes/base.md", "sha256": "sha256:abc"},
+            {"id": "catalog/sources/source-a", "sha256": "sha256:def"},
+            {"id": "catalog/sources/source-a/source.md", "sha256": "sha256:ghi"},
+        ],
         machine="test-machine",
     )
 
     fm = read_frontmatter(vault / ".memoria/staging/notes/alpha.md")
     assert fm["sources"] == [
-        {"id": "catalog-sources-source-a-source", "resource": "/catalog/sources/source-a/source.md"}
+        {"id": "notes-base", "resource": "/notes/base.md"},
+        {"id": "catalog-sources-source-a", "resource": "catalog/sources/source-a"},
+        {
+            "id": "catalog-sources-source-a-source",
+            "resource": "catalog/sources/source-a/source.md",
+        },
     ]
 
 
@@ -1168,3 +1186,146 @@ def test_stage_concept_keeps_author_supplied_sources(tmp_path: Path) -> None:
 
     fm = read_frontmatter(vault / ".memoria/staging/notes/alpha.md")
     assert fm["sources"] == [{"id": "ext", "resource": "https://example.com"}]
+
+
+def _forge_confirmation(vault: Path, rel: str) -> None:
+    """Hand-write a confirmation entry into the file, the way a hostile or
+    careless byte-level author would."""
+    path = vault / rel
+    frontmatter, body = split_frontmatter(path.read_text(encoding="utf-8"))
+    frontmatter["verified"] = [{"by": "human:pi", "at": "1999-01-01T00:00:00Z"}]
+    write_frontmatter_doc(path, frontmatter, body)
+
+
+def test_acceptance_discards_a_byte_supplied_verified_entry(tmp_path: Path) -> None:
+    """The judgment seam replaces the field wholesale, so an entry someone
+    typed into the file never survives into the projection."""
+    vault = workspace(tmp_path)
+    stage_concept(vault, "notes/alpha.md", note_text(), machine="test-machine")
+    promote_checked(vault, "notes/alpha.md", machine="test-machine")
+    _forge_confirmation(vault, "notes/alpha.md")
+
+    mark_checked(vault, "notes/alpha.md", judgment=True, machine="test-machine")
+
+    entries = read_frontmatter(vault / "notes/alpha.md")["verified"]
+    assert len(entries) == 1
+    assert entries[0]["at"] != "1999-01-01T00:00:00Z"
+
+
+def test_second_acceptance_leaves_exactly_one_confirmation(tmp_path: Path) -> None:
+    """Replace, never append: the field carries the latest confirmation only."""
+    vault = workspace(tmp_path)
+    stage_concept(vault, "notes/alpha.md", note_text(), machine="test-machine")
+    promote_checked(vault, "notes/alpha.md", machine="test-machine")
+    first = read_frontmatter(vault / "notes/alpha.md")["verified"]
+
+    mark_checked(vault, "notes/alpha.md", judgment=True, machine="test-machine")
+
+    entries = read_frontmatter(vault / "notes/alpha.md")["verified"]
+    assert len(first) == len(entries) == 1
+
+
+def test_mechanical_rewrite_leaves_the_confirmation_untouched(tmp_path: Path) -> None:
+    """A link rewrite or candidates-block write is not a judgment, so it
+    neither re-signs nor drops what the last acceptance recorded."""
+    vault = workspace(tmp_path)
+    stage_concept(vault, "notes/alpha.md", note_text(), machine="test-machine")
+    promote_checked(vault, "notes/alpha.md", machine="test-machine")
+    before = read_frontmatter(vault / "notes/alpha.md")["verified"]
+
+    mark_checked(
+        vault,
+        "notes/alpha.md",
+        judgment=False,
+        body="Mechanically rewritten body.\n",
+        machine="test-machine",
+    )
+
+    assert read_frontmatter(vault / "notes/alpha.md")["verified"] == before
+
+
+def test_mechanical_rewrite_drops_a_non_list_verified_value(tmp_path: Path) -> None:
+    """A scalar would explode into characters downstream; preserving is only
+    ever preserving a well-formed projection."""
+    vault = workspace(tmp_path)
+    stage_concept(vault, "notes/alpha.md", note_text(), machine="test-machine")
+    promote_checked(vault, "notes/alpha.md", machine="test-machine")
+    path = vault / "notes/alpha.md"
+    frontmatter, body = split_frontmatter(path.read_text(encoding="utf-8"))
+    frontmatter["verified"] = "human:pi"
+    write_frontmatter_doc(path, frontmatter, body)
+
+    mark_checked(vault, "notes/alpha.md", judgment=False, machine="test-machine")
+
+    assert "verified" not in read_frontmatter(path)
+
+
+def test_validation_failure_leaves_the_caller_frontmatter_clean(tmp_path: Path) -> None:
+    """The seam works on its own copy: a refused write mutates nothing."""
+    vault = workspace(tmp_path)
+    stage_concept(vault, "notes/alpha.md", note_text(), machine="test-machine")
+    promote_checked(vault, "notes/alpha.md", machine="test-machine")
+    caller_frontmatter = {"type": "note", "title": "Alpha note", "tags": [], "links": {}}
+
+    with pytest.raises(ValueError):
+        mark_checked(
+            vault,
+            "notes/alpha.md",
+            judgment=True,
+            frontmatter=dict(caller_frontmatter, id="not-a-ulid"),
+            machine="test-machine",
+        )
+
+    assert "verified" not in caller_frontmatter
+    assert "generated" not in caller_frontmatter
+
+
+def test_content_replacement_restamps_generated(tmp_path: Path) -> None:
+    """Spec §5.2: `generated` records the last meaningful change, so the
+    process that replaced the bytes owns the stamp, not the original stager."""
+    vault = workspace(tmp_path)
+    stage_concept(vault, "notes/alpha.md", note_text(), machine="test-machine")
+    promote_checked(vault, "notes/alpha.md", machine="test-machine")
+    staged_by = read_frontmatter(vault / "notes/alpha.md")["generated"]["by"]
+
+    mark_checked(
+        vault,
+        "notes/alpha.md",
+        judgment=False,
+        body="Mechanically rewritten body.\n",
+        machine="test-machine",
+    )
+
+    rewritten_by = read_frontmatter(vault / "notes/alpha.md")["generated"]["by"]
+    assert staged_by == "process:stage-concept"
+    assert rewritten_by == "process:mark-checked"
+
+
+def test_first_promotion_keeps_the_staging_generated_stamp(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    stage_concept(vault, "notes/alpha.md", note_text(), machine="test-machine")
+    staged_by = read_frontmatter(vault / ".memoria/staging/notes/alpha.md")["generated"]["by"]
+
+    promote_checked(vault, "notes/alpha.md", machine="test-machine")
+
+    assert read_frontmatter(vault / "notes/alpha.md")["generated"]["by"] == staged_by
+
+
+def test_machine_authored_pi_request_is_not_stamped_as_the_human(tmp_path: Path) -> None:
+    """Authority is not authorship: a PI-authority door relaying a machine
+    body stamps the machine, not `human:pi`."""
+    vault = workspace(tmp_path)
+
+    stage_concept(
+        vault,
+        "notes/alpha.md",
+        note_text(),
+        actor="pi",
+        machine_authored=True,
+        agent_identity="memoria-copi/1.2",
+        machine="test-machine",
+    )
+
+    generated = read_frontmatter(vault / ".memoria/staging/notes/alpha.md")["generated"]
+    assert generated["by"] != "human:pi"
+    assert generated["by"] == "memoria-copi/1.2"

@@ -92,7 +92,11 @@ def write_hub_candidates(
         # releasing content the runtime quarantined.
         raise ValueError(f"cannot write candidates into quarantined hub: {hub_rel}")
     if status == "checked":
-        return mark_checked(vault, hub_rel, context=context, checks=checks, body=new_body)
+        # A block rewrite is mechanical: it replaces machine-owned candidates,
+        # never the PI's acceptance of the hub.
+        return mark_checked(
+            vault, hub_rel, context=context, checks=checks, body=new_body, judgment=False
+        )
     # Frontmatter is passed through unchanged: stage_concept validates it and
     # fails closed if it carries a retired field.
     event = stage_concept(

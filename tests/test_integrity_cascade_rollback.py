@@ -125,7 +125,7 @@ def test_cascade_rollback_reverts_machine_descendants_and_flags_pi_notes(
         ],
         machine="pi-machine",
     )
-    mark_checked(vault, pi_note, machine="pi-machine")
+    mark_checked(vault, pi_note, judgment=True, machine="pi-machine")
     commit_writer_changes(vault, "observe pi note", [pi_note], machine="pi-machine")
 
     for path in (vault / ".memoria/journal").glob("*.jsonl"):

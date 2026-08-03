@@ -170,6 +170,9 @@ def operation_context_record(context: OperationContext) -> dict[str, Any]:
     `machine_authored` is part of the bound record for the same reason `actor`
     is: it gates a security transform, so it has to be authenticated against the
     persisted request rather than asserted by whoever holds the context object.
+    `agent_identity` is bound for the narrower reason that it is written into
+    files as OKF provenance: an unbound field would let a caller sign its
+    output with any producer name it liked.
     """
     return {
         "actor": context.actor,
@@ -178,6 +181,7 @@ def operation_context_record(context: OperationContext) -> dict[str, Any]:
         "operation_id": context.operation_id,
         "machine": context.machine,
         "machine_authored": context.machine_authored,
+        "agent_identity": context.agent_identity,
     }
 
 
@@ -818,12 +822,18 @@ def mark_checked(
     target_path: str,
     *,
     context: OperationContext,
+    judgment: bool,
     checks: Iterable[str] | None = None,
     schemas_dir: Path | None = None,
     frontmatter: dict[str, Any] | None = None,
     body: str | None = None,
 ) -> dict[str, Any]:
-    """Mark a live Concept checked, optionally validating and writing replacement content atomically."""
+    """Re-record a live Concept's verdict, optionally validating and writing replacement content atomically.
+
+    ``judgment`` has no default on purpose: every caller has to say whether it
+    is relaying an acceptance the PI made or performing a mechanical rewrite.
+    See `_write_checked` for what each one does to the OKF confirmation field.
+    """
     validate_operation_context(vault, context)
     vault = Path(vault)
     target = _target_path(target_path)
@@ -841,6 +851,7 @@ def mark_checked(
         promotion_checks,
         context,
         contract,
+        judgment=judgment,
     )
 
 
@@ -876,7 +887,7 @@ def stage_concept(
     }
     input_rows = _input_rows(inputs)
     if not frontmatter.get("sources") and input_rows:
-        frontmatter["sources"] = _sources_from_inputs(input_rows)
+        frontmatter["sources"] = _sources_from_inputs(vault, input_rows)
     _validate_concept(contract, target, frontmatter)
 
     staged_path = _staged_path(vault, target)
@@ -936,6 +947,7 @@ def promote_checked(
         promotion_checks,
         context,
         contract,
+        judgment=True,
     )
     staged_path.unlink()
     return event
@@ -1311,16 +1323,48 @@ def _write_checked(
     checks: Iterable[str],
     context: OperationContext,
     contract: dict[str, Any],
+    *,
+    judgment: bool,
 ) -> dict[str, Any]:
+    """Write one plane-crossing document, stamping OKF fields at the seam.
+
+    ``judgment`` says whether this write carries an acceptance. A judgment write
+    REPLACES the `verified` field with the single confirmation it just recorded:
+    entries supplied in the incoming bytes are discarded, so nothing typed into
+    a file can pass itself off as the PI's confirmation, and the field stays the
+    latest-confirmation projection it claims to be (full history is the
+    journal's). A mechanical write — a link rewrite, a candidates block — leaves
+    the field exactly as the last acceptance left it, because re-signing on a
+    byte change would record a confirmation nobody made. A non-list value is
+    dropped rather than carried: it would iterate as characters downstream.
+
+    The seam works on its own copy of ``frontmatter`` so a validation failure
+    leaves the caller's dict untouched.
+    """
     promotion_checks = normalize_promotion_checks(checks)
-    events_list = list(frontmatter.get("verified") or [])
-    events_list.append(
-        {
-            "by": okf_verified_actor(context.actor, operation_id=context.operation_id),
+    frontmatter = dict(frontmatter)
+    if judgment:
+        frontmatter.pop("verified", None)
+        frontmatter["verified"] = [
+            {
+                "by": okf_verified_actor(context.actor, operation_id=context.operation_id),
+                "at": now_iso(),
+            }
+        ]
+    elif "verified" in frontmatter and not isinstance(frontmatter["verified"], list):
+        frontmatter.pop("verified", None)
+    if _replaces_existing_body(output_path, body):
+        # Spec 5.2: `generated` is the last meaningful change, and this is the
+        # one seam that changes bytes under an already-promoted document.
+        frontmatter["generated"] = {
+            "by": okf_actor(
+                context.actor,
+                agent_identity=context.agent_identity,
+                operation_id=context.operation_id,
+                machine_authored=context.machine_authored,
+            ),
             "at": now_iso(),
         }
-    )
-    frontmatter["verified"] = events_list
     _validate_concept(contract, target, frontmatter)
     payload_text = frontmatter_doc(frontmatter, body)
     output_sha256 = sha256_bytes(payload_text.encode("utf-8"))
@@ -1340,15 +1384,30 @@ def _write_checked(
     return events[0]
 
 
-def _sources_from_inputs(input_rows: list[dict[str, Any]]) -> list[dict[str, str]]:
-    """Project derivation inputs into OKF v0.2 `sources` entries (spec §5.1)."""
+def _replaces_existing_body(output_path: Path, body: str) -> bool:
+    """Whether this write replaces the body of a document already on disk."""
+    if not output_path.is_file():
+        return False
+    _frontmatter, current_body = split_frontmatter(output_path.read_text(encoding="utf-8"))
+    return current_body != body
+
+
+def _sources_from_inputs(vault: Path, input_rows: list[dict[str, Any]]) -> list[dict[str, str]]:
+    """Project derivation inputs into OKF v0.2 `sources` entries (spec §5.1).
+
+    A bundle-relative `resource` is a resolvable link, so only an input that
+    really is a bundle file earns one. Every other input id — a catalog work
+    key, a provider record — is emitted as written: a scope descriptor an OKF
+    reader can recognize as one, rather than a path that resolves nowhere.
+    """
     out: list[dict[str, str]] = []
     for row in input_rows:
         rid = str(row.get("id") or "")
         if not rid:
             continue
         slug = rid.removesuffix(".md").replace("/", "-")
-        out.append({"id": slug, "resource": f"/{rid}"})
+        resolvable = rid.endswith(".md") and (vault / rid).is_file()
+        out.append({"id": slug, "resource": f"/{rid}" if resolvable else rid})
     return out
 
 

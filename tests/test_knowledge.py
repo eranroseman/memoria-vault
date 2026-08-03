@@ -415,7 +415,7 @@ def test_pi_can_edit_candidate_text_before_accepting(tmp_path: Path) -> None:
         encoding="utf-8",
     )
     observed = observe_pi_edit_from_head(vault, note_rel, machine="pi-machine")
-    check = mark_checked(vault, note_rel, machine="pi-machine")
+    check = mark_checked(vault, note_rel, judgment=True, machine="pi-machine")
     result = curate_note_candidate(
         vault,
         note_rel,

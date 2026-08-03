@@ -535,6 +535,7 @@ def test_worker_binds_exact_context_to_running_request_before_dispatch(
         "operation_id": "test-bound-context",
         "machine": "agent_laptop",
         "machine_authored": False,
+        "agent_identity": "",
     }
 
 
@@ -547,6 +548,7 @@ def test_worker_binds_exact_context_to_running_request_before_dispatch(
         ("operation_id", "forged-operation"),
         ("machine", "forged-machine"),
         ("machine_authored", True),
+        ("agent_identity", "forged-agent/9.9"),
     ],
 )
 def test_forged_or_nonexistent_context_rejected_without_journal_mutation(
