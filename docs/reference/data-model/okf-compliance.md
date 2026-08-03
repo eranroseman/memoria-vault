@@ -30,13 +30,17 @@ conformance bar; the rationale lives in
 - Provenance is first-class: the trusted writer stamps `generated` at
   staging and derives `sources` from derivation inputs; authored `sources`
   entries for external material are preserved as written.
-- Promotion stamps a `verified` confirmation event using the OKF actor
-  grammar (`human:<id>`, `<producer>/<version>`, `process:<id>`). These
-  events are projections of engine judgment state and are stripped when
-  content is re-staged.
+- Acceptance records a `verified` confirmation entry using the OKF actor
+  grammar (`human:<id>`, `<producer>/<version>`, `process:<id>`). An entry
+  states what was confirmed as of its `at` time and nothing after it:
+  content can change following a confirmation without the entry being
+  removed (spec §5.2). The entry is replaced by the next acceptance and
+  stripped when content is re-staged; the current judgment state itself
+  lives engine-side, never in the file.
 - The engine's own judgment state never travels as authority — it stays in
-  `.memoria/`, and any OKF trust field in a foreign bundle is treated as a
-  signal. Imported or copied content re-enters through the normal gates.
+  `.memoria/`, and an OKF trust field in a file is a signal, never a grant.
+- Imported or copied content re-enters through the normal gates, and a
+  foreign bundle's trust fields are read as signals like any other.
   **Planned beta.1 — K1.**
 - Deliberate omissions, each additive later at zero migration cost:
   `status` (absent means `stable`; staging is the draft plane;

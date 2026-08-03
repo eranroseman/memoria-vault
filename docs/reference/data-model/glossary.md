@@ -45,7 +45,7 @@ corpus homes.
 
 **<a id="open-knowledge-format-okf"></a>Open Knowledge Format (OKF)** — the plain-files bundle format Memoria targets, at **v0.2**: a self-contained, tool-agnostic Knowledge Bundle readable without Memoria present. The vault (excluding `.memoria/`) is one OKF bundle; each project is a nested one.
 
-**Knowledge Bundle** — an OKF unit of distribution: the plain-file tree holding the researcher's knowledge, separable from the `.memoria/` engine state. **Planned beta.1 — K1.**
+**Knowledge Bundle** — an OKF unit of distribution: the plain-file tree holding the researcher's knowledge, separable from the `.memoria/` engine state. The format ships; the export and import path is **planned beta.1 — K1.**
 
 **generated** — OKF v0.2 provenance frontmatter (`{ by, at }`) stamped by the
 trusted writer at staging; `by` uses the OKF actor grammar. Records
