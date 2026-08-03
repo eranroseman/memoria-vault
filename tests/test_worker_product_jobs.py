@@ -38,7 +38,7 @@ from tests.helpers import (
     WORKSPACE_SEED,
     call_with_context,
     git,
-    mark_file_status,
+    set_concept_verdict,
     work_text,
     write_note,
 )
@@ -281,7 +281,7 @@ def test_worker_runs_gap_analysis_operation_jobs(tmp_path: Path) -> None:
         "Neural retrieval also changes review timing.\n",
         encoding="utf-8",
     )
-    mark_file_status(vault, "digests/source-alpha.md", "digest")
+    set_concept_verdict(vault, "digests/source-alpha.md", "digest")
 
     queued = enqueue_operation(
         vault,
@@ -331,7 +331,7 @@ def test_worker_runs_project_scoped_gap_analysis(tmp_path: Path) -> None:
         "Body.\n",
         encoding="utf-8",
     )
-    mark_file_status(vault, "projects/project-alpha/project.md", "project")
+    set_concept_verdict(vault, "projects/project-alpha/project.md", "project")
     for name, body in {
         "thesis": "type: note\ntitle: Thesis\ntags: []\nlinks: {}\nstatus: accepted\n",
         "support": (
@@ -346,7 +346,7 @@ def test_worker_runs_project_scoped_gap_analysis(tmp_path: Path) -> None:
         note = vault / f"notes/{name}.md"
         note.parent.mkdir(parents=True, exist_ok=True)
         note.write_text(f"---\n{body}---\nBody.\n", encoding="utf-8")
-        mark_file_status(vault, note.relative_to(vault).as_posix())
+        set_concept_verdict(vault, note.relative_to(vault).as_posix())
 
     queued = enqueue_operation(
         vault,
@@ -396,7 +396,7 @@ def test_worker_runs_frame_paper_operation(tmp_path: Path) -> None:
         "Body.\n",
         encoding="utf-8",
     )
-    mark_file_status(vault, project_rel, "project")
+    set_concept_verdict(vault, project_rel, "project")
 
     queued = enqueue_operation(
         vault,
@@ -461,7 +461,7 @@ def _framable_project(vault: Path) -> str:
         "Body.\n",
         encoding="utf-8",
     )
-    mark_file_status(vault, project_rel, "project")
+    set_concept_verdict(vault, project_rel, "project")
     return project_rel
 
 
@@ -584,7 +584,7 @@ def test_worker_runs_project_argument_analysis_operation_jobs(tmp_path: Path) ->
         "Body.\n",
         encoding="utf-8",
     )
-    mark_file_status(vault, "projects/project-alpha/project.md", "project")
+    set_concept_verdict(vault, "projects/project-alpha/project.md", "project")
     for name, body in {
         "thesis": "type: note\ntitle: Thesis\ntags: []\nlinks: {}\nstatus: accepted\n",
         "support": (
@@ -599,7 +599,7 @@ def test_worker_runs_project_argument_analysis_operation_jobs(tmp_path: Path) ->
         note = vault / f"notes/{name}.md"
         note.parent.mkdir(parents=True, exist_ok=True)
         note.write_text(f"---\n{body}---\nBody.\n", encoding="utf-8")
-        mark_file_status(vault, note.relative_to(vault).as_posix())
+        set_concept_verdict(vault, note.relative_to(vault).as_posix())
 
     queued = enqueue_operation(
         vault,
@@ -756,7 +756,7 @@ def test_worker_does_not_fail_open_for_untyped_export_readiness_opt_out(
         "Body.\n",
         encoding="utf-8",
     )
-    mark_file_status(vault, "projects/project-alpha/project.md", "project")
+    set_concept_verdict(vault, "projects/project-alpha/project.md", "project")
     write_note(vault, "thesis", "checked", "A checked thesis.")
 
     queued = enqueue_operation(
@@ -1805,14 +1805,14 @@ def test_worker_runs_fork_project_canvas_operation_jobs(tmp_path: Path) -> None:
         note = vault / f"notes/{name}.md"
         note.parent.mkdir(parents=True, exist_ok=True)
         note.write_text(f"---\n{body}---\nBody.\n", encoding="utf-8")
-        mark_file_status(vault, note.relative_to(vault).as_posix())
+        set_concept_verdict(vault, note.relative_to(vault).as_posix())
     project = vault / "projects/project-alpha/project.md"
     project.parent.mkdir(parents=True, exist_ok=True)
     project.write_text(
         "---\ntype: project\ntitle: Alpha project\nthesis: notes/thesis.md\n---\nP.\n",
         encoding="utf-8",
     )
-    mark_file_status(vault, "projects/project-alpha/project.md", "project")
+    set_concept_verdict(vault, "projects/project-alpha/project.md", "project")
 
     enqueue_operation(
         vault,

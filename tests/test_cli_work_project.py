@@ -9,7 +9,7 @@ from memoria_vault.cli import _build_parser, main
 from memoria_vault.runtime import state
 from memoria_vault.runtime.vaultio import read_frontmatter, split_frontmatter
 from memoria_vault.runtime.vocabulary.edges import LINK_RELATIONS
-from tests.helpers import _assert_request_columns, mark_file_status
+from tests.helpers import _assert_request_columns, set_concept_verdict
 
 pytestmark = pytest.mark.contract
 
@@ -337,7 +337,7 @@ def test_cli_project_gaps_runs_gap_analysis_request(
         "Body.\n",
         encoding="utf-8",
     )
-    mark_file_status(workspace, "digests/source-alpha.md", "digest")
+    set_concept_verdict(workspace, "digests/source-alpha.md", "digest")
     state.upsert_catalog_record(
         workspace,
         work_id="db-alpha",
@@ -1010,7 +1010,7 @@ def test_cli_new_note_check_and_link_flow(
         "---\ntype: note\ntitle: Target\ntags: []\nlinks: {}\n---\nTarget body.\n",
         encoding="utf-8",
     )
-    mark_file_status(workspace, "notes/target.md", "note")
+    set_concept_verdict(workspace, "notes/target.md", "note")
     assert (
         main(
             [
@@ -1265,7 +1265,7 @@ def _write_project_argument_fixture(workspace: Path) -> None:
         "Body.\n",
         encoding="utf-8",
     )
-    mark_file_status(workspace, "projects/project-alpha/project.md", "project")
+    set_concept_verdict(workspace, "projects/project-alpha/project.md", "project")
     notes = {
         "thesis": (
             "type: note\ncheck_status: checked\ntitle: Thesis\nstatus: accepted\n"
@@ -1286,7 +1286,7 @@ def _write_project_argument_fixture(workspace: Path) -> None:
         note = workspace / f"notes/{name}.md"
         note.parent.mkdir(parents=True, exist_ok=True)
         note.write_text(f"---\n{frontmatter}---\nBody.\n", encoding="utf-8")
-        mark_file_status(workspace, f"notes/{name}.md", "note")
+        set_concept_verdict(workspace, f"notes/{name}.md", "note")
 
 
 def _doi_provider_payloads() -> dict[str, object]:

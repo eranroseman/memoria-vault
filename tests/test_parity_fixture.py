@@ -12,7 +12,7 @@ from memoria_vault.runtime import state
 from memoria_vault.runtime.capabilities import render_capability_index
 from memoria_vault.runtime.vaultio import read_frontmatter
 from tests.cli_test_helpers import cli_command_surface
-from tests.helpers import mark_file_status
+from tests.helpers import set_concept_verdict
 
 pytestmark = pytest.mark.contract
 
@@ -259,7 +259,7 @@ def _write_project_argument_fixture(workspace: Path) -> None:
         "Body.\n",
         encoding="utf-8",
     )
-    mark_file_status(workspace, "projects/project-alpha/project.md", "project")
+    set_concept_verdict(workspace, "projects/project-alpha/project.md", "project")
     thesis = workspace / "notes/thesis.md"
     support = workspace / "notes/support.md"
     thesis.parent.mkdir(parents=True, exist_ok=True)
@@ -267,7 +267,7 @@ def _write_project_argument_fixture(workspace: Path) -> None:
         "---\ntype: note\ntitle: Thesis\ntags: []\nlinks: {}\nstatus: accepted\n---\nThesis.\n",
         encoding="utf-8",
     )
-    mark_file_status(workspace, "notes/thesis.md", "note")
+    set_concept_verdict(workspace, "notes/thesis.md", "note")
     support.write_text(
         "---\n"
         "type: note\n"
@@ -281,4 +281,4 @@ def _write_project_argument_fixture(workspace: Path) -> None:
         "Support.\n",
         encoding="utf-8",
     )
-    mark_file_status(workspace, "notes/support.md", "note")
+    set_concept_verdict(workspace, "notes/support.md", "note")

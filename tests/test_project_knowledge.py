@@ -39,7 +39,7 @@ from tests.helpers import (
     copy_memoria_dirs,
     git,
     init_git,
-    mark_file_status,
+    set_concept_verdict,
 )
 
 pytestmark = pytest.mark.runtime
@@ -485,7 +485,7 @@ def test_argument_renderer_neutralizes_exported_beacons(tmp_path: Path) -> None:
         "<script>signal()</script> http://beacon.example/bare\n",
         encoding="utf-8",
     )
-    mark_file_status(tmp_path, "projects/project-alpha/project.md", "project")
+    set_concept_verdict(tmp_path, "projects/project-alpha/project.md", "project")
 
     rendered = render_project_export_markdown(tmp_path, "project-alpha")
 
@@ -553,7 +553,7 @@ def test_frame_project_paper_records_plan_and_leaves_project_unchecked(tmp_path:
         "Body.\n",
         encoding="utf-8",
     )
-    mark_file_status(vault, "projects/project-alpha/project.md", "project")
+    set_concept_verdict(vault, "projects/project-alpha/project.md", "project")
 
     result = frame_project_paper(
         vault,
@@ -616,7 +616,7 @@ def test_non_draft_export_gate_enforced_by_default(tmp_path: Path) -> None:
         + body,
         encoding="utf-8",
     )
-    mark_file_status(vault, "projects/project-alpha/project.md", "project")
+    set_concept_verdict(vault, "projects/project-alpha/project.md", "project")
     _md(
         vault / "notes/support.md",
         "type: note\ncheck_status: checked\ntitle: Support\n"

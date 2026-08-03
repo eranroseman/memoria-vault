@@ -19,7 +19,7 @@ from tests.helpers import (
     call_with_context,
     copy_memoria_dirs,
     init_git,
-    mark_file_status,
+    set_concept_verdict,
     write_checked_concept,
 )
 
@@ -91,7 +91,7 @@ def test_passage_index_refreshes_stale_file_and_cascades_status(tmp_path: Path) 
         path.read_text(encoding="utf-8").replace("first version", "second version"),
         encoding="utf-8",
     )
-    mark_file_status(vault, "notes/alpha.md")
+    set_concept_verdict(vault, "notes/alpha.md")
     answer = answer_query(vault, "rarealpha")
 
     assert answer["backend"] == "bm25"
@@ -658,7 +658,7 @@ def test_refresh_reindexes_only_changed_files_and_keeps_concept_edges(
         path.read_text(encoding="utf-8").replace("first version", "second version"),
         encoding="utf-8",
     )
-    mark_file_status(vault, "notes/alpha.md")
+    set_concept_verdict(vault, "notes/alpha.md")
     refreshed = call_with_context(indexing.refresh_stale_passages, vault)
 
     assert refreshed["passages"] == {"inserted": 1, "paths": 1}
@@ -917,7 +917,7 @@ def test_refresh_removes_reverified_non_searchable_file(tmp_path: Path) -> None:
 
     The rejection is journaled note-curation status, not frontmatter: `lifecycle`
     is retired (vaultio.RETIRED_FRONTMATTER_FIELDS) and no reader consults it
-    (#1525), so the route this test used to take no longer exists. `mark_file_status`
+    (#1525), so the route this test used to take no longer exists. `set_concept_verdict`
     keeps the read barrier open, so the removal is `_is_searchable_frontmatter`
     refusing the file and not the barrier refusing to open it.
     """
@@ -947,7 +947,7 @@ def test_refresh_removes_reverified_non_searchable_file(tmp_path: Path) -> None:
         path,
         ns=(path.stat().st_atime_ns, int(stored_mtime_ns) + 1_000_000_000),
     )
-    mark_file_status(vault, "notes/alpha.md")
+    set_concept_verdict(vault, "notes/alpha.md")
 
     call_with_context(indexing.refresh_stale_passages, vault)
 

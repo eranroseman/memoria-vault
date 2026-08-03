@@ -33,8 +33,8 @@ from tests.helpers import (
     copy_memoria_dirs,
     git,
     init_git,
-    mark_file_status,
     operation_context,
+    set_concept_verdict,
     write_checked_concept,
 )
 
@@ -121,7 +121,7 @@ def checked_note(vault: Path, name: str, title: str, note_id: str) -> Path:
         f"---\ntype: note\nid: {note_id}\ntitle: {title}\ntags: []\nlinks: {{}}\n---\nBody.\n",
         encoding="utf-8",
     )
-    mark_file_status(vault, path.relative_to(vault).as_posix())
+    set_concept_verdict(vault, path.relative_to(vault).as_posix())
     return path
 
 
@@ -874,7 +874,7 @@ def test_curate_note_link_rejects_invalid_source_without_mutation(tmp_path: Path
         ),
         encoding="utf-8",
     )
-    mark_file_status(vault, "notes/source.md")
+    set_concept_verdict(vault, "notes/source.md")
     before = source.read_text(encoding="utf-8")
     journal = vault / ".memoria/journal/curator.jsonl"
     assert not journal.exists()
@@ -958,7 +958,7 @@ def linked_note(vault: Path, name: str, note_id: str, link_type: str, target: st
         f'links:\n  {link_type}:\n    - "{target}"\n---\nBody.\n',
         encoding="utf-8",
     )
-    mark_file_status(vault, f"notes/{name}.md")
+    set_concept_verdict(vault, f"notes/{name}.md")
     return path
 
 
@@ -1135,7 +1135,7 @@ def test_move_concept_rolls_back_when_an_inbound_rewrite_refuses(tmp_path: Path)
         doomed.read_text(encoding="utf-8").replace("type: note\n", "type: note\nstatus: draft\n"),
         encoding="utf-8",
     )
-    mark_file_status(vault, "notes/z-linker.md")
+    set_concept_verdict(vault, "notes/z-linker.md")
     commit_notes(vault)
     head = git(vault, "rev-parse", "HEAD")
     before = {path: path.read_bytes() for path in (target, first, doomed)}
@@ -1367,7 +1367,7 @@ def test_move_concept_rewrites_and_re_signs_a_checked_digest_linker(tmp_path: Pa
         "---\nDigest body.\n",
         encoding="utf-8",
     )
-    mark_file_status(vault, "digests/source-alpha.md", "digest")
+    set_concept_verdict(vault, "digests/source-alpha.md", "digest")
     commit_notes(vault)
     assert is_consumable_checked_file(vault, "digests/source-alpha.md", enqueue_scan=False)
 
@@ -1520,7 +1520,7 @@ def test_move_concept_carries_evidence_set_block_refs(tmp_path: Path) -> None:
             f"# Alpha\n\nA claim. %%ev: {evidence_id} items=source-alpha#^p0001%%\n",
             encoding="utf-8",
         )
-        mark_file_status(vault, path_rel)
+        set_concept_verdict(vault, path_rel)
     state.rebuild_evidence_sets_from_markers(vault, run_id="seed-run")
     assert {row["id"]: row["block_ref"] for row in state.evidence_sets(vault)} == {
         "ev-0000000a": f"{rel}#^blk-0000000a",
@@ -1559,7 +1559,7 @@ def test_move_concept_journals_its_own_rollback(tmp_path: Path) -> None:
         doomed.read_text(encoding="utf-8").replace("type: note\n", "type: note\nstatus: draft\n"),
         encoding="utf-8",
     )
-    mark_file_status(vault, "notes/z-linker.md")
+    set_concept_verdict(vault, "notes/z-linker.md")
     commit_notes(vault)
 
     with pytest.raises(ValueError, match="retired frontmatter field is ignored: status"):
@@ -1606,7 +1606,7 @@ def test_move_concept_rollback_keeps_linker_text_out_of_the_journal(tmp_path: Pa
         ),
         encoding="utf-8",
     )
-    mark_file_status(vault, "notes/z-linker.md")
+    set_concept_verdict(vault, "notes/z-linker.md")
     commit_notes(vault)
 
     # The PI still gets the offending text in full — raised, and on `requests.error`.
