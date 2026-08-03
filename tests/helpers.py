@@ -13,7 +13,8 @@ from typing import Any
 from memoria_vault.runtime import state
 from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.trusted_writer import OperationContext, operation_context_record
-from memoria_vault.runtime.vaultio import read_frontmatter
+from memoria_vault.runtime.vaultio import UNIVERSAL_CONCEPT_BUNDLES, read_frontmatter
+from memoria_vault.runtime.vocabulary.edges import CONCEPT_ROOTS
 from tests.paths import ROOT as ROOT
 from tests.paths import WORKSPACE_SEED
 
@@ -329,15 +330,14 @@ def mark_file_status(
 
 def sync_file_verdicts(vault: Path) -> None:
     """Mark every checked/rejected concept file under vault with its recorded verdict."""
-    for root in (
-        "catalog",
-        "knowledge",
-        "notes",
-        "hubs",
-        "projects",
-        "digests",
-        "fulltext",
-    ):
+    # Derived, not retyped: the hand-typed roster spelled fulltexts/ as
+    # "fulltext" and listed a "knowledge" root that has never existed; the
+    # exists-continue below made both misses silent. "projects" is not a
+    # CONCEPT_ROOTS prefix (only catalog/sources/, notes/, hubs/, digests/,
+    # fulltexts/ are), but it is a bundle root -- UNIVERSAL_CONCEPT_BUNDLES
+    # already carries it, so the union needs no hand-typed literal.
+    roots = {root.split("/", 1)[0] for root in CONCEPT_ROOTS} | UNIVERSAL_CONCEPT_BUNDLES
+    for root in roots:
         base = vault / root
         if not base.exists():
             continue

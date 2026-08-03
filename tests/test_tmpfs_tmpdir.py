@@ -18,8 +18,33 @@ def _tmpfs_env(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv("TMPDIR", raising=False)
 
 
+def _statvfs_reporting(free_bytes: int, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Pin the candidate's free space, so neither branch reads the live disk.
+
+    `_tmpfs_tmpdir` measures whatever filesystem its candidate sits on, and
+    under a selected tmpfs that candidate is the same /dev/shm the suite is
+    running from. Reading it live made this test a function of how much scratch
+    other processes happened to be holding: concurrent full-suite runs starve it
+    below the floor and it fails on a healthy machine. The negative case below
+    already mocked `statvfs` for the same reason; this is the missing half.
+    """
+    real_statvfs = os.statvfs
+
+    def reported(path: object) -> os.statvfs_result:
+        stats = real_statvfs(path)
+        fields = list(stats)
+        fields[4] = free_bytes // stats.f_frsize  # f_bavail
+        return type(stats)(tuple(fields))
+
+    monkeypatch.setattr(os, "statvfs", reported)
+
+
 @pytest.mark.usefixtures("_tmpfs_env")
-def test_tmpfs_tmpdir_selects_a_writable_candidate_with_room(tmp_path: Path) -> None:
+def test_tmpfs_tmpdir_selects_a_writable_candidate_with_room(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _statvfs_reporting(test_config.TMPFS_MIN_FREE_BYTES, monkeypatch)
+
     assert test_config._tmpfs_tmpdir(tmp_path) == str(tmp_path)
 
 
@@ -52,26 +77,7 @@ def test_tmpfs_tmpdir_ignores_a_candidate_that_is_absent(tmp_path: Path) -> None
 def test_tmpfs_tmpdir_ignores_a_candidate_without_room(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    real_statvfs = os.statvfs
-
-    def cramped(path: object) -> os.statvfs_result:
-        stats = real_statvfs(path)
-        return type(stats)(
-            (
-                stats.f_bsize,
-                stats.f_frsize,
-                stats.f_blocks,
-                stats.f_bfree,
-                (test_config.TMPFS_MIN_FREE_BYTES // stats.f_frsize) - 1,
-                stats.f_files,
-                stats.f_ffree,
-                stats.f_favail,
-                stats.f_flag,
-                stats.f_namemax,
-            )
-        )
-
-    monkeypatch.setattr(os, "statvfs", cramped)
+    _statvfs_reporting(test_config.TMPFS_MIN_FREE_BYTES - 1, monkeypatch)
 
     assert test_config._tmpfs_tmpdir(tmp_path) is None
 

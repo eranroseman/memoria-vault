@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from scripts.checks.schema_doc_drift import check_schema_docs
+from scripts.checks.schema_doc_drift import _find_doc, check_schema_docs, load_types
 from tests.paths import ROOT
 
 pytestmark = pytest.mark.static
@@ -146,3 +146,31 @@ def test_frontmatter_reference_does_not_advertise_required_any() -> None:
     text = (ROOT / "docs/reference/data-model/frontmatter.md").read_text(encoding="utf-8")
 
     assert "required_any" not in text
+
+
+def test_load_types_ignores_non_mapping_and_untyped_yaml(tmp_path: Path) -> None:
+    """The and->or survivors: a list document and a dict without a string
+    `type` must both be skipped, each alone."""
+    types_dir = tmp_path / "schemas" / "types"
+    types_dir.mkdir(parents=True)
+    (types_dir / "list.yaml").write_text("- a\n- b\n", encoding="utf-8")
+    (types_dir / "untyped.yaml").write_text("category: x\n", encoding="utf-8")
+    (types_dir / "good.yaml").write_text("type: note\ncategory: x\n", encoding="utf-8")
+
+    types = load_types(tmp_path / "schemas")
+
+    assert set(types) == {"note"}
+
+
+def test_find_doc_uses_the_match_only_when_it_is_unique(tmp_path: Path) -> None:
+    docs = tmp_path / "docs"
+    (docs / "a").mkdir(parents=True)
+    (docs / "b").mkdir(parents=True)
+    (docs / "a" / "document-types.md").write_text("x", encoding="utf-8")
+
+    unique = _find_doc(docs, "document-types.md")
+    assert unique == docs / "a" / "document-types.md"
+
+    (docs / "b" / "document-types.md").write_text("x", encoding="utf-8")
+    ambiguous = _find_doc(docs, "document-types.md")
+    assert ambiguous == docs / "document-types.md"  # the deterministic fallback

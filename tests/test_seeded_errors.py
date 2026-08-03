@@ -8,6 +8,7 @@ import pytest
 from memoria_vault.runtime import state
 from memoria_vault.runtime.seeded_errors import (
     SEEDED_PROBE_SENTINEL,
+    _bar_failures,
     _metrics_by_error_class,
     _verdict_key,
     load_seeded_error_bundle,
@@ -324,3 +325,69 @@ def test_seeded_error_verdict_detects_and_rolls_back_structural_case(
     assert (tmp_path / ".memoria/quarantine" / poisoned_target).is_file()
     assert (tmp_path / ".memoria/quarantine" / extraction_target).is_file()
     assert (tmp_path / control).is_file()
+
+
+_PASSING_METRICS = {
+    "recall": 0.9,
+    "false_positive_rate": 0.05,
+    "rollback_completeness": 0.95,
+    "residual_error_rate": 0.02,
+    "checkpoint_value_rate": 0.8,
+}
+_BARS = {
+    "recall_min": 0.8,
+    "false_positive_rate_max": 0.1,
+    "rollback_completeness_min": 0.9,
+    "residual_error_rate_max": 0.05,
+    "checkpoint_value_rate_min": 0.5,
+}
+
+
+def test_bar_failures_is_empty_when_every_bar_holds() -> None:
+    assert _bar_failures(dict(_PASSING_METRICS), dict(_BARS)) == []
+
+
+@pytest.mark.parametrize(
+    ("metric", "breached_value"),
+    [
+        ("recall", 0.79),
+        ("false_positive_rate", 0.11),
+        ("rollback_completeness", 0.89),
+        ("residual_error_rate", 0.06),
+        ("checkpoint_value_rate", 0.49),
+    ],
+)
+def test_each_bar_fails_alone_when_breached(metric: str, breached_value: float) -> None:
+    metrics = dict(_PASSING_METRICS)
+    metrics[metric] = breached_value
+
+    assert _bar_failures(metrics, dict(_BARS)) == [metric]
+
+
+@pytest.mark.parametrize(
+    "metric",
+    [
+        "recall",
+        "false_positive_rate",
+        "rollback_completeness",
+        "residual_error_rate",
+        "checkpoint_value_rate",
+    ],
+)
+def test_a_metric_exactly_on_its_bar_passes(metric: str) -> None:
+    """The comparisons are strict: landing on the bar is a pass. Pinning the
+    boundary is what makes a later `<` -> `<=` edit visible (the 0.999/1.0
+    lesson from the dwell tests)."""
+    metrics = dict(_PASSING_METRICS)
+    bar_key = next(k for k in _BARS if k.startswith(metric))
+    metrics[metric] = float(_BARS[bar_key])
+
+    assert _bar_failures(metrics, dict(_BARS)) == []
+
+
+def test_multiple_breaches_report_in_bar_order() -> None:
+    metrics = dict(_PASSING_METRICS)
+    metrics["recall"] = 0.0
+    metrics["checkpoint_value_rate"] = 0.0
+
+    assert _bar_failures(metrics, dict(_BARS)) == ["recall", "checkpoint_value_rate"]

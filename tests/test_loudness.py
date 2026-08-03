@@ -7,45 +7,51 @@ from memoria_vault.runtime.attention import inbox, loudness
 pytestmark = pytest.mark.unit
 
 
-def test_alert_card_writes_no_push_log(tmp_path):
+def test_alert_finding_lands_on_the_card_at_alert(tmp_path):
     inbox.write_finding(
         tmp_path, "alert", "Critical drift", "system is stopped", "linter", loudness="alert"
     )
 
-    assert not list(tmp_path.rglob("*push*.jsonl"))
+    [card] = list((tmp_path / "inbox").glob("*.md"))
+    assert _card_loudness(card) == "alert"
 
 
-def test_deduped_alert_finding_writes_no_push_log(tmp_path):
-    card = inbox.write_finding(
-        tmp_path,
-        "alert",
-        "Critical drift",
-        "system is stopped",
-        "linter",
-        loudness="alert",
-        dedupe_slug="no-push-finding",
-    )
+def test_a_deduped_finding_writes_exactly_one_card(tmp_path):
+    for _ in range(2):
+        inbox.write_finding(
+            tmp_path,
+            "alert",
+            "Critical drift",
+            "system is stopped",
+            "linter",
+            loudness="alert",
+            dedupe_slug="dedupe-probe",
+        )
 
-    assert card is not None
-    assert not list(tmp_path.rglob("*push*.jsonl"))
-
-
-def test_deduped_alert_work_prompt_writes_no_push_log(tmp_path):
-    inbox.write_work_prompt(
-        tmp_path,
-        "Review the affected work",
-        "Review the affected work and decide what to do next.",
-        "A review gate needs PI attention.",
-        "test",
-        request_id="REQ-NO-PUSH",
-        loudness="alert",
-        dedupe_slug="no-push-work-prompt",
-    )
-
-    assert not list(tmp_path.rglob("*push*.jsonl"))
+    cards = list((tmp_path / "inbox").glob("*.md"))
+    assert len(cards) == 1
+    assert _card_loudness(cards[0]) == "alert"
 
 
-def test_notice_card_writes_no_push_log(tmp_path):
+def test_a_deduped_work_prompt_writes_exactly_one_card_at_its_band(tmp_path):
+    for _ in range(2):
+        inbox.write_work_prompt(
+            tmp_path,
+            "Review the affected work",
+            "Review the affected work and decide what to do next.",
+            "A review gate needs PI attention.",
+            "test",
+            request_id="REQ-DEDUPE",
+            loudness="alert",
+            dedupe_slug="work-prompt-probe",
+        )
+
+    cards = list((tmp_path / "inbox").glob("*.md"))
+    assert len(cards) == 1
+    assert _card_loudness(cards[0]) == "alert"
+
+
+def test_a_proposal_lands_at_notice(tmp_path):
     inbox.write_proposal(
         tmp_path,
         "candidate",
@@ -59,7 +65,8 @@ def test_notice_card_writes_no_push_log(tmp_path):
         loudness="notice",
     )
 
-    assert not list(tmp_path.rglob("*push*.jsonl"))
+    [card] = list((tmp_path / "inbox").glob("*.md"))
+    assert _card_loudness(card) == "notice"
 
 
 def test_open_blockers_only_reads_open_block_attention_projections(tmp_path):

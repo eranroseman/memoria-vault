@@ -25,23 +25,13 @@ checked knowledge and nothing exports without passing through you.
 
 ## What it guarantees
 
-Shipped today:
-
-- **Export refuses when a citation does not resolve** — and the refusal names
-  the failing citation. No silent rot into deliverables.
-- **Provenance is recorded, not reconstructed** — notes link to the works they
-  came from; answers cite the corpus they were drawn from; machine writes land
-  through a single journaled write path.
-- **Return after months and pick up where you left off** — attention cards show
-  exactly what is waiting on you.
-
-Planned for the beta.1 milestone
-([roadmap](https://eranroseman.github.io/memoria-vault/roadmap/)):
-
-- **Every drafted sentence traces to a passage you can open** (grounded
-  synthesis).
-- **When a source falls, you see everything it was holding up** (typed
-  blast-radius propagation).
+Each promise is backed by a named mechanism, and the docs never claim un-built
+behavior — anything not shipped is marked *planned*. The canonical list of what
+ships today and what is landing for beta.1 lives on
+[Home](docs/README.md#what-memoria-guarantees), next to the mechanism behind
+each one, so there is one place to keep current;
+[Roadmap & status](https://eranroseman.github.io/memoria-vault/roadmap/) tracks
+the milestone.
 
 Start at the published docs:
 [eranroseman.github.io/memoria-vault](https://eranroseman.github.io/memoria-vault/).
