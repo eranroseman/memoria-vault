@@ -72,11 +72,11 @@ operations:
 memoria work update --workspace . <work-id> --check-status checked
 ```
 
-**5. Capture a paper's companion repository.**
+**5. Capture a companion repository (needs network).**
 
-One corpus paper (OpenScholar) ships with its open-source companion repo.
 A paper's repo is often the method's only complete specification —
-capturing both is the habit worth building:
+capturing both is the habit worth building. The seed corpus's OpenScholar
+paper ships with one. Skip this step if you are working offline:
 
 ```bash
 memoria work add --workspace . \
@@ -85,6 +85,8 @@ memoria work add --workspace . \
 ```
 
 **6. Compile a digest when a source is ready.**
+
+Use the `work_id` you checked in step 4:
 
 ```bash
 memoria work digest --workspace . <work-id> --mode test

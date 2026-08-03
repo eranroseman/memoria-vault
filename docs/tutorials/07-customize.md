@@ -23,7 +23,7 @@ memoria steering show --workspace .
 
 Every effective steering token renders with its provenance: the project, hub,
 question note, or watch entry that contributed it. In this workspace, tokens
-already trace to the tutorial project from Tutorial 04. They are derived from
+already trace to the tutorial project from Tutorial 01. They are derived from
 the work you keep active, not authored as steering prose.
 
 **2. Create a second, narrower project.**
@@ -123,4 +123,9 @@ Obsidian, Zotero, or a live model provider.
 - `memoria steering show` is the read surface for each effective token and its
   provenance.
 
-For optional setup, continue with [How-to guides](../how-to-guides/README.md).
+Two how-to guides continue the loop you just closed:
+[Return to work](../how-to-guides/inbox/return-to-work.md) picks up the
+workspace after time away, and
+[Run the weekly review](../how-to-guides/inbox/run-the-weekly-review.md) keeps
+the queues this arc created moving. For everything else, the
+[How-to guides](../how-to-guides/README.md) index routes by task.
