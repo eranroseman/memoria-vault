@@ -248,15 +248,14 @@ def test_surface_tensions_refuses_tampered_checked_file_before_tier2(tmp_path: P
 def test_a_duplicate_canonical_id_collapses_at_the_row_layer(tmp_path: Path) -> None:
     """Two files sharing one *ULID* frontmatter id yield ONE consumable row --
     not because a duplicate id is rejected anywhere, but because
-    `_concept_key_for_file` (state/__init__.py:3230) keys a Concept on a valid
-    ULID `id`, so the second file's `record_observed_file_edit` resolves to
-    the same concept row as the first and repoints its `path` there (a
-    same-id, different-path write is a rename, per
-    `ensure_concept_parent_conn`). The first file's relpath then no longer
-    resolves to a checked concept, so `is_consumable_checked_file`
-    (read_barrier.py:14) reports it unchecked and `_checked_tension_rows`
-    drops it -- one row survives, not two. That collapse is ULID-specific: a
-    non-ULID or absent id does not repoint anything (see
+    `_concept_key_for_file` keys a Concept on a valid ULID `id`, so the
+    second file's `record_observed_file_edit` resolves to the same concept
+    row as the first and repoints its `path` there (a same-id,
+    different-path write is a rename, per `ensure_concept_parent_conn`).
+    The first file's relpath then no longer resolves to a checked concept,
+    so `is_consumable_checked_file` reports it unchecked and
+    `_checked_tension_rows` drops it -- one row survives, not two. That
+    collapse is ULID-specific: a non-ULID or absent id does not repoint anything (see
     `test_a_duplicate_non_ulid_canonical_id_reaches_the_pair_loop` below),
     which is why the pair loop still needs its own same-id guard. The
     distinct-id control proves the fixture itself is candidate-capable, so
@@ -306,9 +305,9 @@ def test_a_duplicate_canonical_id_collapses_at_the_row_layer(tmp_path: Path) -> 
 def test_a_duplicate_non_ulid_canonical_id_reaches_the_pair_loop(tmp_path: Path) -> None:
     """A non-ULID (or absent) shared id does NOT collapse at the row layer.
 
-    `_concept_key_for_file` (state/__init__.py:3230) only keys a Concept on a
-    valid ULID `id`; any other id -- a hand-written slug, a catalog
-    `work_id`, a blank -- falls back to the file's own path. Two files that
+    `_concept_key_for_file` only keys a Concept on a valid ULID `id`; any
+    other id -- a hand-written slug, a catalog `work_id`, a blank -- falls
+    back to the file's own path. Two files that
     share a non-ULID `id` therefore get two independent concept rows, both
     independently checked, so `_checked_tension_rows` yields two rows with
     identical `canonical_id` (`frontmatter.get("id") or frontmatter.get(

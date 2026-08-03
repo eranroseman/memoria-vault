@@ -1,9 +1,15 @@
-"""The bwrap sandbox's isolation properties, each pinned behaviorally.
+"""The bwrap sandbox's isolation properties, most pinned behaviorally.
 
 These execute real code inside the real sandbox. Locally they skip when bwrap
 is unavailable (the pwsh precedent), but under MEMORIA_REQUIRE_SANDBOX=1 (CI) a
 skip becomes a hard failure, so a runner-image change cannot silently return
 this module to never running.
+
+Knowingly unpinned: --die-with-parent. It only matters when the *runner
+process itself* is killed out from under a live sandboxed child, which this
+module has no way to produce without forking the test process; no test here
+or elsewhere in tests/ exercises it (`git grep die-with-parent -- tests/` is
+empty).
 """
 
 from __future__ import annotations
@@ -50,7 +56,8 @@ def _stdout(vault: Path, run: dict) -> str:
 
 
 def test_sandboxed_code_has_no_network(sandbox_vault: Path) -> None:
-    """--unshare-net is the sandbox's core claim; deleting it fails nowhere else."""
+    """--unshare-net is the sandbox's core claim; before this test existed,
+    deleting it failed nowhere else."""
     _probe_artifact(
         sandbox_vault,
         "net-probe",
@@ -88,7 +95,7 @@ def test_host_environment_does_not_leak_into_the_sandbox(
 
 
 def test_the_workspace_bind_is_read_only(sandbox_vault: Path) -> None:
-    _probe_artifact(
+    artifact = _probe_artifact(
         sandbox_vault,
         "ro-probe",
         "try:\n"
@@ -101,7 +108,7 @@ def test_the_workspace_bind_is_read_only(sandbox_vault: Path) -> None:
     run = run_artifact(sandbox_vault, "ro-probe", run_id="ro-1")
 
     assert "WRITE_BLOCKED" in _stdout(sandbox_vault, run)
-    source = sandbox_vault / "projects/project-alpha/code/ro-probe/src"
+    source = sandbox_vault / artifact["source_dir"]
     assert not (source / "poison.txt").exists()  # the host side stayed clean
 
 
@@ -138,4 +145,4 @@ def test_stdout_is_truncated_at_the_declared_cap(sandbox_vault: Path) -> None:
     run = run_artifact(sandbox_vault, "loud-probe", run_id="loud-1", max_output_bytes=64)
 
     raw = (sandbox_vault / run["stdout_path"]).read_bytes()
-    assert len(raw) <= 64
+    assert len(raw) == 64  # <= would pass vacuously on empty stdout too
