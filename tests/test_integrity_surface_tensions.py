@@ -246,13 +246,22 @@ def test_surface_tensions_refuses_tampered_checked_file_before_tier2(tmp_path: P
 
 
 def test_a_duplicate_canonical_id_collapses_at_the_row_layer(tmp_path: Path) -> None:
-    """Two files sharing one frontmatter id yield ONE consumable row -- the
-    identity layer rejects the duplicate before the pair loop ever runs. The
-    old form of this test asserted candidate_count == 0 and credited it to a
-    pair-loop guard that is unreachable (deleting it survived the suite); the
-    zero was real but produced here, one layer down. The distinct-id control
-    proves the fixture itself is candidate-capable, so the collapse is doing
-    the work rather than an overlap threshold or a broken fixture.
+    """Two files sharing one *ULID* frontmatter id yield ONE consumable row --
+    not because a duplicate id is rejected anywhere, but because
+    `_concept_key_for_file` (state/__init__.py:3230) keys a Concept on a valid
+    ULID `id`, so the second file's `record_observed_file_edit` resolves to
+    the same concept row as the first and repoints its `path` there (a
+    same-id, different-path write is a rename, per
+    `ensure_concept_parent_conn`). The first file's relpath then no longer
+    resolves to a checked concept, so `is_consumable_checked_file`
+    (read_barrier.py:14) reports it unchecked and `_checked_tension_rows`
+    drops it -- one row survives, not two. That collapse is ULID-specific: a
+    non-ULID or absent id does not repoint anything (see
+    `test_a_duplicate_non_ulid_canonical_id_reaches_the_pair_loop` below),
+    which is why the pair loop still needs its own same-id guard. The
+    distinct-id control proves the fixture itself is candidate-capable, so
+    the collapse above is doing the work rather than an overlap threshold or
+    a broken fixture.
     """
     shared_id = "01ARZ3NDEKTSV4RRFFQ69G5FAV"
 
@@ -292,6 +301,51 @@ def test_a_duplicate_canonical_id_collapses_at_the_row_layer(tmp_path: Path) -> 
     distinct = _vault(tmp_path / "distinct", (shared_id, "01BX5ZZKBKACTAV9WEVGEMMVS0"))
     assert len(_checked_tension_rows(distinct)) == 2  # the control: fixture is pair-capable
     assert surface_tensions(distinct)["candidate_count"] == 1
+
+
+def test_a_duplicate_non_ulid_canonical_id_reaches_the_pair_loop(tmp_path: Path) -> None:
+    """A non-ULID (or absent) shared id does NOT collapse at the row layer.
+
+    `_concept_key_for_file` (state/__init__.py:3230) only keys a Concept on a
+    valid ULID `id`; any other id -- a hand-written slug, a catalog
+    `work_id`, a blank -- falls back to the file's own path. Two files that
+    share a non-ULID `id` therefore get two independent concept rows, both
+    independently checked, so `_checked_tension_rows` yields two rows with
+    identical `canonical_id` (`frontmatter.get("id") or frontmatter.get(
+    "work_id") or rel`, integrity.py:1698). Nothing upstream of the pair loop
+    ever rejects this pair; the `pair_key[0] == pair_key[1]` arm in
+    `tier1_tension_candidates` is what keeps it from being surfaced as a
+    tension between a claim and itself.
+    """
+    shared_id = "recall-claim"
+    vault = workspace(tmp_path)
+    for rel, body in {
+        "notes/recall-up.md": "The intervention improved recall.",
+        "notes/recall-not-up.md": "The intervention did not improve recall.",
+    }.items():
+        path = vault / rel
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(
+            "---\n"
+            "type: note\n"
+            f"id: {shared_id}\n"
+            f"title: {Path(rel).stem}\n"
+            "tags: []\n"
+            "links: {}\n"
+            "---\n"
+            f"# {Path(rel).stem}\n\n{body}\n",
+            encoding="utf-8",
+        )
+        state.record_observed_file_edit(
+            vault, output_id=rel, concept_type="note", output_sha256=sha256_file(path)
+        )
+        state.set_concept_verdict(vault, rel, "checked")
+
+    rows = _checked_tension_rows(vault)
+
+    assert len(rows) == 2
+    assert {row["canonical_id"] for row in rows} == {shared_id}
+    assert surface_tensions(vault)["candidate_count"] == 0
 
 
 def _unsorted_pair_vault(tmp_path: Path) -> Path:
