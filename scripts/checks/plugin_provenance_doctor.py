@@ -8,21 +8,11 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-FORBIDDEN_REL = (
-    Path("src/memoria_vault/product/workspace_seed/.memoria/plugins"),
-    Path("src/memoria_vault/product/workspace_seed/system/scripts"),
-    Path("src/.obsidian"),
-    Path("packages/obsidian-plugin"),
-    Path("tests/test_memoria_inspector.py"),
-)
-FORBIDDEN_GLOBS = (
-    "src/**/agent_client*",
-    "src/**/obsidian_adapter*",
-    "src/**/obsidian_plugin*",
-    "tests/**/test_*agent_client*.py",
-    "tests/**/test_*obsidian_adapter*.py",
-    "tests/**/test_*obsidian_plugin*.py",
-)
+# This doctor owns exactly one job: positive membership over the seeded
+# .obsidian tree. The retired-payload denylist that used to live beside it
+# (FORBIDDEN_REL / FORBIDDEN_GLOBS) moved into removed_surfaces.json, where
+# every other must-not-reappear rule already lives with an owner and reason —
+# two mechanisms for one job had already drifted into overlap.
 SEED_OBSIDIAN = Path("src/memoria_vault/product/workspace_seed/.obsidian")
 # Deny by default: exact membership, never a prefix or glob. Widening it is a
 # deliberate act per file, which is the only reason it catches the payload it
@@ -49,17 +39,6 @@ ALLOWED_SEED_OBSIDIAN_FILES = {
 def check(root: Path = ROOT) -> list[str]:
     root = root.resolve()
     findings: list[str] = []
-    for rel in FORBIDDEN_REL:
-        path = root / rel
-        if path.exists():
-            findings.append(f"{rel.as_posix()}: forbidden baseline-vault plugin payload")
-    for pattern in FORBIDDEN_GLOBS:
-        for path in sorted(root.glob(pattern)):
-            if path.exists():
-                findings.append(
-                    f"{path.relative_to(root).as_posix()}: "
-                    "Obsidian plugin or adapter implementation is excluded from core runtime"
-                )
     seed_obsidian = root / SEED_OBSIDIAN
     if seed_obsidian.exists():
         for path in sorted(seed_obsidian.rglob("*")):

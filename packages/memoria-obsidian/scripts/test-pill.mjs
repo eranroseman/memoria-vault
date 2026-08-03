@@ -10,7 +10,7 @@ process.env.TZ = "Asia/Kolkata";
 assert.equal(new Date(0).getHours(), 5, "TZ pin did not take effect");
 
 const require = createRequire(import.meta.url);
-const { PILL_STATES, computeNextPollDelay, computePill, formatAsOf } = require("../pill.js");
+const { PILL_STATES, computeNextPollDelay, computePill, formatAsOf } = require("../../../src/memoria_vault/product/workspace_seed/.obsidian/plugins/memoria-obsidian/pill.js");
 
 const at = new Date(2026, 6, 15, 14, 2).getTime(); // local 14:02
 

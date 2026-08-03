@@ -88,13 +88,14 @@ organization, and venue graph records.
 |---|---|
 | **`memoria` CLI** | Required workspace control surface. All mutating work enters through request envelopes and the engine lifecycle. |
 | **search** | Checked-only local search over retrieval documents: checked Concepts plus generated checked Work text and graph neighborhoods. Used by `memoria workspace rebuild --search`, `memoria ask`, project gap analysis, prompt operations, and integrity checks; deterministic BM25 is the selected answer path while derived passage/vector candidates remain evaluation substrate. |
-| **Obsidian proof adapter** | Source package under `packages/memoria-obsidian/`; built files are seeded into `.obsidian/plugins/memoria-obsidian/` by `memoria init`. It calls the local HTTP transport, stores tokens with Obsidian SecretStorage, and writes Memoria-owned state only through `/operation/run`. |
+| **Obsidian proof adapter** | Source lives in the workspace seed at `.obsidian/plugins/memoria-obsidian/`, installed by `memoria init`; `packages/memoria-obsidian/` holds its node test harness. It calls the local HTTP transport, keeps the per-boot handshake token in memory only (never written to plugin settings), and writes Memoria-owned state only through `/operation/run`. |
 | **Optional editor adapters** | Presentation surfaces may call the CLI/engine, but they do not own source authority, policy, checks, or state. |
 
 ### Obsidian proof adapter
 
-The optional package at `packages/memoria-obsidian/` builds the local HTTP client
-and empirical-use recorder seeded into new workspaces by default. It does not
+The plugin seeded into new workspaces by default is the local HTTP client
+and empirical-use recorder; its modules live in the workspace seed and its
+node test suite lives under `packages/memoria-obsidian/`. It does not
 replace the CLI.
 
 | Surface | Current behavior |

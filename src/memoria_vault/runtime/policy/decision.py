@@ -5,7 +5,6 @@ from __future__ import annotations
 from .model import ActorPolicy, Decision
 from .paths import (
     ACTIONS,
-    MUTATING_ACTIONS,
     REVIEW_GATED_PREFIXES,
     normalize_path,
     path_matches,
@@ -30,7 +29,6 @@ def decide(
     path: str,
     policy: ActorPolicy,
     flags: dict | None = None,
-    skill_deny_write: list[str] | None = None,
 ) -> Decision:
     """Return the policy decision for one request. Pure: no I/O, no logging."""
     flags = flags or {}
@@ -40,13 +38,6 @@ def decide(
 
     if action not in ACTIONS:
         return Decision("deny", f"{rule}.invalid-action", f"unknown action '{action}'")
-
-    if skill_deny_write and action in MUTATING_ACTIONS and path_matches(npath, skill_deny_write):
-        return Decision(
-            "deny",
-            "skill.deny.write",
-            "blocked by the loaded skill's policy.deny (one-way narrowing)",
-        )
 
     if action == "report":
         return Decision("allow", f"{rule}.report", log_required=require_log)
@@ -146,14 +137,6 @@ def decide(
             "review-gated zone write requires PI disposition -- surface as an attention item",
         )
     return Decision("allow_with_log", f"{rule}.{action}.{_zone(npath)}", log_required=True)
-
-
-def compose_skill_deny(skill_policy: dict | None) -> list[str]:
-    """Compose a loaded skill's ``policy.deny.write`` onto the actor policy."""
-    if not skill_policy:
-        return []
-    deny = (skill_policy.get("deny") or {}).get("write") or []
-    return list(deny)
 
 
 def _zone(path: str) -> str:

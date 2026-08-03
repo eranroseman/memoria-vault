@@ -247,6 +247,16 @@ def _fsync_dir(path: Path) -> None:
         os.close(fd)
 
 
+def unique_path(path: Path) -> Path:
+    """Return ``path``, or its first ``-N``-suffixed sibling that does not exist."""
+    candidate = path
+    index = 1
+    while candidate.exists():
+        candidate = path.with_name(f"{path.stem}-{index}{path.suffix}")
+        index += 1
+    return candidate
+
+
 def iter_markdown(
     vault: Path, skip_dirs: set[str] | frozenset[str] | None = None
 ) -> Iterator[Path]:

@@ -50,8 +50,8 @@ def load_contract(path: Path = CONTRACT) -> Contract:
             owner=str(raw.get("owner", "")),
             reason=str(raw.get("reason", "")),
         )
-        if rule.kind not in {"path", "text"}:
-            raise ValueError(f"rules[{index}].kind must be path or text")
+        if rule.kind not in {"path", "glob", "text"}:
+            raise ValueError(f"rules[{index}].kind must be path, glob, or text")
         if not rule.needle or not rule.owner or not rule.reason:
             raise ValueError(f"rules[{index}] must include needle, owner, and reason")
         rules.append(rule)
@@ -85,12 +85,17 @@ def find_violations(repo: Path = ROOT, contract_path: Path = CONTRACT) -> list[s
     repo = repo.resolve()
     contract = load_contract(contract_path)
     path_rules = [rule for rule in contract.rules if rule.kind == "path"]
+    glob_rules = [rule for rule in contract.rules if rule.kind == "glob"]
     text_rules = [rule for rule in contract.rules if rule.kind == "text"]
     errors: list[str] = []
 
     for rule in path_rules:
         if (repo / rule.needle).exists():
             errors.append(f"forbidden path exists: {rule.needle}")
+
+    for rule in glob_rules:
+        for match in sorted(repo.glob(rule.needle)):
+            errors.append(f"forbidden glob match: {match.relative_to(repo).as_posix()}")
 
     for rel in contract.search_roots:
         root = repo / rel
