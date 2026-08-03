@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import importlib
 import json
 import os
 import shutil
@@ -14,7 +15,15 @@ import pytest
 
 from memoria_vault.cli import main
 from memoria_vault.runtime import backup, state, trusted_writer
-from tests.helpers import init_cli_workspace
+from tests.helpers import ROOT, init_cli_workspace
+
+# `state/__init__.py` re-exports `workspace_lock` (the function) under the
+# same name as the submodule, which shadows the submodule on the package's
+# own attribute -- `from memoria_vault.runtime.state import workspace_lock`
+# and `import memoria_vault.runtime.state.workspace_lock` both resolve that
+# attribute and would silently hand back the function. `importlib.import_module`
+# reads `sys.modules` directly, bypassing the shadowed attribute.
+state_lock = importlib.import_module("memoria_vault.runtime.state.workspace_lock")
 
 pytestmark = pytest.mark.runtime
 
@@ -1017,7 +1026,7 @@ def test_workspace_recover_restores_live_components_after_interrupted_restore(
         ),
         encoding="utf-8",
     )
-    env = {**os.environ, "PYTHONPATH": str(Path(__file__).parents[1] / "src")}
+    env = {**os.environ, "PYTHONPATH": str(ROOT / "src")}
     interrupted = subprocess.run(
         [sys.executable, str(crash_script)], env=env, check=False, capture_output=True, text=True
     )
@@ -1085,7 +1094,7 @@ def test_workspace_recover_preserves_wal_when_restore_stops_after_marker(
         ),
         encoding="utf-8",
     )
-    env = {**os.environ, "PYTHONPATH": str(Path(__file__).parents[1] / "src")}
+    env = {**os.environ, "PYTHONPATH": str(ROOT / "src")}
     interrupted = subprocess.run(
         [sys.executable, str(crash_script)], env=env, check=False, capture_output=True, text=True
     )
@@ -1202,7 +1211,7 @@ def test_workspace_recover_restores_previous_target_after_interrupted_backup_rep
         ),
         encoding="utf-8",
     )
-    env = {**os.environ, "PYTHONPATH": str(Path(__file__).parents[1] / "src")}
+    env = {**os.environ, "PYTHONPATH": str(ROOT / "src")}
     interrupted = subprocess.run(
         [sys.executable, str(crash_script)], env=env, check=False, capture_output=True, text=True
     )
@@ -1244,7 +1253,7 @@ def test_workspace_recover_writes_stamp_after_completed_backup_publish_crash(
         ),
         encoding="utf-8",
     )
-    env = {**os.environ, "PYTHONPATH": str(Path(__file__).parents[1] / "src")}
+    env = {**os.environ, "PYTHONPATH": str(ROOT / "src")}
     interrupted = subprocess.run(
         [sys.executable, str(crash_script)], env=env, check=False, capture_output=True, text=True
     )
@@ -1287,7 +1296,7 @@ def test_workspace_recover_writes_stamp_after_first_backup_publish_crash(
         ),
         encoding="utf-8",
     )
-    env = {**os.environ, "PYTHONPATH": str(Path(__file__).parents[1] / "src")}
+    env = {**os.environ, "PYTHONPATH": str(ROOT / "src")}
     interrupted = subprocess.run(
         [sys.executable, str(crash_script)], env=env, check=False, capture_output=True, text=True
     )
@@ -1363,7 +1372,7 @@ def test_workspace_recover_preserves_originals_after_interrupted_in_process_roll
         ),
         encoding="utf-8",
     )
-    env = {**os.environ, "PYTHONPATH": str(Path(__file__).parents[1] / "src")}
+    env = {**os.environ, "PYTHONPATH": str(ROOT / "src")}
     interrupted = subprocess.run(
         [sys.executable, str(crash_script)], env=env, check=False, capture_output=True, text=True
     )
@@ -1936,7 +1945,7 @@ def test_workspace_lock_fails_closed_without_no_follow_open(
             lock_path.symlink_to(outside_lock)
         return real_open(path, *args, **kwargs)
 
-    monkeypatch.delattr(state.os, "O_NOFOLLOW")
+    monkeypatch.delattr(state_lock.os, "O_NOFOLLOW")
     monkeypatch.setattr(Path, "open", replace_lock_before_open)
 
     with pytest.raises(ValueError, match="no-follow"):
@@ -1951,7 +1960,7 @@ def test_workspace_lock_uses_native_safe_opener_on_windows(
 ) -> None:
     vault = tmp_path / "workspace"
     lock_path = vault / ".memoria/locks/worker.lock"
-    real_os = state.os
+    real_os = state_lock.os
     sentinel = object()
 
     class WindowsOS:
@@ -1960,9 +1969,9 @@ def test_workspace_lock_uses_native_safe_opener_on_windows(
         def __getattr__(self, name: str):
             return getattr(real_os, name)
 
-    monkeypatch.setattr(state, "os", WindowsOS())
+    monkeypatch.setattr(state_lock, "os", WindowsOS())
     monkeypatch.setattr(
-        state,
+        state_lock,
         "_open_workspace_lock_file_windows",
         lambda _vault, _lock_path: sentinel,
         raising=False,

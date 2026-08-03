@@ -15,7 +15,6 @@ pytestmark = pytest.mark.contract
 
 evaluate_pre = _m.evaluate_pre
 Path = _m.Path
-ROOT = Path(__file__).resolve().parents[1]
 POLICY_CONFIG = """
 version: 1
 actors:

@@ -7,3 +7,6 @@ pytest==9.1.1
 pytest-cov==7.1.0
 pytest-xdist==3.8.0
 PyYAML==6.0.3
+# Build backend for scripts/checks/wheel_gate.py's `pip wheel --no-build-isolation`,
+# not contributor test/lint tooling like the lines above -- do not delete as unused.
+setuptools==83.0.0

@@ -3,10 +3,11 @@
 import json
 import re
 import tomllib
-from pathlib import Path
 
 import pytest
 import yaml
+
+from tests.paths import ROOT
 
 pytestmark = pytest.mark.static
 
@@ -14,7 +15,6 @@ pytestmark = pytest.mark.static
 # an exact npm version -- "10.0.1" passes, "^10.0.1" and "latest" do not.
 RELEASE_TAG = re.compile(r"v?\d+(?:\.\d+)*")
 
-ROOT = Path(__file__).resolve().parent.parent
 PACKAGE_JSON = ROOT / "package.json"
 PACKAGE_LOCK = ROOT / "package-lock.json"
 PYPROJECT = ROOT / "pyproject.toml"
@@ -93,7 +93,7 @@ def test_precommit_hooks_use_pinned_tool_environments():
     for repo, rev in pinned_repos.items():
         assert RELEASE_TAG.fullmatch(rev), f"{repo} is not pinned to a release tag: {rev}"
 
-    for package in ("pre-commit", "pre-commit-hooks"):
+    for package in ("pre-commit", "pre-commit-hooks", "setuptools"):
         assert _pins(package), f"{package} must be pinned in requirements-dev.txt"
     # These come from the pinned hook environments above. Matching on the
     # package rather than one version closes the hole the old assertions left:

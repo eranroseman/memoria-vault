@@ -38,7 +38,7 @@ from memoria_vault.runtime.http_transport import (
     origin_allowed,
     start_idle_monitor,
 )
-from tests.helpers import init_cli_workspace
+from tests.helpers import ROOT, init_cli_workspace
 
 pytestmark = pytest.mark.runtime
 
@@ -2311,7 +2311,7 @@ def test_concurrent_spawn_handshakes_converge_on_one_listener(
 ) -> None:
     handshake = rendezvous.handshake  # Resolve before any child-side effects in the red phase.
     _require_loopback()
-    src_dir = Path(__file__).parents[1] / "src"
+    src_dir = ROOT / "src"
     monkeypatch.setenv("PYTHONPATH", f"{src_dir}{os.pathsep}{os.environ.get('PYTHONPATH', '')}")
     state_dir = rendezvous.vault_state_dir(workspace)
     barrier = threading.Barrier(2)
@@ -2352,7 +2352,7 @@ def test_handshake_converges_with_a_direct_serve_race(
 ) -> None:
     handshake = rendezvous.handshake  # Resolve before starting the direct server in the red phase.
     _require_loopback()
-    src_dir = Path(__file__).parents[1] / "src"
+    src_dir = ROOT / "src"
     monkeypatch.setenv("PYTHONPATH", f"{src_dir}{os.pathsep}{os.environ.get('PYTHONPATH', '')}")
     state_dir = rendezvous.vault_state_dir(workspace)
     direct = threading.Thread(

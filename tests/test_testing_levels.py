@@ -8,9 +8,9 @@ from pathlib import Path
 
 import pytest
 
-pytestmark = pytest.mark.static
+from tests.paths import ROOT
 
-ROOT = Path(__file__).resolve().parent.parent
+pytestmark = pytest.mark.static
 
 # Every marker registered in pyproject is a level except `slow`, which is
 # orthogonal: it grades speed within a level rather than replacing one.
@@ -41,8 +41,10 @@ def _module_marks(path: Path) -> list[str]:
 
 def test_each_pytest_file_declares_exactly_one_testing_level() -> None:
     levels = _registered_levels()
+    files = sorted((ROOT / "tests").rglob("test_*.py"))
+    assert files, "level gate found no test files; the glob is broken"
 
-    for path in sorted((ROOT / "tests").glob("test_*.py")):
+    for path in files:
         declared = [name for name in _module_marks(path) if name in levels]
         assert len(declared) == 1, (
             f"{path.name} declares levels {declared}; expected exactly one registered level"
@@ -50,4 +52,5 @@ def test_each_pytest_file_declares_exactly_one_testing_level() -> None:
 
 
 def test_pytest_files_are_named_by_behavior_not_release_checkpoint() -> None:
-    assert not list((ROOT / "tests").glob("test_alpha*.py"))
+    assert (ROOT / "tests").is_dir(), "ROOT is wrong; this assert would otherwise pass vacuously"
+    assert not list((ROOT / "tests").rglob("test_alpha*.py"))

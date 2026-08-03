@@ -8,14 +8,14 @@ change re-splits the scope across files.
 """
 
 import json
-from pathlib import Path
 
 import pytest
 import yaml
 
+from tests.paths import ROOT
+
 pytestmark = pytest.mark.static
 
-ROOT = Path(__file__).resolve().parent.parent
 CSPELL_JSON = ROOT / "cspell.json"
 PRECOMMIT = ROOT / ".pre-commit-config.yaml"
 
