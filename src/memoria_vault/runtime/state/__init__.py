@@ -2700,6 +2700,12 @@ def rebuild_evidence_bindings_from_journal(vault: Path) -> dict[str, int]:
     """Replay verified first-time evidence mints into the immutable bindings ledger."""
     vault = Path(vault)
     with workspace_lock(vault):
+        # Recovery cannot assume the ledger schema survived — connect() no
+        # longer re-executes schema.sql on current DBs, and this path exists
+        # precisely for damaged databases (e.g. a dropped evidence_bindings
+        # table). Re-run the idempotent DDL ourselves before touching it.
+        with connect(vault) as conn:
+            conn.executescript(_schema_sql())
         verification = verify_journal_chain(vault)
         if not verification["ok"]:
             raise ValueError(
