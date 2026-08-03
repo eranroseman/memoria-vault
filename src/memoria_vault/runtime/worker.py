@@ -1002,7 +1002,7 @@ def _run_operation_job(
         checks = required_promotion_checks(policy)
         if payload_check and payload_check not in checks:
             raise ValueError(f"mark-checked check must be declared by policy: {payload_check}")
-        event = mark_checked(vault, target_path, checks=checks, context=context)
+        event = mark_checked(vault, target_path, checks=checks, context=context, judgment=True)
         # I1 spec §2: promoting staged content to checked is PI judgment over a
         # machine proposal, so it always records one. `item_id` is the canonical
         # path `mark_checked` itself writes under, never the raw payload string.

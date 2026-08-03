@@ -35,6 +35,7 @@ def operation_context(
     machine: str = "test-machine",
     run_id: str = "test-run",
     machine_authored: bool = False,
+    agent_identity: str = "",
 ) -> OperationContext:
     """Persist a real request envelope and return its matching test context."""
     request_id = f"test-{uuid.uuid4().hex}"
@@ -43,10 +44,18 @@ def operation_context(
         operation_id=operation_id,
         actor=actor,
         args={"run_id": run_id},
-        provenance={"surface": "pytest"},
         machine_authored=machine_authored,
+        provenance={"surface": "pytest", "agent_identity": agent_identity},
     )
-    context = OperationContext(actor, run_id, request_id, operation_id, machine, machine_authored)
+    context = OperationContext(
+        actor,
+        run_id,
+        request_id,
+        operation_id,
+        machine,
+        machine_authored,
+        agent_identity,
+    )
     job = {
         "job_id": request_id,
         "kind": "operation",
@@ -87,6 +96,7 @@ def call_with_context(function: Any, vault: Path, *args: Any, **kwargs: Any) -> 
         machine=machine,
         run_id=run_id,
         machine_authored=machine_authored,
+        agent_identity=str(kwargs.pop("agent_identity", "")),
     )
     return function(vault, *args, context=context, **kwargs)
 

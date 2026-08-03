@@ -1,3 +1,8 @@
+---
+type: system
+title: Session diary template
+---
+
 # Session diary
 
 Copy this template once per session (into `tmp/` or anywhere outside the

@@ -7,6 +7,7 @@ import pytest
 import yaml
 
 from memoria_vault.runtime.subsystems.lib import schema
+from tests.helpers import WORKSPACE_SEED
 
 pytestmark = pytest.mark.contract
 
@@ -37,6 +38,19 @@ def _empty_workspace(root: Path) -> Path:
     for bundle in schema.bundle_roots(schema.load_folders()):
         (root / bundle).mkdir(parents=True)
         (root / bundle / "index.md").write_text("# Index\n", encoding="utf-8")
+    return root
+
+
+def _seeded_workspace(root: Path) -> Path:
+    """Copy the shipped workspace seed and stand up empty bundle-root dirs.
+
+    Bundle roots (notes/, hubs/, ...) are created by `memoria init`'s
+    skeleton, not shipped inside `workspace_seed/`, so a raw copy needs them
+    added for `validate_okf_core_workspace`'s bundle-root presence check.
+    """
+    shutil.copytree(WORKSPACE_SEED, root, dirs_exist_ok=True)
+    for bundle in schema.bundle_roots(schema.load_folders()):
+        (root / bundle).mkdir(parents=True, exist_ok=True)
     return root
 
 
@@ -411,3 +425,105 @@ def test_consequence_mark_fields_registered_on_kb_doc_types():
     assert any("not in enum consequence" in error for error in bad)
     bad_stale = schema.validate_frontmatter(dict(marked, stale="yes"), types["note"])
     assert any("stale: expected bool" in error for error in bad_stale)
+
+
+def _minimal_valid_fm(type_name: str, sc: dict) -> dict:
+    fm: dict = {}
+    for field, kind in (sc.get("required") or {}).items():
+        if str(kind).startswith("literal:"):
+            fm[field] = str(kind).split(":", 1)[1]
+        elif kind == "ulid":
+            fm[field] = "01ARZ3NDEKTSV4RRFFQ69G5FAV"
+        elif kind == "list":
+            fm[field] = []
+        elif kind == "links":
+            fm[field] = {}
+        else:
+            fm[field] = "x"
+    return fm
+
+
+def test_okf_families_accepted_on_every_type() -> None:
+    types = schema.load_types()
+    okf_fm = {
+        "generated": {"by": "human:pi", "at": "2026-08-02T00:00:00Z"},
+        "verified": [{"by": "human:pi", "at": "2026-08-02T00:00:00Z"}],
+        "sources": [{"id": "s1", "resource": "https://example.com"}],
+        "usage_window": {"from": "2026-07-01", "to": "2026-07-31"},
+    }
+    for type_name, sc in types.items():
+        for field in okf_fm:
+            assert field in (sc.get("optional") or {}), f"{type_name} missing optional {field}"
+        errors = schema.validate_frontmatter({**_minimal_valid_fm(type_name, sc), **okf_fm}, sc)
+        assert errors == [], f"{type_name}: {errors}"
+
+
+def test_timestamp_is_retired_frontmatter() -> None:
+    from memoria_vault.runtime.vaultio import RETIRED_FRONTMATTER_FIELDS
+
+    assert "timestamp" in RETIRED_FRONTMATTER_FIELDS
+
+
+def test_okf_core_covers_files_outside_bundle_roots(tmp_path):
+    root = _empty_workspace(tmp_path)
+    (root / "orphan.md").write_text("no frontmatter here\n", encoding="utf-8")
+
+    errors = schema.validate_okf_core_workspace(root)
+
+    assert any("orphan.md" in err and "frontmatter" in err for err in errors)
+
+
+def test_okf_core_checks_reserved_file_structure(tmp_path):
+    root = _empty_workspace(tmp_path)
+    (root / "index.md").write_text("---\ntype: system\n---\n# Index\n", encoding="utf-8")
+    (root / "log.md").write_text("---\ntype: system\n---\n# Log\n", encoding="utf-8")
+
+    errors = schema.validate_okf_core_workspace(root)
+
+    assert any("index.md" in err and "okf_version" in err for err in errors)
+    assert any("log.md" in err and "frontmatter" in err for err in errors)
+
+
+def test_okf_core_requires_the_root_index_to_declare_the_version(tmp_path):
+    root = _empty_workspace(tmp_path)
+    (root / "index.md").write_text("# Index\n", encoding="utf-8")
+
+    errors = schema.validate_okf_core_workspace(root)
+
+    assert any(err.startswith("index.md:") and "okf_version" in err for err in errors)
+
+
+def test_okf_core_rejects_a_root_index_declaring_another_version(tmp_path):
+    root = _empty_workspace(tmp_path)
+    (root / "index.md").write_text('---\nokf_version: "0.1"\n---\n# Index\n', encoding="utf-8")
+
+    errors = schema.validate_okf_core_workspace(root)
+
+    assert any(err.startswith("index.md:") and "0.2" in err for err in errors)
+
+
+def test_okf_core_accepts_a_nested_bundle_index_declaring_the_version(tmp_path):
+    """OKF §12: a project is a nested bundle, so its index.md may declare too."""
+    root = _empty_workspace(tmp_path)
+    (root / "index.md").write_text('---\nokf_version: "0.2"\n---\n# Index\n', encoding="utf-8")
+    nested = root / "projects/demo/index.md"
+    nested.parent.mkdir(parents=True, exist_ok=True)
+    nested.write_text('---\nokf_version: "0.2"\n---\n# Demo\n', encoding="utf-8")
+
+    assert schema.validate_okf_core_workspace(root) == []
+
+
+def test_okf_core_skips_only_directories_inside_the_vault(tmp_path):
+    """A vault living under a directory named like a skip target is still a
+    vault: the skip list is read relative to the root, not absolutely."""
+    root = _empty_workspace(tmp_path / "node_modules" / "vault")
+    (root / "orphan.md").write_text("no frontmatter here\n", encoding="utf-8")
+
+    errors = schema.validate_okf_core_workspace(root)
+
+    assert any("orphan.md" in err for err in errors)
+
+
+def test_seeded_workspace_is_okf_core_clean(tmp_path):
+    root = _seeded_workspace(tmp_path)
+    assert schema.validate_okf_core_workspace(root) == []

@@ -32,6 +32,8 @@ from memoria_vault.runtime.vaultio import (
     frontmatter_doc,
     is_ulid,
     iter_markdown,
+    okf_actor,
+    okf_verified_actor,
     read_frontmatter,
     retired_frontmatter_field_errors,
     split_frontmatter,
@@ -56,6 +58,11 @@ class OperationContext:
     *authorship*: a transport door can hold PI authority (loopback bind, per-boot
     bearer token) while the body it posts was composed by a machine. Doors set
     `machine_authored` so the two stay separable; see `body_is_pi_authored`.
+
+    `agent_identity` is request provenance, not authority: which named agent
+    (if any) composed the body, carried through from the request envelope's
+    `provenance["agent_identity"]` for OKF actor rendering (`okf_actor`). It
+    defaults to "" for contexts built without that provenance in scope.
     """
 
     actor: str
@@ -64,6 +71,7 @@ class OperationContext:
     operation_id: str
     machine: str
     machine_authored: bool = False
+    agent_identity: str = ""
 
     @property
     def body_is_pi_authored(self) -> bool:
@@ -134,6 +142,12 @@ def operation_context_from_job(job: Mapping[str, Any], machine: str | None) -> O
     if not isinstance(machine_authored, bool):
         raise ValueError("request envelope machine_authored must be a boolean")
 
+    provenance = envelope.get("provenance")
+    agent_identity_value = (
+        provenance.get("agent_identity") if isinstance(provenance, Mapping) else None
+    )
+    agent_identity = agent_identity_value.strip() if isinstance(agent_identity_value, str) else ""
+
     return OperationContext(
         actor=actor,
         run_id=run_id or request_id,
@@ -141,6 +155,7 @@ def operation_context_from_job(job: Mapping[str, Any], machine: str | None) -> O
         operation_id=operation_id,
         machine=safe_filename(machine or platform.node() or "local"),
         machine_authored=machine_authored,
+        agent_identity=agent_identity,
     )
 
 
@@ -161,6 +176,9 @@ def operation_context_record(context: OperationContext) -> dict[str, Any]:
     `machine_authored` is part of the bound record for the same reason `actor`
     is: it gates a security transform, so it has to be authenticated against the
     persisted request rather than asserted by whoever holds the context object.
+    `agent_identity` is bound for the narrower reason that it is written into
+    files as OKF provenance: an unbound field would let a caller sign its
+    output with any producer name it liked.
     """
     return {
         "actor": context.actor,
@@ -169,6 +187,7 @@ def operation_context_record(context: OperationContext) -> dict[str, Any]:
         "operation_id": context.operation_id,
         "machine": context.machine,
         "machine_authored": context.machine_authored,
+        "agent_identity": context.agent_identity,
     }
 
 
@@ -809,12 +828,19 @@ def mark_checked(
     target_path: str,
     *,
     context: OperationContext,
+    judgment: bool,
+    machine_composed: bool = False,
     checks: Iterable[str] | None = None,
     schemas_dir: Path | None = None,
     frontmatter: dict[str, Any] | None = None,
     body: str | None = None,
 ) -> dict[str, Any]:
-    """Mark a live Concept checked, optionally validating and writing replacement content atomically."""
+    """Re-record a live Concept's verdict, optionally validating and writing replacement content atomically.
+
+    ``judgment`` has no default on purpose: every caller has to say whether it
+    is relaying an acceptance the PI made or performing a mechanical rewrite.
+    See `_write_checked` for what each one does to the OKF confirmation field.
+    """
     validate_operation_context(vault, context)
     vault = Path(vault)
     target = _target_path(target_path)
@@ -832,6 +858,8 @@ def mark_checked(
         promotion_checks,
         context,
         contract,
+        judgment=judgment,
+        machine_composed=machine_composed,
     )
 
 
@@ -855,6 +883,19 @@ def stage_concept(
     if not context.body_is_pi_authored:
         body = neutralize_untrusted_markdown(body)
     _inherit_authored_identity(vault, target, frontmatter)
+    frontmatter.pop("verified", None)
+    frontmatter["generated"] = {
+        "by": okf_actor(
+            context.actor,
+            agent_identity=context.agent_identity,
+            operation_id=context.operation_id,
+            machine_authored=context.machine_authored,
+        ),
+        "at": now_iso(),
+    }
+    input_rows = _input_rows(inputs)
+    if not frontmatter.get("sources") and input_rows:
+        frontmatter["sources"] = _sources_from_inputs(vault, input_rows)
     _validate_concept(contract, target, frontmatter)
 
     staged_path = _staged_path(vault, target)
@@ -865,7 +906,7 @@ def stage_concept(
         "output_id": target,
         "staging_id": _rel(vault, staged_path),
         "output_sha256": sha256_file(staged_path),
-        "inputs": _input_rows(inputs),
+        "inputs": input_rows,
     }
     event = append_journal_event(vault, event, context=context)
     state.record_file_output(
@@ -914,6 +955,7 @@ def promote_checked(
         promotion_checks,
         context,
         contract,
+        judgment=True,
     )
     staged_path.unlink()
     return event
@@ -1289,8 +1331,54 @@ def _write_checked(
     checks: Iterable[str],
     context: OperationContext,
     contract: dict[str, Any],
+    *,
+    judgment: bool,
+    machine_composed: bool = False,
 ) -> dict[str, Any]:
+    """Write one plane-crossing document, stamping OKF fields at the seam.
+
+    ``judgment`` says whether this write carries an acceptance. A judgment write
+    REPLACES the `verified` field with the single confirmation it just recorded:
+    entries supplied in the incoming bytes are discarded, so nothing typed into
+    a file can pass itself off as the PI's confirmation, and the field stays the
+    latest-confirmation projection it claims to be (full history is the
+    journal's). A mechanical write — a link rewrite, a candidates block — leaves
+    the field exactly as the last acceptance left it, because re-signing on a
+    byte change would record a confirmation nobody made. A non-list value is
+    dropped rather than carried: it would iterate as characters downstream.
+
+    The seam works on its own copy of ``frontmatter`` so a validation failure
+    leaves the caller's dict untouched.
+    """
     promotion_checks = normalize_promotion_checks(checks)
+    frontmatter = dict(frontmatter)
+    if judgment:
+        frontmatter.pop("verified", None)
+        frontmatter["verified"] = [
+            {
+                "by": okf_verified_actor(context.actor, operation_id=context.operation_id),
+                "at": now_iso(),
+            }
+        ]
+    elif "verified" in frontmatter and not isinstance(frontmatter["verified"], list):
+        frontmatter.pop("verified", None)
+    if _replaces_existing_body(output_path, body):
+        # Spec 5.2: `generated` is the last meaningful change, and this is the
+        # one seam that changes bytes under an already-promoted document.
+        # `machine_composed` marks a body the ENGINE composed at this seam
+        # (e.g. a regenerated hub-candidates block): the request envelope's
+        # `machine_authored` describes only the envelope body, so a PI-actor
+        # CLI run would otherwise stamp `human:pi` on engine-authored bytes.
+        if machine_composed:
+            by = f"process:{context.operation_id or 'engine'}"
+        else:
+            by = okf_actor(
+                context.actor,
+                agent_identity=context.agent_identity,
+                operation_id=context.operation_id,
+                machine_authored=context.machine_authored,
+            )
+        frontmatter["generated"] = {"by": by, "at": now_iso()}
     _validate_concept(contract, target, frontmatter)
     payload_text = frontmatter_doc(frontmatter, body)
     output_sha256 = sha256_bytes(payload_text.encode("utf-8"))
@@ -1308,6 +1396,33 @@ def _write_checked(
     state.mark_checked(vault, target, output_sha256, payload_text)
     write_frontmatter_doc(output_path, frontmatter, body, create_parent=True)
     return events[0]
+
+
+def _replaces_existing_body(output_path: Path, body: str) -> bool:
+    """Whether this write replaces the body of a document already on disk."""
+    if not output_path.is_file():
+        return False
+    _frontmatter, current_body = split_frontmatter(output_path.read_text(encoding="utf-8"))
+    return current_body != body
+
+
+def _sources_from_inputs(vault: Path, input_rows: list[dict[str, Any]]) -> list[dict[str, str]]:
+    """Project derivation inputs into OKF v0.2 `sources` entries (spec §5.1).
+
+    A bundle-relative `resource` is a resolvable link, so only an input that
+    really is a bundle file earns one. Every other input id — a catalog work
+    key, a provider record — is emitted as written: a scope descriptor an OKF
+    reader can recognize as one, rather than a path that resolves nowhere.
+    """
+    out: list[dict[str, str]] = []
+    for row in input_rows:
+        rid = str(row.get("id") or "")
+        if not rid:
+            continue
+        slug = rid.removesuffix(".md").replace("/", "-")
+        resolvable = rid.endswith(".md") and (vault / rid).is_file()
+        out.append({"id": slug, "resource": f"/{rid}" if resolvable else rid})
+    return out
 
 
 def _input_rows(inputs: Iterable[str | dict[str, Any]]) -> list[dict[str, Any]]:

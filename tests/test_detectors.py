@@ -574,3 +574,13 @@ def test_walk_never_reaches_skipped_dirs(tmp_path):
     walked = {_m.relpath(tmp_path, p) for p in _m.iter_files(tmp_path)}
 
     assert walked == {"notes/real.md"}
+
+
+def test_working_doc_exemption_is_scoped_to_project_directories() -> None:
+    """`outline.md`/`draft.md` are exempt working docs only under
+    `projects/<slug>/`; the same basename elsewhere is still a Concept."""
+    assert _m.is_untyped_infra("projects/p/outline.md")
+    assert _m.is_untyped_infra("projects/p/draft.md")
+    assert not _m.is_untyped_infra("notes/draft.md")
+    assert not _m.is_untyped_infra("hubs/outline.md")
+    assert not _m.is_untyped_infra("projects/p/nested/draft.md")

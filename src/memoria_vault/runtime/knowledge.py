@@ -434,6 +434,8 @@ def curate_note_link(
             context=context,
             frontmatter=frontmatter,
             body=body,
+            # Curating one link edits the graph, not the verdict on the note.
+            judgment=False,
         )
 
     edge_id = ""
@@ -712,16 +714,24 @@ def _write_link_rewrite(
     checked: bool,
     context: OperationContext,
 ) -> None:
-    """Write one rewritten linker, re-signing it if it is consumable as checked.
+    """Write one rewritten linker, re-recording its hash if it is consumable.
 
     A checked file whose bytes change out of band fails the sha256 read barrier and
     falls out of consumption, so a mechanical ``links:`` rewrite has to go back
     through the same trusted-writer seam ``curate_note_link`` uses. That re-validates
     the document as well as re-recording its hash, so the perimeter does not widen:
-    a linker the writer would refuse refuses the move instead.
+    a linker the writer would refuse refuses the move instead. The rewrite carries
+    no judgment, so it records no confirmation of its own.
     """
     if checked:
-        mark_checked(vault, rel, context=context, frontmatter=frontmatter, body=body)
+        mark_checked(
+            vault,
+            rel,
+            context=context,
+            frontmatter=frontmatter,
+            body=body,
+            judgment=False,
+        )
     else:
         write_frontmatter_doc(vault / rel, frontmatter, body)
 
@@ -1443,6 +1453,7 @@ def _write_full_text_gap_attention(
             path,
             {
                 "title": title,
+                "type": "attention",
                 "projection": "attention",
                 "attention_kind": "flag",
                 "attention_status": "open",
@@ -1686,6 +1697,7 @@ def _write_tag_candidate_attention(
             path,
             {
                 "title": f"Review tag candidate: {phrase}",
+                "type": "attention",
                 "projection": "attention",
                 "attention_kind": "candidate",
                 "attention_status": "open",
@@ -3929,14 +3941,20 @@ def _project_slice_reason(query: str, score: float) -> str:
 
 
 def _outline_text(members: Iterable[dict[str, Any]]) -> str:
-    lines = []
+    """Render the slice outline, typed like the draft it feeds.
+
+    OKF core wants every non-reserved document to declare a `type`; `outline`
+    is a project working document, not a Concept, so it names itself the way
+    `draft.md` does rather than borrowing a Concept type.
+    """
+    lines = ["---", "type: outline", "generated_by: write-project-slice", "---", ""]
     for member in members:
         note_id = str(member["id"]).strip()
         reasoning = neutralize_untrusted_markdown_fragment(
             str(member.get("reasoning") or "").strip()
         )
         lines.append(f"- {note_id} — {reasoning}")
-    return "\n".join(lines) + ("\n" if lines else "")
+    return "\n".join(lines) + "\n"
 
 
 def _existing_evidence_ids(vault: Path, extractor: Any) -> set[str]:

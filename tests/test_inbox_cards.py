@@ -90,7 +90,9 @@ def test_proposal_card_is_attention_projection(tmp_path):
     assert fm["projection"] == "attention"
     assert fm["attention_kind"] == "candidate"
     assert fm["attention_status"] == "open"
-    assert "type" not in fm
+    # OKF core types every non-reserved document; `attention` is the card kind,
+    # not a Concept type — no per-type schema claims it.
+    assert fm["type"] == "attention"
 
 
 def test_proposal_carries_no_verdict(tmp_path):
@@ -124,7 +126,9 @@ def test_finding_card_is_attention_projection(tmp_path):
     assert fm["projection"] == "attention"
     assert fm["attention_kind"] == "flag"
     assert fm["attention_status"] == "open"
-    assert "type" not in fm
+    # OKF core types every non-reserved document; `attention` is the card kind,
+    # not a Concept type — no per-type schema claims it.
+    assert fm["type"] == "attention"
     body = p.read_text(encoding="utf-8")
     assert "# Finding" in body and "# Evidence" in body
 
@@ -163,7 +167,9 @@ def test_work_prompt_card_is_attention_projection(tmp_path):
     assert fm["posture"] == "writer"
     assert "task_id" not in fm
     assert "lane" not in fm
-    assert "type" not in fm
+    # OKF core types every non-reserved document; `attention` is the card kind,
+    # not a Concept type — no per-type schema claims it.
+    assert fm["type"] == "attention"
     body = p.read_text(encoding="utf-8")
     assert "# Action" in body and "# What happened" in body and "# Where to look" in body
 

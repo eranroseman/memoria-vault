@@ -181,6 +181,10 @@ checked against the generated `bibliography.bib`.
 | `links` | `links` | Required by most Concept types (see each type's schema for exact requirements), even when empty. |
 | `description` | `str` | Optional human-readable summary where the type supports it. |
 | `tags` | `list` | Required local classification list, even when empty. |
+| `generated` | `map` | Optional OKF v0.2 provenance: `{ by, at }`, stamped by the trusted writer at staging. `by` uses the OKF actor grammar. |
+| `sources` | `list` | Optional OKF v0.2 provenance entries (`{ id, resource, … }`), derived from derivation inputs at staging or authored for external material. |
+| `usage_window` | `map` | Optional OKF v0.2 `{ from, to }` frame for per-source `usage_count` signals. |
+| `verified` | `list` | Optional OKF v0.2 confirmation events (`{ by, at }`), stamped at promotion. Distinct from the engine's judgment state, which stays in `.memoria/`. |
 
 ## Enforcement
 

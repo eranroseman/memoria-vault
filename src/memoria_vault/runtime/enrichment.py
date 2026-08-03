@@ -486,6 +486,7 @@ def _write_attention_flag(
     text = frontmatter_doc(
         {
             "title": title,
+            "type": "attention",
             "projection": "attention",
             "attention_kind": "flag",
             "attention_status": "open",
@@ -533,6 +534,7 @@ def _write_discovery_candidate(
     text = frontmatter_doc(
         {
             "title": f"Review discovered Work: {safe_target_title}",
+            "type": "attention",
             "projection": "attention",
             "attention_kind": "candidate",
             "attention_status": "open",

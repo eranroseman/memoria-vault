@@ -47,6 +47,7 @@ def render_copi_skill() -> str:
     return f"""---
 name: memoria-copi
 description: Memoria co-PI method. Use before answering any question about vault content, comparing sources, stress-testing an argument, or proposing any change in this vault.
+type: system
 ---
 
 # Memoria co-PI method

@@ -51,9 +51,24 @@ TRANSIENT_PREFIXES = ("system/logs/", "inbox/")
 MISPLACED_SKIP_PREFIXES = TRANSIENT_PREFIXES
 
 
+# Project working documents. They declare their own `type` so the whole tree
+# stays OKF-conformant (design spec §12.3 counts them as Concept documents for
+# export shape), but no per-type schema claims them and none ever becomes a
+# knowledge-graph node, so the Concept detectors must not read them as Concepts.
+PROJECT_WORKING_FILES = {"outline.md", "draft.md"}
+
+
 def is_untyped_infra(rp: str) -> bool:
-    """Infrastructure, navigation, and attention projections are not Concepts."""
-    return rp.startswith(("system/", "inbox/"))
+    """Infrastructure, navigation, attention, and project working docs are not Concepts.
+
+    The working-doc exemption is scoped to `projects/<slug>/` deliberately: a
+    note the PI happens to name `notes/draft.md` is still a Concept and must
+    not silently drop out of the Concept detectors.
+    """
+    if rp.startswith(("system/", "inbox/")):
+        return True
+    parts = rp.split("/")
+    return len(parts) == 3 and parts[0] == "projects" and parts[2] in PROJECT_WORKING_FILES
 
 
 LEFTOVER_PATTERNS = [

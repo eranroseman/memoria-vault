@@ -33,7 +33,11 @@ from memoria_vault.runtime.subsystems.lib.edges import (  # noqa: F401
     normalize_link_target,
     parse_links,
 )
-from memoria_vault.runtime.vaultio import is_ulid, universal_concept_frontmatter_errors
+from memoria_vault.runtime.vaultio import (
+    DEFAULT_SKIP_DIRS,
+    is_ulid,
+    universal_concept_frontmatter_errors,
+)
 
 
 def _default_schemas_dir() -> Path:
@@ -47,6 +51,11 @@ def _default_schemas_dir() -> Path:
 SCHEMAS_DIR = _default_schemas_dir()
 
 VOCABULARY_FIELDS = {"note": {"topics": "topics"}}
+
+# The version the root index.md declares, and the one the conformance check
+# holds every bundle index to.
+OKF_VERSION = "0.2"
+_NESTED_BUNDLE_INDEX = re.compile(r"projects/[^/]+/index\.md")
 
 
 def _present(value) -> bool:
@@ -309,16 +318,32 @@ def _under_home(path: Path, root: Path, home: str) -> bool:
 
 
 def validate_okf_core_workspace(root: Path, schemas_dir: Path | None = None) -> list[str]:
-    """Permissive OKF-core shape check for bundle roots."""
+    """OKF v0.2 core conformance (spec §11) over the whole bundle tree.
+
+    Every non-reserved `.md` file in the tree needs parseable frontmatter with
+    a non-empty `type` -- not just files under the bundle roots -- because the
+    exported bundle is the whole vault minus `.memoria/`, so a root-level file
+    like `Start here.md` is a concept document to an OKF consumer too.
+    """
     root = Path(root)
     folders = load_folders(schemas_dir)
     errors: list[str] = []
     for bundle in bundle_roots(folders):
         if not (root / bundle).is_dir():
             errors.append(f"missing bundle root: {bundle}")
-    for path in _concept_files(root, folders):
-        fm, _body, fm_errors = _markdown_frontmatter(path)
+    reserved = {"index.md", "log.md"}
+    for path in sorted(root.rglob("*.md")):
+        # Relative parts only: a vault that happens to live under a directory
+        # named like a skip target is still a vault.
+        if any(part in DEFAULT_SKIP_DIRS for part in path.relative_to(root).parts):
+            continue
         rel = path.relative_to(root).as_posix()
+        if path.name in reserved:
+            errors.extend(_reserved_file_errors(path, rel, is_bundle_root=(rel == path.name)))
+            continue
+        if path.name == "SCHEMA.md":
+            continue
+        fm, _body, fm_errors = _markdown_frontmatter(path)
         errors.extend(f"{rel}: {err}" for err in fm_errors)
         if fm_errors:
             continue
@@ -328,8 +353,43 @@ def validate_okf_core_workspace(root: Path, schemas_dir: Path | None = None) -> 
     return errors
 
 
+def _reserved_file_errors(path: Path, rel: str, *, is_bundle_root: bool) -> list[str]:
+    """Spec §8/§9: index.md declares okf_version at a bundle root; log.md carries none.
+
+    A nested bundle may declare its own version (§12), so `projects/<slug>/index.md`
+    is allowed the same one-key frontmatter as the root. Every other index.md
+    carries none, and the root's declaration is required, not optional: the claim
+    that this tree is an OKF bundle is made in exactly that one line.
+    """
+    root_index = is_bundle_root and path.name == "index.md"
+    declares_version = root_index or _NESTED_BUNDLE_INDEX.fullmatch(rel) is not None
+    text = path.read_text(encoding="utf-8")
+    if not text.startswith("---\n"):
+        if root_index:
+            return [f'{rel}: the bundle root index.md must declare okf_version "{OKF_VERSION}"']
+        return []
+    fm, _body, fm_errors = _markdown_frontmatter(path)
+    if fm_errors:
+        return [f"{rel}: {err}" for err in fm_errors]
+    if path.name == "log.md":
+        return [f"{rel}: reserved log.md must carry no frontmatter"]
+    if not declares_version or set(fm) != {"okf_version"}:
+        return [f"{rel}: reserved index.md frontmatter is limited to okf_version at a bundle root"]
+    if str(fm["okf_version"]) != OKF_VERSION:
+        return [
+            f"{rel}: index.md must declare okf_version {OKF_VERSION!r},"
+            f" not {fm.get('okf_version')!r}"
+        ]
+    return []
+
+
 def validate_memoria_workspace(root: Path, schemas_dir: Path | None = None) -> list[str]:
-    """Strict Memoria Concept check before promotion into bundle roots."""
+    """Strict Memoria Concept check before promotion into bundle roots.
+
+    Its own per-type checks stay bundle-root-scoped (via `_concept_files`) by
+    design: root-level files like `Start here.md` carry `type: system`, which
+    is not in the type-schema roster, and must not fail this strict validator.
+    """
     root = Path(root)
     types = load_types(schemas_dir)
     folders = load_folders(schemas_dir)

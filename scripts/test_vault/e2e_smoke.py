@@ -221,6 +221,20 @@ def assert_final_verdict(verdict: str) -> None:
     assert "PASS" in verdict, f"worked vault verdict: {verdict}"
 
 
+def assert_okf_core_conformance(vault: Path) -> None:
+    """The *worked* vault is an OKF v0.2 bundle, not just the seeded one.
+
+    Every file an operation raised along the way — attention cards above all —
+    is in scope here, which is what makes the conformance claim a claim about
+    the running system rather than about the seed.
+    """
+    from memoria_vault.runtime.subsystems.lib import schema
+
+    errors = schema.validate_okf_core_workspace(vault, vault / ".memoria/schemas")
+    assert not errors, f"OKF core conformance: {errors[:5]}"
+    print("   OKF v0.2 core conformance clean over the worked vault")
+
+
 def _fail(message: str) -> None:
     print(f"e2e-smoke: FAIL - {message}", file=sys.stderr)
     raise SystemExit(1)
@@ -449,6 +463,7 @@ def _final_integrity(vault: Path, env: dict[str, str]) -> None:
     verdict = _detector_verdict(vault, env)
     print(f"   {verdict}")
     assert_final_verdict(verdict)
+    assert_okf_core_conformance(vault)
 
 
 def run_smoke(root: Path = ROOT) -> None:

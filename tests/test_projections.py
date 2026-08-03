@@ -12,6 +12,7 @@ from memoria_vault.runtime.projections import (
     TRACKED_PROJECTION_PATHS,
     check_tracked_projections,
     check_workspace_indexes,
+    render_tracked_projection,
     render_workspace_index,
 )
 from memoria_vault.runtime.projections import (
@@ -179,6 +180,16 @@ def test_vault_agents_md_symlink_is_a_redirected_projection(tmp_path: Path) -> N
     ]
 
 
+def test_vault_agents_md_describes_okf_trust_fields(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    content = render_tracked_projection(vault, "AGENTS.md")
+
+    assert "check_status" not in content.split("engine surfaces")[0], (
+        "detached-reader guidance must describe fields that exist in files"
+    )
+    assert "generated" in content and "verified" in content
+
+
 def test_workspace_index_projection_drift_check(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
 
@@ -194,6 +205,18 @@ def test_workspace_index_projection_drift_check(tmp_path: Path) -> None:
 
     (vault / "index.md").write_text("stale\n", encoding="utf-8")
     assert not check_workspace_indexes(vault)
+
+
+def test_workspace_index_is_okf_reserved_shape(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    content = render_workspace_index(vault, "index.md")
+
+    frontmatter = content.split("---\n")[1]
+    assert frontmatter == 'okf_version: "0.2"\n'
+    assert "type:" not in frontmatter
+    for line in content.splitlines():
+        if line.startswith("- ["):
+            assert ") - " in line, f"index entry missing description: {line}"
 
 
 def test_projection_inventory_does_not_duplicate_changed_fixed_paths(tmp_path: Path) -> None:

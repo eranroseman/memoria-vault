@@ -194,7 +194,9 @@ def test_seed_mcp_json_wires_memoria_mcp_stdio():
 
 
 def test_seed_claude_md_is_an_agents_md_loader():
-    assert (WORKSPACE_SEED / "CLAUDE.md").read_text("utf-8") == "@AGENTS.md\n"
+    assert (WORKSPACE_SEED / "CLAUDE.md").read_text("utf-8") == (
+        "---\ntype: system\ntitle: Agent instructions loader\n---\n\n@AGENTS.md\n"
+    )
 
 
 def test_seed_codex_hooks_mirror_the_deny_rules():

@@ -357,6 +357,7 @@ def assert_invariants(vault: Path) -> None:
     """Spec §3.4: invariants over goldens — the always-on battery."""
     from memoria_vault.runtime import projections, state
     from memoria_vault.runtime.subsystems.integrity.linter import detectors
+    from memoria_vault.runtime.subsystems.lib.schema import validate_okf_core_workspace
 
     with contextlib.closing(sqlite3.connect(vault / ".memoria/memoria.sqlite")) as conn:
         ok = conn.execute("PRAGMA integrity_check").fetchone()[0]
@@ -375,6 +376,10 @@ def assert_invariants(vault: Path) -> None:
     assert projections.check_workspace_indexes(vault), "workspace indexes stale"
     findings = detectors.run_all(vault)
     assert detectors.verdict(findings) == "PASS", f"detectors: {findings[:5]}"
+    # The OKF conformance claim is only true if every operation keeps it true,
+    # so it is asserted after each one rather than on a seeded tree.
+    okf = validate_okf_core_workspace(vault, vault / ".memoria/schemas")
+    assert okf == [], f"OKF core conformance: {okf[:5]}"
 
 
 @contextlib.contextmanager

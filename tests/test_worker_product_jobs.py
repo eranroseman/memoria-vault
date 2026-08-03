@@ -1044,7 +1044,7 @@ def test_observe_pi_edits_propagates_scan_side_demotion(tmp_path: Path) -> None:
         inputs=[{"id": source_rel, "sha256": sha256_file(vault / source_rel)}],
         machine="pi-machine",
     )
-    mark_checked(vault, pi_rel, machine="pi-machine")
+    mark_checked(vault, pi_rel, judgment=True, machine="pi-machine")
 
     pi_depth_two_path = vault / pi_depth_two_rel
     pi_depth_two_path.write_text(note_text(), encoding="utf-8")
@@ -1057,7 +1057,7 @@ def test_observe_pi_edits_propagates_scan_side_demotion(tmp_path: Path) -> None:
         inputs=[{"id": direct_rel, "sha256": sha256_file(vault / direct_rel)}],
         machine="pi-machine",
     )
-    mark_checked(vault, pi_depth_two_rel, machine="pi-machine")
+    mark_checked(vault, pi_depth_two_rel, judgment=True, machine="pi-machine")
     commit_writer_changes(
         vault, "observe pi downstream", [pi_rel, pi_depth_two_rel], machine="pi-machine"
     )

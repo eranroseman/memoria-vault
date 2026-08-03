@@ -119,7 +119,7 @@ def _vault(tmp_path: Path) -> tuple[Path, str]:
         inputs=[{"id": TARGET, "sha256": sha256_file(vault / TARGET)}],
         machine="pi-machine",
     )
-    call_with_context(_mark_checked, vault, PI_NOTE, machine="pi-machine")
+    call_with_context(_mark_checked, vault, PI_NOTE, judgment=True, machine="pi-machine")
     call_with_context(
         _commit_writer_changes, vault, "observe pi note", [PI_NOTE], machine="pi-machine"
     )
@@ -141,6 +141,17 @@ def _event_type_id(vault: Path, event_type: str) -> int:
         if event["event_type"] == event_type:
             return int(event["event_id"])
     raise AssertionError(f"no {event_type} event")
+
+
+def _check_fired_payload(vault: Path, target_id: str) -> dict[str, Any]:
+    """The newest `check-fired` event naming ``target_id`` (its own key, not
+    ``output_id``) — the record promotion journals *after* the OKF `verified`
+    stamp, so its `output_sha256` is computed from the exact bytes written to
+    disk (`trusted_writer._write_checked`)."""
+    for event in engine_api.read_journal(vault, limit=500)["events"]:
+        if event["event_type"] == "check-fired" and event["payload"].get("target_id") == target_id:
+            return event["payload"]
+    raise AssertionError(f"no check-fired event for {target_id}")
 
 
 def _surfaces(vault: Path) -> dict[str, Any]:
@@ -212,6 +223,19 @@ def test_revert_preview_mutates_nothing_that_cascade_rollback_moves(tmp_path: Pa
 
 
 def test_revert_preview_reports_the_shipped_records_for_a_derived_event(tmp_path: Path) -> None:
+    """A `derived` event's `output_sha256` is the *staged* bytes, recorded
+    before promotion. Promotion (`_write_checked`) appends an OKF `verified`
+    confirmation to the frontmatter after staging, so staged and shipped bytes
+    now legitimately diverge — this was already incidental before that (body
+    neutralization can also run again at promotion), just never provably so.
+
+    The record that *is* guaranteed to match the shipped file's current bytes
+    is the `check-fired` event promotion journals: its `output_sha256` is
+    computed from the exact payload `_write_checked` then writes to disk.
+    `revert_preview` itself refuses to compute a preview keyed on a
+    `check-fired` id (it names no `output_id`, only `target_id` — see
+    `test_revert_preview_names_an_event_that_derived_no_output`), so that
+    record is read directly off the journal here instead."""
     vault, root_commit = _vault(tmp_path)
     event_id = _event_id(vault, TARGET)
 
@@ -224,9 +248,15 @@ def test_revert_preview_reports_the_shipped_records_for_a_derived_event(tmp_path
     assert event["event_type"] == "derived"
     assert event["output_id"] == TARGET
     assert event["staging_id"] == f".memoria/staging/{TARGET}"
-    assert event["output_sha256"] == sha256_file(vault / TARGET)
     assert event["inputs"] == []
     assert event["timestamp"]
+
+    shipped_sha256 = sha256_file(vault / TARGET)
+    checked = _check_fired_payload(vault, TARGET)
+    assert checked["output_sha256"] == shipped_sha256
+    # The derived event's own hash is the pre-stamp, staging-time snapshot —
+    # a true fact about that event, no longer a proxy for the shipped file.
+    assert event["output_sha256"] != shipped_sha256
     assert preview["outputs"] == {"materialized_commit": root_commit}
     assert preview["owning_operation"] == {
         "operation": "cascade-rollback",

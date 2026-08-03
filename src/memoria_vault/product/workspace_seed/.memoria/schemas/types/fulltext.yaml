@@ -11,4 +11,8 @@ required:
 optional:
   archived: bool
   description: str
+  generated: map
+  sources: list
+  usage_window: map
+  verified: list
   x: map

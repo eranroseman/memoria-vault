@@ -980,6 +980,7 @@ def _write_digest_text_attention(
         frontmatter_doc(
             {
                 "title": title,
+                "type": "attention",
                 "projection": "attention",
                 "attention_kind": "flag",
                 "attention_status": "open",
