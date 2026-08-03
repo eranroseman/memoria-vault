@@ -484,6 +484,46 @@ def test_okf_core_checks_reserved_file_structure(tmp_path):
     assert any("log.md" in err and "frontmatter" in err for err in errors)
 
 
+def test_okf_core_requires_the_root_index_to_declare_the_version(tmp_path):
+    root = _empty_workspace(tmp_path)
+    (root / "index.md").write_text("# Index\n", encoding="utf-8")
+
+    errors = schema.validate_okf_core_workspace(root)
+
+    assert any(err.startswith("index.md:") and "okf_version" in err for err in errors)
+
+
+def test_okf_core_rejects_a_root_index_declaring_another_version(tmp_path):
+    root = _empty_workspace(tmp_path)
+    (root / "index.md").write_text('---\nokf_version: "0.1"\n---\n# Index\n', encoding="utf-8")
+
+    errors = schema.validate_okf_core_workspace(root)
+
+    assert any(err.startswith("index.md:") and "0.2" in err for err in errors)
+
+
+def test_okf_core_accepts_a_nested_bundle_index_declaring_the_version(tmp_path):
+    """OKF §12: a project is a nested bundle, so its index.md may declare too."""
+    root = _empty_workspace(tmp_path)
+    (root / "index.md").write_text('---\nokf_version: "0.2"\n---\n# Index\n', encoding="utf-8")
+    nested = root / "projects/demo/index.md"
+    nested.parent.mkdir(parents=True, exist_ok=True)
+    nested.write_text('---\nokf_version: "0.2"\n---\n# Demo\n', encoding="utf-8")
+
+    assert schema.validate_okf_core_workspace(root) == []
+
+
+def test_okf_core_skips_only_directories_inside_the_vault(tmp_path):
+    """A vault living under a directory named like a skip target is still a
+    vault: the skip list is read relative to the root, not absolutely."""
+    root = _empty_workspace(tmp_path / "node_modules" / "vault")
+    (root / "orphan.md").write_text("no frontmatter here\n", encoding="utf-8")
+
+    errors = schema.validate_okf_core_workspace(root)
+
+    assert any("orphan.md" in err for err in errors)
+
+
 def test_seeded_workspace_is_okf_core_clean(tmp_path):
     root = _seeded_workspace(tmp_path)
     assert schema.validate_okf_core_workspace(root) == []

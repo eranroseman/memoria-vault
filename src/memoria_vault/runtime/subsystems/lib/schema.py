@@ -52,6 +52,11 @@ SCHEMAS_DIR = _default_schemas_dir()
 
 VOCABULARY_FIELDS = {"note": {"topics": "topics"}}
 
+# The version the root index.md declares, and the one the conformance check
+# holds every bundle index to.
+OKF_VERSION = "0.2"
+_NESTED_BUNDLE_INDEX = re.compile(r"projects/[^/]+/index\.md")
+
 
 def _present(value) -> bool:
     return value not in (None, "", [])
@@ -328,7 +333,9 @@ def validate_okf_core_workspace(root: Path, schemas_dir: Path | None = None) -> 
             errors.append(f"missing bundle root: {bundle}")
     reserved = {"index.md", "log.md"}
     for path in sorted(root.rglob("*.md")):
-        if any(part in DEFAULT_SKIP_DIRS for part in path.parts):
+        # Relative parts only: a vault that happens to live under a directory
+        # named like a skip target is still a vault.
+        if any(part in DEFAULT_SKIP_DIRS for part in path.relative_to(root).parts):
             continue
         rel = path.relative_to(root).as_posix()
         if path.name in reserved:
@@ -347,19 +354,29 @@ def validate_okf_core_workspace(root: Path, schemas_dir: Path | None = None) -> 
 
 
 def _reserved_file_errors(path: Path, rel: str, *, is_bundle_root: bool) -> list[str]:
-    """Spec §8/§9: index.md frontmatter only for bundle-root okf_version; log.md none."""
+    """Spec §8/§9: index.md declares okf_version at a bundle root; log.md carries none.
+
+    A nested bundle may declare its own version (§12), so `projects/<slug>/index.md`
+    is allowed the same one-key frontmatter as the root. Every other index.md
+    carries none, and the root's declaration is required, not optional: the claim
+    that this tree is an OKF bundle is made in exactly that one line.
+    """
+    root_index = is_bundle_root and path.name == "index.md"
+    declares_version = root_index or _NESTED_BUNDLE_INDEX.fullmatch(rel) is not None
     text = path.read_text(encoding="utf-8")
     if not text.startswith("---\n"):
+        if root_index:
+            return [f'{rel}: the bundle root index.md must declare okf_version "{OKF_VERSION}"']
         return []
     fm, _body, fm_errors = _markdown_frontmatter(path)
     if fm_errors:
         return [f"{rel}: {err}" for err in fm_errors]
     if path.name == "log.md":
         return [f"{rel}: reserved log.md must carry no frontmatter"]
-    if not is_bundle_root or set(fm) != {"okf_version"}:
-        return [
-            f"{rel}: reserved index.md frontmatter is limited to okf_version at the bundle root"
-        ]
+    if not declares_version or set(fm) != {"okf_version"}:
+        return [f"{rel}: reserved index.md frontmatter is limited to okf_version at a bundle root"]
+    if str(fm["okf_version"]) != OKF_VERSION:
+        return [f"{rel}: index.md must declare okf_version {OKF_VERSION!r}, not {fm!r}"]
     return []
 
 

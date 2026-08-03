@@ -73,6 +73,9 @@ def write_proposal(
     today = datetime.date.today().isoformat()
     frontmatter = {
         "title": title,
+        # OKF core wants every non-reserved document typed; attention cards are
+        # one kind, and no per-type schema claims them (they are not Concepts).
+        "type": "attention",
         "projection": "attention",
         "attention_kind": card_type,
         "attention_status": "open",
@@ -140,6 +143,9 @@ def write_finding(
     today = datetime.date.today().isoformat()
     frontmatter = {
         "title": title,
+        # OKF core wants every non-reserved document typed; attention cards are
+        # one kind, and no per-type schema claims them (they are not Concepts).
+        "type": "attention",
         "projection": "attention",
         "attention_kind": card_type,
         "attention_status": "open",
@@ -223,6 +229,9 @@ def write_work_prompt(
     today = datetime.date.today().isoformat()
     frontmatter = {
         "title": title,
+        # OKF core wants every non-reserved document typed; attention cards are
+        # one kind, and no per-type schema claims them (they are not Concepts).
+        "type": "attention",
         "projection": "attention",
         "attention_kind": "work-prompt",
         "attention_status": "open",
