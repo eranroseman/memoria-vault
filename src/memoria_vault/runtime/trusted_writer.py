@@ -111,7 +111,7 @@ def operation_context_from_job(job: Mapping[str, Any], machine: str | None) -> O
     if actor not in state.ACTORS:
         raise ValueError(f"request envelope actor must be one of {sorted(state.ACTORS)}")
 
-    request_id = _required_context_identifier(job, "job_id", "job request")
+    request_id = _required_context_identifier(job, "request_id", "job request")
     envelope_request_id = _required_context_identifier(envelope, "request_id", "envelope request")
     if request_id != envelope_request_id:
         raise ValueError("job and envelope request identifiers must match")

@@ -1167,7 +1167,7 @@ def test_live_server_runs_each_served_note_link_as_pi_and_rejects_tension(
         assert code == HTTPStatus.OK
         assert response["ok"] is True
         assert response["result"]["status"] == "done"
-        request = state.request_row(workspace, response["job"]["job_id"])
+        request = state.request_row(workspace, response["job"]["request_id"])
         assert request is not None and request["actor"] == "pi"
         assert read_frontmatter(workspace / "notes/source.md")["links"][relation] == [
             "notes/target.md"
@@ -1271,7 +1271,8 @@ def test_live_server_carries_the_modal_warrant_text_to_the_edge_attribute(
     assert [code for code, _ in responses] == [HTTPStatus.OK, HTTPStatus.OK]
     assert [payload["result"]["status"] for _, payload in responses] == ["done", "done"]
     assert [
-        state.request_row(workspace, payload["job"]["job_id"])["actor"] for _, payload in responses
+        state.request_row(workspace, payload["job"]["request_id"])["actor"]
+        for _, payload in responses
     ] == ["pi", "pi"]
     # Both relations reached the frontmatter graph...
     assert read_frontmatter(workspace / "notes/source.md")["links"] == {

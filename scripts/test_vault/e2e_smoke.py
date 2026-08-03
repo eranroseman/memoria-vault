@@ -82,7 +82,7 @@ def _operation_context(vault: Path, operation_id: str):
         vault,
         envelope,
         {
-            "job_id": request_id,
+            "request_id": request_id,
             "kind": "operation",
             "operation_id": operation_id,
             "bound_context": operation_context_record(context),

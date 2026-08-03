@@ -136,7 +136,6 @@ CREATE TABLE IF NOT EXISTS external_ids (
     value TEXT NOT NULL,
     source_provider TEXT NOT NULL DEFAULT '',
     confidence TEXT NOT NULL DEFAULT 'high',
-    verified_at TEXT NOT NULL,
     PRIMARY KEY (owner_type, owner_id, namespace, value)
 );
 CREATE TABLE IF NOT EXISTS enrichment_runs (
@@ -376,7 +375,9 @@ CREATE TABLE IF NOT EXISTS code_runs (
     timeout_result TEXT NOT NULL DEFAULT '',
     sandbox_backend TEXT NOT NULL DEFAULT '',
     sandbox_profile_hash TEXT NOT NULL DEFAULT '',
-    state TEXT NOT NULL CHECK (state IN ('pending', 'running', 'succeeded', 'failed', 'unavailable')),
+    run_status TEXT NOT NULL CHECK (
+        run_status IN ('pending', 'running', 'succeeded', 'failed', 'unavailable')
+    ),
     started_at TEXT NOT NULL,
     ended_at TEXT
 );
@@ -387,7 +388,9 @@ CREATE TABLE IF NOT EXISTS evidence_sets (
     type TEXT NOT NULL CHECK (
         type IN ('single-span', 'multi-span', 'multi-hop', 'implicit', 'computed')
     ),
-    state TEXT NOT NULL CHECK (state IN ('complete', 'evidence-incomplete')),
+    completeness_status TEXT NOT NULL CHECK (
+        completeness_status IN ('complete', 'evidence-incomplete')
+    ),
     review_required INTEGER NOT NULL CHECK (review_required IN (0, 1)),
     run_id TEXT NOT NULL DEFAULT '',
     block_text_sha256 TEXT
@@ -442,4 +445,4 @@ CREATE TABLE IF NOT EXISTS telemetry_events (
 CREATE INDEX IF NOT EXISTS idx_telemetry_type_ts
     ON telemetry_events(event_type, ts);
 
-PRAGMA user_version = 19;
+PRAGMA user_version = 20;

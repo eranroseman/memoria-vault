@@ -1666,7 +1666,7 @@ def _bulk_work_import(args: argparse.Namespace, entries: list[str]) -> dict[str,
                 )
             )
             if args.enrich and (enrichment := _queue_import_enrichment(args, payload, output)):
-                enrichment_jobs.append(str(enrichment["job_id"]))
+                enrichment_jobs.append(str(enrichment["request_id"]))
         else:
             error = str(result.get("error") or result.get("status") or "capture failed")
             failed.append({"ref": ref, "error": error})
@@ -2248,19 +2248,19 @@ def _apply_request_mutation(
             idempotency_key=args.idempotency_key,
             command=command,
         )
-        if not _request_lifecycle_event_exists(workspace, event_name, str(successor["job_id"])):
+        if not _request_lifecycle_event_exists(workspace, event_name, str(successor["request_id"])):
             append_explicit_journal_event(
                 workspace,
                 {
                     "event": event_name,
                     "request_id": source_request_id,
-                    "successor_request_id": successor["job_id"],
+                    "successor_request_id": successor["request_id"],
                     **event_payload_extra,
                 },
                 actor="pi",
                 machine="memoria-cli",
             )
-    updated = state.request_row(workspace, str(successor["job_id"]))
+    updated = state.request_row(workspace, str(successor["request_id"]))
     return _emit(
         {
             "ok": True,
@@ -2816,7 +2816,7 @@ def _cmd_eval_select_models(args: argparse.Namespace) -> int:
             machine_authored=False,
             provenance={"surface": "memoria-cli", "command": "eval-select-models"},
         )
-        verdict = run_request(workspace, request["job_id"], machine="memoria-cli")
+        verdict = run_request(workspace, request["request_id"], machine="memoria-cli")
         passed = bool(verdict.get("passed"))
         selections.append(
             {
@@ -3376,7 +3376,7 @@ def _queue_import_enrichment(
     if not work_id:
         return None
     workspace = _workspace(args)
-    parent_request_id = str(output["job"]["job_id"])
+    parent_request_id = str(output["job"]["request_id"])
     return enqueue_operation(
         workspace,
         "enrich-source",
@@ -3439,7 +3439,7 @@ def _workspace_recover_fixture(workspace: Path, fixture: str) -> dict[str, str]:
         run_id="fixture:crash-before-materialization",
         idempotency_key="fixture-crash-before-materialization",
     )
-    result = run_request(workspace, request["job_id"], machine="memoria-cli")
+    result = run_request(workspace, request["request_id"], machine="memoria-cli")
     if result.get("status") != "done":
         raise RuntimeError(str(result.get("error") or "recover fixture request failed"))
     with state.connect(workspace) as conn:
@@ -4437,7 +4437,7 @@ def _success_detail(payload: dict[str, Any]) -> str:
             "work_id",
             "project_id",
             "request_id",
-            "job_id",
+            "request_id",
             "artifact_id",
             "event_id",
             "operation_id",

@@ -1546,7 +1546,7 @@ def test_scheduled_integrity_sweep_is_daily_idempotent(tmp_path: Path) -> None:
         machine="test-machine",
     )
 
-    assert [job["job_id"] for job in result["jobs"]] == [
+    assert [job["request_id"] for job in result["jobs"]] == [
         "trace-integrity-scan-2026-06-29",
         "check-source-metadata-2026-06-29",
         "integrity-evidence-check-2026-06-29",
@@ -1693,7 +1693,7 @@ def _ground_claim_in(vault: Path, work_id: str, note: str, evidence_id: str) -> 
                 "block_ref": f"notes/{note}.md#^blk-33333333",
                 "items": [f"{work_id}#^p0001"],
                 "type": "single-span",
-                "state": "complete",
+                "completeness_status": "complete",
                 "review_required": False,
                 "bind": False,
             }

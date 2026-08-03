@@ -773,7 +773,7 @@ def test_http_transport_rejects_idempotency_key_bound_to_pending_pi_request(
         lambda: {
             "operation_id": "create-concept",
             "payload": {"concept_type": "note"},
-            "idempotency_key": request["job_id"],
+            "idempotency_key": request["request_id"],
         },
     )
 
@@ -793,7 +793,7 @@ def test_http_transport_rejects_idempotency_key_bound_to_pending_pi_request(
         "ok": False,
         "error": "idempotency key is already bound to a different request",
     }
-    assert state.request_job(workspace, request["job_id"])["status"] == "pending"
+    assert state.request_job(workspace, request["request_id"])["status"] == "pending"
     assert "attention_status: open" in (workspace / "inbox/pi-pending.md").read_text(
         encoding="utf-8"
     )
@@ -839,7 +839,7 @@ def test_http_transport_operation_run_records_empirical_event_once(workspace: Pa
     assert replay_status == HTTPStatus.OK
     assert response["ok"] is True
     assert replay["job"]["status"] == "done"
-    assert replay["job"]["job_id"] == response["job"]["job_id"]
+    assert replay["job"]["request_id"] == response["job"]["request_id"]
     with state.connect(workspace) as conn:
         # T.3 moved this sink to `telemetry_events`; the once-only property the test
         # is named for now lives there, and the journal must gain nothing at all.
@@ -851,7 +851,7 @@ def test_http_transport_operation_run_records_empirical_event_once(workspace: Pa
         ).fetchone()[0]
         request = conn.execute(
             "SELECT operation_id, provenance_json FROM operation_requests WHERE request_id = ?",
-            (response["job"]["job_id"],),
+            (response["job"]["request_id"],),
         ).fetchone()
     assert count == 1
     assert journaled == 0

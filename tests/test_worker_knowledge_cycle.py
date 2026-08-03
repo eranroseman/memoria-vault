@@ -40,7 +40,7 @@ def run_operation(
         actor="pi",
         machine_authored=False,
     )
-    done = run_request(vault, str(job["job_id"]), machine="cycle-machine")
+    done = run_request(vault, str(job["request_id"]), machine="cycle-machine")
     assert done is not None
     assert done["status"] == "done"
     return done

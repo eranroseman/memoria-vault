@@ -171,10 +171,10 @@ def run_step(root: Path, vault: Path, step: dict[str, Any]) -> list[str]:
         context = operation_context_from_job(request, "test-env-harness")
         request["status"] = "running"
         request["bound_context"] = operation_context_record(context)
-        state.set_request_running(vault, request["job_id"], request)
+        state.set_request_running(vault, request["request_id"], request)
         result = write_project_argument_canvas(vault, args["project"], context=context)
         request["status"] = "done"
-        state.finish_request(vault, request["job_id"], "done", request)
+        state.finish_request(vault, request["request_id"], "done", request)
         artifacts.append(result["canvas_path"])
     else:
         raise HarnessError(f"unknown cassette tool: {tool}")

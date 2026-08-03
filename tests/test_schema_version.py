@@ -13,12 +13,12 @@ from tests.helpers import ROOT
 pytestmark = pytest.mark.contract
 
 
-def test_schema_lands_at_user_version_19(tmp_path: Path) -> None:
+def test_schema_lands_at_user_version_20(tmp_path: Path) -> None:
     # Both sides are literal on purpose: comparing the applied version to
     # `state.SCHEMA_VERSION` alone passes when the constant and the DDL drift together.
     with state.connect(tmp_path) as conn:
-        assert state.SCHEMA_VERSION == 19
-        assert conn.execute("PRAGMA user_version").fetchone()[0] == 19
+        assert state.SCHEMA_VERSION == 20
+        assert conn.execute("PRAGMA user_version").fetchone()[0] == 20
 
 
 def test_rejects_incompatible_schema_version(tmp_path: Path) -> None:

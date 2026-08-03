@@ -45,7 +45,7 @@ def _row(**overrides: Any) -> dict[str, Any]:
         "block_ref": BLOCK_REF,
         "items": [],
         "type": "implicit",
-        "state": "evidence-incomplete",
+        "completeness_status": "evidence-incomplete",
         "review_required": True,
         "run_id": "",
         "block_text_sha256": state._block_text_sha256_from_text(CONTENT, BLOCK_REF),
