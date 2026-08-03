@@ -33,8 +33,9 @@ def _is_type_checking_guard(test: ast.expr) -> bool:
     """Whether an ``if`` test is (roughly) ``TYPE_CHECKING`` or ``typing.TYPE_CHECKING``.
 
     An import inside such a guard never executes at runtime — it must not
-    count as a module-level dependency. See ``runtime/state.py:53-54`` for the
-    live idiom this exists to leave alone.
+    count as a module-level dependency. See
+    ``runtime/state/__init__.py:62-63`` for the live idiom this exists to
+    leave alone.
     """
     if isinstance(test, ast.Name):
         return test.id == "TYPE_CHECKING"
@@ -187,8 +188,8 @@ def test_try_except_wrapped_engine_import_is_caught(tmp_path: Path) -> None:
     """A module-level import inside try/except still executes at import time.
 
     Live idiom (with a harmless target) at runtime/rendezvous.py:24-31 and
-    runtime/state.py:43-50 — a direct-children-of-tree.body scan would miss an
-    engine import shaped like this.
+    runtime/state/workspace_lock.py:15-23 — a direct-children-of-tree.body
+    scan would miss an engine import shaped like this.
     """
     bad = (
         "try:\n"
@@ -222,8 +223,8 @@ def test_type_checking_import_is_not_caught(tmp_path: Path) -> None:
     """An import under ``if TYPE_CHECKING:`` must stay uncaught.
 
     It never executes at runtime, so it is not a real import-time dependency —
-    live idiom at runtime/state.py:53-54. Recursing into ``if`` bodies for the
-    two shapes above must not start flagging this one.
+    live idiom at runtime/state/__init__.py:62-63. Recursing into ``if``
+    bodies for the two shapes above must not start flagging this one.
     """
     probe = tmp_path / "_layering_probe.py"
     probe.write_text(
