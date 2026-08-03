@@ -546,7 +546,7 @@ def test_context_panel_hands_read_scope_to_the_bound_engine(
     }
 
 
-def test_trace_and_context_panels_are_both_branch_honest(vault: Path) -> None:
+def test_trace_and_context_panels_render_their_live_producers(vault: Path) -> None:
     panels = cockpit.assemble_deep(vault, PROJECT_REL)
 
     trace = panels["trace"]
@@ -558,20 +558,14 @@ def test_trace_and_context_panels_are_both_branch_honest(vault: Path) -> None:
 
     context = panels["context"]
     assert context["source_action"] == "context.read"
-    row = actions_by_id().get("context.read")
-    if row is None:
-        assert context["reserved"] == "context.read is not in the surface-contract registry"
-        assert "bundle" not in context
-    elif not row.get("engine"):
-        # The placeholder repeats the registry's own word for the row rather
-        # than an empty string: `"reserved" in context` is true of `""` too, and
-        # a blank line under the panel heading reads as "nothing to say here"
-        # instead of "U1 declared this row and left the transport to U2".
-        assert context["reserved"] == row["reserved"] == "U2"
-        assert "bundle" not in context
-    else:
-        assert "bundle" in context
-        assert "invocation" in context
+    # The two reserved arms below this were dead: `context.read` carries
+    # `engine: "read_context"` unconditionally in the static SURFACE_ACTIONS
+    # tuple and `engine_api.read_context` is unconditionally defined, so neither
+    # `row is None` nor a blank `engine` is producible. A three-way branch whose
+    # first two arms cannot run asserts whichever one the implementation takes.
+    assert "bundle" in context
+    assert "invocation" in context
+    assert "reserved" not in context
 
 
 def test_assemble_triage_worklist_preserves_payload_order(vault: Path) -> None:
