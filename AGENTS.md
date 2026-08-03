@@ -23,9 +23,9 @@ should feel like a co-PI, not a knowledge base. Product pitch:
   `verify` and `gitleaks` checks.
 - **Merge** by squash. No required commit-message format (Conventional Commits
   earns back with release tooling).
-- **The git index is shared per checkout** — two sessions in one checkout can
-  sweep each other's staged files into a commit. Stage explicit paths, never
-  `git add -A`; see Cross-tool parity for per-tool isolation.
+- **The git index is shared per checkout** — two sessions or subagents in one
+  checkout can sweep each other's staged files into a commit. Stage explicit
+  paths, never `git add -A`; see Cross-tool parity for per-tool isolation.
 - **Test only against disposable vaults under `test-vault/`** (never a personal
   vault). The installed test-vault carries its own nested `.git` (vault
   versioning is product behavior) and must stay reconstructible — `git clean
@@ -42,6 +42,11 @@ should feel like a co-PI, not a knowledge base. Product pitch:
 - Present options with pros/cons and a recommendation — never a bare list.
 - Any addition must name the expensive, recurring failure it prevents; prefer
   deletion > mechanism > rule > checker.
+
+## Parallel delegation
+
+Multi-step task: name independent subtasks, dispatch subagents in parallel.
+Pattern: `superpowers:dispatching-parallel-agents`.
 
 ## Where things live
 
