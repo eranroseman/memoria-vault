@@ -344,7 +344,7 @@ def resolve_operation_runner(
         raise ValueError(f"{PROVIDER_CONFIG} runner provider {provider} requires url")
     return {
         "mode": run_mode,
-        "runner": str(runner_policy.get("engine") or "pydantic-ai"),
+        "runner": str(runner_policy.get("backend") or "pydantic-ai"),
         "provider": provider,
         "model": str(runner_policy["model"]),
         "base_url": base_url,
@@ -433,16 +433,16 @@ def _validate_runner_policy(operation_id: str, runner_policy: Any) -> dict[str, 
         branch = runner_policy[mode]
         if not isinstance(branch, dict):
             raise ValueError(f"{operation_id} runner.{mode} must be a map")
-        engine = str(branch.get("engine") or "pydantic-ai").strip()
-        if engine not in SUPPORTED_OPERATION_RUNNERS:
-            raise ValueError(f"{operation_id} unsupported operation runner: {engine}")
+        backend = str(branch.get("backend") or "pydantic-ai").strip()
+        if backend not in SUPPORTED_OPERATION_RUNNERS:
+            raise ValueError(f"{operation_id} unsupported operation runner: {backend}")
         provider = str(branch.get("provider") or "").strip()
         model = str(branch.get("model") or "").strip()
         if provider not in RUNNER_PROVIDER_NAMES:
             raise ValueError(f"{operation_id} runner.{mode} provider must be local or gateway")
         if not model:
             raise ValueError(f"{operation_id} runner.{mode}.model must be non-empty")
-        branches[mode] = {**branch, "engine": engine, "provider": provider, "model": model}
+        branches[mode] = {**branch, "backend": backend, "provider": provider, "model": model}
     return branches
 
 

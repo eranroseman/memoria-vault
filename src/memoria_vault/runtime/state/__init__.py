@@ -385,11 +385,11 @@ def claim_request(vault: Path, request_id: str, job: dict[str, Any]) -> bool:
 
 
 def set_request_running(vault: Path, request_id: str, job: dict[str, Any]) -> None:
-    _set_request_state(vault, request_id, "running", {**job, "status": "running"})
+    _set_request_status(vault, request_id, "running", {**job, "status": "running"})
 
 
 def finish_request(vault: Path, request_id: str, status: str, job: dict[str, Any]) -> None:
-    _set_request_state(vault, request_id, status, job)
+    _set_request_status(vault, request_id, status, job)
 
 
 def recover_running_requests(vault: Path) -> list[str]:
@@ -2825,7 +2825,7 @@ def _init(conn: sqlite3.Connection) -> None:
         raise RuntimeError(f"Memoria DB schema initialization failed: {applied}")
 
 
-def _set_request_state(vault: Path, request_id: str, status: str, job: dict[str, Any]) -> None:
+def _set_request_status(vault: Path, request_id: str, status: str, job: dict[str, Any]) -> None:
     if status not in REQUEST_STATUSES:
         raise ValueError(f"unknown request status: {status}")
     request_id = safe_filename(request_id)

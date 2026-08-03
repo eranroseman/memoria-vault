@@ -967,9 +967,11 @@ def _register_warrant_threshold(vault: Path, value: str) -> None:
     (config / "edges.yaml").write_text(f"warrant_absence_threshold: {value}\n", encoding="utf-8")
 
 
-def _warrant_edge(source_id: str, source_path: str, target_id: str, target_path: str) -> dict:
+def _warrant_edge(
+    source_concept_id: str, source_path: str, target_id: str, target_path: str
+) -> dict:
     return {
-        "source_concept_id": source_id,
+        "source_concept_id": source_concept_id,
         "relation_type": "warrant",
         "target_concept_id": target_id,
         "target_path": target_path,

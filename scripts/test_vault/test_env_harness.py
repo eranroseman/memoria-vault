@@ -136,7 +136,7 @@ def run_step(root: Path, vault: Path, step: dict[str, Any]) -> list[str]:
         path = vault / args["path"]
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(args["content"], encoding="utf-8")
-        mark_file_status(vault, args["path"], args.get("verdict"))
+        set_concept_verdict(vault, args["path"], args.get("verdict"))
         artifacts.append(args["path"])
     elif tool == "inbox.write_proposal":
         path = inbox.write_proposal(vault, **args)
@@ -182,7 +182,7 @@ def run_step(root: Path, vault: Path, step: dict[str, Any]) -> list[str]:
     return artifacts
 
 
-def mark_file_status(vault: Path, rel: str, verdict: str | None) -> None:
+def set_concept_verdict(vault: Path, rel: str, verdict: str | None) -> None:
     path = vault / rel
     frontmatter = read_frontmatter(path)
     if verdict not in state.CHECK_STATUSES:
