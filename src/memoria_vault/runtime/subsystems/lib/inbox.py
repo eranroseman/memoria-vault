@@ -38,7 +38,7 @@ def _slug(text: str) -> str:
 
 def write_proposal(
     vault: Path,
-    card_type: str,
+    attention_kind: str,
     title: str,
     action: str,
     argument_for: str,
@@ -60,8 +60,8 @@ def write_proposal(
 
     Returns None when the PI has paused this producer (I1 spec §6.4).
     """
-    if card_type not in PROPOSAL_TYPES:
-        raise ValueError(f"not a proposal type: {card_type}")
+    if attention_kind not in PROPOSAL_TYPES:
+        raise ValueError(f"not a proposal type: {attention_kind}")
     if certainty not in CERTAINTY:
         raise ValueError(f"certainty must be one of {CERTAINTY}")
     if loudness not in LOUDNESS:
@@ -77,7 +77,7 @@ def write_proposal(
         # one kind, and no per-type schema claims them (they are not Concepts).
         "type": "attention",
         "projection": "attention",
-        "attention_kind": card_type,
+        "attention_kind": attention_kind,
         "attention_status": "open",
         "action": action,
         "argument_for": argument_for,
@@ -96,13 +96,13 @@ def write_proposal(
         f"# Action\n\n{action}\n\n# For\n\n{argument_for}\n\n"
         f"# Against\n\n{argument_against}\n\n# What tipped it\n\n{what_tipped_it}\n"
     )
-    path = _write(vault, card_type, title, frontmatter_doc(frontmatter, body))
-    return admit(vault, path, card_type, loudness, raised_by)
+    path = _write(vault, attention_kind, title, frontmatter_doc(frontmatter, body))
+    return admit(vault, path, attention_kind, loudness, raised_by)
 
 
 def write_finding(
     vault: Path,
-    card_type: str,
+    attention_kind: str,
     title: str,
     finding: str,
     raised_by: str,
@@ -126,13 +126,13 @@ def write_finding(
     ``dedupe_slug``, which suppresses for as long as the file is there whatever its
     status. The two are orthogonal and the fingerprint is checked first.
     """
-    if card_type not in VERIFICATION_TYPES:
-        raise ValueError(f"not a verification type: {card_type}")
+    if attention_kind not in VERIFICATION_TYPES:
+        raise ValueError(f"not a verification type: {attention_kind}")
     if agent_recommendation not in RECOMMENDATION:
         raise ValueError(f"agent_recommendation must be one of {RECOMMENDATION}")
     if loudness not in LOUDNESS:
         raise ValueError(f"loudness must be one of {LOUDNESS}")
-    if card_type == "flag" and not (target or citekey):
+    if attention_kind == "flag" and not (target or citekey):
         raise ValueError("a flag must point at a target or citekey")
     band = throttled(vault, raised_by, loudness)
     if band is None:
@@ -147,7 +147,7 @@ def write_finding(
         # one kind, and no per-type schema claims them (they are not Concepts).
         "type": "attention",
         "projection": "attention",
-        "attention_kind": card_type,
+        "attention_kind": attention_kind,
         "attention_status": "open",
         "finding": finding,
         "agent_recommendation": agent_recommendation,
@@ -183,13 +183,17 @@ def write_finding(
         if dedupe_slug:
             inbox = vault / "inbox"
             inbox.mkdir(parents=True, exist_ok=True)
-            path = inbox / f"{card_type}-{_slug(dedupe_slug)}.md"
+            path = inbox / f"{attention_kind}-{_slug(dedupe_slug)}.md"
             if path.exists():
                 return None
             write_text_durable(path, content)
-            return admit(vault, path, card_type, loudness, raised_by)
+            return admit(vault, path, attention_kind, loudness, raised_by)
         return admit(
-            vault, _write(vault, card_type, title, content), card_type, loudness, raised_by
+            vault,
+            _write(vault, attention_kind, title, content),
+            attention_kind,
+            loudness,
+            raised_by,
         )
 
 
@@ -318,10 +322,10 @@ def _touch_last_seen(path: Path, frontmatter: dict[str, Any], body: str) -> None
     write_frontmatter_doc(path, frontmatter, body)
 
 
-def _write(vault: Path, card_type: str, title: str, content: str) -> Path:
+def _write(vault: Path, attention_kind: str, title: str, content: str) -> Path:
     inbox = vault / "inbox"
     inbox.mkdir(parents=True, exist_ok=True)
-    base = f"{card_type}-{_slug(title)}"
+    base = f"{attention_kind}-{_slug(title)}"
     path = inbox / f"{base}.md"
     n = 1
     while path.exists():
@@ -369,7 +373,7 @@ def throttled(vault: Path, raised_by: str, loudness: str) -> str | None:
     return "quiet" if mode == "quiet" else loudness
 
 
-def admit(vault: Path, path: Path, card_type: str, loudness: str, raised_by: str) -> Path:
+def admit(vault: Path, path: Path, attention_kind: str, loudness: str, raised_by: str) -> Path:
     """Record one `attention-admitted` row for a card that was actually written.
 
     Returns `path` so every writer's return statement is its admission point. A
@@ -387,7 +391,7 @@ def admit(vault: Path, path: Path, card_type: str, loudness: str, raised_by: str
         "attention-admitted",
         {
             "card_path": path.relative_to(vault).as_posix(),
-            "kind": card_type,
+            "kind": attention_kind,
             "loudness": loudness,
             "raised_by": raised_by or "unknown",
         },
