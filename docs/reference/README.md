@@ -26,7 +26,7 @@ gate in `scripts/verify`; **Manual** pages are maintained by hand.
 | --- | --- | --- |
 | [Frontmatter fields](data-model/frontmatter.md) | Schema-owned YAML frontmatter field grammar and ownership | Source-owned |
 | [Document types](data-model/document-types.md) | Schema-owned document types and owning files | Source-owned |
-| [Vocabulary](data-model/vocabulary.md) | Vocabulary-source values for Work `research_area`/`methodology` metadata and claim-bearing note `topics` | Guarded mirror |
+| [Vocabulary](data-model/vocabulary.md) | Vocabulary-source values for Work `research_area`/`methodology` metadata and claim-bearing note `topics` | Manual |
 | [Wikilink and link conventions](data-model/wikilink-and-link-conventions.md) | Wikilink conventions, authored-link vocabulary, hub thresholds | Manual |
 | [Glossary](data-model/glossary.md) | Term definitions, organized by domain | Manual |
 | [OKF compliance contract](data-model/okf-compliance.md) | OKF bundle conformance boundary and typed-frontmatter rule | Manual |
@@ -52,7 +52,7 @@ gate in `scripts/verify`; **Manual** pages are maintained by hand.
 | File | What it covers | Source |
 | --- | --- | --- |
 | [Control plane reference](control-and-policy/control-plane.md) | Request-control commands and state | Guarded mirror |
-| [Empirical events](control-and-policy/empirical-events.md) | Empirical-use event schema, enums, required fields, and privacy boundary | Guarded mirror |
+| [Empirical events](control-and-policy/empirical-events.md) | Empirical-use event schema, enums, required fields, and privacy boundary | Manual |
 | [Evidence sets](control-and-policy/evidence-sets.md) | Draft evidence marker and derived-store contract | Manual |
 | [Project structural impact](control-and-policy/project-structural-impact.md) | Project-gate structural-impact command, generated index payload, and write behavior | Manual |
 | [Worklists](control-and-policy/worklists.md) | Batch worklist report JSON, emitted item notes, and aggregate review prompt contract | Manual |
