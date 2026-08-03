@@ -2817,7 +2817,15 @@ def compact_citation(vault: Path, source_ref: str) -> dict[str, Any]:
 
 def _init(conn: sqlite3.Connection) -> None:
     current = int(conn.execute("PRAGMA user_version").fetchone()[0])
-    if current not in {0, SCHEMA_VERSION}:
+    if current == SCHEMA_VERSION:
+        # 1733: re-running the 445-line schema.sql here cost ~19.6ms on EVERY
+        # connect (heavy tests open 300-700 connections; the CLI pays it per
+        # command). The script is pure IF-NOT-EXISTS DDL, so on a current DB
+        # it was always a semantic no-op. A version mismatch still hard-fails
+        # below, and a dev editing schema.sql must bump SCHEMA_VERSION —
+        # which tests/test_schema_version.py pins to the DDL already.
+        return
+    if current != 0:
         raise RuntimeError(f"unsupported Memoria DB schema version: {current}")
     conn.executescript(_schema_sql())
     applied = int(conn.execute("PRAGMA user_version").fetchone()[0])

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import sqlite3
 from pathlib import Path
+from unittest import mock
 
 import pytest
 
@@ -44,3 +45,41 @@ def test_state_has_no_schema_migration_ladder() -> None:
     assert not hasattr(state, "MIGRATIONS")
     assert "_backfill_concept_edge_ids" not in source
     assert "migration from schema version" not in source
+
+
+def test_connect_skips_schema_script_when_db_is_current(tmp_path: Path) -> None:
+    """1733: _init re-ran the full schema.sql on EVERY connect (~19.6ms each,
+    300-700 connects per heavy test). A current DB must skip the script."""
+
+    vault = tmp_path / "vault"
+    vault.mkdir()
+    with state.connect(vault):
+        pass  # first connect creates and initializes the DB
+
+    # Patch _schema_sql to detect if it's called (a sign that executescript was invoked)
+    call_count = [0]
+    original_schema_sql = state._schema_sql
+
+    def counting_schema_sql():
+        call_count[0] += 1
+        return original_schema_sql()
+
+    with mock.patch("memoria_vault.runtime.state._schema_sql", side_effect=counting_schema_sql):
+        with state.connect(vault) as conn:
+            version = int(conn.execute("PRAGMA user_version").fetchone()[0])
+
+    assert call_count[0] == 0, "second connect must not call _schema_sql (i.e., no executescript)"
+    assert version == state.SCHEMA_VERSION
+
+
+def test_connect_still_initializes_a_fresh_db(tmp_path: Path) -> None:
+    from memoria_vault.runtime import state
+
+    vault = tmp_path / "vault2"
+    vault.mkdir()
+    with state.connect(vault) as conn:
+        version = int(conn.execute("PRAGMA user_version").fetchone()[0])
+        tables = {r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+
+    assert version == state.SCHEMA_VERSION
+    assert "concepts" in tables
