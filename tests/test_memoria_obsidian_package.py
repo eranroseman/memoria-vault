@@ -12,6 +12,10 @@ from tests.helpers import ROOT
 
 pytestmark = pytest.mark.contract
 
+# The node test harness (package.json + scripts/*.mjs). The plugin modules
+# themselves live only in the packaged workspace seed below — the packages/
+# copy was deleted when the byte-parity chain that kept two copies honest
+# became more mechanism than a single copy needs.
 PLUGIN = ROOT / "packages" / "memoria-obsidian"
 SEED_PLUGIN = ROOT / "src/memoria_vault/product/workspace_seed/.obsidian/plugins/memoria-obsidian"
 
@@ -32,8 +36,8 @@ NODE_SUITE_FILES = (
     "test-viewspec.mjs",
 )
 
-# Byte-identical between the release package and the seed.
-SEED_PARITY_ARTIFACTS = (
+# The complete shipped module set; the color sweep pins its scan against this.
+SHIPPED_ARTIFACTS = (
     "handshake.js",
     "main.js",
     "manifest.json",
@@ -100,7 +104,7 @@ def _run_node_suite() -> subprocess.CompletedProcess[str]:
 
 
 def test_memoria_obsidian_package_has_obsidian_release_artifacts() -> None:
-    manifest = json.loads((PLUGIN / "manifest.json").read_text(encoding="utf-8"))
+    manifest = json.loads((SEED_PLUGIN / "manifest.json").read_text(encoding="utf-8"))
     package = json.loads((PLUGIN / "package.json").read_text(encoding="utf-8"))
 
     assert manifest == {
@@ -116,33 +120,9 @@ def test_memoria_obsidian_package_has_obsidian_release_artifacts() -> None:
         "isDesktopOnly": True,
     }
     assert package["scripts"]["test"] == "node --test"
-    assert (PLUGIN / "main.js").is_file()
-    assert (PLUGIN / "schema.js").is_file()
-    assert (PLUGIN / "styles.css").is_file()
-
-
-def test_memoria_obsidian_seed_matches_release_artifacts() -> None:
-    for artifact in SEED_PARITY_ARTIFACTS:
-        assert (SEED_PLUGIN / artifact).read_text(encoding="utf-8") == (
-            PLUGIN / artifact
-        ).read_text(encoding="utf-8")
-
-
-def test_memoria_obsidian_parity_roster_covers_every_shipped_module() -> None:
-    """The roster above is a pin, so it has to be a *complete* pin.
-
-    An eighth module added to the package and copied to the seed would sit
-    outside `SEED_PARITY_ARTIFACTS` and drift with nothing to notice, exactly
-    as `viewspec.js` did between U3-PLUG.4 and here. Enumerating the package
-    rather than the seed is deliberate: the package is where a new module is
-    authored, so this fails on the change that creates the gap.
-
-    Stylesheets are covered by the same roster from
-    `..._has_no_hardcoded_colors`, which pins the files its sweep read against
-    this roster; extending the subset check here as well was measured and
-    changed nothing.
-    """
-    assert {path.name for path in PLUGIN.glob("*.js")} <= set(SEED_PARITY_ARTIFACTS)
+    assert (SEED_PLUGIN / "main.js").is_file()
+    assert (SEED_PLUGIN / "schema.js").is_file()
+    assert (SEED_PLUGIN / "styles.css").is_file()
 
 
 def test_memoria_obsidian_seeded_plugin_loads_every_module_it_requires(tmp_path: Path) -> None:
@@ -190,7 +170,7 @@ def test_memoria_obsidian_node_suite_still_discovers_every_file() -> None:
 
 
 def _plugin_js_source() -> str:
-    return "\n".join(path.read_text(encoding="utf-8") for path in sorted(PLUGIN.glob("*.js")))
+    return "\n".join(path.read_text(encoding="utf-8") for path in sorted(SEED_PLUGIN.glob("*.js")))
 
 
 def test_memoria_obsidian_uses_memoria_operation_run_only() -> None:
@@ -279,18 +259,16 @@ def test_memoria_obsidian_color_detector_reports_every_forbidden_literal() -> No
 def test_memoria_obsidian_has_no_hardcoded_colors() -> None:
     """U3 acceptance: the plugin contains zero hardcoded colors (theme vars only).
 
-    Scanning the package alone covers the seeded copy too, and that is a chain
-    rather than an omission: every `*.js` and `*.css` here is inside
-    `SEED_PARITY_ARTIFACTS` (`..._parity_roster_covers_every_shipped_module`),
-    and every entry of that roster is compared byte-for-byte against the seed
-    (`..._seed_matches_release_artifacts`), so a color that reaches only the
-    seeded copy breaks parity instead of hiding behind this sweep.
+    The sweep reads the one copy that exists — the seeded modules — and the
+    equality pin below doubles as the completeness check: a ninth module
+    added to the seed but not to `SHIPPED_ARTIFACTS` fails here instead of
+    escaping the sweep.
     """
-    scanned = sorted(PLUGIN.glob("*.js")) + sorted(PLUGIN.glob("*.css"))
+    scanned = sorted(SEED_PLUGIN.glob("*.js")) + sorted(SEED_PLUGIN.glob("*.css"))
 
     # A sweep that reads no files reports no findings. Pin what it must have read.
     assert {path.name for path in scanned} == {
-        name for name in SEED_PARITY_ARTIFACTS if name.endswith((".js", ".css"))
+        name for name in SHIPPED_ARTIFACTS if name.endswith((".js", ".css"))
     }
     findings = [
         finding
@@ -301,7 +279,7 @@ def test_memoria_obsidian_has_no_hardcoded_colors() -> None:
 
 
 def test_memoria_obsidian_registers_minimal_proof_commands() -> None:
-    source = (PLUGIN / "main.js").read_text(encoding="utf-8")
+    source = (SEED_PLUGIN / "main.js").read_text(encoding="utf-8")
 
     for command_id in (
         "open-attention",
@@ -330,7 +308,7 @@ def test_memoria_obsidian_canvas_surface_is_enqueue_and_read_only() -> None:
     instead of duplicating edges. The no-file-write claims are already swept
     over every plugin module by `..._uses_memoria_operation_run_only`.
     """
-    source = (PLUGIN / "main.js").read_text(encoding="utf-8")
+    source = (SEED_PLUGIN / "main.js").read_text(encoding="utf-8")
 
     assert "fork-project-canvas" in source
     assert "/project/canvas/forks" in source
@@ -343,7 +321,7 @@ def test_memoria_obsidian_canvas_surface_is_enqueue_and_read_only() -> None:
 
 
 def test_memoria_obsidian_registers_the_canvas_commands() -> None:
-    source = (PLUGIN / "main.js").read_text(encoding="utf-8")
+    source = (SEED_PLUGIN / "main.js").read_text(encoding="utf-8")
 
     for command_id in ("fork-canvas", "graduate-scratch-edges"):
         assert f'id: "{command_id}"' in source
@@ -364,7 +342,7 @@ def test_schema_js_enums_stay_a_subset_of_the_engine_roster() -> None:
     """
     from memoria_vault.engine import empirical_events as engine
 
-    source = (PLUGIN / "schema.js").read_text(encoding="utf-8")
+    source = (SEED_PLUGIN / "schema.js").read_text(encoding="utf-8")
 
     for name in ("SURFACES", "WORKFLOWS", "DECISIONS", "OUTCOMES", "REASON_CODES"):
         match = re.search(rf"const {name} = new Set\(\[(.*?)\]\)", source, re.S)

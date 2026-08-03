@@ -12,7 +12,7 @@ const {
   renderBlock,
   renderView,
   sortCards,
-} = require("../viewspec.js");
+} = require("../../../src/memoria_vault/product/workspace_seed/.obsidian/plugins/memoria-obsidian/viewspec.js");
 
 function texts(tree) {
   return [tree.text, ...(tree.children || []).flatMap(texts)].filter(Boolean);
