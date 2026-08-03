@@ -8,6 +8,7 @@ import pytest
 from memoria_vault.runtime import state
 from memoria_vault.runtime.code.execution import Availability, run_artifact
 from memoria_vault.runtime.code.records import create_code_artifact
+from memoria_vault.runtime.code.runs import verify_code_run
 from memoria_vault.runtime.policy.audit import sha256_file
 
 pytestmark = pytest.mark.runtime
@@ -129,3 +130,79 @@ def test_run_artifact_rejects_unknown_artifact_and_malformed_command(
             assert "approved_command must be a non-empty argv list" in str(exc)
         else:
             raise AssertionError(f"run_artifact executed malformed command {artifact_id!r}")
+
+
+def _succeeded_run(tmp_path: Path, output_text: str = "42\n") -> str:
+    output = tmp_path / "projects/project-alpha/code/analysis/outputs/result.txt"
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(output_text, encoding="utf-8")
+    output_rel = output.relative_to(tmp_path).as_posix()
+    create_code_artifact(
+        tmp_path,
+        "project-alpha",
+        "analysis",
+        approved_command=["python3", "main.py"],
+        declared_outputs=[output_rel],
+    )
+    state.record_code_run(
+        tmp_path,
+        run_id="run-1",
+        artifact_id="analysis",
+        command=["python3", "main.py"],
+        cwd="projects/project-alpha/code/analysis/src",
+        output_hashes={output_rel: sha256_file(output)},
+        exit_status=0,
+        sandbox_backend="bwrap",
+        sandbox_profile_hash="sha256:" + "0" * 64,
+        run_state="succeeded",
+    )
+    return output_rel
+
+
+def test_verify_code_run_refuses_an_unknown_run(tmp_path: Path) -> None:
+    assert verify_code_run(tmp_path, "no-such-run") == {
+        "ready": False,
+        "reason": "missing-code-run",
+    }
+
+
+def test_verify_code_run_refuses_a_run_that_did_not_succeed(tmp_path: Path) -> None:
+    create_code_artifact(
+        tmp_path, "project-alpha", "analysis", approved_command=["python3", "main.py"]
+    )
+    state.record_code_run(
+        tmp_path,
+        run_id="run-1",
+        artifact_id="analysis",
+        command=["python3", "main.py"],
+        cwd="projects/project-alpha/code/analysis/src",
+        exit_status=1,
+        sandbox_backend="bwrap",
+        sandbox_profile_hash="sha256:" + "0" * 64,
+        run_state="failed",
+    )
+
+    assert verify_code_run(tmp_path, "run-1") == {"ready": False, "reason": "failed"}
+
+
+def test_verify_code_run_refuses_an_output_rewritten_after_the_run(tmp_path: Path) -> None:
+    """The tamper case: grounds must be exactly what the run produced."""
+    output_rel = _succeeded_run(tmp_path)
+    assert verify_code_run(tmp_path, "run-1")["ready"] is True  # sane before the tamper
+
+    (tmp_path / output_rel).write_text("43\n", encoding="utf-8")
+
+    assert verify_code_run(tmp_path, "run-1") == {
+        "ready": False,
+        "reason": "output-hash-mismatch",
+        "path": output_rel,
+    }
+
+
+def test_verify_code_run_refuses_an_output_deleted_after_the_run(tmp_path: Path) -> None:
+    output_rel = _succeeded_run(tmp_path)
+
+    (tmp_path / output_rel).unlink()
+
+    verdict = verify_code_run(tmp_path, "run-1")
+    assert verdict == {"ready": False, "reason": "output-hash-mismatch", "path": output_rel}
