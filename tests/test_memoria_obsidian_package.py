@@ -8,10 +8,10 @@ from pathlib import Path
 import pytest
 
 from memoria_vault.runtime.bundles import seed_bundles
+from tests.helpers import ROOT
 
 pytestmark = pytest.mark.contract
 
-ROOT = Path(__file__).resolve().parent.parent
 PLUGIN = ROOT / "packages" / "memoria-obsidian"
 SEED_PLUGIN = ROOT / "src/memoria_vault/product/workspace_seed/.obsidian/plugins/memoria-obsidian"
 

@@ -16,7 +16,7 @@ import sqlite3
 import tempfile
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
+from tests.paths import ROOT
 
 _SEED_CACHE: Path | None = None
 

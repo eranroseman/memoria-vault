@@ -60,6 +60,7 @@ GATES: list[list[str]] = [
     ["python3", "scripts/checks/plugin_provenance_doctor.py"],
     ["python3", "scripts/checks/doc_claims_gate.py"],
     ["python3", "scripts/checks/control_plane_actor_gate.py"],
+    ["python3", "scripts/checks/wheel_gate.py"],
     [
         "env",
         "PYTEST_DISABLE_PLUGIN_AUTOLOAD=1",
@@ -125,7 +126,7 @@ PSSA_COMMAND = (
 
 
 # Gates a docs-only diff cannot affect: they exercise code, not documentation.
-_DOCS_SKIP = ("e2e_smoke.py", "-m compileall", "bash -n", "memoria --version")
+_DOCS_SKIP = ("e2e_smoke.py", "-m compileall", "bash -n", "memoria --version", "wheel_gate.py")
 
 
 def _gates_for_run(docs_only: bool) -> list[list[str]]:
@@ -202,7 +203,7 @@ def check_json() -> int:
         check=False,
     )
     bad: list[str] = []
-    for name in listing.stdout.split():
+    for name in listing.stdout.splitlines():
         try:
             json.loads((ROOT / name).read_text(encoding="utf-8"))
         except (ValueError, OSError) as exc:

@@ -35,11 +35,11 @@ from memoria_vault.runtime.subsystems.lib import inbox
 from memoria_vault.runtime.subsystems.lib.edges import LINK_RELATIONS, concept_edge_path_records
 from memoria_vault.runtime.vaultio import read_frontmatter
 from tests.cli_test_helpers import write_runner_provider_config
-from tests.helpers import init_cli_workspace, write_checked_note
+from tests.helpers import ROOT, init_cli_workspace, write_checked_note
 
 pytestmark = pytest.mark.contract
 
-PLUGIN = Path(__file__).resolve().parent.parent / "packages" / "memoria-obsidian"
+PLUGIN = ROOT / "packages" / "memoria-obsidian"
 VIEWSPEC_JS = PLUGIN / "viewspec.js"
 RELATE_JS = PLUGIN / "relate.js"
 CREDENTIAL_ENV_NAMES = (

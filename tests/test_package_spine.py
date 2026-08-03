@@ -14,10 +14,9 @@ import pytest
 import memoria_vault
 import memoria_vault.runtime.policy as packaged_policy
 from memoria_vault.runtime import state
+from tests.helpers import ROOT
 
 pytestmark = pytest.mark.package
-
-ROOT = Path(__file__).resolve().parent.parent
 
 
 def test_pyproject_declares_installable_memoria_package():
@@ -72,9 +71,16 @@ def test_stack_dependencies_stay_small_and_no_orm():
     assert data["project"]["optional-dependencies"]["mcp"] == ["mcp>=2,<3"]
 
 
+def _state_source() -> str:
+    state_dir = ROOT / "src/memoria_vault/runtime/state"
+    files = sorted(state_dir.rglob("*.py"))
+    assert files, "state source glob found no files; ROOT or state_dir is wrong"
+    return "\n".join(p.read_text(encoding="utf-8") for p in files)
+
+
 def test_runtime_sqlite_schema_is_packaged_resource():
     schema = files("memoria_vault.runtime").joinpath("schema.sql").read_text(encoding="utf-8")
-    source = (ROOT / "src/memoria_vault/runtime/state.py").read_text(encoding="utf-8")
+    source = _state_source()
 
     assert "CREATE TABLE IF NOT EXISTS operation_requests" in schema
     assert f"PRAGMA user_version = {state.SCHEMA_VERSION}" in schema
@@ -82,7 +88,7 @@ def test_runtime_sqlite_schema_is_packaged_resource():
 
 
 def test_retired_citation_source_ref_helpers_are_absent():
-    source = (ROOT / "src/memoria_vault/runtime/state.py").read_text(encoding="utf-8")
+    source = _state_source()
 
     assert "def _source_refs(" not in source
     assert "def _collect_source_refs(" not in source
@@ -157,3 +163,41 @@ def test_workspace_seed_is_packaged_runtime_minimum():
         "notes/.gitkeep",
     ):
         assert not seed.joinpath(*rel.split("/")).is_file(), rel
+
+
+def test_every_import_chain_directory_is_an_explicit_package():
+    """A directory reachable by import must carry __init__.py (audit §2.1).
+
+    Implicit namespace packages ship only while packages.find defaults
+    namespaces=true; an explicit package list, namespaces=false, or a move
+    drops them from the wheel silently. Scope: directories whose every path
+    segment under src/ is a Python identifier and that either lead to a .py
+    file or are named as a dotted package-data key. The identifier check
+    excludes dot-prefixed names only: product/workspace_seed/.claude/hooks
+    is out of scope (dot-prefixed), but workspace_seed/system/templates/ would
+    demand __init__.py at each segment.
+    """
+    src = ROOT / "src"
+    src_root = src / "memoria_vault"
+
+    def importable(d: Path) -> bool:
+        return all(part.isidentifier() for part in d.relative_to(src).parts)
+
+    required: set[Path] = set()
+    for py in src_root.rglob("*.py"):
+        if "__pycache__" in py.parts:
+            continue
+        d = py.parent
+        while d != src and importable(d):
+            required.add(d)
+            d = d.parent
+    data = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+    for key in data["tool"]["setuptools"]["package-data"]:
+        p = src / Path(*key.split("."))
+        if p.is_dir():
+            required.add(p)
+
+    missing = sorted(
+        str(d.relative_to(ROOT)) for d in required if not (d / "__init__.py").is_file()
+    )
+    assert missing == [], f"implicit namespace directories: {missing}"

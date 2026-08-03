@@ -3,7 +3,7 @@
 import pytest
 import yaml
 
-from tests.helpers import WORKSPACE_SEED
+from tests.paths import WORKSPACE_SEED
 
 pytestmark = pytest.mark.contract
 

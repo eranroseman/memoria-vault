@@ -8,9 +8,9 @@ from pathlib import Path
 
 import pytest
 
-pytestmark = pytest.mark.static
+from tests.paths import ROOT
 
-ROOT = Path(__file__).resolve().parents[1]
+pytestmark = pytest.mark.static
 
 
 def _verify_namespace() -> dict:
@@ -29,6 +29,7 @@ def test_roster_covers_lint_tests_and_product_gates() -> None:
         "python3 scripts/checks/plugin_provenance_doctor.py",
         "python3 scripts/checks/doc_claims_gate.py",
         "python3 scripts/checks/control_plane_actor_gate.py",
+        "python3 scripts/checks/wheel_gate.py",
         "python3 scripts/test_vault/e2e_smoke.py",
         "memoria --version",
     ):
@@ -90,6 +91,9 @@ def test_docs_only_scope_narrows_the_roster() -> None:
     assert not any("compileall" in d for d in docs)
     assert not any(d.startswith("bash -n") for d in docs)
     assert not any("memoria --version" in d for d in docs)
+
+    # a docs-only diff provably cannot change packaging, so the wheel gate is skipped
+    assert not any("wheel_gate" in d for d in docs)
 
 
 def test_run_reports_a_missing_executable_instead_of_raising(

@@ -31,8 +31,15 @@ def test_rejects_incompatible_schema_version(tmp_path: Path) -> None:
         state.connect(tmp_path)
 
 
+def _state_source() -> str:
+    state_dir = ROOT / "src/memoria_vault/runtime/state"
+    files = sorted(state_dir.rglob("*.py"))
+    assert files, "state source glob found no files; ROOT or state_dir is wrong"
+    return "\n".join(p.read_text(encoding="utf-8") for p in files)
+
+
 def test_state_has_no_schema_migration_ladder() -> None:
-    source = (ROOT / "src/memoria_vault/runtime/state.py").read_text(encoding="utf-8")
+    source = _state_source()
 
     assert not hasattr(state, "MIGRATIONS")
     assert "_backfill_concept_edge_ids" not in source
