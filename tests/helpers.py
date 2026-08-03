@@ -12,6 +12,7 @@ from typing import Any
 
 from memoria_vault.runtime import state
 from memoria_vault.runtime.policy.audit import sha256_file
+from memoria_vault.runtime.subsystems.lib.edges import CONCEPT_ROOTS
 from memoria_vault.runtime.trusted_writer import OperationContext, operation_context_record
 from memoria_vault.runtime.vaultio import read_frontmatter
 from tests.paths import ROOT as ROOT
@@ -306,15 +307,11 @@ def mark_file_status(
 
 def sync_file_verdicts(vault: Path) -> None:
     """Mark every checked/rejected concept file under vault with its recorded verdict."""
-    for root in (
-        "catalog",
-        "knowledge",
-        "notes",
-        "hubs",
-        "projects",
-        "digests",
-        "fulltext",
-    ):
+    # Derived, not retyped: the hand-typed roster spelled fulltexts/ as
+    # "fulltext" and listed a "knowledge" root that has never existed; the
+    # exists-continue below made both misses silent.
+    roots = (*dict.fromkeys(root.split("/", 1)[0] for root in CONCEPT_ROOTS), "projects")
+    for root in roots:
         base = vault / root
         if not base.exists():
             continue
