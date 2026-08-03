@@ -95,7 +95,7 @@ def call_with_context(function: Any, vault: Path, *args: Any, **kwargs: Any) -> 
         operation_id=function.__name__.replace("_", "-"),
         machine=machine,
         run_id=run_id,
-        machine_authored=bool(kwargs.pop("machine_authored", False)),
+        machine_authored=machine_authored,
         agent_identity=str(kwargs.pop("agent_identity", "")),
     )
     return function(vault, *args, context=context, **kwargs)
