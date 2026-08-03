@@ -749,6 +749,7 @@ def test_http_transport_rejects_idempotency_key_bound_to_pending_pi_request(
         workspace,
         "resolve-attention",
         actor="pi",
+        machine_authored=False,
         idempotency_key="pi-pending-request",
         payload={
             "target_id": "inbox/pi-pending.md",
@@ -966,6 +967,33 @@ def test_http_server_refuses_unauthenticated_operation_run_before_the_write_seam
     assert "attention_status: open" in (workspace / "inbox/unauthenticated-resolve.md").read_text(
         encoding="utf-8"
     )
+
+
+def test_json_responses_carry_nosniff_and_no_store_headers(workspace: Path) -> None:
+    """U1 M.3 made `_write` reflect a client-supplied path into a JSON body; #1564
+    hardens the reply. `nosniff` removes the content-sniffing class outright, and
+    read payloads carry vault content no intermediary should cache. Asserted on
+    the 401 reply because every response flows through the same `_write`."""
+    server = make_http_server(workspace, host="127.0.0.1", port=0, token="test-token")
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    host, port = server.server_address[0], server.server_address[1]
+    try:
+        conn = http.client.HTTPConnection(host, port, timeout=10)
+        try:
+            conn.request("GET", "/status")
+            response = conn.getresponse()
+            response.read()
+            assert response.status == 401
+            assert response.getheader("X-Content-Type-Options") == "nosniff"
+            assert response.getheader("Cache-Control") == "no-store"
+            assert response.getheader("Content-Type") == "application/json; charset=utf-8"
+        finally:
+            conn.close()
+    finally:
+        server.shutdown()
+        thread.join(timeout=5)
+        server.server_close()
 
 
 def _raise(exc: Exception) -> None:

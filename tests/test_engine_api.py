@@ -105,6 +105,7 @@ def test_write_new_concept_replays_generated_path_and_id_for_same_key(
         extra={"mode": "claim", "claim_text": "Stable body."},
         idempotency_key="idempotent-concept",
         actor="pi",
+        machine_authored=False,
     )
     second = api.write_new_concept(
         workspace,
@@ -115,6 +116,7 @@ def test_write_new_concept_replays_generated_path_and_id_for_same_key(
         extra={"mode": "claim", "claim_text": "Stable body."},
         idempotency_key="idempotent-concept",
         actor="pi",
+        machine_authored=False,
     )
 
     assert first["ok"] is second["ok"] is True
@@ -141,6 +143,7 @@ def test_write_new_concept_rejects_changed_body_for_same_key(workspace: Path) ->
         extra={},
         idempotency_key="bound-concept",
         actor="pi",
+        machine_authored=False,
     )
 
     with pytest.raises(ValueError, match="idempotency key is already bound"):
@@ -153,6 +156,7 @@ def test_write_new_concept_rejects_changed_body_for_same_key(workspace: Path) ->
             extra={},
             idempotency_key="bound-concept",
             actor="pi",
+            machine_authored=False,
         )
 
 
@@ -186,6 +190,7 @@ def test_write_new_concept_concurrent_exact_retries_share_generated_identity(
             extra={"mode": "claim", "claim_text": "Stable body."},
             idempotency_key="concurrent-concept",
             actor="pi",
+            machine_authored=False,
         )
 
     with ThreadPoolExecutor(max_workers=2) as executor:
@@ -365,6 +370,7 @@ def test_engine_read_scope_filters_and_blocks_requests(workspace: Path) -> None:
         extra={},
         idempotency_key="create-alpha",
         actor="pi",
+        machine_authored=False,
     )
     api.write_new_concept(
         workspace,
@@ -375,6 +381,7 @@ def test_engine_read_scope_filters_and_blocks_requests(workspace: Path) -> None:
         extra={},
         idempotency_key="create-beta",
         actor="pi",
+        machine_authored=False,
     )
 
     listed = api.read_requests(workspace, read_scope=[alpha["path"]])

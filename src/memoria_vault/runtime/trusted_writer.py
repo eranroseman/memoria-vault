@@ -87,6 +87,12 @@ class OperationContext:
 
 _CONTEXT_EVENT_FIELDS = {
     "actor": "actor",
+    # 1599: authorship rides next to authority. Without it a journal reader
+    # cannot distinguish a body the PI typed from one a machine posted through
+    # a door that carries PI authority — the exact conflation #1596 fixed one
+    # layer down. Rows written before this field exist without it; consumers
+    # read absence as False (PI-authored), the conservative direction.
+    "machine_authored": "machine_authored",
     "run_id": "run_id",
     "request_id": "request_id",
     "operation": "operation_id",

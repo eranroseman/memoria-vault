@@ -11,6 +11,11 @@ Lookup table for the AI-research-system patterns Memoria borrowed, adapted,
 used as framing, or rejected. The design argument is
 [Pattern provenance: borrow, adapt, ignore](../../explanation/rationale/evidence/why-pattern-provenance.md).
 
+A source name links to [Bibliography](bibliography.md) on its first mention;
+later mentions of the same work are bare shorthand. A name marked *uncited*
+has no bibliography entry at all — it is historical inspiration, recorded so
+the lineage stays honest, and nothing in the current design rests on it.
+
 ## Borrow
 
 | Pattern | Representative sources | Memoria use |
@@ -19,7 +24,7 @@ used as framing, or rejected. The design argument is
 | Explicit roles per operation | [AI Scientist v2](bibliography.md#yamada2025aiscientistv2), [LatteReview](bibliography.md#rouzrokh2026lattereview), [Agent Laboratory](bibliography.md#schmidgall2025agentlaboratory) | Permission-scoped operation manifests and request rows. |
 | Strong schema at handoffs | AI Scientist, AutoResearchClaw | Typed frontmatter catches mismatches that free-text handoffs would compound. |
 | Persistent knowledge graph | [OmegaWiki](bibliography.md#qian2026omegawiki), [Idea2Story](bibliography.md#xu2026idea2story) | Wikilinks, typed relations, hubs, and entity notes. |
-| Reviewable organization artifacts | LitLLM, [LatteReview](bibliography.md#rouzrokh2026lattereview) | Canvases, hubs, and optional editor views keep synthesis visible. |
+| Reviewable organization artifacts | LitLLM (uncited), [LatteReview](bibliography.md#rouzrokh2026lattereview) | Canvases, hubs, and optional editor views keep synthesis visible. |
 | Persistent work queue | Prior in-house agent runtime | Historical inspiration; the standalone runtime uses operation requests in the workspace DB. |
 | Durable-state thesis | [Chen et al. 2026](bibliography.md#chen2026autonomous), [MetaGPT](bibliography.md#hong2024metagpt), [PARNESS](bibliography.md#wang2026parness) | Thin control over thick state. |
 | Claim-to-evidence chain | [ScientistOne](bibliography.md#meng2026scientistone), [AutoResearchClaw](bibliography.md#liu2026autoresearchclaw) | Peer-reviewer claim-trace and citation checks. |
@@ -37,7 +42,7 @@ used as framing, or rejected. The design argument is
 | Chain-of-Evidence taxonomy | [ScientistOne](bibliography.md#meng2026scientistone) | Score-as-gate; reserved for Peer-reviewer claim trace. |
 | Scenario-typed retrieval | [PARNESS](bibliography.md#wang2026parness) | Memoria keeps the current authored relation vocabulary narrow: the six frontmatter-legal relations `supports`, `contradicts`, `extends`, `warrant`, `qualifier`, `rebuttal` — `tension` is machine-surfaced, never authored. |
 | Per-paper structured representation | [MASSW](bibliography.md#zhang2024massw), [Knows](bibliography.md#yu2026knows) | Five-aspect schema (context/key-idea/method/outcome/projected-impact) drives automatic ingest population; `work_aspects` read-model rows are queryable. |
-| Consensus pre-filter, benchmarks, shared synthesis pool, trace capture, systematic review mode | [AI-Supervisor](bibliography.md#long2026aisupervisor), [CiteME](bibliography.md#press2024citeme), [AutoResearchBench](bibliography.md#xiong2026autoresearchbench), [AgentRxiv](bibliography.md#schmidgall2025agentrxiv), LatteReview, LitLLM | Scores can change what reaches the gate, never where the gate sits. |
+| Consensus pre-filter, benchmarks, shared synthesis pool, trace capture, systematic review mode | [AI-Supervisor](bibliography.md#long2026aisupervisor), [CiteME](bibliography.md#press2024citeme), [AutoResearchBench](bibliography.md#xiong2026autoresearchbench), [AgentRxiv](bibliography.md#schmidgall2025agentrxiv), LatteReview, LitLLM (uncited) | Scores can change what reaches the gate, never where the gate sits. |
 
 ## Reference
 

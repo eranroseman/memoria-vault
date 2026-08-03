@@ -1128,7 +1128,11 @@ def cascade_rollback(
             continue
         seen.add(output_id)
 
-        if event.get("actor") == "pi":
+        # 1599: route on authorship, not authority. A machine-authored body
+        # that arrived with PI actor authority is a machine descendant; only
+        # the PI's own hand earns needs_human review. Absent field = legacy
+        # row = PI-attributed, preserving the old conservative behaviour.
+        if event.get("actor") == "pi" and not event.get("machine_authored", False):
             _flag_descendant(
                 vault,
                 output_id,
@@ -1180,10 +1184,11 @@ def revert_preview(vault: Path, event_id: int) -> dict[str, Any]:
 
     What it reports is exactly what the shipped records support: the event's
     own derivation facts, the descendant split the ``cascade_rollback`` loop
-    above would decide — mirrored read-only in the same order (actor `pi` ->
-    would_flag, absent file -> would_skip, else would_quarantine), never
-    re-decided — the output's materialized commit, the owning explicit
-    operation, and whether a whole-workspace backup exists.
+    above would decide — mirrored read-only in the same order (actor `pi` and
+    not `machine_authored` -> would_flag, absent file -> would_skip, else
+    would_quarantine), never re-decided — the output's materialized commit,
+    the owning explicit operation, and whether a whole-workspace backup
+    exists.
 
     Mutates nothing: it opens no database that is not already there, writes no
     file, appends no journal row, and runs no git command.
@@ -1226,7 +1231,10 @@ def revert_preview(vault: Path, event_id: int) -> dict[str, Any]:
     # the target's own event under `include_target`, which a preview never does.
     for descendant in trace_downstream(vault, target):
         output_id = normalize_path(str(descendant["output_id"]))
-        if descendant.get("actor") == "pi":
+        # Same authorship split as the live rollback above (#1599); the
+        # preview must remain the rollback's own outcome, not a second
+        # decision procedure.
+        if descendant.get("actor") == "pi" and not descendant.get("machine_authored", False):
             would_flag.append(output_id)
         elif not (vault / output_id).is_file():
             would_skip.append(output_id)

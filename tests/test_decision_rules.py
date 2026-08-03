@@ -690,6 +690,7 @@ def _apply(vault: Path, *, actor: str = "pi", key: str = "apply") -> dict[str, A
         payload={},
         idempotency_key=key,
         actor=actor,
+        machine_authored=False,
     )
     done = run_next_job(vault, machine="decision-rules-test")
     assert done is not None

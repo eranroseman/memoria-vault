@@ -25,6 +25,7 @@ import yaml
 from memoria_vault.runtime.content_security import (
     classify_fenced_code_opening,
     fenced_code_closes,
+    neutralize_untrusted_markdown,
 )
 from memoria_vault.runtime.evidence import (
     EvidenceMarker,
@@ -709,6 +710,27 @@ def request_row(vault: Path, request_id: str) -> Any | None:
         ).fetchone()
 
 
+def _neutralized_request_error(error: Any) -> Any:
+    """requests.error is the designated home for untrusted operation text (#1608).
+
+    A raised operation's ``str(exc)`` can be composed from file-derived text the
+    PI never authored, and ``requests.get`` carries both an HTTP and an MCP
+    binding. Neutralizing here covers the column that ``request_summary`` and
+    ``request_detail`` both read; ``request_detail`` additionally neutralizes
+    the copy of that same text worker.py persists into ``job["error"]`` (see
+    ``request_detail`` below) so neither read path serves it verbatim. The
+    stored row keeps the raw text in both places.
+
+    Still open, and deliberately out of this seam: ``run_operation`` returns the
+    failed job dict inline, so ``POST /operation/run`` and the MCP ``operation``
+    tool serve the same raw text on the *run-result* path rather than a stored-
+    request read. Same class, different seam; tracked on #1608.
+    """
+    if not isinstance(error, str) or not error:
+        return error
+    return neutralize_untrusted_markdown(error)
+
+
 def request_summary(row: Any) -> dict[str, Any]:
     return {
         "request_id": row["request_id"],
@@ -716,11 +738,14 @@ def request_summary(row: Any) -> dict[str, Any]:
         "status": row["status"],
         "created_at": row["created_at"],
         "completed_at": row["completed_at"],
-        "error": row["error"],
+        "error": _neutralized_request_error(row["error"]),
     }
 
 
 def request_detail(row: Any) -> dict[str, Any]:
+    job = json.loads(row["job_json"])
+    if "error" in job:
+        job = {**job, "error": _neutralized_request_error(job["error"])}
     return {
         **request_summary(row),
         "args": json.loads(row["args_json"]),
@@ -734,7 +759,7 @@ def request_detail(row: Any) -> dict[str, Any]:
         "provenance": json.loads(row["provenance_json"]),
         "schedule_id": row["schedule_id"],
         "kind": row["kind"],
-        "job": json.loads(row["job_json"]),
+        "job": job,
     }
 
 

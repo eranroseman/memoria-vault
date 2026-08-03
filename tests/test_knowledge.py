@@ -1405,6 +1405,7 @@ def test_move_concept_operation_dispatches_via_worker(tmp_path: Path) -> None:
         payload={"old_path": "notes/mv-me.md", "new_path": "notes/mv-done.md"},
         idempotency_key="mv-agent",
         actor="agent",
+        machine_authored=False,
     )
     refused = run_next_job(vault, machine="curator")
 
@@ -1419,6 +1420,7 @@ def test_move_concept_operation_dispatches_via_worker(tmp_path: Path) -> None:
         payload={"old_path": "notes/mv-me.md", "new_path": "notes/mv-done.md"},
         idempotency_key="mv-pi",
         actor="pi",
+        machine_authored=False,
     )
     done = run_next_job(vault, machine="curator")
 

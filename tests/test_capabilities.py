@@ -112,6 +112,7 @@ def test_worker_runs_capability_index_projection_operation_jobs(tmp_path: Path) 
         "regenerate-capability-index",
         idempotency_key="capability-index",
         actor="pi",
+        machine_authored=False,
     )
     done = run_next_job(vault, machine="test-machine")
 

@@ -165,6 +165,7 @@ def run_step(root: Path, vault: Path, step: dict[str, Any]) -> list[str]:
             payload={"project_path": args["project"]},
             idempotency_key=f"harness-canvas-{args['project']}",
             actor="operation",
+            machine_authored=False,
             provenance={"surface": "test-env-harness"},
         )
         context = operation_context_from_job(request, "test-env-harness")

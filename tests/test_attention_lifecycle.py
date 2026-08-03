@@ -60,6 +60,7 @@ def _run(workspace: Path, operation_id: str, payload: dict[str, Any]) -> dict[st
         workspace,
         operation_id,
         actor="pi",
+        machine_authored=False,
         idempotency_key=f"pi-{operation_id}-{payload['target_id']}",
         payload=payload,
     )

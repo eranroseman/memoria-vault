@@ -62,7 +62,7 @@ The live roster is `PROTECTED_OPERATION_ACTORS` in `worker.py`:
 
 | Required actor | Operations |
 | --- | --- |
-| `pi` | `acknowledge-attention`, `resolve-attention`, `resolve-evidence`, `record-copi-interview`, `curate-note-candidate`, `curate-note-link`, `move-concept`, `mark-checked`, `update-work`, `frame-paper`, `promote-draft-passage`, `cascade-rollback`, `capture-remote-pdf-source` |
+| `pi` | `apply-decision-rule-notices`, `acknowledge-attention`, `resolve-attention`, `resolve-evidence`, `record-copi-interview`, `curate-note-candidate`, `curate-note-link`, `move-concept`, `mark-checked`, `update-work`, `frame-paper`, `promote-draft-passage`, `cascade-rollback`, `seed-install`, `capture-remote-pdf-source` |
 | `integrity` | `trace-integrity-scan`, `observe-pi-edits` |
 
 Some PI-only actions are *additionally* guarded in the CLI handler

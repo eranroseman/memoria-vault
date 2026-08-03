@@ -52,6 +52,7 @@ GATES: list[list[str]] = [
     ["python3", "scripts/checks/checked_terminology_gate.py"],
     ["python3", "scripts/checks/plugin_provenance_doctor.py"],
     ["python3", "scripts/checks/doc_claims_gate.py"],
+    ["python3", "scripts/checks/control_plane_actor_gate.py"],
     [
         "env",
         "PYTEST_DISABLE_PLUGIN_AUTOLOAD=1",
@@ -89,6 +90,11 @@ GATES: list[list[str]] = [
         "scripts/test_vault/refresh-test-vault.sh",
         "scripts/test_vault/install-test-vault-local-llm.sh",
     ],
+    # 1689: the installed console script is the one surface no other gate
+    # exercises through PATH — pytest resolves src/ via path config, so a
+    # stale editable install (e.g. pointing at a deleted worktree) keeps
+    # every gate green while `memoria` is dead for every CLI-consuming task.
+    ["memoria", "--version"],
 ]
 
 # Self-skips when the analyzer module is absent (exit 2), so a machine with pwsh
@@ -103,7 +109,7 @@ PSSA_COMMAND = (
 
 
 # Gates a docs-only diff cannot affect: they exercise code, not documentation.
-_DOCS_SKIP = ("e2e_smoke.py", "-m compileall", "bash -n")
+_DOCS_SKIP = ("e2e_smoke.py", "-m compileall", "bash -n", "memoria --version")
 
 
 def _gates_for_run(docs_only: bool) -> list[list[str]]:
@@ -157,7 +163,15 @@ def _hold_single_run_lock(path: Path = LOCK_PATH) -> object | None:
 
 def run(command: list[str]) -> int:
     print(f"== {' '.join(command)}")
-    return subprocess.run(command, cwd=ROOT, check=False).returncode
+    try:
+        return subprocess.run(command, cwd=ROOT, check=False).returncode
+    except FileNotFoundError:
+        # `check=False` swallows a nonzero exit, but not a missing executable --
+        # that's exactly the failure the `memoria --version` gate exists to
+        # catch (#1689), so it must report the same way every other gate
+        # failure does rather than crash the whole run with a traceback.
+        print(f"  command not found: {command[0]}", file=sys.stderr)
+        return 127
 
 
 def check_json() -> int:

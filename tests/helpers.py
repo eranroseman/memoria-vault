@@ -88,6 +88,7 @@ def call_with_context(function: Any, vault: Path, *args: Any, **kwargs: Any) -> 
     actor = str(kwargs.pop("actor", "operation"))
     machine = str(kwargs.pop("machine", "test-machine") or "test-machine")
     run_id = str(kwargs.pop("run_id", "test-run") or "test-run")
+    machine_authored = bool(kwargs.pop("machine_authored", False))
     context = operation_context(
         vault,
         actor=actor,

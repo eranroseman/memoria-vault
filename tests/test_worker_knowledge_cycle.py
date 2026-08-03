@@ -33,7 +33,12 @@ def run_operation(
     key: str,
 ) -> dict:
     job = enqueue_operation(
-        vault, operation_id, payload=payload or {}, idempotency_key=key, actor="pi"
+        vault,
+        operation_id,
+        payload=payload or {},
+        idempotency_key=key,
+        actor="pi",
+        machine_authored=False,
     )
     done = run_request(vault, str(job["job_id"]), machine="cycle-machine")
     assert done is not None

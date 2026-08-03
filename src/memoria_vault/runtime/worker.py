@@ -137,7 +137,10 @@ def enqueue_operation(
     precondition_hashes: dict[str, Any] | None = None,
     causal_refs: list[str | dict[str, Any]] | None = None,
     actor: str,
-    machine_authored: bool = False,
+    # 1601: no default. The flag gates neutralize_untrusted_markdown, so a
+    # forgotten call site must fail with a TypeError, not fail open as
+    # "trusted". The default shipped that failure twice (#1596, dd6d8b29).
+    machine_authored: bool,
     provenance: dict[str, Any] | None = None,
     schedule_id: str | None = None,
     supersede_request_id: str | None = None,
@@ -269,6 +272,7 @@ def enqueue_integrity_sweep(
             idempotency_key=f"{operation_id}-{key}",
             schedule_id=key,
             actor="integrity",
+            machine_authored=False,
             provenance={"surface": "worker-schedule"},
         )
         for operation_id in INTEGRITY_SWEEP_OPERATIONS
@@ -1428,6 +1432,7 @@ def _run_capture_bibtex_source_operation(
             primary_target=f"catalog/sources/{result['work_id']}",
             causal_refs=[context.request_id],
             actor="operation",
+            machine_authored=False,
             provenance={"surface": "worker", "command": "capture-bibtex-source"},
         )
     return output
@@ -1655,6 +1660,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--idempotency-key", default=None)
     parser.add_argument("--schedule-id", default=None)
     parser.add_argument("--actor", choices=sorted(state.ACTORS), default=None)
+    parser.add_argument("--machine-authored", action="store_true")
     args = parser.parse_args(argv)
 
     vault = Path(args.vault)
@@ -1674,6 +1680,7 @@ def main(argv: list[str] | None = None) -> int:
                     payload=payload,
                     idempotency_key=args.idempotency_key,
                     actor=args.actor,
+                    machine_authored=args.machine_authored,
                 ),
                 ensure_ascii=False,
                 sort_keys=True,
@@ -1686,6 +1693,7 @@ def main(argv: list[str] | None = None) -> int:
             "observe-pi-edits",
             idempotency_key=args.idempotency_key or f"scan-{now_iso()}",
             actor="integrity",
+            machine_authored=False,
             provenance={"surface": "worker-scan"},
         )
         run_pending_jobs(vault, machine=args.machine, limit=1)
@@ -1703,6 +1711,7 @@ def main(argv: list[str] | None = None) -> int:
             idempotency_key=args.idempotency_key or f"{args.operation_id}-{args.schedule_id}",
             schedule_id=args.schedule_id,
             actor="operation",
+            machine_authored=False,
             provenance={"surface": "worker-schedule"},
         )
         run_pending_jobs(vault, machine=args.machine, limit=1)

@@ -76,6 +76,7 @@ def test_operation(tmp_path: Path, operation_id: str) -> None:
         payload=payload,
         idempotency_key=idempotency_key,
         actor="agent",
+        machine_authored=False,
     )
     done = run_next_job(vault, machine="floor")
     assert done is not None, queued

@@ -446,6 +446,7 @@ def test_worker_dispatch_runs_generate_questions(
         payload={"scope": "notes/alpha.md"},
         idempotency_key="gq-worker-1",
         actor="agent",
+        machine_authored=False,
     )
 
     done = run_next_job(vault, machine="gq-worker")
@@ -476,6 +477,7 @@ def test_worker_dispatch_passes_the_payload_mode_to_the_runner(tmp_path: Path) -
         payload={"scope": "notes/alpha.md", "mode": "sideways"},
         idempotency_key="gq-worker-3",
         actor="agent",
+        machine_authored=False,
     )
 
     done = run_next_job(vault, machine="gq-worker")
@@ -494,6 +496,7 @@ def test_worker_dispatch_requires_scope(tmp_path: Path) -> None:
         payload={},
         idempotency_key="gq-worker-2",
         actor="agent",
+        machine_authored=False,
     )
 
     done = run_next_job(vault, machine="gq-worker")
