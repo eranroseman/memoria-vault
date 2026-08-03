@@ -901,5 +901,7 @@ def test_analysis_fields_name_the_unresolved_item_as_the_tipping_factor() -> Non
     assert evidence_review.analysis_fields(row, [dict(UNRESOLVED_PREVIEW)]) == {
         "tipped_by": "source-alpha#^p9999"
     }
-    # Without attached previews the honest factor is the state, not a ref.
-    assert evidence_review.analysis_fields(row, []) == {"tipped_by": "completeness_status=evidence-incomplete"}
+    # Without attached previews the honest factor is the completeness status, not a ref.
+    assert evidence_review.analysis_fields(row, []) == {
+        "tipped_by": "completeness_status=evidence-incomplete"
+    }
