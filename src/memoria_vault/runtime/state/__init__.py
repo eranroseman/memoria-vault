@@ -737,11 +737,15 @@ def set_concept_verdict(vault: Path, concept_id: str, check_status: str) -> None
 def set_catalog_check_status(vault: Path, work_id: str, check_status: str) -> None:
     """The one writer for a catalog Work's verdict.
 
-    Keeps every store that answers "is this Work consumable?" in step, in one
-    transaction: `catalog_sources.check_status`, the `concept_verdicts` row,
-    the `passages.check_status` cascade retrieval filters on, and the
-    `outputs.check_status` mirror the read barrier consults. Re-checking
-    clears the propagation mark exactly like `set_concept_verdict`.
+    Keeps every store the read-barrier/retrieval path gates on in step, in
+    one transaction: `catalog_sources.check_status`, the `concept_verdicts`
+    row, the `passages.check_status` cascade retrieval filters on, and the
+    `outputs.check_status` mirror when a file-backed output row exists (a
+    catalog Work is db-store, so this is structurally a no-op for it).
+    Re-checking clears the propagation mark exactly like
+    `set_concept_verdict`. Scope excludes `work_aspects.check_status`
+    (written at capture time), which nothing consumes without first
+    checking `catalog_sources`.
     """
     status = _check_status(check_status)
     stable_work_id = _work_id(work_id)
