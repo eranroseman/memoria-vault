@@ -188,7 +188,7 @@ def prepare_seeded_error_fixture(
         provider_coverage="partial",
         citekey="fresh2026",
     )
-    _set_catalog_check_status(vault, "unchecked-source", "unchecked")
+    state.set_catalog_check_status(vault, "unchecked-source", "unchecked")
     stale_source = _checked_stale_source(vault, context=context)
     broken_digest = _checked_broken_digest(vault, context=context)
     contradiction_digest = _checked_contradiction_digest(vault, context=context)
@@ -329,24 +329,6 @@ def _checked_poisoned_source(vault: Path, *, context: OperationContext) -> dict[
         provider_coverage="full",
         citekey="poisoned2026",
     )
-
-
-def _set_catalog_check_status(vault: Path, work_id: str, check_status: str) -> None:
-    with state.connect(vault) as conn:
-        conn.execute(
-            "UPDATE catalog_sources SET check_status = ? WHERE work_id = ?",
-            (check_status, work_id),
-        )
-        # v16 keys a catalog Concept by its bare work_id; the rendered
-        # `catalog/sources/<work_id>` form is the parent's path, not its identity.
-        conn.execute(
-            """
-            INSERT INTO concept_verdicts(concept_id, check_status)
-            VALUES (?, ?)
-            ON CONFLICT(concept_id) DO UPDATE SET check_status = excluded.check_status
-            """,
-            (state.resolve_concept_id(conn, work_id), check_status),
-        )
 
 
 def _set_catalog_stale(vault: Path, work_id: str) -> None:
