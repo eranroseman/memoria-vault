@@ -9,6 +9,8 @@ import pytest
 from memoria_vault.runtime import state
 from tests.helpers import worker_workspace
 
+pytestmark = pytest.mark.runtime
+
 
 def _seed_work(vault: Path, work_id: str) -> None:
     state.upsert_catalog_record(
@@ -55,9 +57,7 @@ def test_recheck_clears_stale_flag_and_consequence(tmp_path: Path) -> None:
     vault = worker_workspace(tmp_path)
     _seed_work(vault, "w-recheck")
     state.set_catalog_check_status(vault, "w-recheck", "quarantined")
-    state.set_concept_flag(
-        vault, "catalog/sources/w-recheck", "stale", reason="test seeded stale"
-    )
+    state.set_concept_flag(vault, "catalog/sources/w-recheck", "stale", reason="test seeded stale")
 
     state.set_catalog_check_status(vault, "w-recheck", "checked")
 
@@ -66,9 +66,7 @@ def test_recheck_clears_stale_flag_and_consequence(tmp_path: Path) -> None:
         target = state.resolve_concept_id(conn, "w-recheck")
         flags = [
             str(r["flag"])
-            for r in conn.execute(
-                "SELECT flag FROM concept_flags WHERE concept_id = ?", (target,)
-            )
+            for r in conn.execute("SELECT flag FROM concept_flags WHERE concept_id = ?", (target,))
         ]
         consequence = conn.execute(
             "SELECT consequence FROM concept_verdicts WHERE concept_id = ?", (target,)
