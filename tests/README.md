@@ -1,7 +1,7 @@
 # tests/
 
-Pytest suite for the repo's test levels (see AGENTS.md → *Test before opening a
-PR*). Tests live here as standalone files, not inline in shipped modules, so the
+Pytest suite for the repo's test levels (see AGENTS.md → *Ground truth*).
+Tests live here as standalone files, not inline in shipped modules, so the
 deployed vault carries no test code.
 
 - `test_*.py` — behavior, contract, or subsystem tests. Name files for the
@@ -15,21 +15,20 @@ deployed vault carries no test code.
 - `tests/helpers.py` and `tests/cli_test_helpers.py` — shared fixture builders
   and CLI-surface helpers used by several test modules.
 
-| Level | Purpose | Runs |
-| --- | --- | --- |
-| `static` | formatting, lint, schema, spell, design history, workflow safety | `scripts/verify`, every PR |
-| `unit` | deterministic Python behavior | `scripts/verify`, every PR |
-| `contract` | CLI, operations, capability manifests, concept writers, projections | `scripts/verify`, every PR |
-| `package` | wheel build/install smoke, e2e smoke, and package-facing helper tests | on demand (built wheel) |
-| `runtime` | worker loops, recovery, idempotence, state transitions, long checks | on demand (disposable workspace) |
-| `live` | real external services/providers | manual only (live provider) |
+| Level | Purpose |
+| --- | --- |
+| `static` | formatting, lint, schema, spell, design history, workflow safety |
+| `unit` | deterministic Python behavior |
+| `contract` | CLI, operations, capability manifests, concept writers, projections |
+| `package` | wheel build/install smoke, e2e smoke, and package-facing helper tests |
+| `runtime` | worker loops, recovery, idempotence, state transitions, long checks |
+| `floor` | promotion-floor sweep — every command x every API on the seeded ephemeral vault |
+| `live` | real external services/providers |
 
-`python scripts/verify` runs the `static`/`unit`/`contract` levels (plus lint,
-product gates, offline smoke, and syntax checks). Target one level with
+Which levels the gate runs is owned by `PYTEST_MARKERS` in `scripts/verify` —
+read it there rather than restating it here. Target one level with
 `python3 -m pytest tests/ -q -m unit`; use `-m "not slow"` for the fast local
-loop. The `package`, `runtime`, and `live` levels run on demand after
-`pip install -e .` — e.g. `python3 -m pytest tests/ -q -m package` — never in the
-gate.
+loop; run a level the gate excludes the same way on demand (e.g. `-m live`).
 
 The installer end-to-end harness is a separate disposable-vault check:
 

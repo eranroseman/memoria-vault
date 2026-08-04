@@ -23,7 +23,16 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install pre-commit
-        run: python -m pip install --quiet -r requirements-dev.txt
+        run: |
+          # Fail here, loudly, if the pin ever moves or is renamed: a zero-match
+          # grep would otherwise expand to `pip install ""`, which current pip
+          # accepts as a no-op, pushing the failure to the next step as a
+          # misleading "pre-commit: command not found".
+          pin="$(grep -E '^pre-commit==' requirements-dev.txt)" || {
+            echo "::error::no readable pre-commit== pin in requirements-dev.txt"
+            exit 1
+          }
+          python -m pip install --quiet "$pin"
       - name: Cache pre-commit environments
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
         with:

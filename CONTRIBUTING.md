@@ -55,11 +55,11 @@ recreate status, priority, or subsystem taxonomies as labels.
 ## Testing and verification
 
 `python scripts/verify` is the one gate. It runs lint, the product-integrity
-checks, the `static`/`unit`/`contract` test suite, an offline end-to-end smoke,
-and syntax checks; CI requires it plus `gitleaks`. Target a subset while
-iterating with `python3 -m pytest tests/ -q -m unit` (or `contract`, `static`).
-The `package`, `runtime`, and `live` test markers need a built wheel, a
-disposable workspace, or a live provider and are run on demand, not in the gate.
+checks, the test suite, an offline end-to-end smoke, and syntax checks; CI
+requires it plus `gitleaks`. Which pytest levels the gate runs is owned by
+`PYTEST_MARKERS` in `scripts/verify`. Target a subset while iterating with
+`python3 -m pytest tests/ -q -m unit` (or `contract`, `static`); levels the
+gate excludes run the same way on demand.
 
 Do not test installers against the real `~/Memoria`; use a disposable vault
 under `test-vault/`.
