@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
+import pytest
+
 from memoria_vault.runtime.vaultio import (
     frontmatter_bounds,
     parse_frontmatter,
     split_frontmatter,
 )
+
+pytestmark = pytest.mark.unit
 
 PLAIN = "---\ntype: note\n---\nbody\n"
 BOM = "\ufeff---\ntype: note\n---\nbody\n"
