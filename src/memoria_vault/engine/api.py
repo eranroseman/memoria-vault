@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import datetime
 import json
+import uuid
 from pathlib import Path
 from typing import Any
 
@@ -332,6 +333,173 @@ def read_evidence_review_view(
     facets["shown"] = len(blocks)
     facets["batch"] = batch
     return _read_payload(view=_view("evidence-review", blocks), facets=facets)
+
+
+def _record_review_client_event(
+    workspace: Path,
+    fields: dict[str, Any],
+    *,
+    actor: str,
+    command: str,
+    surface: str = "cli",
+) -> dict[str, Any]:
+    """Record one evidence-review client event through the empirical-event door.
+
+    `empirical-event-record` is the only seam that writes client telemetry;
+    since I1 T.3 it lands in `telemetry_events`, never the journal. `surface`
+    names the empirical-event schema's own field (`cli`, `rest`, `mcp`, ...) —
+    a different namespace than `run_operation`'s request-provenance `surface`.
+    """
+    event: dict[str, Any] = {
+        "event_id": str(uuid.uuid4()),
+        "timestamp": now_iso(),
+        "session_id": uuid.uuid4().hex,
+        "surface": surface,
+        "workflow": "evidence-review",
+        "item_type": "evidence-set",
+        **fields,
+    }
+    result = run_operation(
+        workspace,
+        "empirical-event-record",
+        event,
+        idempotency_key=f"empirical-event:{event['event_id']}",
+        actor=actor,
+        command=command,
+    )
+    telemetry: dict[str, Any] = {"ok": bool(result["ok"]), "event_id": event["event_id"]}
+    if "duration_s" in event:
+        telemetry["duration_s"] = event["duration_s"]
+    if not telemetry["ok"]:
+        telemetry["result"] = result["result"]  # the failed operation's own account
+    return telemetry
+
+
+def evidence_review_item(
+    workspace: Path,
+    evidence_id: str,
+    *,
+    show_analysis: bool = False,
+    actor: str = "pi",
+    surface: str = "cli",
+) -> dict[str, Any]:
+    """One evidence-review row by id, with its `view.opened` client event recorded.
+
+    `batch=0` is the engine-direct unbounded lookup; only the evidence arm of
+    the discriminated union answers an evidence id — an SRD gap shares the
+    queue and carries no `evidence_id` at all. `surface` names the client event's
+    own field; it defaults to `"cli"` so the CLI caller's behavior is unchanged,
+    but a host-neutral caller (rest, mcp, ...) can record its own surface.
+    """
+    queue = evidence_review_queue(workspace, batch=0)
+    row = next(
+        (
+            r
+            for r in queue["rows"]
+            if r["kind"] == "evidence-set" and r["evidence_id"] == evidence_id
+        ),
+        None,
+    )
+    if row is None:
+        return {
+            "ok": False,
+            "error": f"evidence id is not in the review queue: {evidence_id}",
+        }
+    detail = evidence_review.detail_row(row, show_analysis=show_analysis)
+    telemetry = _record_review_client_event(
+        workspace,
+        {"event_type": "view.opened", "item_id": evidence_id},
+        actor=actor,
+        command="review-show",
+        surface=surface,
+    )
+    payload: dict[str, Any] = {"ok": telemetry["ok"], "row": detail, "telemetry": telemetry}
+    if not telemetry["ok"]:
+        payload["error"] = (
+            str((telemetry["result"] or {}).get("error") or "")
+            or "evidence detail was read but view.opened was not recorded"
+        )
+    return payload
+
+
+def resolve_evidence(
+    workspace: Path,
+    evidence_id: str,
+    decision: str,
+    *,
+    reason: str = "",
+    warrant: str = "",
+    reason_code: str = "other",
+    actor: str,
+    surface: str = "cli",
+    command: str = "",
+) -> dict[str, Any]:
+    """The whole disposition workflow: dwell, decision, client telemetry.
+
+    The decision routes through the `resolve-evidence` operation, so the
+    worker's actor gate — not this verb — refuses a non-PI actor. `duration_s`
+    rides only a dwell the schema can support: nonpositive is refused there,
+    and a sub-second gap is noise, never a real look.
+
+    `surface` names the client event's own field, defaulting to `"cli"` so
+    `memoria review <decision>` is unchanged. `command` is the provenance
+    label on the `resolve-evidence` request row and its client event; it
+    defaults to `f"review-{decision}"` — `memoria review <decision>`'s own
+    name — so that caller's behavior is unchanged too. A different host
+    (e.g. `project resolve-evidence`) should pass its own command name rather
+    than inherit a command it did not run.
+    """
+    from memoria_vault.runtime import knowledge
+
+    resolved_command = command or f"review-{decision}"
+
+    dwell = knowledge.review_dwell_seconds(workspace, evidence_id)
+    operation = run_operation(
+        workspace,
+        "resolve-evidence",
+        {
+            "evidence_id": evidence_id,
+            "decision": decision,
+            "reason": reason,
+            "warrant": warrant,
+        },
+        actor=actor,
+        command=resolved_command,
+    )
+    if not operation["ok"]:
+        result = operation["result"] or {}
+        return {
+            "ok": False,
+            "evidence_id": evidence_id,
+            "decision": decision,
+            "error": str(result.get("error") or f"resolve-evidence failed: {evidence_id}"),
+            "job": operation["job"],
+            "result": result,
+        }
+    fields: dict[str, Any] = {
+        "event_type": "disposition.recorded",
+        "decision": decision,
+        "reason_code": reason_code,
+        "item_id": evidence_id,
+    }
+    if dwell is not None and dwell >= 1.0:
+        fields["duration_s"] = round(dwell, 1)
+    telemetry = _record_review_client_event(
+        workspace, fields, actor=actor, command=resolved_command, surface=surface
+    )
+    payload: dict[str, Any] = {
+        "ok": telemetry["ok"],
+        "evidence_id": evidence_id,
+        "decision": decision,
+        "event": (operation["result"] or {}).get("resolution"),
+        "telemetry": telemetry,
+    }
+    if not telemetry["ok"]:
+        payload["error"] = (
+            str((telemetry["result"] or {}).get("error") or "")
+            or "disposition succeeded but client telemetry was not recorded"
+        )
+    return payload
 
 
 def read_dashboard_view(workspace: Path) -> dict[str, Any]:

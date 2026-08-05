@@ -879,6 +879,157 @@ def test_cli_project_resolve_evidence_accept_carries_warrant(
     assert accepted["event"]["warrant"] == "Spans jointly entail the claim."
 
 
+def test_cli_project_resolve_evidence_rejects_non_pi_actor_without_telemetry(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """The rewired handler (T4) now routes through the `resolve_evidence` verb's
+    `resolve-evidence` operation, so a non-PI actor is refused at the worker's
+    actor gate rather than by a raised `ValueError` in the handler itself: an
+    `ok: False` payload / rc 1, not a stack trace / rc 2 (final-review finding
+    A). No disposition ever happened, so no `disposition.recorded` row lands
+    either."""
+    workspace = tmp_path / "workspace"
+    main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    capsys.readouterr()
+    _write_project_argument_fixture(workspace)
+    (workspace / "projects/project-alpha/outline.md").write_text(
+        "- 01ARZ3NDEKTSV4RRFFQ69G5FA2 -- Support\n",
+        encoding="utf-8",
+    )
+    assert (
+        main(
+            [
+                "project",
+                "compose",
+                "--workspace",
+                str(workspace),
+                "project-alpha",
+                "--json",
+                "--idempotency-key",
+                "compose-for-non-pi-actor",
+            ]
+        )
+        == 0
+    )
+    composed = json.loads(capsys.readouterr().out)
+    evidence_id = composed["result"]["evidence_markers"][0]["id"]
+
+    rc = main(
+        [
+            "project",
+            "resolve-evidence",
+            "--workspace",
+            str(workspace),
+            "project-alpha",
+            "--evidence-id",
+            evidence_id,
+            "--decision",
+            "accept",
+            "--actor",
+            "agent",
+            "--json",
+            "--idempotency-key",
+            "verify-for-non-pi-actor",
+        ]
+    )
+    refused = json.loads(capsys.readouterr().out)
+
+    assert rc == 1
+    assert refused["ok"] is False
+    assert "PI actor" in refused["error"]
+    # `init` itself writes an unrelated `onboarding-step` row, so the assertion
+    # is specific to the disposition event, not to the table being empty.
+    # `telemetry_events.event_type` is the empirical-event schema id
+    # (`empirical_event.v1`); the client's own event type lives inside
+    # `payload_json` (matches `onboarding_steps._STEP_QUERY`'s json_extract use).
+    with state.connect(workspace) as conn:
+        telemetry_rows = conn.execute(
+            "SELECT 1 FROM telemetry_events"
+            " WHERE json_extract(payload_json, '$.event_type') = 'disposition.recorded'"
+        ).fetchall()
+    assert telemetry_rows == []
+
+
+def test_cli_project_resolve_evidence_accept_records_one_disposition_telemetry_row(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """The rewired handler (T4) shares the `resolve_evidence` verb with `memoria
+    review accept`, so `project resolve-evidence` now emits the verb's own
+    `disposition.recorded` client event too (final-review finding A) —
+    previously this handler called the runtime function directly and wrote no
+    telemetry at all."""
+    workspace = tmp_path / "workspace"
+    main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    capsys.readouterr()
+    _write_project_argument_fixture(workspace)
+    (workspace / "projects/project-alpha/outline.md").write_text(
+        "- 01ARZ3NDEKTSV4RRFFQ69G5FA2 -- Support\n",
+        encoding="utf-8",
+    )
+    assert (
+        main(
+            [
+                "project",
+                "compose",
+                "--workspace",
+                str(workspace),
+                "project-alpha",
+                "--json",
+                "--idempotency-key",
+                "compose-for-telemetry",
+            ]
+        )
+        == 0
+    )
+    composed = json.loads(capsys.readouterr().out)
+    evidence_id = composed["result"]["evidence_markers"][0]["id"]
+
+    rc = main(
+        [
+            "project",
+            "resolve-evidence",
+            "--workspace",
+            str(workspace),
+            "project-alpha",
+            "--evidence-id",
+            evidence_id,
+            "--decision",
+            "accept",
+            "--reason",
+            "reviewed",
+            "--json",
+            "--idempotency-key",
+            "verify-for-telemetry",
+        ]
+    )
+    accepted = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    assert accepted["ok"] is True
+    # `init` itself writes an unrelated `onboarding-step` row, so the count is
+    # scoped to the disposition event, not to the whole table. The client's
+    # own event type lives inside `payload_json`, not the outer `event_type`
+    # column (that column holds the empirical-event schema id).
+    with state.connect(workspace) as conn:
+        telemetry_rows = conn.execute(
+            "SELECT payload_json FROM telemetry_events"
+            " WHERE json_extract(payload_json, '$.event_type') = 'disposition.recorded'"
+            " ORDER BY rowid"
+        ).fetchall()
+    assert len(telemetry_rows) == 1
+    event = json.loads(telemetry_rows[0]["payload_json"])
+    assert event["decision"] == "accept"
+    assert event["item_id"] == evidence_id
+    assert event["surface"] == "cli"
+    # Finding C: the request row's provenance names the command the PI actually
+    # ran, not the `review-accept` name `memoria review accept` would carry.
+    with state.connect(workspace) as conn:
+        (resolve_request,) = conn.execute(
+            "SELECT provenance_json FROM operation_requests WHERE operation_id = 'resolve-evidence'"
+        ).fetchall()
+    assert json.loads(resolve_request["provenance_json"])["command"] == "project-resolve-evidence"
+
+
 def test_cli_new_note_check_and_link_flow(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
