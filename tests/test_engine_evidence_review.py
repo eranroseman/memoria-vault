@@ -55,7 +55,12 @@ def test_resolve_evidence_routes_through_the_operation(monkeypatch, tmp_path) ->
 
 
 def test_resolve_evidence_surfaces_operation_refusal(monkeypatch, tmp_path) -> None:
-    def refused(workspace: Path, operation_id: str, payload: dict[str, Any], **kwargs: Any):
+    calls: list[tuple[str, dict[str, Any], dict[str, Any]]] = []
+
+    def refused(
+        workspace: Path, operation_id: str, payload: dict[str, Any], **kwargs: Any
+    ) -> dict[str, Any]:
+        calls.append((operation_id, payload, kwargs))
         return {
             "ok": False,
             "job": {"request_id": "req-1"},
@@ -69,6 +74,8 @@ def test_resolve_evidence_surfaces_operation_refusal(monkeypatch, tmp_path) -> N
 
     assert payload["ok"] is False
     assert "PI actor authority" in payload["error"]
+    ops = [op for op, _p, _k in calls]
+    assert ops == ["resolve-evidence"]
 
 
 def test_evidence_review_item_unknown_id(monkeypatch, tmp_path) -> None:
