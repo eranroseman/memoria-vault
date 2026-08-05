@@ -1949,6 +1949,7 @@ def _cmd_project_resolve_evidence(args: argparse.Namespace) -> int:
         reason=args.reason,
         warrant=args.warrant,
         actor=args.actor,
+        command="project-resolve-evidence",
     )
     if not payload["ok"]:
         return _emit(payload, args)
