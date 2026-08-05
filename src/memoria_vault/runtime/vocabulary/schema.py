@@ -367,7 +367,7 @@ def _reserved_file_errors(path: Path, rel: str, *, is_bundle_root: bool) -> list
     root_index = is_bundle_root and path.name == "index.md"
     declares_version = root_index or _NESTED_BUNDLE_INDEX.fullmatch(rel) is not None
     text = path.read_text(encoding="utf-8")
-    if not text.startswith("---\n"):
+    if vaultio.FRONTMATTER_OPENING.match(text) is None:
         if root_index:
             return [f'{rel}: the bundle root index.md must declare okf_version "{OKF_VERSION}"']
         return []

@@ -484,6 +484,20 @@ def test_okf_core_checks_reserved_file_structure(tmp_path):
     assert any("log.md" in err and "frontmatter" in err for err in errors)
 
 
+def test_okf_core_flags_reserved_log_md_with_bom_prefixed_frontmatter(tmp_path):
+    """A BOM before the opening ``---`` must not hide log.md's frontmatter from
+    the reserved-file check: `_reserved_file_errors` used to strict-match
+    ``text.startswith("---\\n")`` and silently skip BOM/CRLF/leading-blank-line
+    frontmatter, while every real reader parsed it via `vaultio.frontmatter_bounds`.
+    """
+    root = _empty_workspace(tmp_path)
+    (root / "log.md").write_text("﻿---\ntype: system\n---\n# Log\n", encoding="utf-8")
+
+    errors = schema.validate_okf_core_workspace(root)
+
+    assert any(err == "log.md: reserved log.md must carry no frontmatter" for err in errors)
+
+
 def test_okf_core_requires_the_root_index_to_declare_the_version(tmp_path):
     root = _empty_workspace(tmp_path)
     (root / "index.md").write_text("# Index\n", encoding="utf-8")
