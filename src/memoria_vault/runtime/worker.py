@@ -8,6 +8,7 @@ import subprocess
 import tempfile
 import uuid
 from argparse import ArgumentParser
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
@@ -311,6 +312,84 @@ def _run_job(vault: Path, job: dict[str, Any], context: OperationContext) -> dic
     return {"commit": commit, "outputs": [target]}
 
 
+OperationHandler = Callable[
+    [Path, dict[str, Any], OperationContext, dict[str, Any], dict[str, Any]],
+    dict[str, Any],
+]
+
+
+def _op_apply_decision_rule_notices(
+    vault: Path,
+    payload: dict[str, Any],
+    context: OperationContext,
+    job: dict[str, Any],
+    policy: dict[str, Any],
+) -> dict[str, Any]:
+    from memoria_vault.runtime.decision_rules import apply_decision_rule_notices
+
+    return apply_decision_rule_notices(vault, context=context)
+
+
+def _op_empirical_event_record(
+    vault: Path,
+    payload: dict[str, Any],
+    context: OperationContext,
+    job: dict[str, Any],
+    policy: dict[str, Any],
+) -> dict[str, Any]:
+    from memoria_vault.engine.empirical_events import validate_empirical_event
+    from memoria_vault.runtime.operations import record_empirical_event
+
+    event = validate_empirical_event(payload)
+    expected_key = f"empirical-event:{event['event_id']}"
+    envelope = job.get("request_envelope") if isinstance(job.get("request_envelope"), dict) else {}
+    if envelope.get("idempotency_key") != expected_key:
+        raise ValueError(f"empirical-event-record requires idempotency_key={expected_key}")
+    return record_empirical_event(
+        vault,
+        event,
+        context=context,
+    )
+
+
+def _op_trace_integrity_scan(
+    vault: Path,
+    payload: dict[str, Any],
+    context: OperationContext,
+    job: dict[str, Any],
+    policy: dict[str, Any],
+) -> dict[str, Any]:
+    from memoria_vault.runtime.trusted_writer import (
+        quarantine_untraced,
+        quarantine_untraced_from_status,
+    )
+
+    paths = payload.get("paths")
+    reason = str(payload.get("reason") or "worker-trace-integrity")
+    if paths is None:
+        events = quarantine_untraced_from_status(vault, reason=reason, context=context)
+    else:
+        if not isinstance(paths, list) or not all(
+            isinstance(path, str) and path.strip() for path in paths
+        ):
+            raise ValueError("trace-integrity-scan paths must be a list of strings")
+        events = quarantine_untraced(
+            vault,
+            [path.strip() for path in paths],
+            reason=reason,
+            context=context,
+        )
+    commit = _commit_tracked_targets(vault, "trace integrity scan", events, context)
+    return {"commit": commit, "finding_count": len(events), "findings": events}
+
+
+OPERATION_HANDLERS: dict[str, OperationHandler] = {
+    "apply-decision-rule-notices": _op_apply_decision_rule_notices,
+    "empirical-event-record": _op_empirical_event_record,
+    "trace-integrity-scan": _op_trace_integrity_scan,
+}
+
+
 def _run_operation_job(
     vault: Path, job: dict[str, Any], context: OperationContext
 ) -> dict[str, Any]:
@@ -325,6 +404,10 @@ def _run_operation_job(
     )
 
     policy = load_operation_policy(vault, operation_id)
+    handler = OPERATION_HANDLERS.get(operation_id)
+    if handler is not None:
+        return handler(vault, payload, context, job, policy)
+    # Legacy chain below — one group per migration task, deleted in the final task.
     if operation_id == "create-concept":
         target, content = _create_concept_payload(payload)
         envelope = job.get("request_envelope")
@@ -349,51 +432,8 @@ def _run_operation_job(
             "check_status": state.concept_check_status(vault, target),
             "materialized": materialized,
         }
-    if operation_id == "empirical-event-record":
-        from memoria_vault.engine.empirical_events import validate_empirical_event
-        from memoria_vault.runtime.operations import record_empirical_event
-
-        event = validate_empirical_event(payload)
-        expected_key = f"empirical-event:{event['event_id']}"
-        envelope = (
-            job.get("request_envelope") if isinstance(job.get("request_envelope"), dict) else {}
-        )
-        if envelope.get("idempotency_key") != expected_key:
-            raise ValueError(f"empirical-event-record requires idempotency_key={expected_key}")
-        return record_empirical_event(
-            vault,
-            event,
-            context=context,
-        )
-    if operation_id == "apply-decision-rule-notices":
-        from memoria_vault.runtime.decision_rules import apply_decision_rule_notices
-
-        return apply_decision_rule_notices(vault, context=context)
     if operation_id in INTEGRITY_FINDING_OPERATIONS:
         return _run_integrity_finding_operation(vault, operation_id, payload, context)
-    if operation_id == "trace-integrity-scan":
-        from memoria_vault.runtime.trusted_writer import (
-            quarantine_untraced,
-            quarantine_untraced_from_status,
-        )
-
-        paths = payload.get("paths")
-        reason = str(payload.get("reason") or "worker-trace-integrity")
-        if paths is None:
-            events = quarantine_untraced_from_status(vault, reason=reason, context=context)
-        else:
-            if not isinstance(paths, list) or not all(
-                isinstance(path, str) and path.strip() for path in paths
-            ):
-                raise ValueError("trace-integrity-scan paths must be a list of strings")
-            events = quarantine_untraced(
-                vault,
-                [path.strip() for path in paths],
-                reason=reason,
-                context=context,
-            )
-        commit = _commit_tracked_targets(vault, "trace integrity scan", events, context)
-        return {"commit": commit, "finding_count": len(events), "findings": events}
     if operation_id == "compile-source-digest":
         from memoria_vault.runtime.operations import compile_source_digest
 
