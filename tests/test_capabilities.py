@@ -68,23 +68,16 @@ def test_capability_index_renderer_covers_shipped_operations() -> None:
     )
 
 
-def test_worker_operations_are_cataloged_and_policy_shaped() -> None:
-    worker = (ROOT / "src/memoria_vault/runtime/worker.py").read_text(encoding="utf-8")
-    worker_ids = set(re.findall(r'operation_id == "([^"]+)"', worker))
-    for block in re.findall(r"operation_id in \{([^}]+)\}", worker):
-        worker_ids.update(re.findall(r'"([^"]+)"', block))
-    # Some checks dispatch through a module-level dict (`operation_id in SOME_DICT`)
-    # instead of a literal set; pull its keys too so the dispatch dict doesn't
-    # have to be spelled out twice just to keep this scan honest.
-    for dict_name in re.findall(r"operation_id in (\w+)", worker):
-        dict_block = re.search(rf"^{dict_name} = \{{(.*?)^\}}", worker, re.M | re.S)
-        if dict_block:
-            worker_ids.update(re.findall(r'"([^"]+)":', dict_block.group(1)))
+def test_cataloged_operations_load_their_policy() -> None:
+    # The "worker can dispatch every catalogued id, and only catalogued ids" invariant
+    # used to be checked here by regex-scraping worker.py's source text for its if-chain
+    # shape. That's superseded now that dispatch is a real registry:
+    # tests/test_operation_dispatch.py::test_registry_matches_the_manifest_catalog_exactly
+    # checks the identical claim properly, by importing worker.OPERATION_HANDLERS. What's
+    # left here — and still worth its own test — is that every catalogued manifest's
+    # policy actually loads.
     catalog = json.loads(render_capability_index())
     catalog_ids = {row["id"] for row in catalog["capabilities"]}
-
-    assert worker_ids <= catalog_ids
-    assert catalog_ids <= worker_ids
     for operation_id in sorted(catalog_ids):
         load_operation_policy(Path(), operation_id)
 
