@@ -11,6 +11,7 @@ from memoria_vault.runtime.content_security import (
     fenced_code_closes,
 )
 from memoria_vault.runtime.evidence import EvidenceMarker, parse_evidence_marker
+from memoria_vault.runtime.vaultio import frontmatter_bounds as _yaml_frontmatter_bounds
 
 _DIRECT_EVIDENCE_MARKER_RE = re.compile(
     r"(?m)^(?![ \t>|\ufeff])(?!(?:[-+*]|\d+[.)]|:)[ \t]+)"
@@ -159,18 +160,6 @@ def _mask_html_declarations(text: str) -> str:
     masked.append(text[copied_until:])
     return "".join(masked)
 
-
-def _yaml_frontmatter_bounds(text: str) -> tuple[int, int, int] | None:
-    """Return the body and closing offsets for closed initial YAML frontmatter."""
-    opening = re.match(r"\A\ufeff?(?:[ \t]*\r?\n)*---[ \t]*(?:\r?\n)", text)
-    if opening is None:
-        return None
-    closing = re.search(r"(?m)^(?:---|\.\.\.)[ \t]*(?:\r?\n|$)", text[opening.end() :])
-    if closing is None:
-        return None
-    body_end = opening.end() + closing.start()
-    end = opening.end() + closing.end()
-    return opening.end(), body_end, end
 
 
 def _mask_yaml_frontmatter(text: str) -> str:
