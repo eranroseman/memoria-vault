@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import re
 import secrets
 import tempfile
 import time
@@ -43,22 +44,35 @@ def safe_read(path: Path) -> str:
         return ""
 
 
-def _frontmatter_end(text: str) -> int | None:
-    """Return the index of the closing ``---`` line, or ``None`` if absent."""
-    if not text.startswith("---"):
+FRONTMATTER_OPENING = re.compile(r"\A\ufeff?(?:[ \t]*\r?\n)*---[ \t]*(?:\r?\n)")
+_FRONTMATTER_CLOSING = re.compile(r"(?m)^(?:---|\.\.\.)[ \t]*(?:\r?\n|$)")
+
+
+def frontmatter_bounds(text: str) -> tuple[int, int, int] | None:
+    """Return `(body_start, body_end, end)` offsets of closed initial YAML frontmatter.
+
+    The one answer to "where does frontmatter end" — tolerant of a BOM,
+    leading blank lines, CRLF line endings, and the YAML `...` terminator.
+    Every reader (parsing, masking, schema validation) must use this; the
+    writer (`frontmatter_doc`) emits the canonical strict form.
+    """
+    opening = FRONTMATTER_OPENING.match(text)
+    if opening is None:
         return None
-    end = text.find("\n---", 3)
-    return None if end == -1 else end
+    closing = _FRONTMATTER_CLOSING.search(text[opening.end() :])
+    if closing is None:
+        return None
+    return opening.end(), opening.end() + closing.start(), opening.end() + closing.end()
 
 
 def parse_frontmatter(text: str) -> dict[str, Any]:
     """Parse leading YAML frontmatter, returning ``{}`` when absent or invalid."""
-    end = _frontmatter_end(text)
-    if end is None:
+    bounds = frontmatter_bounds(text)
+    if bounds is None:
         return {}
-    raw = text[3:end]
+    body_start, body_end, _end = bounds
     try:
-        data = yaml.safe_load(raw) or {}
+        data = yaml.safe_load(text[body_start:body_end]) or {}
     except yaml.YAMLError:
         return {}
     return data if isinstance(data, dict) else {}
@@ -69,13 +83,10 @@ def read_frontmatter(path: Path) -> dict[str, Any]:
 
 
 def split_frontmatter(text: str) -> tuple[dict[str, Any], str]:
-    end = _frontmatter_end(text)
-    if end is None:
+    bounds = frontmatter_bounds(text)
+    if bounds is None:
         return {}, text
-    body_start = end + len("\n---")
-    if body_start < len(text) and text[body_start] == "\n":
-        body_start += 1
-    return parse_frontmatter(text), text[body_start:]
+    return parse_frontmatter(text), text[bounds[2] :]
 
 
 def strip_frontmatter(text: str) -> str:
