@@ -1687,15 +1687,14 @@ def _run_operation_job(
 ) -> dict[str, Any]:
     operation_id = context.operation_id
     payload = job.get("payload") if isinstance(job.get("payload"), dict) else {}
-    _require_operation_actor(context)
+    _require_operation_actor(context)  # stays first: protected actors gate every dispatch
     from memoria_vault.runtime.operations import load_operation_policy
 
     policy = load_operation_policy(vault, operation_id)
     handler = OPERATION_HANDLERS.get(operation_id)
-    if handler is not None:
-        return handler(vault, payload, context, job, policy)
-    # Legacy chain below — one group per migration task, deleted in the final task.
-    raise ValueError(f"unsupported operation: {operation_id!r}")
+    if handler is None:
+        raise ValueError(f"unsupported operation: {operation_id!r}")
+    return handler(vault, payload, context, job, policy)
 
 
 _UNENRICHED_CSL_KEYS = ("memoria",)
