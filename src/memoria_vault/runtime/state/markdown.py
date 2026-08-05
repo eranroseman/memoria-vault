@@ -161,7 +161,6 @@ def _mask_html_declarations(text: str) -> str:
     return "".join(masked)
 
 
-
 def _mask_yaml_frontmatter(text: str) -> str:
     """Mask a closed YAML frontmatter block at the beginning of a Markdown file."""
     bounds = _yaml_frontmatter_bounds(text)
