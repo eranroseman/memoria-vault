@@ -134,10 +134,24 @@ def test_cascade_rollback_reverts_machine_descendants_and_flags_pi_notes(
     assert notes["note_paths"][0] in downstream
     assert pi_note in downstream
 
+    state.replace_indexed_passages(
+        vault,
+        [
+            {
+                "origin": "file",
+                "text": "a passage from source-alpha",
+                "path": "fulltexts/source-alpha.md",
+                "work_id": "source-alpha",
+                "check_status": "checked",
+            }
+        ],
+    )
+
     result = cascade_rollback(
         vault,
         "catalog/sources/source-alpha",
         reason="seeded poisoned source",
+        include_target=True,
         machine="integrity-machine",
     )
 
@@ -157,11 +171,20 @@ def test_cascade_rollback_reverts_machine_descendants_and_flags_pi_notes(
         vault / ".memoria/quarantine" / notes["note_paths"][0]
     )
     assert state.concept_check_status(vault, notes["note_paths"][0]) == "quarantined"
+    assert state.concept_check_status(vault, "source-alpha") == "quarantined"
+    with state.connect(vault) as conn:
+        passage_status = conn.execute(
+            "SELECT check_status FROM passages WHERE work_id = ?", ("source-alpha",)
+        ).fetchone()
+    assert passage_status is not None and str(passage_status["check_status"]) == "quarantined"
 
     rollback_events = list(iter_jsonl(vault / ".memoria/journal/integrity-machine.jsonl"))
-    assert [event["event"] for event in rollback_events].count("resolved") == len(
-        result["reverted"]
-    )
+    # The catalog source's own quarantine (_quarantine_catalog_source) journals
+    # a "derived" event only, with no matching "resolved" -- that pairing is a
+    # file-Concept convention (_quarantine_machine_descendant). Every other
+    # reverted item is a file Concept and does get one.
+    file_reverted = [item for item in result["reverted"] if item != "catalog/sources/source-alpha"]
+    assert [event["event"] for event in rollback_events].count("resolved") == len(file_reverted)
     assert any(
         event.get("event") == "derived"
         and event.get("output_id") == digest["digest_path"]
@@ -178,6 +201,7 @@ def test_cascade_rollback_reverts_machine_descendants_and_flags_pi_notes(
     committed = set(git(vault, "show", "--name-only", "--format=", result["commit"]).splitlines())
     assert committed == {
         state.JOURNAL_HEAD_REL,
+        ".memoria/quarantine/catalog/sources/source-alpha",
         digest["digest_path"],
         *digest["hub_paths"],
         notes["note_paths"][0],

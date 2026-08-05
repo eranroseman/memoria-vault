@@ -734,6 +734,43 @@ def set_concept_verdict(vault: Path, concept_id: str, check_status: str) -> None
             )
 
 
+def set_catalog_check_status(vault: Path, work_id: str, check_status: str) -> None:
+    """The one writer for a catalog Work's verdict.
+
+    Keeps every store the read-barrier/retrieval path gates on in step, in
+    one transaction: `catalog_sources.check_status`, the `concept_verdicts`
+    row, the `passages.check_status` cascade retrieval filters on, and the
+    `outputs.check_status` mirror when a file-backed output row exists (a
+    catalog Work is db-store, so this is structurally a no-op for it).
+    Re-checking clears the propagation mark exactly like
+    `set_concept_verdict`. Scope excludes `work_aspects.check_status`
+    (written at capture time), which nothing consumes without first
+    checking `catalog_sources`.
+    """
+    status = _check_status(check_status)
+    stable_work_id = _work_id(work_id)
+    with connect(vault) as conn:
+        conn.execute(
+            "UPDATE catalog_sources SET check_status = ? WHERE work_id = ?",
+            (status, stable_work_id),
+        )
+        target = resolve_concept_id(conn, stable_work_id)
+        _set_concept_verdict_conn(conn, target, status)
+        conn.execute(
+            "UPDATE outputs SET check_status = ? WHERE output_id = ?",
+            (status, normalize_path(stable_work_id)),
+        )
+        if status == "checked":
+            conn.execute(
+                "DELETE FROM concept_flags WHERE concept_id = ? AND flag = 'stale'",
+                (target,),
+            )
+            conn.execute(
+                "UPDATE concept_verdicts SET consequence = '' WHERE concept_id = ?",
+                (target,),
+            )
+
+
 def concept_check_status(vault: Path, concept_id: str) -> str:
     if not db_path(vault).is_file():
         return "unchecked"
