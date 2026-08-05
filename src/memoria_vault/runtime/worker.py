@@ -1522,6 +1522,103 @@ def _op_seed_install(
     )
 
 
+def _op_run_prompt_operation(
+    vault: Path,
+    payload: dict[str, Any],
+    context: OperationContext,
+    job: dict[str, Any],
+    policy: dict[str, Any],
+) -> dict[str, Any]:
+    from memoria_vault.runtime.operations import run_prompt_operation
+
+    return run_prompt_operation(
+        vault,
+        context.operation_id,
+        payload,
+        context=context,
+        mode=str(payload.get("mode") or "test"),
+    )
+
+
+def _op_regenerate_references_bib(
+    vault: Path,
+    payload: dict[str, Any],
+    context: OperationContext,
+    job: dict[str, Any],
+    policy: dict[str, Any],
+) -> dict[str, Any]:
+    from memoria_vault.runtime.capture import write_references_bib
+
+    result = write_references_bib(vault, commit=True, context=context)
+    return {
+        "commit": result["commit"],
+        "changed": result["changed"],
+        "output": result["path"],
+    }
+
+
+def _op_regenerate_capability_index(
+    vault: Path,
+    payload: dict[str, Any],
+    context: OperationContext,
+    job: dict[str, Any],
+    policy: dict[str, Any],
+) -> dict[str, Any]:
+    from memoria_vault.runtime.capabilities import write_capability_index
+
+    result = write_capability_index(vault, context=context)
+    return {
+        "commit": result["commit"],
+        "changed": result["changed"],
+        "output": result["path"],
+    }
+
+
+def _op_regenerate_indexes(
+    vault: Path,
+    payload: dict[str, Any],
+    context: OperationContext,
+    job: dict[str, Any],
+    policy: dict[str, Any],
+) -> dict[str, Any]:
+    from memoria_vault.runtime.projections import write_workspace_indexes
+
+    result = write_workspace_indexes(vault, commit=True, context=context)
+    return {
+        "commit": result["commit"],
+        "changed": result["changed"],
+        "outputs": result["paths"],
+    }
+
+
+def _op_regenerate_tracked_projections(
+    vault: Path,
+    payload: dict[str, Any],
+    context: OperationContext,
+    job: dict[str, Any],
+    policy: dict[str, Any],
+) -> dict[str, Any]:
+    from memoria_vault.runtime.projections import write_tracked_projections
+
+    projection_paths = payload.get("paths")
+    if projection_paths is not None and (
+        not isinstance(projection_paths, list)
+        or not all(isinstance(path, str) and path.strip() for path in projection_paths)
+    ):
+        raise ValueError("regenerate-tracked-projections paths must be a list of strings")
+    result = write_tracked_projections(
+        vault,
+        commit=True,
+        context=context,
+        projection_paths=projection_paths,
+    )
+    return {
+        "commit": result["commit"],
+        "changed": result["changed"],
+        "outputs": result["paths"],
+    }
+
+
 OPERATION_HANDLERS: dict[str, OperationHandler] = {
     "apply-decision-rule-notices": _op_apply_decision_rule_notices,
     "empirical-event-record": _op_empirical_event_record,
@@ -1565,9 +1662,24 @@ OPERATION_HANDLERS: dict[str, OperationHandler] = {
     "capture-pdf-source": _op_capture_pdf_source,
     "capture-remote-pdf-source": _op_capture_remote_pdf_source,
     "seed-install": _op_seed_install,
+    "regenerate-references-bib": _op_regenerate_references_bib,
+    "regenerate-capability-index": _op_regenerate_capability_index,
+    "regenerate-indexes": _op_regenerate_indexes,
+    "regenerate-tracked-projections": _op_regenerate_tracked_projections,
 }
 for _integrity_operation_id in INTEGRITY_FINDING_OPERATIONS:
     OPERATION_HANDLERS[_integrity_operation_id] = _op_integrity_finding
+
+PROMPT_OPERATIONS = (
+    "analyze-claims",
+    "check-falsifiability",
+    "compare-and-contrast",
+    "extract-claim-stubs",
+    "red-team-argument",
+    "summarize-for-recall",
+)
+for _prompt_operation_id in PROMPT_OPERATIONS:
+    OPERATION_HANDLERS[_prompt_operation_id] = _op_run_prompt_operation
 
 
 def _run_operation_job(
@@ -1583,70 +1695,6 @@ def _run_operation_job(
     if handler is not None:
         return handler(vault, payload, context, job, policy)
     # Legacy chain below — one group per migration task, deleted in the final task.
-    if operation_id in {
-        "analyze-claims",
-        "check-falsifiability",
-        "compare-and-contrast",
-        "extract-claim-stubs",
-        "red-team-argument",
-        "summarize-for-recall",
-    }:
-        from memoria_vault.runtime.operations import run_prompt_operation
-
-        return run_prompt_operation(
-            vault,
-            operation_id,
-            payload,
-            context=context,
-            mode=str(payload.get("mode") or "test"),
-        )
-    if operation_id == "regenerate-references-bib":
-        from memoria_vault.runtime.capture import write_references_bib
-
-        result = write_references_bib(vault, commit=True, context=context)
-        return {
-            "commit": result["commit"],
-            "changed": result["changed"],
-            "output": result["path"],
-        }
-    if operation_id == "regenerate-capability-index":
-        from memoria_vault.runtime.capabilities import write_capability_index
-
-        result = write_capability_index(vault, context=context)
-        return {
-            "commit": result["commit"],
-            "changed": result["changed"],
-            "output": result["path"],
-        }
-    if operation_id == "regenerate-indexes":
-        from memoria_vault.runtime.projections import write_workspace_indexes
-
-        result = write_workspace_indexes(vault, commit=True, context=context)
-        return {
-            "commit": result["commit"],
-            "changed": result["changed"],
-            "outputs": result["paths"],
-        }
-    if operation_id == "regenerate-tracked-projections":
-        from memoria_vault.runtime.projections import write_tracked_projections
-
-        projection_paths = payload.get("paths")
-        if projection_paths is not None and (
-            not isinstance(projection_paths, list)
-            or not all(isinstance(path, str) and path.strip() for path in projection_paths)
-        ):
-            raise ValueError("regenerate-tracked-projections paths must be a list of strings")
-        result = write_tracked_projections(
-            vault,
-            commit=True,
-            context=context,
-            projection_paths=projection_paths,
-        )
-        return {
-            "commit": result["commit"],
-            "changed": result["changed"],
-            "outputs": result["paths"],
-        }
     raise ValueError(f"unsupported operation: {operation_id!r}")
 
 
