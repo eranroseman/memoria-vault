@@ -383,11 +383,248 @@ def _op_trace_integrity_scan(
     return {"commit": commit, "finding_count": len(events), "findings": events}
 
 
+def _op_integrity_finding(
+    vault: Path,
+    payload: dict[str, Any],
+    context: OperationContext,
+    job: dict[str, Any],
+    policy: dict[str, Any],
+) -> dict[str, Any]:
+    return _run_integrity_finding_operation(vault, context.operation_id, payload, context)
+
+
+def _op_check_source_metadata(
+    vault: Path,
+    payload: dict[str, Any],
+    context: OperationContext,
+    job: dict[str, Any],
+    policy: dict[str, Any],
+) -> dict[str, Any]:
+    from memoria_vault.runtime.grounding import check_source_metadata
+
+    result = check_source_metadata(
+        vault,
+        context=context,
+        shadow=bool(payload.get("shadow", True)),
+        commit=True,
+    )
+    return {
+        "commit": result["commit"],
+        "finding_count": len(result["findings"]),
+        "findings": result["findings"],
+    }
+
+
+def _op_cascade_rollback(
+    vault: Path,
+    payload: dict[str, Any],
+    context: OperationContext,
+    job: dict[str, Any],
+    policy: dict[str, Any],
+) -> dict[str, Any]:
+    from memoria_vault.runtime.grounding import cascade_rollback
+
+    target_id = str(payload.get("target_id") or "").strip()
+    if not target_id:
+        raise ValueError("cascade-rollback requires target_id")
+    result = cascade_rollback(
+        vault,
+        target_id,
+        context=context,
+        reason=str(payload.get("reason") or "worker-cascade-rollback"),
+        include_target=bool(payload.get("include_target", False)),
+    )
+    return {
+        "commit": result["commit"],
+        "reverted_count": len(result["reverted"]),
+        "needs_human_count": len(result["needs_human"]),
+        "rollback": result,
+    }
+
+
+def _op_resolve_attention_family(
+    vault: Path,
+    payload: dict[str, Any],
+    context: OperationContext,
+    job: dict[str, Any],
+    policy: dict[str, Any],
+) -> dict[str, Any]:
+    operation_id = context.operation_id
+    from memoria_vault.runtime.grounding import resolve_attention
+
+    target_id = str(payload.get("target_id") or "").strip()
+    if not target_id:
+        raise ValueError(f"{operation_id} requires target_id")
+    result = resolve_attention(
+        vault,
+        target_id,
+        context=context,
+        resolution="acknowledged" if operation_id == "acknowledge-attention" else "resolved",
+        outcome=str(
+            payload.get("outcome")
+            or ("acknowledged" if operation_id == "acknowledge-attention" else "apply")
+        ),
+        routing_class=str(payload.get("routing_class") or "ask"),
+        reason=str(payload.get("reason") or operation_id),
+        item_type=str(payload.get("item_type") or "attention"),
+    )
+    return {"commit": result["commit"], "resolution": result["event"]}
+
+
+def _op_resolve_evidence(
+    vault: Path,
+    payload: dict[str, Any],
+    context: OperationContext,
+    job: dict[str, Any],
+    policy: dict[str, Any],
+) -> dict[str, Any]:
+    from memoria_vault.runtime.knowledge import resolve_evidence_review
+
+    evidence_id = str(payload.get("evidence_id") or "").strip()
+    if not evidence_id:
+        raise ValueError("resolve-evidence requires evidence_id")
+    event = resolve_evidence_review(
+        vault,
+        evidence_id,
+        actor=context.actor,
+        machine=context.machine,
+        decision=str(payload.get("decision") or ""),
+        reason=str(payload.get("reason") or ""),
+        warrant=str(payload.get("warrant") or "").strip(),
+    )
+    return {"commit": "", "resolution": event}
+
+
+def _op_observe_pi_edits(
+    vault: Path,
+    payload: dict[str, Any],
+    context: OperationContext,
+    job: dict[str, Any],
+    policy: dict[str, Any],
+) -> dict[str, Any]:
+    from memoria_vault.runtime.projections import (
+        changed_tracked_projection_paths,
+        regenerable_tracked_projection_paths,
+        write_tracked_projections,
+    )
+    from memoria_vault.runtime.trusted_writer import (
+        observe_pi_edits_from_status,
+        quarantine_untraced,
+    )
+
+    projection_paths = changed_tracked_projection_paths(vault)
+    regeneration_paths = regenerable_tracked_projection_paths(vault, projection_paths)
+    projection_events = quarantine_untraced(
+        vault,
+        projection_paths,
+        context=context,
+        reason="workspace-scan-generated-projection",
+    )
+    projection_commit = _commit_tracked_targets(
+        vault, "trace integrity scan", projection_events, context
+    )
+    regeneration: dict[str, Any] = {}
+    if regeneration_paths:
+        regeneration = write_tracked_projections(
+            vault,
+            commit=True,
+            context=context,
+            projection_paths=regeneration_paths,
+        )
+    result = observe_pi_edits_from_status(vault, context=context)
+    commits = [
+        commit
+        for commit in (
+            projection_commit,
+            str(regeneration.get("commit") or ""),
+            result["commit"],
+        )
+        if commit
+    ]
+    return {
+        "commit": commits[-1] if commits else "",
+        "observed_count": len(result["observed"]),
+        "finding_count": len(result["findings"]),
+        "findings": result["findings"],
+        "paths": result["paths"],
+        "projection_quarantine_count": len(projection_events),
+        "projection_paths": projection_paths,
+        "regeneration": regeneration,
+    }
+
+
+def _op_mark_checked(
+    vault: Path,
+    payload: dict[str, Any],
+    context: OperationContext,
+    job: dict[str, Any],
+    policy: dict[str, Any],
+) -> dict[str, Any]:
+    from memoria_vault.runtime.operations import emit_disposition_event, required_promotion_checks
+    from memoria_vault.runtime.trusted_writer import mark_checked
+
+    target_path = str(payload.get("target_path") or "").strip()
+    if not target_path:
+        raise ValueError("mark-checked requires target_path")
+    payload_check = str(payload.get("check") or "").strip()
+    checks = required_promotion_checks(policy)
+    if payload_check and payload_check not in checks:
+        raise ValueError(f"mark-checked check must be declared by policy: {payload_check}")
+    event = mark_checked(vault, target_path, checks=checks, context=context, judgment=True)
+    # I1 spec §2: promoting staged content to checked is PI judgment over a
+    # machine proposal, so it always records one. `item_id` is the canonical
+    # path `mark_checked` itself writes under, never the raw payload string.
+    target_rel = normalize_path(target_path)
+    emit_disposition_event(
+        vault,
+        decision="accept",
+        item_type=str(read_frontmatter(vault / target_rel).get("type") or "concept"),
+        item_id=target_rel,
+        context=context,
+    )
+    commit = commit_writer_changes(
+        vault,
+        f"mark checked {Path(target_path).stem}",
+        [target_path],
+        context=context,
+    )
+    return {"commit": commit, "check": event}
+
+
+def _op_surface_tensions(
+    vault: Path,
+    payload: dict[str, Any],
+    context: OperationContext,
+    job: dict[str, Any],
+    policy: dict[str, Any],
+) -> dict[str, Any]:
+    from memoria_vault.runtime.grounding import surface_tensions
+
+    return surface_tensions(
+        vault,
+        context=context,
+        max_pairs=int(payload.get("max_pairs") or 20),
+        commit=True,
+        tier2=_payload_bool(payload, "tier2", True),
+        mode=str(payload.get("mode") or "test"),
+    )
+
+
 OPERATION_HANDLERS: dict[str, OperationHandler] = {
     "apply-decision-rule-notices": _op_apply_decision_rule_notices,
     "empirical-event-record": _op_empirical_event_record,
     "trace-integrity-scan": _op_trace_integrity_scan,
+    "check-source-metadata": _op_check_source_metadata,
+    "cascade-rollback": _op_cascade_rollback,
+    "acknowledge-attention": _op_resolve_attention_family,
+    "resolve-attention": _op_resolve_attention_family,
+    "resolve-evidence": _op_resolve_evidence,
+    "observe-pi-edits": _op_observe_pi_edits,
+    "mark-checked": _op_mark_checked,
+    "surface-tensions": _op_surface_tensions,
 }
+for _integrity_operation_id in INTEGRITY_FINDING_OPERATIONS:
+    OPERATION_HANDLERS[_integrity_operation_id] = _op_integrity_finding
 
 
 def _run_operation_job(
@@ -399,7 +636,6 @@ def _run_operation_job(
     from memoria_vault.runtime.operations import (
         emit_disposition_event,
         load_operation_policy,
-        required_promotion_checks,
         resolve_operation_runner,
     )
 
@@ -432,8 +668,6 @@ def _run_operation_job(
             "check_status": state.concept_check_status(vault, target),
             "materialized": materialized,
         }
-    if operation_id in INTEGRITY_FINDING_OPERATIONS:
-        return _run_integrity_finding_operation(vault, operation_id, payload, context)
     if operation_id == "compile-source-digest":
         from memoria_vault.runtime.operations import compile_source_digest
 
@@ -912,165 +1146,6 @@ def _run_operation_job(
         result = eval_dispatch.dispatch(vault, dry_run=dry_run, context=context)
         outputs = [] if dry_run else [".memoria/eval/last-run.md"]
         return {"outputs": outputs, **result}
-    if operation_id == "check-source-metadata":
-        from memoria_vault.runtime.grounding import check_source_metadata
-
-        result = check_source_metadata(
-            vault,
-            context=context,
-            shadow=bool(payload.get("shadow", True)),
-            commit=True,
-        )
-        return {
-            "commit": result["commit"],
-            "finding_count": len(result["findings"]),
-            "findings": result["findings"],
-        }
-    if operation_id == "cascade-rollback":
-        from memoria_vault.runtime.grounding import cascade_rollback
-
-        target_id = str(payload.get("target_id") or "").strip()
-        if not target_id:
-            raise ValueError("cascade-rollback requires target_id")
-        result = cascade_rollback(
-            vault,
-            target_id,
-            context=context,
-            reason=str(payload.get("reason") or "worker-cascade-rollback"),
-            include_target=bool(payload.get("include_target", False)),
-        )
-        return {
-            "commit": result["commit"],
-            "reverted_count": len(result["reverted"]),
-            "needs_human_count": len(result["needs_human"]),
-            "rollback": result,
-        }
-    if operation_id in {"acknowledge-attention", "resolve-attention"}:
-        from memoria_vault.runtime.grounding import resolve_attention
-
-        target_id = str(payload.get("target_id") or "").strip()
-        if not target_id:
-            raise ValueError(f"{operation_id} requires target_id")
-        result = resolve_attention(
-            vault,
-            target_id,
-            context=context,
-            resolution="acknowledged" if operation_id == "acknowledge-attention" else "resolved",
-            outcome=str(
-                payload.get("outcome")
-                or ("acknowledged" if operation_id == "acknowledge-attention" else "apply")
-            ),
-            routing_class=str(payload.get("routing_class") or "ask"),
-            reason=str(payload.get("reason") or operation_id),
-            item_type=str(payload.get("item_type") or "attention"),
-        )
-        return {"commit": result["commit"], "resolution": result["event"]}
-    if operation_id == "resolve-evidence":
-        from memoria_vault.runtime.knowledge import resolve_evidence_review
-
-        evidence_id = str(payload.get("evidence_id") or "").strip()
-        if not evidence_id:
-            raise ValueError("resolve-evidence requires evidence_id")
-        event = resolve_evidence_review(
-            vault,
-            evidence_id,
-            actor=context.actor,
-            machine=context.machine,
-            decision=str(payload.get("decision") or ""),
-            reason=str(payload.get("reason") or ""),
-            warrant=str(payload.get("warrant") or "").strip(),
-        )
-        return {"commit": "", "resolution": event}
-    if operation_id == "observe-pi-edits":
-        from memoria_vault.runtime.projections import (
-            changed_tracked_projection_paths,
-            regenerable_tracked_projection_paths,
-            write_tracked_projections,
-        )
-        from memoria_vault.runtime.trusted_writer import (
-            observe_pi_edits_from_status,
-            quarantine_untraced,
-        )
-
-        projection_paths = changed_tracked_projection_paths(vault)
-        regeneration_paths = regenerable_tracked_projection_paths(vault, projection_paths)
-        projection_events = quarantine_untraced(
-            vault,
-            projection_paths,
-            context=context,
-            reason="workspace-scan-generated-projection",
-        )
-        projection_commit = _commit_tracked_targets(
-            vault, "trace integrity scan", projection_events, context
-        )
-        regeneration: dict[str, Any] = {}
-        if regeneration_paths:
-            regeneration = write_tracked_projections(
-                vault,
-                commit=True,
-                context=context,
-                projection_paths=regeneration_paths,
-            )
-        result = observe_pi_edits_from_status(vault, context=context)
-        commits = [
-            commit
-            for commit in (
-                projection_commit,
-                str(regeneration.get("commit") or ""),
-                result["commit"],
-            )
-            if commit
-        ]
-        return {
-            "commit": commits[-1] if commits else "",
-            "observed_count": len(result["observed"]),
-            "finding_count": len(result["findings"]),
-            "findings": result["findings"],
-            "paths": result["paths"],
-            "projection_quarantine_count": len(projection_events),
-            "projection_paths": projection_paths,
-            "regeneration": regeneration,
-        }
-    if operation_id == "mark-checked":
-        from memoria_vault.runtime.trusted_writer import mark_checked
-
-        target_path = str(payload.get("target_path") or "").strip()
-        if not target_path:
-            raise ValueError("mark-checked requires target_path")
-        payload_check = str(payload.get("check") or "").strip()
-        checks = required_promotion_checks(policy)
-        if payload_check and payload_check not in checks:
-            raise ValueError(f"mark-checked check must be declared by policy: {payload_check}")
-        event = mark_checked(vault, target_path, checks=checks, context=context, judgment=True)
-        # I1 spec §2: promoting staged content to checked is PI judgment over a
-        # machine proposal, so it always records one. `item_id` is the canonical
-        # path `mark_checked` itself writes under, never the raw payload string.
-        target_rel = normalize_path(target_path)
-        emit_disposition_event(
-            vault,
-            decision="accept",
-            item_type=str(read_frontmatter(vault / target_rel).get("type") or "concept"),
-            item_id=target_rel,
-            context=context,
-        )
-        commit = commit_writer_changes(
-            vault,
-            f"mark checked {Path(target_path).stem}",
-            [target_path],
-            context=context,
-        )
-        return {"commit": commit, "check": event}
-    if operation_id == "surface-tensions":
-        from memoria_vault.runtime.grounding import surface_tensions
-
-        return surface_tensions(
-            vault,
-            context=context,
-            max_pairs=int(payload.get("max_pairs") or 20),
-            commit=True,
-            tier2=_payload_bool(payload, "tier2", True),
-            mode=str(payload.get("mode") or "test"),
-        )
     if operation_id in {
         "analyze-claims",
         "check-falsifiability",
