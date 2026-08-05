@@ -610,6 +610,549 @@ def _op_surface_tensions(
     )
 
 
+def _op_create_concept(
+    vault: Path,
+    payload: dict[str, Any],
+    context: OperationContext,
+    job: dict[str, Any],
+    policy: dict[str, Any],
+) -> dict[str, Any]:
+    target, content = _create_concept_payload(payload)
+    envelope = job.get("request_envelope")
+    input_refs = envelope.get("input_refs") if isinstance(envelope, dict) else None
+    if not isinstance(input_refs, list):
+        raise ValueError("create-concept request envelope input_refs must be a list")
+    stage_concept(
+        vault,
+        target,
+        content,
+        context=context,
+        inputs=input_refs,
+    )
+    materialized = materialize_unchecked(vault, target, context=context)
+    commit = commit_writer_changes(vault, f"create {Path(target).stem}", [target], context=context)
+    return {
+        "commit": commit,
+        "outputs": [target],
+        "output_path": target,
+        "check_status": state.concept_check_status(vault, target),
+        "materialized": materialized,
+    }
+
+
+def _op_record_copi_interview(
+    vault: Path,
+    payload: dict[str, Any],
+    context: OperationContext,
+    job: dict[str, Any],
+    policy: dict[str, Any],
+) -> dict[str, Any]:
+    from memoria_vault.runtime.operations import record_copi_interview_turn
+
+    work_id = str(payload.get("work_id") or "").strip()
+    response = str(payload.get("response") or "").strip()
+    if not work_id:
+        raise ValueError("record-copi-interview requires work_id")
+    if not response:
+        raise ValueError("record-copi-interview requires response")
+    result = record_copi_interview_turn(
+        vault,
+        work_id,
+        response,
+        context=context,
+        prompt=str(payload.get("prompt") or "What matters about this source?"),
+        project_id=str(payload.get("project_id") or ""),
+    )
+    return {
+        "commit": result["commit"],
+        "turn_id": result["event"]["turn_id"],
+        "work_id": result["event"]["work_id"],
+    }
+
+
+def _op_propose_note_candidates(
+    vault: Path,
+    payload: dict[str, Any],
+    context: OperationContext,
+    job: dict[str, Any],
+    policy: dict[str, Any],
+) -> dict[str, Any]:
+    from memoria_vault.runtime.knowledge import emit_note_candidates
+
+    digest_path = str(payload.get("digest_path") or "").strip()
+    candidates = payload.get("candidates")
+    if not digest_path:
+        raise ValueError("propose-note-candidates requires digest_path")
+    if not isinstance(candidates, list) or not all(
+        isinstance(candidate, dict) for candidate in candidates
+    ):
+        raise ValueError("propose-note-candidates requires candidates")
+    result = emit_note_candidates(
+        vault,
+        digest_path,
+        candidates,
+        context=context,
+        mode=str(payload.get("mode") or "test"),
+    )
+    return {
+        "commit": result["commit"],
+        "note_paths": result["note_paths"],
+    }
+
+
+def _op_curate_note_candidate(
+    vault: Path,
+    payload: dict[str, Any],
+    context: OperationContext,
+    job: dict[str, Any],
+    policy: dict[str, Any],
+) -> dict[str, Any]:
+    from memoria_vault.runtime.knowledge import curate_note_candidate
+
+    note_path = str(payload.get("note_path") or "").strip()
+    status = str(payload.get("status") or "").strip()
+    if not note_path:
+        raise ValueError("curate-note-candidate requires note_path")
+    if not status:
+        raise ValueError("curate-note-candidate requires status")
+    result = curate_note_candidate(
+        vault,
+        note_path,
+        status,
+        context=context,
+        reason=str(payload.get("reason") or ""),
+    )
+    return {
+        "commit": result["commit"],
+        "note_path": result["note_path"],
+        "curation_status": result["status"],
+    }
+
+
+def _op_curate_note_link(
+    vault: Path,
+    payload: dict[str, Any],
+    context: OperationContext,
+    job: dict[str, Any],
+    policy: dict[str, Any],
+) -> dict[str, Any]:
+    from memoria_vault.runtime.knowledge import curate_note_link
+
+    source_note_path = str(payload.get("source_note_path") or "").strip()
+    link_type = str(payload.get("link_type") or "").strip()
+    target_path = str(payload.get("target_path") or "").strip()
+    if not source_note_path:
+        raise ValueError("curate-note-link requires source_note_path")
+    if not link_type:
+        raise ValueError("curate-note-link requires link_type")
+    if not target_path:
+        raise ValueError("curate-note-link requires target_path")
+    result = curate_note_link(
+        vault,
+        source_note_path,
+        link_type,
+        target_path,
+        context=context,
+        reason=str(payload.get("reason") or ""),
+        warrant=str(payload.get("warrant") or ""),
+        proposal_ref=str(payload.get("proposal_ref") or ""),
+    )
+    return {
+        "commit": result["commit"],
+        "source_note_path": result["source_note_path"],
+        "target_path": result["target_path"],
+        "link_type": result["link_type"],
+        "changed": result["changed"],
+    }
+
+
+def _op_move_concept(
+    vault: Path,
+    payload: dict[str, Any],
+    context: OperationContext,
+    job: dict[str, Any],
+    policy: dict[str, Any],
+) -> dict[str, Any]:
+    from memoria_vault.runtime.knowledge import move_concept
+
+    old_path = str(payload.get("old_path") or "").strip()
+    new_path = str(payload.get("new_path") or "").strip()
+    if not old_path:
+        raise ValueError("move-concept requires old_path")
+    if not new_path:
+        raise ValueError("move-concept requires new_path")
+    result = move_concept(
+        vault,
+        old_path,
+        new_path,
+        context=context,
+        reason=str(payload.get("reason") or ""),
+    )
+    return {
+        "commit": result["commit"],
+        "old_path": result["old_path"],
+        "new_path": result["new_path"],
+        "rewritten": result["rewritten"],
+    }
+
+
+def _op_generate_questions(
+    vault: Path,
+    payload: dict[str, Any],
+    context: OperationContext,
+    job: dict[str, Any],
+    policy: dict[str, Any],
+) -> dict[str, Any]:
+    from memoria_vault.runtime.operations import generate_questions
+
+    scope = str(payload.get("scope") or "").strip()
+    if not scope:
+        raise ValueError("generate-questions requires scope")
+    result = generate_questions(
+        vault,
+        scope,
+        context=context,
+        mode=str(payload.get("mode") or "test"),
+    )
+    return {
+        "commit": result["commit"],
+        "scope": result["scope"],
+        "proposal_paths": result["proposal_paths"],
+        "question_count": result["question_count"],
+        "rejected_count": result["rejected_count"],
+        "production_enabled": result["production_enabled"],
+    }
+
+
+def _op_analyze_gaps(
+    vault: Path,
+    payload: dict[str, Any],
+    context: OperationContext,
+    job: dict[str, Any],
+    policy: dict[str, Any],
+) -> dict[str, Any]:
+    from memoria_vault.runtime.knowledge import analyze_gaps
+
+    seed_terms = payload.get("seed_terms") or []
+    dense_threshold = payload.get("dense_threshold", 2)
+    if not isinstance(seed_terms, list) or not all(isinstance(term, str) for term in seed_terms):
+        raise ValueError("analyze-gaps requires seed_terms")
+    if not isinstance(dense_threshold, int) or dense_threshold < 1:
+        raise ValueError("analyze-gaps requires dense_threshold >= 1")
+    project_path = str(payload.get("project_path") or "").strip()
+    result = analyze_gaps(
+        vault,
+        context=context,
+        seed_terms=seed_terms,
+        dense_threshold=dense_threshold,
+        project_path=project_path,
+    )
+    out = {
+        "checked_topics": result["checked_topics"],
+        "dense_threshold": result["dense_threshold"],
+        "summary": result["summary"],
+        "saturation": result["saturation"],
+        "citation_neighborhood_gap_count": result["citation_neighborhood_gap_count"],
+        "full_text_gap_count": result["full_text_gap_count"],
+        "full_text_attention_paths": result["full_text_attention_paths"],
+        "full_text_attention_commit": result["full_text_attention_commit"],
+        "argument_gap_count": result["argument_gap_count"],
+        "paper_readiness_gap_count": result["paper_readiness_gap_count"],
+        "discovery_candidate_paths": result["discovery_candidate_paths"],
+        "discovery_commit": result["discovery_commit"],
+        "tag_candidate_count": result["tag_candidate_count"],
+        "tag_candidate_paths": result["tag_candidate_paths"],
+        "tag_candidate_commit": result["tag_candidate_commit"],
+        "tag_candidates": result["tag_candidates"],
+        "gap_count": len(result["gaps"]),
+        "gap_findings": result["gap_findings"],
+        "gaps": result["gaps"],
+    }
+    if project_path:
+        out.update(
+            {
+                "project_path": result["project_path"],
+                "thesis_path": result["thesis_path"],
+                "argument_stage": result["argument_stage"],
+                "evidence_saturation": result["evidence_saturation"],
+                "displayed_confidence": result["displayed_confidence"],
+            }
+        )
+    return out
+
+
+def _op_frame_paper(
+    vault: Path,
+    payload: dict[str, Any],
+    context: OperationContext,
+    job: dict[str, Any],
+    policy: dict[str, Any],
+) -> dict[str, Any]:
+    from memoria_vault.runtime.knowledge import frame_project_paper
+
+    project_path = str(payload.get("project_path") or "").strip()
+    if not project_path:
+        raise ValueError("frame-paper requires project_path")
+    result = frame_project_paper(
+        vault,
+        project_path,
+        context=context,
+        paper_plan=payload,
+        proposal_ref=str(payload.get("proposal_ref") or ""),
+    )
+    return {
+        "commit": result["commit"],
+        "project_path": result["project_path"],
+        "paper_plan": result["paper_plan"],
+        "outcome_frame": result["outcome_frame"],
+        "check_status": result["check_status"],
+        "materialized": result["materialized"],
+    }
+
+
+def _op_analyze_project_argument(
+    vault: Path,
+    payload: dict[str, Any],
+    context: OperationContext,
+    job: dict[str, Any],
+    policy: dict[str, Any],
+) -> dict[str, Any]:
+    from memoria_vault.runtime.knowledge import analyze_project_argument
+
+    project_path = str(payload.get("project_path") or "").strip()
+    if not project_path:
+        raise ValueError("analyze-project-argument requires project_path")
+    result = analyze_project_argument(vault, project_path)
+    return {
+        "project_path": result["project_path"],
+        "thesis_path": result["thesis_path"],
+        "argument_stage": result["argument_stage"],
+        "evidence_saturation": result["evidence_saturation"],
+        "displayed_confidence": result["displayed_confidence"],
+        "saturation_conditions": result["saturation_conditions"],
+        "relation_count": result["relation_count"],
+        "supports_count": result["supports_count"],
+        "contradicts_count": result["contradicts_count"],
+        "extends_count": result["extends_count"],
+        "node_count": result["node_count"],
+        "findings": result["findings"],
+        "gap_findings": result["gap_findings"],
+        "advisories": result["advisories"],
+        "nodes": result["nodes"],
+        "edges": result["edges"],
+    }
+
+
+def _op_render_project_argument_canvas(
+    vault: Path,
+    payload: dict[str, Any],
+    context: OperationContext,
+    job: dict[str, Any],
+    policy: dict[str, Any],
+) -> dict[str, Any]:
+    from memoria_vault.runtime.knowledge import write_project_argument_canvas
+
+    project_path = str(payload.get("project_path") or "").strip()
+    if not project_path:
+        raise ValueError("render-project-argument-canvas requires project_path")
+    result = write_project_argument_canvas(
+        vault,
+        project_path,
+        context=context,
+        commit=True,
+    )
+    return {
+        "commit": result["commit"],
+        "project_path": result["project_path"],
+        "canvas_path": result["canvas_path"],
+        "node_count": result["node_count"],
+        "edge_count": result["edge_count"],
+    }
+
+
+def _op_fork_project_canvas(
+    vault: Path,
+    payload: dict[str, Any],
+    context: OperationContext,
+    job: dict[str, Any],
+    policy: dict[str, Any],
+) -> dict[str, Any]:
+    from memoria_vault.runtime.knowledge import fork_project_canvas
+
+    project_path = str(payload.get("project_path") or "").strip()
+    if not project_path:
+        raise ValueError("fork-project-canvas requires project_path")
+    result = fork_project_canvas(
+        vault,
+        project_path,
+        context=context,
+        name=str(payload.get("name") or "scratch"),
+        commit=True,
+    )
+    return {
+        "commit": result["commit"],
+        "project_path": result["project_path"],
+        "source_canvas_path": result["source_canvas_path"],
+        "scratch_canvas_path": result["scratch_canvas_path"],
+    }
+
+
+def _op_write_project_slice(
+    vault: Path,
+    payload: dict[str, Any],
+    context: OperationContext,
+    job: dict[str, Any],
+    policy: dict[str, Any],
+) -> dict[str, Any]:
+    from memoria_vault.runtime.knowledge import write_project_outline
+
+    project_path = str(payload.get("project_path") or "").strip()
+    if not project_path:
+        raise ValueError("write-project-slice requires project_path")
+    result = write_project_outline(
+        vault,
+        project_path,
+        context=context,
+        query=str(payload.get("query") or ""),
+        limit=int(payload.get("limit") or 20),
+        commit=True,
+    )
+    return {
+        "commit": result["commit"],
+        "project_path": result["project_path"],
+        "outline_path": result["outline_path"],
+        "retrieval_backend": result["retrieval_backend"],
+        "query": result["query"],
+        "member_count": result["member_count"],
+        "edge_count": result["edge_count"],
+        "members": result["members"],
+        "edges": result["edges"],
+        "missing": result["missing"],
+        "skipped": result["skipped"],
+    }
+
+
+def _op_compose_project_draft(
+    vault: Path,
+    payload: dict[str, Any],
+    context: OperationContext,
+    job: dict[str, Any],
+    policy: dict[str, Any],
+) -> dict[str, Any]:
+    from memoria_vault.runtime.knowledge import compose_project_draft
+
+    project_path = str(payload.get("project_path") or "").strip()
+    if not project_path:
+        raise ValueError("compose-project-draft requires project_path")
+    result = compose_project_draft(
+        vault,
+        project_path,
+        context=context,
+        token_budget=int(payload.get("token_budget") or 4000),
+        commit=True,
+    )
+    return {
+        "commit": result["commit"],
+        "project_path": result["project_path"],
+        "draft_path": result["draft_path"],
+        "member_count": result["member_count"],
+        "evidence_set_count": result["evidence_set_count"],
+        "evidence_markers": result["evidence_markers"],
+        "evidence_sets": result["evidence_sets"],
+    }
+
+
+def _op_verify_project_draft(
+    vault: Path,
+    payload: dict[str, Any],
+    context: OperationContext,
+    job: dict[str, Any],
+    policy: dict[str, Any],
+) -> dict[str, Any]:
+    from memoria_vault.runtime.knowledge import verify_project_draft
+
+    project_path = str(payload.get("project_path") or "").strip()
+    if not project_path:
+        raise ValueError("verify-project-draft requires project_path")
+    result = verify_project_draft(vault, project_path, context=context)
+    return {
+        "project_path": result["project_path"],
+        "draft_path": result["draft_path"],
+        "ready": result["ready"],
+        "verification_status": result["status"],
+        "missing": result["missing"],
+        "findings": result["findings"],
+        "evidence_sets": result["evidence_sets"],
+        "rebuild": result["rebuild"],
+        "max_findings": result["max_findings"],
+        "triaged_count": result["triaged_count"],
+    }
+
+
+def _op_promote_draft_passage(
+    vault: Path,
+    payload: dict[str, Any],
+    context: OperationContext,
+    job: dict[str, Any],
+    policy: dict[str, Any],
+) -> dict[str, Any]:
+    from memoria_vault.runtime.knowledge import promote_draft_passage
+
+    project_path = str(payload.get("project_path") or "").strip()
+    if not project_path:
+        raise ValueError("promote-draft-passage requires project_path")
+    result = promote_draft_passage(
+        vault,
+        project_path,
+        context=context,
+        title=str(payload.get("title") or ""),
+        passage=str(payload.get("passage") or ""),
+        work_id=str(payload.get("work_id") or ""),
+        commit=True,
+    )
+    return {
+        "commit": result["commit"],
+        "project_path": result["project_path"],
+        "draft_path": result["draft_path"],
+        "note_path": result["note_path"],
+        "check_status": result["check_status"],
+        "work_id": result["work_id"],
+    }
+
+
+def _op_export_project(
+    vault: Path,
+    payload: dict[str, Any],
+    context: OperationContext,
+    job: dict[str, Any],
+    policy: dict[str, Any],
+) -> dict[str, Any]:
+    from memoria_vault.runtime.knowledge import write_project_export
+
+    project_path = str(payload.get("project_path") or "").strip()
+    if not project_path:
+        raise ValueError("export-project requires project_path")
+    result = write_project_export(
+        vault,
+        project_path,
+        context=context,
+        export_format=str(payload.get("format") or "markdown"),
+        output_path=str(payload.get("output_path") or ""),
+        allow_unready=_payload_bool(payload, "allow_unready", False),
+        draft=bool(payload.get("draft")),
+    )
+    return {
+        "project_path": result["project_path"],
+        "format": result["format"],
+        "output_path": result["output_path"],
+        "content": result["content"],
+        "readiness": result["readiness"],
+        "node_count": result["node_count"],
+        "edge_count": result["edge_count"],
+        "relation_count": result["relation_count"],
+    }
+
+
 OPERATION_HANDLERS: dict[str, OperationHandler] = {
     "apply-decision-rule-notices": _op_apply_decision_rule_notices,
     "empirical-event-record": _op_empirical_event_record,
@@ -622,6 +1165,23 @@ OPERATION_HANDLERS: dict[str, OperationHandler] = {
     "observe-pi-edits": _op_observe_pi_edits,
     "mark-checked": _op_mark_checked,
     "surface-tensions": _op_surface_tensions,
+    "create-concept": _op_create_concept,
+    "record-copi-interview": _op_record_copi_interview,
+    "propose-note-candidates": _op_propose_note_candidates,
+    "curate-note-candidate": _op_curate_note_candidate,
+    "curate-note-link": _op_curate_note_link,
+    "move-concept": _op_move_concept,
+    "generate-questions": _op_generate_questions,
+    "analyze-gaps": _op_analyze_gaps,
+    "frame-paper": _op_frame_paper,
+    "analyze-project-argument": _op_analyze_project_argument,
+    "render-project-argument-canvas": _op_render_project_argument_canvas,
+    "fork-project-canvas": _op_fork_project_canvas,
+    "write-project-slice": _op_write_project_slice,
+    "compose-project-draft": _op_compose_project_draft,
+    "verify-project-draft": _op_verify_project_draft,
+    "promote-draft-passage": _op_promote_draft_passage,
+    "export-project": _op_export_project,
 }
 for _integrity_operation_id in INTEGRITY_FINDING_OPERATIONS:
     OPERATION_HANDLERS[_integrity_operation_id] = _op_integrity_finding
@@ -644,30 +1204,6 @@ def _run_operation_job(
     if handler is not None:
         return handler(vault, payload, context, job, policy)
     # Legacy chain below — one group per migration task, deleted in the final task.
-    if operation_id == "create-concept":
-        target, content = _create_concept_payload(payload)
-        envelope = job.get("request_envelope")
-        input_refs = envelope.get("input_refs") if isinstance(envelope, dict) else None
-        if not isinstance(input_refs, list):
-            raise ValueError("create-concept request envelope input_refs must be a list")
-        stage_concept(
-            vault,
-            target,
-            content,
-            context=context,
-            inputs=input_refs,
-        )
-        materialized = materialize_unchecked(vault, target, context=context)
-        commit = commit_writer_changes(
-            vault, f"create {Path(target).stem}", [target], context=context
-        )
-        return {
-            "commit": commit,
-            "outputs": [target],
-            "output_path": target,
-            "check_status": state.concept_check_status(vault, target),
-            "materialized": materialized,
-        }
     if operation_id == "compile-source-digest":
         from memoria_vault.runtime.operations import compile_source_digest
 
@@ -707,393 +1243,6 @@ def _run_operation_job(
             "commit": result["commit"],
             "hub_path": result["hub_path"],
             "candidates": result["candidates"],
-        }
-    if operation_id == "record-copi-interview":
-        from memoria_vault.runtime.operations import record_copi_interview_turn
-
-        work_id = str(payload.get("work_id") or "").strip()
-        response = str(payload.get("response") or "").strip()
-        if not work_id:
-            raise ValueError("record-copi-interview requires work_id")
-        if not response:
-            raise ValueError("record-copi-interview requires response")
-        result = record_copi_interview_turn(
-            vault,
-            work_id,
-            response,
-            context=context,
-            prompt=str(payload.get("prompt") or "What matters about this source?"),
-            project_id=str(payload.get("project_id") or ""),
-        )
-        return {
-            "commit": result["commit"],
-            "turn_id": result["event"]["turn_id"],
-            "work_id": result["event"]["work_id"],
-        }
-    if operation_id == "propose-note-candidates":
-        from memoria_vault.runtime.knowledge import emit_note_candidates
-
-        digest_path = str(payload.get("digest_path") or "").strip()
-        candidates = payload.get("candidates")
-        if not digest_path:
-            raise ValueError("propose-note-candidates requires digest_path")
-        if not isinstance(candidates, list) or not all(
-            isinstance(candidate, dict) for candidate in candidates
-        ):
-            raise ValueError("propose-note-candidates requires candidates")
-        result = emit_note_candidates(
-            vault,
-            digest_path,
-            candidates,
-            context=context,
-            mode=str(payload.get("mode") or "test"),
-        )
-        return {
-            "commit": result["commit"],
-            "note_paths": result["note_paths"],
-        }
-    if operation_id == "curate-note-candidate":
-        from memoria_vault.runtime.knowledge import curate_note_candidate
-
-        note_path = str(payload.get("note_path") or "").strip()
-        status = str(payload.get("status") or "").strip()
-        if not note_path:
-            raise ValueError("curate-note-candidate requires note_path")
-        if not status:
-            raise ValueError("curate-note-candidate requires status")
-        result = curate_note_candidate(
-            vault,
-            note_path,
-            status,
-            context=context,
-            reason=str(payload.get("reason") or ""),
-        )
-        return {
-            "commit": result["commit"],
-            "note_path": result["note_path"],
-            "curation_status": result["status"],
-        }
-    if operation_id == "curate-note-link":
-        from memoria_vault.runtime.knowledge import curate_note_link
-
-        source_note_path = str(payload.get("source_note_path") or "").strip()
-        link_type = str(payload.get("link_type") or "").strip()
-        target_path = str(payload.get("target_path") or "").strip()
-        if not source_note_path:
-            raise ValueError("curate-note-link requires source_note_path")
-        if not link_type:
-            raise ValueError("curate-note-link requires link_type")
-        if not target_path:
-            raise ValueError("curate-note-link requires target_path")
-        result = curate_note_link(
-            vault,
-            source_note_path,
-            link_type,
-            target_path,
-            context=context,
-            reason=str(payload.get("reason") or ""),
-            warrant=str(payload.get("warrant") or ""),
-            proposal_ref=str(payload.get("proposal_ref") or ""),
-        )
-        return {
-            "commit": result["commit"],
-            "source_note_path": result["source_note_path"],
-            "target_path": result["target_path"],
-            "link_type": result["link_type"],
-            "changed": result["changed"],
-        }
-    if operation_id == "move-concept":
-        from memoria_vault.runtime.knowledge import move_concept
-
-        old_path = str(payload.get("old_path") or "").strip()
-        new_path = str(payload.get("new_path") or "").strip()
-        if not old_path:
-            raise ValueError("move-concept requires old_path")
-        if not new_path:
-            raise ValueError("move-concept requires new_path")
-        result = move_concept(
-            vault,
-            old_path,
-            new_path,
-            context=context,
-            reason=str(payload.get("reason") or ""),
-        )
-        return {
-            "commit": result["commit"],
-            "old_path": result["old_path"],
-            "new_path": result["new_path"],
-            "rewritten": result["rewritten"],
-        }
-    if operation_id == "generate-questions":
-        from memoria_vault.runtime.operations import generate_questions
-
-        scope = str(payload.get("scope") or "").strip()
-        if not scope:
-            raise ValueError("generate-questions requires scope")
-        result = generate_questions(
-            vault,
-            scope,
-            context=context,
-            mode=str(payload.get("mode") or "test"),
-        )
-        return {
-            "commit": result["commit"],
-            "scope": result["scope"],
-            "proposal_paths": result["proposal_paths"],
-            "question_count": result["question_count"],
-            "rejected_count": result["rejected_count"],
-            "production_enabled": result["production_enabled"],
-        }
-    if operation_id == "analyze-gaps":
-        from memoria_vault.runtime.knowledge import analyze_gaps
-
-        seed_terms = payload.get("seed_terms") or []
-        dense_threshold = payload.get("dense_threshold", 2)
-        if not isinstance(seed_terms, list) or not all(
-            isinstance(term, str) for term in seed_terms
-        ):
-            raise ValueError("analyze-gaps requires seed_terms")
-        if not isinstance(dense_threshold, int) or dense_threshold < 1:
-            raise ValueError("analyze-gaps requires dense_threshold >= 1")
-        project_path = str(payload.get("project_path") or "").strip()
-        result = analyze_gaps(
-            vault,
-            context=context,
-            seed_terms=seed_terms,
-            dense_threshold=dense_threshold,
-            project_path=project_path,
-        )
-        out = {
-            "checked_topics": result["checked_topics"],
-            "dense_threshold": result["dense_threshold"],
-            "summary": result["summary"],
-            "saturation": result["saturation"],
-            "citation_neighborhood_gap_count": result["citation_neighborhood_gap_count"],
-            "full_text_gap_count": result["full_text_gap_count"],
-            "full_text_attention_paths": result["full_text_attention_paths"],
-            "full_text_attention_commit": result["full_text_attention_commit"],
-            "argument_gap_count": result["argument_gap_count"],
-            "paper_readiness_gap_count": result["paper_readiness_gap_count"],
-            "discovery_candidate_paths": result["discovery_candidate_paths"],
-            "discovery_commit": result["discovery_commit"],
-            "tag_candidate_count": result["tag_candidate_count"],
-            "tag_candidate_paths": result["tag_candidate_paths"],
-            "tag_candidate_commit": result["tag_candidate_commit"],
-            "tag_candidates": result["tag_candidates"],
-            "gap_count": len(result["gaps"]),
-            "gap_findings": result["gap_findings"],
-            "gaps": result["gaps"],
-        }
-        if project_path:
-            out.update(
-                {
-                    "project_path": result["project_path"],
-                    "thesis_path": result["thesis_path"],
-                    "argument_stage": result["argument_stage"],
-                    "evidence_saturation": result["evidence_saturation"],
-                    "displayed_confidence": result["displayed_confidence"],
-                }
-            )
-        return out
-    if operation_id == "frame-paper":
-        from memoria_vault.runtime.knowledge import frame_project_paper
-
-        project_path = str(payload.get("project_path") or "").strip()
-        if not project_path:
-            raise ValueError("frame-paper requires project_path")
-        result = frame_project_paper(
-            vault,
-            project_path,
-            context=context,
-            paper_plan=payload,
-            proposal_ref=str(payload.get("proposal_ref") or ""),
-        )
-        return {
-            "commit": result["commit"],
-            "project_path": result["project_path"],
-            "paper_plan": result["paper_plan"],
-            "outcome_frame": result["outcome_frame"],
-            "check_status": result["check_status"],
-            "materialized": result["materialized"],
-        }
-    if operation_id == "analyze-project-argument":
-        from memoria_vault.runtime.knowledge import analyze_project_argument
-
-        project_path = str(payload.get("project_path") or "").strip()
-        if not project_path:
-            raise ValueError("analyze-project-argument requires project_path")
-        result = analyze_project_argument(vault, project_path)
-        return {
-            "project_path": result["project_path"],
-            "thesis_path": result["thesis_path"],
-            "argument_stage": result["argument_stage"],
-            "evidence_saturation": result["evidence_saturation"],
-            "displayed_confidence": result["displayed_confidence"],
-            "saturation_conditions": result["saturation_conditions"],
-            "relation_count": result["relation_count"],
-            "supports_count": result["supports_count"],
-            "contradicts_count": result["contradicts_count"],
-            "extends_count": result["extends_count"],
-            "node_count": result["node_count"],
-            "findings": result["findings"],
-            "gap_findings": result["gap_findings"],
-            "advisories": result["advisories"],
-            "nodes": result["nodes"],
-            "edges": result["edges"],
-        }
-    if operation_id == "render-project-argument-canvas":
-        from memoria_vault.runtime.knowledge import write_project_argument_canvas
-
-        project_path = str(payload.get("project_path") or "").strip()
-        if not project_path:
-            raise ValueError("render-project-argument-canvas requires project_path")
-        result = write_project_argument_canvas(
-            vault,
-            project_path,
-            context=context,
-            commit=True,
-        )
-        return {
-            "commit": result["commit"],
-            "project_path": result["project_path"],
-            "canvas_path": result["canvas_path"],
-            "node_count": result["node_count"],
-            "edge_count": result["edge_count"],
-        }
-    if operation_id == "fork-project-canvas":
-        from memoria_vault.runtime.knowledge import fork_project_canvas
-
-        project_path = str(payload.get("project_path") or "").strip()
-        if not project_path:
-            raise ValueError("fork-project-canvas requires project_path")
-        result = fork_project_canvas(
-            vault,
-            project_path,
-            context=context,
-            name=str(payload.get("name") or "scratch"),
-            commit=True,
-        )
-        return {
-            "commit": result["commit"],
-            "project_path": result["project_path"],
-            "source_canvas_path": result["source_canvas_path"],
-            "scratch_canvas_path": result["scratch_canvas_path"],
-        }
-    if operation_id == "write-project-slice":
-        from memoria_vault.runtime.knowledge import write_project_outline
-
-        project_path = str(payload.get("project_path") or "").strip()
-        if not project_path:
-            raise ValueError("write-project-slice requires project_path")
-        result = write_project_outline(
-            vault,
-            project_path,
-            context=context,
-            query=str(payload.get("query") or ""),
-            limit=int(payload.get("limit") or 20),
-            commit=True,
-        )
-        return {
-            "commit": result["commit"],
-            "project_path": result["project_path"],
-            "outline_path": result["outline_path"],
-            "retrieval_backend": result["retrieval_backend"],
-            "query": result["query"],
-            "member_count": result["member_count"],
-            "edge_count": result["edge_count"],
-            "members": result["members"],
-            "edges": result["edges"],
-            "missing": result["missing"],
-            "skipped": result["skipped"],
-        }
-    if operation_id == "compose-project-draft":
-        from memoria_vault.runtime.knowledge import compose_project_draft
-
-        project_path = str(payload.get("project_path") or "").strip()
-        if not project_path:
-            raise ValueError("compose-project-draft requires project_path")
-        result = compose_project_draft(
-            vault,
-            project_path,
-            context=context,
-            token_budget=int(payload.get("token_budget") or 4000),
-            commit=True,
-        )
-        return {
-            "commit": result["commit"],
-            "project_path": result["project_path"],
-            "draft_path": result["draft_path"],
-            "member_count": result["member_count"],
-            "evidence_set_count": result["evidence_set_count"],
-            "evidence_markers": result["evidence_markers"],
-            "evidence_sets": result["evidence_sets"],
-        }
-    if operation_id == "verify-project-draft":
-        from memoria_vault.runtime.knowledge import verify_project_draft
-
-        project_path = str(payload.get("project_path") or "").strip()
-        if not project_path:
-            raise ValueError("verify-project-draft requires project_path")
-        result = verify_project_draft(vault, project_path, context=context)
-        return {
-            "project_path": result["project_path"],
-            "draft_path": result["draft_path"],
-            "ready": result["ready"],
-            "verification_status": result["status"],
-            "missing": result["missing"],
-            "findings": result["findings"],
-            "evidence_sets": result["evidence_sets"],
-            "rebuild": result["rebuild"],
-            "max_findings": result["max_findings"],
-            "triaged_count": result["triaged_count"],
-        }
-    if operation_id == "promote-draft-passage":
-        from memoria_vault.runtime.knowledge import promote_draft_passage
-
-        project_path = str(payload.get("project_path") or "").strip()
-        if not project_path:
-            raise ValueError("promote-draft-passage requires project_path")
-        result = promote_draft_passage(
-            vault,
-            project_path,
-            context=context,
-            title=str(payload.get("title") or ""),
-            passage=str(payload.get("passage") or ""),
-            work_id=str(payload.get("work_id") or ""),
-            commit=True,
-        )
-        return {
-            "commit": result["commit"],
-            "project_path": result["project_path"],
-            "draft_path": result["draft_path"],
-            "note_path": result["note_path"],
-            "check_status": result["check_status"],
-            "work_id": result["work_id"],
-        }
-    if operation_id == "export-project":
-        from memoria_vault.runtime.knowledge import write_project_export
-
-        project_path = str(payload.get("project_path") or "").strip()
-        if not project_path:
-            raise ValueError("export-project requires project_path")
-        result = write_project_export(
-            vault,
-            project_path,
-            context=context,
-            export_format=str(payload.get("format") or "markdown"),
-            output_path=str(payload.get("output_path") or ""),
-            allow_unready=_payload_bool(payload, "allow_unready", False),
-            draft=bool(payload.get("draft")),
-        )
-        return {
-            "project_path": result["project_path"],
-            "format": result["format"],
-            "output_path": result["output_path"],
-            "content": result["content"],
-            "readiness": result["readiness"],
-            "node_count": result["node_count"],
-            "edge_count": result["edge_count"],
-            "relation_count": result["relation_count"],
         }
     if operation_id == "rebuild-checked-search-index":
         from memoria_vault.runtime.search_index import rebuild_checked_search_index
