@@ -1153,6 +1153,375 @@ def _op_export_project(
     }
 
 
+def _op_compile_source_digest(
+    vault: Path,
+    payload: dict[str, Any],
+    context: OperationContext,
+    job: dict[str, Any],
+    policy: dict[str, Any],
+) -> dict[str, Any]:
+    from memoria_vault.runtime.operations import compile_source_digest
+
+    work_id = str(payload.get("work_id") or "").strip()
+    hub_topics = payload.get("hub_topics")
+    if not work_id:
+        raise ValueError("compile-source-digest requires work_id")
+    if not isinstance(hub_topics, list) or not all(
+        isinstance(topic, str) and topic.strip() for topic in hub_topics
+    ):
+        raise ValueError("compile-source-digest requires hub_topics")
+    result = compile_source_digest(
+        vault,
+        work_id,
+        [topic.strip() for topic in hub_topics],
+        context=context,
+        mode=str(payload.get("mode") or "test"),
+    )
+    return {
+        "commit": result["commit"],
+        "digest_path": result["digest_path"],
+        "hub_paths": result["hub_paths"],
+        "hub_suggestions": result["hub_suggestions"],
+        "interview_count": result["interview_count"],
+    }
+
+
+def _op_digest_related_works(
+    vault: Path,
+    payload: dict[str, Any],
+    context: OperationContext,
+    job: dict[str, Any],
+    policy: dict[str, Any],
+) -> dict[str, Any]:
+    from memoria_vault.runtime.operations import digest_related_works
+
+    hub_path = str(payload.get("hub_path") or "").strip()
+    if not hub_path:
+        raise ValueError("digest-related-works requires hub_path")
+    limit = payload.get("k", 5)
+    if not isinstance(limit, int) or isinstance(limit, bool) or limit < 1:
+        raise ValueError("digest-related-works k must be a positive integer")
+    result = digest_related_works(vault, hub_path, context=context, k=limit)
+    return {
+        "commit": result["commit"],
+        "hub_path": result["hub_path"],
+        "candidates": result["candidates"],
+    }
+
+
+def _op_rebuild_checked_search_index(
+    vault: Path,
+    payload: dict[str, Any],
+    context: OperationContext,
+    job: dict[str, Any],
+    policy: dict[str, Any],
+) -> dict[str, Any]:
+    from memoria_vault.runtime.search_index import rebuild_checked_search_index
+
+    manifest = rebuild_checked_search_index(vault, context=context)
+    return {
+        "backend": manifest["backend"],
+        "input_root": manifest["input_root"],
+        "document_count": len(manifest["documents"]),
+        "documents": manifest["documents"],
+    }
+
+
+def _op_answer_query(
+    vault: Path,
+    payload: dict[str, Any],
+    context: OperationContext,
+    job: dict[str, Any],
+    policy: dict[str, Any],
+) -> dict[str, Any]:
+    from memoria_vault.runtime.search_index import answer_query
+
+    query = str(payload.get("query") or "").strip()
+    k = payload.get("k", 5)
+    if not query:
+        raise ValueError("answer-query requires query")
+    if not isinstance(k, int) or k < 1:
+        raise ValueError("answer-query requires k >= 1")
+    return answer_query(
+        vault,
+        query,
+        context=context,
+        k=k,
+        include_stale=bool(payload.get("include_stale", False)),
+        project_id=str(payload.get("project_id") or ""),
+        trace=_payload_bool(payload, "trace", False),
+    )
+
+
+def _op_run_seeded_error_verdict(
+    vault: Path,
+    payload: dict[str, Any],
+    context: OperationContext,
+    job: dict[str, Any],
+    policy: dict[str, Any],
+) -> dict[str, Any]:
+    operation_id = context.operation_id
+    from memoria_vault.runtime.operations import load_operation_policy, resolve_operation_runner
+    from memoria_vault.runtime.seeded_errors import run_seeded_error_verdict
+
+    bundle_path = vault / ".memoria/eval/alpha15-seeded-errors.json"
+    target_operation_id = str(payload.get("target_operation_id") or operation_id)
+    target_policy = load_operation_policy(vault, target_operation_id)
+    runner = resolve_operation_runner(vault, target_policy, str(payload.get("mode") or "test"))
+    with tempfile.TemporaryDirectory(prefix="memoria-seeded-gate-") as tmpdir:
+        return run_seeded_error_verdict(
+            Path(tmpdir),
+            context=context,
+            template_root=vault,
+            bundle_path=bundle_path,
+            runner=runner,
+            operation_id=target_operation_id,
+        )
+
+
+def _op_eval_run(
+    vault: Path,
+    payload: dict[str, Any],
+    context: OperationContext,
+    job: dict[str, Any],
+    policy: dict[str, Any],
+) -> dict[str, Any]:
+    from memoria_vault.runtime.eval import eval_dispatch
+
+    dry_run = bool(payload.get("dry_run", False))
+    result = eval_dispatch.dispatch(vault, dry_run=dry_run, context=context)
+    outputs = [] if dry_run else [".memoria/eval/last-run.md"]
+    return {"outputs": outputs, **result}
+
+
+def _op_update_work(
+    vault: Path,
+    payload: dict[str, Any],
+    context: OperationContext,
+    job: dict[str, Any],
+    policy: dict[str, Any],
+) -> dict[str, Any]:
+    from memoria_vault.runtime.operations import emit_disposition_event
+
+    work_id = str(payload.get("work_id") or "").strip()
+    if not work_id:
+        raise ValueError("update-work requires work_id")
+    source = state.catalog_source(vault, work_id)
+    if source is None:
+        raise ValueError(f"work not found: {work_id}")
+
+    identifiers = dict(source["identifiers"])
+    csl_json = dict(source["csl_json"])
+    before_identifiers = dict(identifiers)
+    before_csl = dict(csl_json)
+    if doi := str(payload.get("doi") or "").strip():
+        identifiers["doi"] = doi
+        csl_json["DOI"] = doi
+    if "resource" in payload:
+        csl_json["URL"] = str(payload.get("resource") or "")
+
+    memoria = dict(csl_json["memoria"]) if isinstance(csl_json.get("memoria"), dict) else {}
+    prior_standing = str(memoria.get("standing") or "current")
+    if standing := str(payload.get("standing") or "").strip():
+        if standing not in {"current", "archived", "retracted", "superseded"}:
+            raise ValueError(f"update-work standing is invalid: {standing}")
+        memoria["standing"] = standing
+    for payload_key in ("research_area", "methodology"):
+        if payload_key not in payload:
+            continue
+        values = payload[payload_key]
+        if not isinstance(values, list) or not all(isinstance(value, str) for value in values):
+            raise ValueError(f"update-work {payload_key} must be a list of strings")
+        memoria[payload_key] = [value for value in values if value.strip()]
+    if memoria:
+        csl_json["memoria"] = memoria
+    else:
+        csl_json.pop("memoria", None)
+
+    provider_coverage = str(payload.get("provider_coverage") or source["provider_coverage"])
+    if provider_coverage not in {"full", "partial", "degraded"}:
+        raise ValueError(f"update-work provider_coverage is invalid: {provider_coverage}")
+    check_status = str(payload.get("check_status") or source["check_status"])
+    if check_status not in {"unchecked", "checked", "quarantined"}:
+        raise ValueError(f"update-work check_status is invalid: {check_status}")
+    if provider_coverage == "degraded" and check_status == "checked":
+        if "check_status" in payload:
+            raise ValueError("update-work degraded provider coverage cannot set checked")
+        check_status = "unchecked"
+
+    state.upsert_catalog_record(
+        vault,
+        work_id=source["work_id"],
+        concept_path=source["concept_path"],
+        doi=identifiers.get("doi"),
+        title=str(payload.get("title") or source["title"]),
+        description=(
+            str(payload["description"]) if "description" in payload else source["description"]
+        ),
+        resource=str(payload["resource"]) if "resource" in payload else source["resource"],
+        identifiers=identifiers,
+        citekey=str(payload["citekey"]) if "citekey" in payload else source["citekey"],
+        csl_json=csl_json,
+        provider_coverage=provider_coverage,
+        text_status=source["text_status"],
+        check_status=check_status,
+        content_hash=source["normalized_text_sha256"],
+        raw_hash=source["raw_text_sha256"],
+        content_path=source["content_path"],
+        raw_path=source["raw_path"],
+    )
+    updated = state.catalog_source(vault, source["work_id"])
+    updates = {
+        key: value
+        for key, value in payload.items()
+        if key != "work_id" and value not in (None, [], "")
+    }
+    append_jsonl(
+        vault / OVERRIDE_LOG_REL,
+        [
+            {
+                "timestamp": now_iso(),
+                "operation": "update-work",
+                "work_id": source["work_id"],
+                "updates": updates,
+            }
+        ],
+    )
+    append_journal_event(
+        vault,
+        {
+            "event": "work_updated",
+            "work_id": source["work_id"],
+            "updates": updates,
+            "override_log": OVERRIDE_LOG_REL,
+        },
+        context=context,
+    )
+    # I1 spec §2: only a *correction* of machine-enriched metadata is PI
+    # judgment over machine output. Overwriting a previously non-empty
+    # identifiers/csl_json value is a correction; filling a previously empty
+    # one is completion, and records nothing. `csl_json.memoria` is excluded
+    # because this branch is its only writer — a standing/research_area/
+    # methodology change is PI judgment over PI-authored fields, so counting
+    # it would report a machine correction that never happened.
+    if _corrects_enriched_metadata((before_identifiers, identifiers), (before_csl, csl_json)):
+        emit_disposition_event(
+            vault, decision="edit", item_type="work", item_id=work_id, context=context
+        )
+    commit = commit_writer_changes(
+        vault,
+        f"update work {source['work_id']}",
+        [OVERRIDE_LOG_REL],
+        context=context,
+    )
+    # The catalog standing seam (EDGES section 5). Only a transition *into*
+    # falsity sweeps: `archived` is shelving, and restating a standing the
+    # work already carries is not a second fall.
+    propagation_result: dict[str, Any] = {}
+    new_standing = str(memoria.get("standing") or "current")
+    if new_standing in {"retracted", "superseded"} and new_standing != prior_standing:
+        from memoria_vault.runtime.propagation import propagate_consequences
+
+        propagation_result = propagate_consequences(
+            vault,
+            f"catalog/sources/{source['work_id']}",
+            trigger="standing-changed",
+            reason=f"work standing changed to {new_standing}: {source['work_id']}",
+            context=context,
+        )
+    return {
+        "work_id": source["work_id"],
+        "work": updated,
+        "override_log": OVERRIDE_LOG_REL,
+        "commit": commit,
+        "propagation": propagation_result,
+    }
+
+
+def _op_capture_source(
+    vault: Path,
+    payload: dict[str, Any],
+    context: OperationContext,
+    job: dict[str, Any],
+    policy: dict[str, Any],
+) -> dict[str, Any]:
+    return _run_capture_source_operation(vault, payload, context)
+
+
+def _op_enrich_source(
+    vault: Path,
+    payload: dict[str, Any],
+    context: OperationContext,
+    job: dict[str, Any],
+    policy: dict[str, Any],
+) -> dict[str, Any]:
+    return _run_enrich_source_operation(vault, payload, policy, context)
+
+
+def _op_capture_bibtex_source(
+    vault: Path,
+    payload: dict[str, Any],
+    context: OperationContext,
+    job: dict[str, Any],
+    policy: dict[str, Any],
+) -> dict[str, Any]:
+    return _run_capture_bibtex_source_operation(vault, payload, context)
+
+
+def _op_capture_url_source(
+    vault: Path,
+    payload: dict[str, Any],
+    context: OperationContext,
+    job: dict[str, Any],
+    policy: dict[str, Any],
+) -> dict[str, Any]:
+    return _run_capture_url_source_operation(vault, payload, policy, context)
+
+
+def _op_capture_pdf_source(
+    vault: Path,
+    payload: dict[str, Any],
+    context: OperationContext,
+    job: dict[str, Any],
+    policy: dict[str, Any],
+) -> dict[str, Any]:
+    return _run_capture_pdf_source_operation(vault, payload, context)
+
+
+def _op_capture_remote_pdf_source(
+    vault: Path,
+    payload: dict[str, Any],
+    context: OperationContext,
+    job: dict[str, Any],
+    policy: dict[str, Any],
+) -> dict[str, Any]:
+    return _run_capture_remote_pdf_source_operation(vault, payload, policy, context)
+
+
+def _op_seed_install(
+    vault: Path,
+    payload: dict[str, Any],
+    context: OperationContext,
+    job: dict[str, Any],
+    policy: dict[str, Any],
+) -> dict[str, Any]:
+    from memoria_vault.runtime.operations import require_allowed_network
+    from memoria_vault.runtime.seed_install import seed_install
+
+    # The fetch is never implicit. Every other network-touching operation
+    # validates its payload before reaching the resolver, so a generic
+    # `operation run <id> --payload-json {}` sweep (tests/test_parity_
+    # fixture.py runs one over the whole catalog as actor=pi) cannot start
+    # eight third-party downloads; `memoria seed install` always sends this.
+    if payload.get("install") is not True:
+        raise ValueError("seed-install requires install: true")
+    return seed_install(
+        vault,
+        context=context,
+        authorize_url=lambda url: require_allowed_network(policy, url),
+    )
+
+
 OPERATION_HANDLERS: dict[str, OperationHandler] = {
     "apply-decision-rule-notices": _op_apply_decision_rule_notices,
     "empirical-event-record": _op_empirical_event_record,
@@ -1182,6 +1551,20 @@ OPERATION_HANDLERS: dict[str, OperationHandler] = {
     "verify-project-draft": _op_verify_project_draft,
     "promote-draft-passage": _op_promote_draft_passage,
     "export-project": _op_export_project,
+    "compile-source-digest": _op_compile_source_digest,
+    "digest-related-works": _op_digest_related_works,
+    "rebuild-checked-search-index": _op_rebuild_checked_search_index,
+    "answer-query": _op_answer_query,
+    "run-seeded-error-verdict": _op_run_seeded_error_verdict,
+    "eval-run": _op_eval_run,
+    "update-work": _op_update_work,
+    "capture-source": _op_capture_source,
+    "enrich-source": _op_enrich_source,
+    "capture-bibtex-source": _op_capture_bibtex_source,
+    "capture-url-source": _op_capture_url_source,
+    "capture-pdf-source": _op_capture_pdf_source,
+    "capture-remote-pdf-source": _op_capture_remote_pdf_source,
+    "seed-install": _op_seed_install,
 }
 for _integrity_operation_id in INTEGRITY_FINDING_OPERATIONS:
     OPERATION_HANDLERS[_integrity_operation_id] = _op_integrity_finding
@@ -1193,108 +1576,13 @@ def _run_operation_job(
     operation_id = context.operation_id
     payload = job.get("payload") if isinstance(job.get("payload"), dict) else {}
     _require_operation_actor(context)
-    from memoria_vault.runtime.operations import (
-        emit_disposition_event,
-        load_operation_policy,
-        resolve_operation_runner,
-    )
+    from memoria_vault.runtime.operations import load_operation_policy
 
     policy = load_operation_policy(vault, operation_id)
     handler = OPERATION_HANDLERS.get(operation_id)
     if handler is not None:
         return handler(vault, payload, context, job, policy)
     # Legacy chain below — one group per migration task, deleted in the final task.
-    if operation_id == "compile-source-digest":
-        from memoria_vault.runtime.operations import compile_source_digest
-
-        work_id = str(payload.get("work_id") or "").strip()
-        hub_topics = payload.get("hub_topics")
-        if not work_id:
-            raise ValueError("compile-source-digest requires work_id")
-        if not isinstance(hub_topics, list) or not all(
-            isinstance(topic, str) and topic.strip() for topic in hub_topics
-        ):
-            raise ValueError("compile-source-digest requires hub_topics")
-        result = compile_source_digest(
-            vault,
-            work_id,
-            [topic.strip() for topic in hub_topics],
-            context=context,
-            mode=str(payload.get("mode") or "test"),
-        )
-        return {
-            "commit": result["commit"],
-            "digest_path": result["digest_path"],
-            "hub_paths": result["hub_paths"],
-            "hub_suggestions": result["hub_suggestions"],
-            "interview_count": result["interview_count"],
-        }
-    if operation_id == "digest-related-works":
-        from memoria_vault.runtime.operations import digest_related_works
-
-        hub_path = str(payload.get("hub_path") or "").strip()
-        if not hub_path:
-            raise ValueError("digest-related-works requires hub_path")
-        limit = payload.get("k", 5)
-        if not isinstance(limit, int) or isinstance(limit, bool) or limit < 1:
-            raise ValueError("digest-related-works k must be a positive integer")
-        result = digest_related_works(vault, hub_path, context=context, k=limit)
-        return {
-            "commit": result["commit"],
-            "hub_path": result["hub_path"],
-            "candidates": result["candidates"],
-        }
-    if operation_id == "rebuild-checked-search-index":
-        from memoria_vault.runtime.search_index import rebuild_checked_search_index
-
-        manifest = rebuild_checked_search_index(vault, context=context)
-        return {
-            "backend": manifest["backend"],
-            "input_root": manifest["input_root"],
-            "document_count": len(manifest["documents"]),
-            "documents": manifest["documents"],
-        }
-    if operation_id == "answer-query":
-        from memoria_vault.runtime.search_index import answer_query
-
-        query = str(payload.get("query") or "").strip()
-        k = payload.get("k", 5)
-        if not query:
-            raise ValueError("answer-query requires query")
-        if not isinstance(k, int) or k < 1:
-            raise ValueError("answer-query requires k >= 1")
-        return answer_query(
-            vault,
-            query,
-            context=context,
-            k=k,
-            include_stale=bool(payload.get("include_stale", False)),
-            project_id=str(payload.get("project_id") or ""),
-            trace=_payload_bool(payload, "trace", False),
-        )
-    if operation_id == "run-seeded-error-verdict":
-        from memoria_vault.runtime.seeded_errors import run_seeded_error_verdict
-
-        bundle_path = vault / ".memoria/eval/alpha15-seeded-errors.json"
-        target_operation_id = str(payload.get("target_operation_id") or operation_id)
-        target_policy = load_operation_policy(vault, target_operation_id)
-        runner = resolve_operation_runner(vault, target_policy, str(payload.get("mode") or "test"))
-        with tempfile.TemporaryDirectory(prefix="memoria-seeded-gate-") as tmpdir:
-            return run_seeded_error_verdict(
-                Path(tmpdir),
-                context=context,
-                template_root=vault,
-                bundle_path=bundle_path,
-                runner=runner,
-                operation_id=target_operation_id,
-            )
-    if operation_id == "eval-run":
-        from memoria_vault.runtime.eval import eval_dispatch
-
-        dry_run = bool(payload.get("dry_run", False))
-        result = eval_dispatch.dispatch(vault, dry_run=dry_run, context=context)
-        outputs = [] if dry_run else [".memoria/eval/last-run.md"]
-        return {"outputs": outputs, **result}
     if operation_id in {
         "analyze-claims",
         "check-falsifiability",
@@ -1311,168 +1599,6 @@ def _run_operation_job(
             payload,
             context=context,
             mode=str(payload.get("mode") or "test"),
-        )
-    if operation_id == "update-work":
-        work_id = str(payload.get("work_id") or "").strip()
-        if not work_id:
-            raise ValueError("update-work requires work_id")
-        source = state.catalog_source(vault, work_id)
-        if source is None:
-            raise ValueError(f"work not found: {work_id}")
-
-        identifiers = dict(source["identifiers"])
-        csl_json = dict(source["csl_json"])
-        before_identifiers = dict(identifiers)
-        before_csl = dict(csl_json)
-        if doi := str(payload.get("doi") or "").strip():
-            identifiers["doi"] = doi
-            csl_json["DOI"] = doi
-        if "resource" in payload:
-            csl_json["URL"] = str(payload.get("resource") or "")
-
-        memoria = dict(csl_json["memoria"]) if isinstance(csl_json.get("memoria"), dict) else {}
-        prior_standing = str(memoria.get("standing") or "current")
-        if standing := str(payload.get("standing") or "").strip():
-            if standing not in {"current", "archived", "retracted", "superseded"}:
-                raise ValueError(f"update-work standing is invalid: {standing}")
-            memoria["standing"] = standing
-        for payload_key in ("research_area", "methodology"):
-            if payload_key not in payload:
-                continue
-            values = payload[payload_key]
-            if not isinstance(values, list) or not all(isinstance(value, str) for value in values):
-                raise ValueError(f"update-work {payload_key} must be a list of strings")
-            memoria[payload_key] = [value for value in values if value.strip()]
-        if memoria:
-            csl_json["memoria"] = memoria
-        else:
-            csl_json.pop("memoria", None)
-
-        provider_coverage = str(payload.get("provider_coverage") or source["provider_coverage"])
-        if provider_coverage not in {"full", "partial", "degraded"}:
-            raise ValueError(f"update-work provider_coverage is invalid: {provider_coverage}")
-        check_status = str(payload.get("check_status") or source["check_status"])
-        if check_status not in {"unchecked", "checked", "quarantined"}:
-            raise ValueError(f"update-work check_status is invalid: {check_status}")
-        if provider_coverage == "degraded" and check_status == "checked":
-            if "check_status" in payload:
-                raise ValueError("update-work degraded provider coverage cannot set checked")
-            check_status = "unchecked"
-
-        state.upsert_catalog_record(
-            vault,
-            work_id=source["work_id"],
-            concept_path=source["concept_path"],
-            doi=identifiers.get("doi"),
-            title=str(payload.get("title") or source["title"]),
-            description=(
-                str(payload["description"]) if "description" in payload else source["description"]
-            ),
-            resource=str(payload["resource"]) if "resource" in payload else source["resource"],
-            identifiers=identifiers,
-            citekey=str(payload["citekey"]) if "citekey" in payload else source["citekey"],
-            csl_json=csl_json,
-            provider_coverage=provider_coverage,
-            text_status=source["text_status"],
-            check_status=check_status,
-            content_hash=source["normalized_text_sha256"],
-            raw_hash=source["raw_text_sha256"],
-            content_path=source["content_path"],
-            raw_path=source["raw_path"],
-        )
-        updated = state.catalog_source(vault, source["work_id"])
-        updates = {
-            key: value
-            for key, value in payload.items()
-            if key != "work_id" and value not in (None, [], "")
-        }
-        append_jsonl(
-            vault / OVERRIDE_LOG_REL,
-            [
-                {
-                    "timestamp": now_iso(),
-                    "operation": "update-work",
-                    "work_id": source["work_id"],
-                    "updates": updates,
-                }
-            ],
-        )
-        append_journal_event(
-            vault,
-            {
-                "event": "work_updated",
-                "work_id": source["work_id"],
-                "updates": updates,
-                "override_log": OVERRIDE_LOG_REL,
-            },
-            context=context,
-        )
-        # I1 spec §2: only a *correction* of machine-enriched metadata is PI
-        # judgment over machine output. Overwriting a previously non-empty
-        # identifiers/csl_json value is a correction; filling a previously empty
-        # one is completion, and records nothing. `csl_json.memoria` is excluded
-        # because this branch is its only writer — a standing/research_area/
-        # methodology change is PI judgment over PI-authored fields, so counting
-        # it would report a machine correction that never happened.
-        if _corrects_enriched_metadata((before_identifiers, identifiers), (before_csl, csl_json)):
-            emit_disposition_event(
-                vault, decision="edit", item_type="work", item_id=work_id, context=context
-            )
-        commit = commit_writer_changes(
-            vault,
-            f"update work {source['work_id']}",
-            [OVERRIDE_LOG_REL],
-            context=context,
-        )
-        # The catalog standing seam (EDGES section 5). Only a transition *into*
-        # falsity sweeps: `archived` is shelving, and restating a standing the
-        # work already carries is not a second fall.
-        propagation_result: dict[str, Any] = {}
-        new_standing = str(memoria.get("standing") or "current")
-        if new_standing in {"retracted", "superseded"} and new_standing != prior_standing:
-            from memoria_vault.runtime.propagation import propagate_consequences
-
-            propagation_result = propagate_consequences(
-                vault,
-                f"catalog/sources/{source['work_id']}",
-                trigger="standing-changed",
-                reason=f"work standing changed to {new_standing}: {source['work_id']}",
-                context=context,
-            )
-        return {
-            "work_id": source["work_id"],
-            "work": updated,
-            "override_log": OVERRIDE_LOG_REL,
-            "commit": commit,
-            "propagation": propagation_result,
-        }
-    if operation_id == "capture-source":
-        return _run_capture_source_operation(vault, payload, context)
-    if operation_id == "enrich-source":
-        return _run_enrich_source_operation(vault, payload, policy, context)
-    if operation_id == "capture-bibtex-source":
-        return _run_capture_bibtex_source_operation(vault, payload, context)
-    if operation_id == "capture-url-source":
-        return _run_capture_url_source_operation(vault, payload, policy, context)
-    if operation_id == "capture-pdf-source":
-        return _run_capture_pdf_source_operation(vault, payload, context)
-    if operation_id == "capture-remote-pdf-source":
-        return _run_capture_remote_pdf_source_operation(vault, payload, policy, context)
-    if operation_id == "seed-install":
-        from memoria_vault.runtime.operations import require_allowed_network
-        from memoria_vault.runtime.seed_install import seed_install
-
-        # The fetch is never implicit. Every other network-touching operation
-        # validates its payload before reaching the resolver, so a generic
-        # `operation run <id> --payload-json {}` sweep (tests/test_parity_
-        # fixture.py runs one over the whole catalog as actor=pi) cannot start
-        # eight third-party downloads; `memoria seed install` always sends this.
-        if payload.get("install") is not True:
-            raise ValueError("seed-install requires install: true")
-        return seed_install(
-            vault,
-            context=context,
-            authorize_url=lambda url: require_allowed_network(policy, url),
         )
     if operation_id == "regenerate-references-bib":
         from memoria_vault.runtime.capture import write_references_bib
