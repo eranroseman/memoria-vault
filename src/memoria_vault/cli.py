@@ -2523,61 +2523,6 @@ def _cmd_review_list(args: argparse.Namespace) -> int:
     return 0
 
 
-# A show that did not record its required client event is not a successful show,
-# and the CLI never invents a reason the operation did not give.
-_VIEW_OPENED_UNRECORDED = "evidence detail was read but view.opened was not recorded"
-
-
-def _review_queue_row(workspace: Path, evidence_id: str) -> dict[str, Any] | None:
-    """The one raw queue row an evidence id names, or `None`.
-
-    `batch=0` is the engine-direct unbounded lookup. Only the evidence arm of
-    the discriminated union answers an evidence id: an SRD gap shares the queue
-    and carries no `evidence_id` at all.
-    """
-    queue = engine_api.evidence_review_queue(workspace, batch=0)
-    return next(
-        (
-            row
-            for row in queue["rows"]
-            if row["kind"] == "evidence-set" and row["evidence_id"] == evidence_id
-        ),
-        None,
-    )
-
-
-def _emit_review_view_opened(
-    args: argparse.Namespace, workspace: Path, evidence_id: str
-) -> dict[str, Any]:
-    """Record one `view.opened` client event through the empirical-event door.
-
-    `empirical-event-record` is the only seam that writes client telemetry, and
-    since I1 T.3 it lands in `telemetry_events`, never the journal.
-    """
-    event = {
-        "event_id": str(uuid.uuid4()),
-        "event_type": "view.opened",
-        "timestamp": now_iso(),
-        "session_id": uuid.uuid4().hex,
-        "surface": "cli",
-        "workflow": "evidence-review",
-        "item_type": "evidence-set",
-        "item_id": evidence_id,
-    }
-    result = engine_api.run_operation(
-        workspace,
-        "empirical-event-record",
-        event,
-        idempotency_key=f"empirical-event:{event['event_id']}",
-        actor=args.actor,
-        command="review-show",
-    )
-    telemetry: dict[str, Any] = {"ok": bool(result["ok"]), "event_id": event["event_id"]}
-    if not telemetry["ok"]:
-        telemetry["result"] = result["result"]  # the failed operation's own account
-    return telemetry
-
-
 def _review_item_line(preview: dict[str, Any]) -> str:
     resolves = "resolves" if preview["resolves"] else "does not resolve"
     line = f"  - {preview['ref']}  [{resolves}]"
@@ -2614,99 +2559,31 @@ def _print_review_detail(row: dict[str, Any], *, show_analysis: bool) -> None:
 
 
 def _cmd_review_show(args: argparse.Namespace) -> int:
-    workspace = _workspace(args)
-    row = _review_queue_row(workspace, args.evidence_id)
-    if row is None:
-        return _fail(
-            f"evidence id is not in the review queue: {args.evidence_id}",
-            json_output=args.json,
-        )
-    shown = evidence_review.detail_row(row, show_analysis=args.show_analysis)
-    telemetry = _emit_review_view_opened(args, workspace, args.evidence_id)
-    payload: dict[str, Any] = {"ok": telemetry["ok"], "row": shown, "telemetry": telemetry}
-    if not telemetry["ok"]:
-        payload["error"] = (
-            str((telemetry["result"] or {}).get("error") or "") or _VIEW_OPENED_UNRECORDED
-        )
+    payload = engine_api.evidence_review_item(
+        _workspace(args),
+        args.evidence_id,
+        show_analysis=args.show_analysis,
+        actor=args.actor,
+    )
+    if "row" not in payload:
+        return _fail(payload["error"], json_output=args.json)
+    if not payload["ok"] or args.json or args.quiet:
         return _emit(payload, args)
-    if args.json or args.quiet:
-        return _emit(payload, args)
-    _print_review_detail(shown, show_analysis=args.show_analysis)
+    _print_review_detail(payload["row"], show_analysis=args.show_analysis)
     return 0
 
 
-# The decision itself is journaled and stays journaled; only the client-side
-# record of it is missing, and the CLI says so rather than reporting success.
-_DISPOSITION_UNRECORDED = "disposition succeeded but client telemetry was not recorded"
-
-
-def _emit_review_disposition_recorded(
-    args: argparse.Namespace, workspace: Path, dwell: float | None
-) -> dict[str, Any]:
-    """Record one `disposition.recorded` client event for this decision.
-
-    `duration_s` rides only a dwell the journal can support: the schema refuses
-    a nonpositive duration, and a sub-second gap is noise, never a real look.
-    """
-    event: dict[str, Any] = {
-        "event_id": str(uuid.uuid4()),
-        "event_type": "disposition.recorded",
-        "timestamp": now_iso(),
-        "session_id": uuid.uuid4().hex,
-        "surface": "cli",
-        "workflow": "evidence-review",
-        "decision": args.review_decision,
-        "reason_code": args.reason_code,
-        "item_type": "evidence-set",
-        "item_id": args.evidence_id,
-    }
-    if dwell is not None and dwell >= 1.0:
-        event["duration_s"] = round(dwell, 1)
-    result = engine_api.run_operation(
-        workspace,
-        "empirical-event-record",
-        event,
-        idempotency_key=f"empirical-event:{event['event_id']}",
-        actor=args.actor,
-        command=f"review-{args.review_decision}",
-    )
-    telemetry: dict[str, Any] = {"ok": bool(result["ok"]), "event_id": event["event_id"]}
-    if "duration_s" in event:
-        telemetry["duration_s"] = event["duration_s"]
-    if not telemetry["ok"]:
-        telemetry["result"] = result["result"]  # the failed operation's own account
-    return telemetry
-
-
 def _cmd_review_action(args: argparse.Namespace) -> int:
-    from memoria_vault.runtime.knowledge import resolve_evidence_review, review_dwell_seconds
-
-    _require_pi_actor(args, f"review-{args.review_decision}")
-    workspace = _workspace(args)
-    dwell = review_dwell_seconds(workspace, args.evidence_id)
-    event = resolve_evidence_review(
-        workspace,
+    payload = engine_api.resolve_evidence(
+        _workspace(args),
         args.evidence_id,
-        decision=args.review_decision,
+        args.review_decision,
         reason=args.reason,
         warrant=getattr(args, "warrant", ""),
+        reason_code=args.reason_code,
         actor=args.actor,
-        machine="memoria-cli",
     )
-    telemetry = _emit_review_disposition_recorded(args, workspace, dwell)
-    payload: dict[str, Any] = {
-        "ok": telemetry["ok"],
-        "evidence_id": args.evidence_id,
-        "decision": args.review_decision,
-        "event": event,
-        "telemetry": telemetry,
-    }
-    if not telemetry["ok"]:
-        payload["error"] = (
-            str((telemetry["result"] or {}).get("error") or "") or _DISPOSITION_UNRECORDED
-        )
-        return _emit(payload, args)
-    if args.json or args.quiet:
+    if not payload["ok"] or args.json or args.quiet:
         return _emit(payload, args)
     # `_emit`'s generic success line says only "completed"; the cockpit front
     # names the decision it just recorded, in the list's own row grammar.

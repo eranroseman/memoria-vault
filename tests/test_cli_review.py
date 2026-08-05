@@ -1264,9 +1264,9 @@ def test_review_action_requires_pi_actor(review_vault, capsys: pytest.CaptureFix
     )
     payload = _payload(capsys)
 
-    assert rc == 2
+    assert rc == 1
     assert payload["ok"] is False
-    assert "review-accept" in payload["error"]
+    assert "PI actor authority" in payload["error"]
     assert len(_seam_events(vault)) == before
     assert _telemetry_rows(vault) == []
 
@@ -1282,7 +1282,7 @@ def test_review_action_unknown_id_writes_neither_plane(
     rc = main(["review", "reject", "ev-deadbeef", "--workspace", str(vault), "--json"])
     payload = _payload(capsys)
 
-    assert rc == 2
+    assert rc == 1
     assert payload["ok"] is False
     assert payload["error"] == "unknown evidence id: ev-deadbeef"
     assert len(_seam_events(vault)) == before
@@ -1314,13 +1314,22 @@ def test_review_action_reports_a_refusing_sink_after_a_successful_seam(
 def test_review_action_names_the_unrecorded_client_event_when_the_operation_is_silent(
     review_vault, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """An operation that fails without saying why still yields an honest refusal."""
+    """The decision operation succeeds; the client-telemetry operation fails
+    without saying why — the CLI still yields an honest refusal for that half."""
     vault, ids = review_vault
 
-    def _silent_failure(*args: Any, **kwargs: Any) -> dict[str, Any]:
+    def _resolves_but_records_silently(
+        workspace: Path, operation_id: str, payload: dict[str, Any], **kwargs: Any
+    ) -> dict[str, Any]:
+        if operation_id == "resolve-evidence":
+            return {
+                "ok": True,
+                "job": {"request_id": "req-1"},
+                "result": {"status": "done", "resolution": {"event": "resolved"}},
+            }
         return {"ok": False, "job": {}, "result": None}
 
-    monkeypatch.setattr(engine_api, "run_operation", _silent_failure)
+    monkeypatch.setattr(engine_api, "run_operation", _resolves_but_records_silently)
 
     rc = main(["review", "edit", ids["thesis"], "--workspace", str(vault), "--json"])
     payload = _payload(capsys)
