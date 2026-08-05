@@ -1925,9 +1925,8 @@ def _cmd_project_verify(args: argparse.Namespace) -> int:
 
 
 def _cmd_project_resolve_evidence(args: argparse.Namespace) -> int:
-    from memoria_vault.runtime.knowledge import read_project_draft, resolve_evidence_review
+    from memoria_vault.runtime.knowledge import read_project_draft
 
-    _require_pi_actor(args, "resolve-evidence-review")
     workspace = _workspace(args)
     verification_request = _enqueue_and_run(
         args,
@@ -1943,15 +1942,16 @@ def _cmd_project_resolve_evidence(args: argparse.Namespace) -> int:
             f"evidence id is not in this project draft: {args.evidence_id}",
             json_output=args.json,
         )
-    event = resolve_evidence_review(
+    payload = engine_api.resolve_evidence(
         workspace,
         args.evidence_id,
-        decision=args.decision,
+        args.decision,
         reason=args.reason,
         warrant=args.warrant,
         actor=args.actor,
-        machine="memoria-cli",
     )
+    if not payload["ok"]:
+        return _emit(payload, args)
     return _emit(
         {
             "ok": True,
@@ -1959,7 +1959,7 @@ def _cmd_project_resolve_evidence(args: argparse.Namespace) -> int:
             "draft_path": verification["draft_path"],
             "evidence_id": args.evidence_id,
             "decision": args.decision,
-            "event": event,
+            "event": payload["event"],
         },
         args,
     )
