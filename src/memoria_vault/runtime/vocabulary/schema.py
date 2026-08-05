@@ -23,6 +23,7 @@ from pathlib import Path
 
 import yaml
 
+from memoria_vault.runtime import vaultio
 from memoria_vault.runtime.vaultio import (
     DEFAULT_SKIP_DIRS,
     is_ulid,
@@ -282,14 +283,15 @@ def validate_frontmatter(
 
 def _markdown_frontmatter(path: Path) -> tuple[dict, str, list[str]]:
     text = path.read_text(encoding="utf-8")
-    if not text.startswith("---\n"):
-        return {}, text, ["missing YAML frontmatter"]
-    try:
-        _, fm_text, body = text.split("---\n", 2)
-    except ValueError:
+    bounds = vaultio.frontmatter_bounds(text)
+    if bounds is None:
+        if vaultio.FRONTMATTER_OPENING.match(text) is None:
+            return {}, text, ["missing YAML frontmatter"]
         return {}, text, ["unterminated YAML frontmatter"]
+    body_start, body_end, end = bounds
+    body = text[end:]
     try:
-        data = yaml.safe_load(fm_text) or {}
+        data = yaml.safe_load(text[body_start:body_end]) or {}
     except yaml.YAMLError as exc:
         return {}, body, [f"invalid YAML frontmatter: {exc}"]
     if not isinstance(data, dict):
