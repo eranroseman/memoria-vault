@@ -2478,40 +2478,6 @@ def _cmd_attention_worklist(args: argparse.Namespace) -> int:
     return _emit(engine_api.read_attention(_workspace(args), worklist=True), args)
 
 
-# Presentation-only, and never renamed: the raw queue's own spellings
-# (`routing_type`, `disposition`) are the CLI's too (V2 plan, 2026-07-29
-# raw-queue amendment §3). `items` and analysis are deliberately absent —
-# a list row is claim + item count + routing reason (spec §3).
-_REVIEW_SUMMARY_FIELDS = (
-    "evidence_id",
-    "claim_text",
-    "item_count",
-    "routing_type",
-    "reviewable",
-    "cure",
-    "age_days",
-    "disposition",
-    "warrant",
-)
-
-
-def _review_summary_row(row: dict[str, Any]) -> dict[str, Any]:
-    """Project one raw queue row into its list summary.
-
-    Both arms of the queue's discriminated union keep their `kind`, so an SRD
-    gap stays a distinct read-only entry rather than an evidence row missing
-    its fields.
-    """
-    if row["kind"] == "srd-gap":
-        card = row["card_block"]
-        return {"kind": "srd-gap", "title": str(card["title"]), "ref": str(card["ref"])}
-    summary = {key: row[key] for key in _REVIEW_SUMMARY_FIELDS if key in row}
-    summary["kind"] = "evidence-set"
-    summary["project"] = row["project_path"]
-    summary["routing_reason"] = evidence_review.routing_reason(row, row["item_previews"])
-    return summary
-
-
 def _truncate(text: str, width: int = 60) -> str:
     text = " ".join(str(text).split())
     return text if len(text) <= width else text[: width - 1] + "…"
@@ -2541,7 +2507,7 @@ def _cmd_review_list(args: argparse.Namespace) -> int:
         min_age_days=args.min_age_days,
         batch=args.batch,
     )
-    rows = [_review_summary_row(row) for row in queue["rows"]]
+    rows = [evidence_review.summary_row(row) for row in queue["rows"]]
     payload = {
         "ok": True,
         "rows": rows,
@@ -2578,21 +2544,6 @@ def _review_queue_row(workspace: Path, evidence_id: str) -> dict[str, Any] | Non
         ),
         None,
     )
-
-
-def _review_detail_row(row: dict[str, Any], *, show_analysis: bool) -> dict[str, Any]:
-    """The list summary plus resolved grounds previews (spec §3, evidence-first).
-
-    Analysis is folded by default, and absent entirely when the shared helper is
-    empty — a permanently blocked row never shows analysis it cannot act on.
-    """
-    detail = _review_summary_row(row)
-    detail["items"] = row["item_previews"]
-    if show_analysis:
-        analysis = evidence_review.analysis_fields(row, row["item_previews"])
-        if analysis:
-            detail["analysis"] = analysis
-    return detail
 
 
 def _emit_review_view_opened(
@@ -2670,7 +2621,7 @@ def _cmd_review_show(args: argparse.Namespace) -> int:
             f"evidence id is not in the review queue: {args.evidence_id}",
             json_output=args.json,
         )
-    shown = _review_detail_row(row, show_analysis=args.show_analysis)
+    shown = evidence_review.detail_row(row, show_analysis=args.show_analysis)
     telemetry = _emit_review_view_opened(args, workspace, args.evidence_id)
     payload: dict[str, Any] = {"ok": telemetry["ok"], "row": shown, "telemetry": telemetry}
     if not telemetry["ok"]:

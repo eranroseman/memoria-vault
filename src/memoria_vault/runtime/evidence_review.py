@@ -530,3 +530,52 @@ def _event_date(timestamp: str) -> datetime.date | None:
         return datetime.date.fromisoformat(timestamp[:10])
     except ValueError:
         return None
+
+
+# Presentation-only, and never renamed: the raw queue's own spellings
+# (`routing_type`, `disposition`) are the CLI's too (V2 plan, 2026-07-29
+# raw-queue amendment §3). `items` and analysis are deliberately absent —
+# a list row is claim + item count + routing reason (spec §3).
+SUMMARY_FIELDS = (
+    "evidence_id",
+    "claim_text",
+    "item_count",
+    "routing_type",
+    "reviewable",
+    "cure",
+    "age_days",
+    "disposition",
+    "warrant",
+)
+
+
+def summary_row(row: dict[str, Any]) -> dict[str, Any]:
+    """Project one raw queue row into its list summary.
+
+    Both arms of the queue's discriminated union keep their `kind`, so an SRD
+    gap stays a distinct read-only entry rather than an evidence row missing
+    its fields.
+    """
+    if row["kind"] == "srd-gap":
+        card = row["card_block"]
+        return {"kind": "srd-gap", "title": str(card["title"]), "ref": str(card["ref"])}
+    summary = {key: row[key] for key in SUMMARY_FIELDS if key in row}
+    summary["kind"] = "evidence-set"
+    summary["project"] = row["project_path"]
+    summary["routing_reason"] = routing_reason(row, row["item_previews"])
+    return summary
+
+
+def detail_row(row: dict[str, Any], *, show_analysis: bool) -> dict[str, Any]:
+    """The list summary plus resolved grounds previews (spec §3, evidence-first).
+
+    Analysis is folded by default, and absent entirely when the shared helper is
+    empty — a permanently blocked row never shows analysis it cannot act on.
+    """
+    detail = summary_row(row)
+    detail["items"] = row["item_previews"]
+    if show_analysis:
+        analysis = analysis_fields(row, row["item_previews"])
+        if analysis:
+            detail["analysis"] = analysis
+    return detail
