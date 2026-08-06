@@ -28,6 +28,14 @@ profile packages or lane assignments.
 
 The self-improvement loop (fixed harness, one metric, keep-or-discard) applied to Memoria's own instruments — detectors, prompts, gates — never to the knowledge they assess. Planned — see [Roadmap](../../roadmap.md).
 
+### Catalog
+
+The SQLite record of every source the vault knows: Works, their
+identifiers and provenance, and the work-graph edges discovered for
+them. Sources enter the catalog before any knowledge work; its only
+file-backed faces are `digests/` and `fulltexts/`. See
+[Ingest](../pipelines-and-io/ingest.md) for how sources arrive.
+
 ### Co-PI
 
 The research-partner role exposed through the standalone
@@ -39,6 +47,14 @@ OKF v0.2 provenance frontmatter (`{ by, at }`) stamped by the
 trusted writer at staging; `by` uses the OKF actor grammar. Records
 authorship, not judgment.
 
+### Grounding
+
+The inspectable structure connecting a claim to the sources and
+reasoning that support it. All trust in Memoria lives in grounding
+structure, never in any author — human or machine
+(`src/memoria_vault/runtime/grounding/`). See
+[Intellectual foundations](../../explanation/rationale/foundations/intellectual-foundations.md).
+
 ### Knowledge Bundle
 
 An OKF unit of distribution: the plain-file tree holding the researcher's knowledge, separable from the `.memoria/` engine state. The format ships; the export and import path is planned — see
@@ -49,6 +65,14 @@ An OKF unit of distribution: the plain-file tree holding the researcher's knowle
 The whole system: the OKF knowledge bundles, capability manifests,
 standalone CLI/engine, policy/audit layer, workspace DB, and `.memoria/`
 runtime state.
+
+### memoria doctor
+
+The diagnostic command family (`memoria doctor`,
+`memoria doctor bundle`): read-only checks of installation,
+configuration, runner reachability, and bundle health. See
+[Installer](../system/installer.md) and
+[Failure modes](../system/failure-modes.md).
 
 ### Open Knowledge Format (OKF) {#open-knowledge-format-okf}
 
@@ -69,6 +93,26 @@ executed through `memoria operation run`.
 The human principal investigator who owns and runs the vault. Makes
 every triage, disposition, and promotion decision. Single-user by design.
 
+### Provenance
+
+The umbrella term for recorded origin, in two senses: the OKF
+frontmatter fields on Concepts ([generated](#generated),
+[sources](#sources), [verified](#verified)), stamped by the trusted
+writer and never reconstructed; and pattern provenance — the record
+of which AI-research design patterns Memoria borrowed, adapted,
+referenced, or ignored, and why
+([Pattern provenance](../evidence-and-integrations/pattern-provenance.md)).
+
+### Read API
+
+The engine's verdict-tagged read surface: the registered read
+actions served over CLI, local HTTP, and MCP
+(`src/memoria_vault/engine/surface_contract.py`). All but one
+registered action are reads; the sole write action, `operation.run`,
+queues an operation request rather than writing directly. Surfaces
+such as the Cockpit compose over it. See
+[Engine read API](../commands-and-transports/read-api.md).
+
 ### sources
 
 OKF v0.2 provenance entries derived from derivation inputs at
@@ -84,6 +128,14 @@ runtime state.
 ### Toulmin roles
 
 The six argument components (Claim, Grounds, Warrant, Backing, Qualifier, Rebuttal) that type the knowledge graph and its consequence propagation. Planned — see [Roadmap](../../roadmap.md).
+
+### Trusted writer
+
+The single runtime component allowed to write Concept files: it stamps
+`generated` and `sources` provenance at staging and `verified` at
+promotion, and enforces the frontmatter schema on every write
+(`src/memoria_vault/runtime/trusted_writer.py`). Operations never write
+Concepts directly.
 
 ### verified
 
