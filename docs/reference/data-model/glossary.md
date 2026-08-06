@@ -271,6 +271,15 @@ The umbrella name for every typed document Memoria manages
 frontmatter declaring a schema-backed type, followed by a Markdown body. See
 [Document types](document-types.md) for the full roster and folder homes.
 
+### Disposition
+
+The recorded PI verdict on machine-proposed content: a `disposition.v1`
+journal event (`decision`: `accept`, `reject`, `edit`, `defer`,
+`override`, or `abandon`) appended at PI resolution call-sites such as
+`resolve-attention` and `mark-checked`. One of the three decision kinds
+the PI owns, with [Triage](#triage) and [Promotion](#promotion). See
+[Empirical events](../control-and-policy/empirical-events.md#disposition-call-sites).
+
 ### Document type
 
 One of the Concept types defined in
@@ -282,6 +291,14 @@ One of the Concept types defined in
 A checked `hub` Concept in `hubs/` aggregating a topic's
 members and links. Machine-curated hub changes are suggestions until the PI
 adopts them.
+
+### Ingest
+
+The pipeline stage that brings an external source into the
+[Catalog](#catalog): capture writes an unchecked catalog row plus raw
+and extracted-text blobs, and enrichment checks the row once required
+DOI providers and retraction checks pass. See
+[Ingest](../pipelines-and-io/ingest.md).
 
 ### links (frontmatter)
 
@@ -302,11 +319,55 @@ and `src/memoria_vault/runtime/attention/loudness.py`. `block` is
 pull-only: an open block card pauses delegation and review-gated
 promotion until the PI resolves it.
 
+### Promotion
+
+The review-gated transition where staged content becomes checked
+knowledge once trusted-writer checks pass — not a claim the PI approved
+the content as true, and not a file move. The
+[Trusted writer](#trusted-writer) stamps `verified` at this moment; an
+open `block` card pauses review-gated promotion. See
+[Promotion and the write boundary](../../explanation/knowledge/promotion-and-gated-zones.md).
+
+### Staging
+
+The trusted-writer step that writes generated content into
+`.memoria/staging/` with `generated` and `sources` provenance stamped,
+ahead of worker checks and PI review; re-staging strips `verified`. Not
+git staging, and distinct from the unchecked catalog staging
+[Ingest](#ingest) performs before enrichment checks a row. See
+[Promotion and the write boundary](../../explanation/knowledge/promotion-and-gated-zones.md).
+
 ### State
 
 Not a field name on its own; use the specific field. A Concept's
 read verdict is **`check_status`** in runtime state; request state lives in
 SQLite. Prefer the precise field name over a bare "state".
+
+### steering.md
+
+The vault-root watch/mute override: `## Watch for` bullets boost and
+`## Muted` bullets suppress discovery-ranking relevance tokens, on top
+of steering derived from active projects, hubs, and open question notes.
+PI-authored (`memoria steering edit`); operations read the derived
+effective steering, never this file directly. See
+[Memoria configuration](../system/configuration.md).
+
+### Triage
+
+The PI's first-pass review of Inbox attention projections, resolved
+through `memoria attention resolve` (`--apply`, `--reject`, or
+`--defer`); every resolution logs a disposition for trust and attention
+metrics. Also the name of the Cockpit `--triage` screen (worklist /
+review / flow) that surfaces the queue. See
+[Work the action queue](../../how-to-guides/inbox/work-the-action-queue.md).
+
+### vocabulary (system/vocabulary.md)
+
+The PI-editable controlled-vocabulary artifact governing catalog Work
+`research_area`/`methodology` metadata and claim-bearing note `topics`,
+which draw from the same `research_area` list. Distinct from the
+everyday word: when docs say "the vocabulary", they mean this artifact.
+See [Vocabulary](vocabulary.md).
 
 ### Work
 
