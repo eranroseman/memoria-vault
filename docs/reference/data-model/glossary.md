@@ -227,6 +227,18 @@ Distinct from the **worker** (the request-dispatch loop that runs both
 prompt and deterministic operations) and the **engine** (the whole
 verdict-tagged read/write API surface, `src/memoria_vault/engine/`).
 
+### Sweep
+
+A scheduled, deterministic maintenance pass over the catalog or
+corpus — the retraction sweep and the [Linter](#linter), under
+`memoria_vault.runtime.sweeps` — invoked directly by a manual or
+operator-managed schedule rather than through a worker request row;
+the retraction sweep writes its findings straight into the Inbox.
+Distinct from the worker's `integrity-sweep`
+(`enqueue_integrity_sweep`), which queues integrity-check operations
+as request rows for `memoria workspace check` to run. See
+[Sweeps](../pipelines-and-io/sweeps.md).
+
 ### Task/request
 
 A unit of work represented by a SQLite request row. Attention
@@ -394,11 +406,81 @@ with authored links are specified in
 
 ## Policy and audit
 
+### Actor Authority Guard
+
+The enforcement mechanism that runs first inside every worker
+operation dispatch, checking whether the request's actor (`pi`,
+`agent`, `operation`, `integrity`) matches that operation's required
+actor when one is declared; a mismatch refuses the job outright —
+zero `event_log` rows are appended — rather than logging and allowing
+it. See
+[Control plane reference](../control-and-policy/control-plane.md#actor-authority-guard).
+
 ### Audit log
 
 The append-only JSONL trail of every policy decision at
 `system/logs/audit.jsonl`. It feeds tamper checks and may feed a planned
 audit-log view.
+
+### Detector
+
+One structural check inside the [Linter](#linter): deterministic,
+over corpus structure only. The verdict band is a rollup over the
+detectors. See
+[Linter: detectors and auto-fix](../analysis-and-surfaces/linter.md).
+
+### Empirical event
+
+A typed, allowlisted telemetry payload for self-use measurement:
+submitted through the `empirical-event-record` operation and stored
+as a `telemetry_events` row in `.memoria/memoria.sqlite`
+(`src/memoria_vault/engine/empirical_events.py`), never in the
+[event_log](#event_log). The payload roster and enums are specified
+in [Empirical events](../control-and-policy/empirical-events.md).
+Distinct from the [Audit log](#audit-log) (policy decisions) and the
+[Journal](#journal) (synchronization export).
+
+### event_log {#event_log}
+
+The SQLite table holding the authoritative, hash-chained journal of
+engine state changes, such as operation-request evidence, PI
+dispositions, and evidence mints
+(`src/memoria_vault/runtime/schema.sql`). One of three observability
+trails: `event_log` is the source of truth for what operations did,
+the [Journal](#journal) is its derived per-machine JSONL export, and
+the [Audit log](#audit-log) is the separate write-gate
+policy-decision trail. Distinct from
+[Empirical event](#empirical-event) payloads, which land in the
+unrelated `telemetry_events` table instead. See
+[Telemetry & logs](../pipelines-and-io/telemetry.md).
+
+### Journal
+
+The per-machine append-only JSONL export
+(`.memoria/journal/<machine>.jsonl`) of the [event_log](#event_log)
+SQLite table, for multi-machine synchronization and recovery —
+reconstructible, never the source of truth. See
+[Backup and recovery](../system/backup-and-recovery.md).
+
+### Linter
+
+The deterministic structural detector suite over the corpus: it
+checks structure (links, frontmatter, thresholds), never knowledge
+content, and rolls its detectors up into the PASS / REVIEW / FAIL
+verdict band. See
+[Linter: detectors and auto-fix](../analysis-and-surfaces/linter.md).
+
+### Peer reviewer
+
+The independent, skeptical verification posture (`posture:
+peer-reviewer`) on the judgment-based prompt operations
+`analyze-claims`, `check-falsifiability`, and `red-team-argument`:
+flag, don't fix — a candidate is checked for soundness, not just
+facts, and findings never become automatic fixes. The Verdicts table
+below names it, alongside deterministic operations, as a setter of
+the advisory `agent_recommendation` verdict (`inconclusive` /
+`issues-found` / `clean`); advisory only — the PI decides. See
+[The Peer-reviewer](../../explanation/execution/operation-postures/peer-reviewer.md).
 
 ### Policy gate
 
