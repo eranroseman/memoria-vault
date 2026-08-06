@@ -231,18 +231,24 @@ A checked `hub` Concept in `hubs/` aggregating a topic's
 members and links. Machine-curated hub changes are suggestions until the PI
 adopts them.
 
-### Links vs work-graph edges
+### links (frontmatter)
 
-The two kinds of connection: authored `links:` frontmatter on Concepts versus given `work_graph_edges` rows (`relation_type` values: `references`, `related`, `topic`, `keyword`, `authorship`, `institution`, `published_in`) discovered for catalog Works. The distinction and its rationale are explained in [Wikilink and link conventions](wikilink-and-link-conventions.md). `links:` is specified in [Frontmatter fields](frontmatter.md#links-and-catalog-resources); `work_graph_edges` is a SQLite table (`src/memoria_vault/runtime/schema.sql`), not Concept frontmatter.
+The authored kind of connection: `links:` frontmatter on Concepts,
+written by the PI or proposed by operations, with its relation
+vocabulary specified in
+[Frontmatter fields](frontmatter.md#links-and-catalog-resources).
+Distinct from given [Work-graph edges](#work-graph-edge); the
+distinction and its rationale are explained in
+[Wikilink and link conventions](wikilink-and-link-conventions.md).
 
 ### loudness
 
-The urgency band on an attention card's frontmatter: `quiet`,
-`notice`, `alert`, `block` ([Empirical
-events](../control-and-policy/empirical-events.md#enum-values) mirrors the
-same roster on empirical event payloads). `block` is pull-only: an open block
-card pauses delegation and review-gated promotion until the PI resolves it
-(`src/memoria_vault/runtime/attention/loudness.py`).
+The urgency band on an attention card's frontmatter; the band roster is
+specified in
+[Empirical events](../control-and-policy/empirical-events.md#enum-values)
+and `src/memoria_vault/runtime/attention/loudness.py`. `block` is
+pull-only: an open block card pauses delegation and review-gated
+promotion until the PI resolves it.
 
 ### State
 
@@ -261,6 +267,14 @@ work`.
 Memoria ships no cross-Work identity calibration floor or automatic
 merge decision; a future near-tie rule may raise an Inbox `flag` for PI
 review.
+
+### Work-graph edge
+
+The given kind of connection: a `work_graph_edges` SQLite row
+(`src/memoria_vault/runtime/schema.sql`) discovered for catalog Works —
+not Concept frontmatter. The `relation_type` roster and the contrast
+with authored links are specified in
+[Wikilink and link conventions](wikilink-and-link-conventions.md).
 
 ---
 

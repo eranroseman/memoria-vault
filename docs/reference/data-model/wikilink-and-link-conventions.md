@@ -69,7 +69,10 @@ Rules:
 
 Catalog/provider relationships such as citations, authors, venues, OpenAlex
 related Works, and entity IDs live in SQLite records and provider payloads. They
-are given facts from ingest/enrichment, not authored `links:` frontmatter.
+are given facts from ingest/enrichment, not authored `links:` frontmatter. The
+`work_graph_edges` `relation_type` roster is `references`, `related`, `topic`,
+`keyword`, `authorship`, `institution`, `published_in`
+(`src/memoria_vault/runtime/schema.sql`).
 
 ---
 
