@@ -234,9 +234,11 @@ corpus — the retraction sweep and the [Linter](#linter), under
 `memoria_vault.runtime.sweeps` — invoked directly by a manual or
 operator-managed schedule rather than through a worker request row;
 the retraction sweep writes its findings straight into the Inbox.
-Distinct from the worker's `integrity-sweep`
-(`enqueue_integrity_sweep`), which queues integrity-check operations
-as request rows for `memoria workspace check` to run. See
+Distinct from the worker's `integrity-sweep`: `memoria workspace
+check` calls `run_integrity_sweep`
+(`src/memoria_vault/runtime/worker.py`), which queues
+integrity-check operations as request rows via
+`enqueue_integrity_sweep`, then runs them itself. See
 [Sweeps](../pipelines-and-io/sweeps.md).
 
 ### Task/request
@@ -456,9 +458,12 @@ unrelated `telemetry_events` table instead. See
 
 ### Journal
 
-The per-machine append-only JSONL export
-(`.memoria/journal/<machine>.jsonl`) of the [event_log](#event_log)
-SQLite table, for multi-machine synchronization and recovery —
+The append-only, hash-chained record of engine state changes: the
+journal proper is the chain kept in the [event_log](#event_log)
+SQLite table, enforced by its append-only triggers and checked by
+`memoria journal verify` (`src/memoria_vault/cli.py`). The
+per-machine `.memoria/journal/<machine>.jsonl` files are its derived
+export for multi-machine synchronization and recovery —
 reconstructible, never the source of truth. See
 [Backup and recovery](../system/backup-and-recovery.md).
 
@@ -472,8 +477,8 @@ verdict band. See
 
 ### Peer reviewer
 
-The independent, skeptical verification posture (`posture:
-peer-reviewer`) on the judgment-based prompt operations
+The independent, skeptical verification posture
+(`posture: peer-reviewer`) on the judgment-based prompt operations
 `analyze-claims`, `check-falsifiability`, and `red-team-argument`:
 flag, don't fix — a candidate is checked for soundness, not just
 facts, and findings never become automatic fixes. The Verdicts table
