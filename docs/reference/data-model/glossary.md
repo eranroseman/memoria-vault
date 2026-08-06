@@ -276,8 +276,9 @@ frontmatter declaring a schema-backed type, followed by a Markdown body. See
 The recorded PI verdict on machine-proposed content: a `disposition.v1`
 journal event (`decision`: `accept`, `reject`, `edit`, `defer`,
 `override`, or `abandon`) appended at PI resolution call-sites such as
-`resolve-attention` and `mark-checked`. One of the three decision kinds
-the PI owns, with [Triage](#triage) and [Promotion](#promotion). See
+`resolve-attention` and `mark-checked`. One of the decision kinds the
+PI owns, with [Triage](#triage); [Promotion](#promotion) is the gate
+they feed. See
 [Empirical events](../control-and-policy/empirical-events.md#disposition-call-sites).
 
 ### Document type
@@ -332,7 +333,7 @@ open `block` card pauses review-gated promotion. See
 
 The trusted-writer step that writes generated content into
 `.memoria/staging/` with `generated` and `sources` provenance stamped,
-ahead of worker checks and PI review; re-staging strips `verified`. Not
+ahead of worker checks; re-staging strips `verified`. Not
 git staging, and distinct from the unchecked catalog staging
 [Ingest](#ingest) performs before enrichment checks a row. See
 [Promotion and the write boundary](../../explanation/knowledge/promotion-and-gated-zones.md).
@@ -350,15 +351,15 @@ The vault-root watch/mute override: `## Watch for` bullets boost and
 of steering derived from active projects, hubs, and open question notes.
 PI-authored (`memoria steering edit`); operations read the derived
 effective steering, never this file directly. See
-[Memoria configuration](../system/configuration.md).
+[Memory substrates](../pipelines-and-io/memory-substrates.md).
 
 ### Triage
 
-The PI's first-pass review of Inbox attention projections, resolved
-through `memoria attention resolve` (`--apply`, `--reject`, or
-`--defer`); every resolution logs a disposition for trust and attention
-metrics. Also the name of the Cockpit `--triage` screen (worklist /
-review / flow) that surfaces the queue. See
+The PI's review of Inbox attention projections, resolved through
+`memoria attention resolve` (`--apply`, `--reject`, or `--defer`); every
+resolution logs a disposition for trust and attention metrics. Also the
+name of the Cockpit `--triage` screen (worklist / review / flow) that
+surfaces the queue. See
 [Work the action queue](../../how-to-guides/inbox/work-the-action-queue.md).
 
 ### vocabulary (system/vocabulary.md)
