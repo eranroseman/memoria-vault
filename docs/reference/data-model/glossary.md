@@ -60,6 +60,10 @@ A checked capability manifest plus runner behavior invoked by
 the CLI/engine. Operations compute and propose; the PI decides. The shipped
 operations are listed in [Operations](../commands-and-transports/operations.md).
 
+A **Pattern** is a package-owned prompt operation
+([standalone engine with operations as product code, no agent tools](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md))
+executed through `memoria operation run`.
+
 ### PI
 
 The human principal investigator who owns and runs the vault. Makes
@@ -144,8 +148,10 @@ state, or linter findings. The standalone baseline does not ship `system/dashboa
 
 ### Ceiling
 
-The maximum write scope an optional adapter policy grants. Request
-payloads may narrow that scope, but never widen it.
+The maximum write scope a policy grants, in either of two places: an
+operation manifest's capability ceiling, or the write scope an optional
+adapter policy grants. Request payloads may narrow a ceiling, never
+widen it.
 
 ### Dispatcher
 
@@ -234,12 +240,6 @@ events](../control-and-policy/empirical-events.md#enum-values) mirrors the
 same roster on empirical event payloads). `block` is pull-only: an open block
 card pauses delegation and review-gated promotion until the PI resolves it
 (`src/memoria_vault/runtime/attention/loudness.py`).
-
-### Pattern
-
-A package-owned prompt operation
-([standalone engine with operations as product code, no agent tools](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)) executed through
-`memoria operation run`.
 
 ### State
 
