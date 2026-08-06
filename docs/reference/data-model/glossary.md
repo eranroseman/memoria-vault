@@ -26,7 +26,7 @@ profile packages or lane assignments.
 
 ### autoresearch
 
-The self-improvement loop (fixed harness, one metric, keep-or-discard) applied to Memoria's own instruments — detectors, prompts, gates — never to the knowledge they assess. **Planned beta.2; beta.1 precursors I1/E1.**
+The self-improvement loop (fixed harness, one metric, keep-or-discard) applied to Memoria's own instruments — detectors, prompts, gates — never to the knowledge they assess. Planned — see [Roadmap](../../roadmap.md).
 
 ### Co-PI
 
@@ -41,7 +41,8 @@ authorship, not judgment.
 
 ### Knowledge Bundle
 
-An OKF unit of distribution: the plain-file tree holding the researcher's knowledge, separable from the `.memoria/` engine state. The format ships; the export and import path is **planned beta.1 — K1.**
+An OKF unit of distribution: the plain-file tree holding the researcher's knowledge, separable from the `.memoria/` engine state. The format ships; the export and import path is planned — see
+[Roadmap](../../roadmap.md).
 
 ### Memoria
 
@@ -78,7 +79,7 @@ runtime state.
 
 ### Toulmin roles
 
-The six argument components (Claim, Grounds, Warrant, Backing, Qualifier, Rebuttal) that type the knowledge graph and its consequence propagation. **Planned G4/G5, beta.1/B1.**
+The six argument components (Claim, Grounds, Warrant, Backing, Qualifier, Rebuttal) that type the knowledge graph and its consequence propagation. Planned — see [Roadmap](../../roadmap.md).
 
 ### verified
 
@@ -116,19 +117,13 @@ output, logs, and corpus reads; no combined Maintenance view ships.
 
 A planned optional-adapter navigation model
 ([thin read-API surfaces over one engine, PI direct access preserved](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)):
-**Now** over **Places**. It requires no persisted navigation note. The
-standalone CLI does not render it.
-
-### Now
-
-The planned rail's top band: what is waiting on you right now — **Action
-queue** (your Inbox queue) and **Drift** (open integrity flags).
-
-### Places
-
-The planned rail's lower band over durable corpus homes: Library
-(`digests/`, `fulltexts/`, `bibliography.bib`), Knowledge (`notes/`, `hubs/`), and
-Project (`projects/`).
+a **Now** band — what is waiting on you right now (your Inbox action
+queue, open integrity flags, and a health-band count of open `flag` /
+`alert` attention projections) — over a **Places** band of durable corpus
+homes (Library: `digests/`, `fulltexts/`, `bibliography.bib`; Knowledge:
+`notes/`, `hubs/`; Project: `projects/`). It requires no persisted
+navigation note. The standalone CLI does not render it. Planned — see
+[Roadmap](../../roadmap.md).
 
 ### Queue
 
@@ -136,12 +131,6 @@ The **Inbox** (`projection: attention`): the shipped file-backed
 daily attention surface, read through CLI/read-API views. A planned rail reaches
 it from **Now -> Action queue**. It shows open attention projections such as
 `candidate`, `gap`, and `work-prompt`; clearing it to empty is the goal.
-
-### Rail health band
-
-The planned count the rail's **Now** shows for open `flag` /
-`alert` attention projections; non-zero would point to structural debt in the
-planned Maintenance view.
 
 ### System dashboard
 
@@ -266,6 +255,10 @@ presence is its `digests/<work_id>.md` digest and `fulltexts/<work_id>.md`
 reproduction. Human interpretation of a Work lives in a `note` with `mode:
 work`.
 
+Memoria ships no cross-Work identity calibration floor or automatic
+merge decision; a future near-tie rule may raise an Inbox `flag` for PI
+review.
+
 ---
 
 ## Policy and audit
@@ -275,12 +268,6 @@ work`.
 The append-only JSONL trail of every policy decision at
 `system/logs/audit.jsonl`. It feeds tamper checks and may feed a planned
 audit-log view.
-
-### Extraction-uncertainty flag
-
-Planned diagnostic: a future cross-Work
-identity near-tie rule may raise an Inbox `flag` for PI review. Memoria ships no
-cross-Work identity calibration floor or automatic merge decision today.
 
 ### Policy gate
 
