@@ -150,8 +150,11 @@ state, or linter findings. The standalone baseline does not ship `system/dashboa
 
 The maximum write scope a policy grants, in either of two places: an
 operation manifest's capability ceiling, or the write scope an optional
-adapter policy grants. Request payloads may narrow a ceiling, never
-widen it.
+adapter policy grants. Request payloads may narrow a ceiling in either
+sense, never widen it: a manifest's declared `allowed_paths` and
+`allowed_tools` refuse a payload that reaches past them, the same way
+an adapter policy's `allow.tools` is a hard ceiling for non-direct
+tools.
 
 ### Dispatcher
 
