@@ -28,7 +28,7 @@ and state carry the facts that change.
 
 ## Three spaces, one bundle
 
-> **Planned (beta.1 — K1/W2):** Detachability enforcement and the complete project-close harvest/archive lifecycle are target-state.
+> **Planned (beta.1):** Detachability enforcement and the complete project-close harvest/archive lifecycle are target-state.
 
 Catalog (works and sources), knowledge (notes, hubs, digests), and projects
 are regions of one bundle, not separate stores. Each `projects/<slug>/` is a

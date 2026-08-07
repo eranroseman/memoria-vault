@@ -26,7 +26,7 @@ conformance bar; the rationale lives in
   Concept's **internal id** (a ULID for `note`/`hub`/`project`; the source
   `work_id` for `digest`/`fulltext`; the artifact id for `code-artifact` —
   see [Frontmatter fields](frontmatter.md#other-universal-fields)) is
-  producer metadata, not OKF identity. (Planned: G3, beta.1/B1.)
+  producer metadata, not OKF identity. (Planned beta.1.)
 - Provenance is first-class: the trusted writer stamps `generated` at
   staging and derives `sources` from derivation inputs; authored `sources`
   entries for external material are preserved as written.
@@ -41,7 +41,7 @@ conformance bar; the rationale lives in
   `.memoria/`, and an OKF trust field in a file is a signal, never a grant.
 - Imported or copied content re-enters through the normal gates, and a
   foreign bundle's trust fields are read as signals like any other.
-  **Planned beta.1 — K1.**
+  **Planned beta.1.**
 - Deliberate omissions, each additive later at zero migration cost:
   `status` (absent means `stable`; staging is the draft plane;
   `superseded`/`archived` carry deprecation), `stale_after` (no TTL
@@ -49,11 +49,10 @@ conformance bar; the rationale lives in
   spec tolerates unknown types), and `log.md` (optional per OKF §9;
   not generated).
 - OKF-facing relationships and citations use standard Markdown links
-  (bundle-relative); wikilinks remain a local authoring affordance. **Planned
-  beta.1 — K1.**
+  (bundle-relative); wikilinks remain a local authoring affordance.
+  **Planned beta.1.**
 - Export is a copy of the bundle folder (vault minus `.memoria/`), taken from
-  a clean committed state, with no transformation step. **Planned beta.1 —
-  K1.**
+  a clean committed state, with no transformation step. **Planned beta.1.**
 
 ## Related
 

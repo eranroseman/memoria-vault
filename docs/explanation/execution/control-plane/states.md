@@ -82,10 +82,10 @@ resolved through the shipped evidence/check resolution, while PI action is
 recorded separately. This is not a separate CLI command or a complete Toulmin
 warrant graph.
 
-> **Planned — G4 (beta.1/B1) and V1 (beta.1):** The complete Toulmin
-> warrant graph and its checking model are planned across these milestones.
-> Today, `grounds resolve` covers shipped evidence/check resolution (e.g.
-> code-grounds references), not the complete Toulmin warrant graph.
+> **Planned (beta.1):** The complete Toulmin warrant graph and its
+> checking model are not yet shipped. Today, `grounds resolve` covers shipped
+> evidence/check resolution (e.g. code-grounds references), not the complete
+> Toulmin warrant graph.
 
 **Rejection creates a new request, not a revision of the old one.** A rejected
 attempt is closed; rework begins on a fresh request or amended request that

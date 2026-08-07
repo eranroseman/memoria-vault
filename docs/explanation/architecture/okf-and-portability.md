@@ -9,7 +9,7 @@ nav_order: 5
 
 > **Shipped:** OKF v0.2 targeting, trust/provenance stamping (`generated`,
 > `sources`, `verified`), reserved-file structure, and whole-tree conformance
-> checking. **Planned (beta.1 — K1):** standard-Markdown links discipline for
+> checking. **Planned (beta.1):** standard-Markdown links discipline for
 > OKF-facing relationships, the foreign-bundle import path, and the
 > folder-copy export unit.
 
@@ -38,7 +38,7 @@ unchecked and earns its way through the gates like any other source.
 
 ## Nested project bundles
 
-> **Planned (beta.1 — K1/W2):** Detachability enforcement and the complete project-close harvest/archive lifecycle are target-state.
+> **Planned (beta.1):** Detachability enforcement and the complete project-close harvest/archive lifecycle are target-state.
 
 Each `projects/<slug>/` is itself a nested, detachable OKF bundle. Projects
 may reference vault knowledge freely; permanent knowledge never links into a

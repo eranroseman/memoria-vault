@@ -97,12 +97,12 @@ behavior — anything not shipped is marked *planned* here and everywhere else.
 **Planned — beta.1 milestone** ([Roadmap & status](roadmap.md)):
 
 - **Every sentence in a draft will trace to a passage you can open** *(planned
-  — grounded synthesis, workstream R2)*.
+  — grounded synthesis)*.
 - **When a source falls, you will see everything it was holding up** *(planned
-  — typed blast-radius propagation, workstream G5)*.
+  — typed blast-radius propagation)*.
 - **A first real answer from your own corpus in under 30 minutes** *(planned —
-  the onboarding bar, workstream O1; it ships with the telemetry that measures
-  it rather than asserting it)*.
+  the onboarding bar; it ships with the telemetry that measures it rather than
+  asserting it)*.
 
 ## Who it's for
 
@@ -150,7 +150,7 @@ flowchart LR
 | Term | Meaning |
 | --- | --- |
 | PI | The human principal investigator. The PI decides what enters the vault and what can be cited. |
-| Co-PI | The read-only conversational posture behind `memoria ask`. See [The Co-PI](explanation/execution/operation-postures/co-pi.md) for its full mission. |
+| Co-PI | The research-partner role behind `memoria ask` — read-only conversation over the checked corpus. See [The Co-PI](explanation/execution/operation-postures/co-pi.md) for its full mission. |
 | Operations | Checked capability-backed units of work such as capture, enrich, digest, ask, verify, and export. |
 | Request table | The SQLite control plane. It records operation requests, status, blockers, review, and completion. |
 | Workspace | The local folder tree. It holds knowledge bundles, catalog state, attention projections, and system outputs. |

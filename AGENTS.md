@@ -60,8 +60,8 @@ Pattern: `superpowers:dispatching-parallel-agents`.
 - Canonical term definitions live in `docs/reference/data-model/glossary.md`
   (one definition per term, usage rulings included) — read it before naming
   things, add new rulings there, and never start a second glossary. Root
-  `CONTEXT.md` is a symlink to it for tools that look for that file by
-  convention.
+  `CONTEXT.md` is a pointer stub routing to it (and back here) for tools
+  that look for that file by convention.
 
 ## Cross-tool parity (Codex, Kilo)
 

@@ -7,7 +7,7 @@ nav_order: 7
 
 # Consequence propagation
 
-> **Planned (G4/G5, beta.1/B1):** Typed graph propagation and eager write-time marking described below are target-state.
+> **Planned (beta.1):** Typed graph propagation and eager write-time marking described below are target-state.
 
 Memoria's central operation is what happens *after* a change to the knowledge
 base. Any change or addition — a new claim, an edited note, a new or changed

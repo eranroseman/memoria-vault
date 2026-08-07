@@ -14,7 +14,7 @@ not an activation mechanism.
 
 ## Planned production-calibration contract
 
-> **Planned beta.1 — I1/E1:** A reusable calibration contract does not ship
+> **Planned beta.1:** A reusable calibration contract does not ship
 > today. Before a future score can alter routing, promotion, or other canonical
 > work, it will require the evidence below.
 
