@@ -53,5 +53,6 @@ and [the review gate](rationale/boundaries/why-review-gate-is-structural.md).
 The maintained arguments live in [Design rationale](rationale/README.md). Dated
 decisions live in [design history](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md);
 forward-looking decisions live in the working records under `docs/superpowers/`
-until they are accepted, rejected, or closed into design history. Scheduling and
-readiness live on GitHub issues and milestones.
+until they are accepted, rejected, or closed into design history. Milestones
+mark intended-release scope when one is set; the per-release record is the
+frozen `design-history/` chapter.
