@@ -44,6 +44,29 @@ state transition commits but its lifecycle-event append is interrupted, an
 exact repeat appends that one missing event without creating another successor
 or reopening work that has since finished.
 
+The full request lifecycle, with the state each control accepts:
+
+```mermaid
+stateDiagram-v2
+    [*] --> pending
+    pending --> running : resume / workspace run
+    running --> done : worker finishes
+    running --> failed : run fails
+    running --> failed : workspace recover marks interrupted run
+    pending --> cancelled : cancel
+    pending --> cancelled : answer / amend (cancelled as superseded)
+    failed --> pending : retry
+    cancelled --> pending : retry (PI-cancelled, not superseded)
+    done --> [*]
+    note right of cancelled
+        answer / amend accept any non-running request
+        and create one pending PI-attributed successor
+        (at most one per source). A terminal source
+        keeps its status and gains the superseded
+        marker; a superseded request cannot be retried.
+    end note
+```
+
 The local CLI's `--actor` value records declared provenance; it does not
 authenticate a caller. Keep the raw CLI PI-owned. MCP binds its request actor to
 `agent`. The loopback HTTP transport binds its request actor to `pi` — it is the

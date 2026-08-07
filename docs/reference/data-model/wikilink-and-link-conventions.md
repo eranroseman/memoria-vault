@@ -75,24 +75,28 @@ are given facts from ingest/enrichment, not authored `links:` frontmatter.
 
 ## Expected topology
 
-```text
-digest/fulltext
-  -> catalog Work row via work_id
-  -> note/hub/project when the PI authors a local link
+Two planes: authored relationships between vault Concept files, and the SQLite
+catalog Work row each `digest` and `fulltext` reaches through `work_id`.
 
-note
-  -> source evidence in body text, anchors, digests, and operation records
-  -> note/hub/project through supports / contradicts / extends /
-     warrant / qualifier / rebuttal
+```mermaid
+flowchart LR
+    subgraph vault["Vault Concept files (authored links:)"]
+        digest[digest]
+        fulltext[fulltext]
+        note[note]
+        hub[hub]
+        project[project]
+    end
 
-hub
-  -> tag-owned membership through checked Concept tags
-  -> curated body links for featured paths and gaps
+    subgraph catalog["SQLite catalog"]
+        work[("catalog Work row")]
+    end
 
-project
-  -> one-way project -> corpus references
-  -> thesis role through the project schema
-  -> project exports under projects/<project>/exports/
+    digest & fulltext -->|"work_id"| work
+    digest & fulltext -->|"PI-authored local link"| note & hub & project
+    note -->|"supports / contradicts / extends /<br/>warrant / qualifier / rebuttal"| note & hub & project
+    hub -->|"tag-owned membership through<br/>checked Concept tags"| note
+    project -->|"one-way corpus reference"| digest & fulltext & note & hub
 ```
 
 ---

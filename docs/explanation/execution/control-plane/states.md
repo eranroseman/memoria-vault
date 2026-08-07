@@ -34,9 +34,11 @@ this page describes the state model it produces.
 The runtime moves each request through machine-facing states owned by the control
 plane reference and worker code. Recovery marks interrupted running work as
 failed so it can be retried explicitly, and pending materialization payloads
-replay through `workspace recover`. This chain is load-bearing for the worker and
-recovery code, but the **PI does not treat it as approval**. It is plumbing, and
-its design serves execution:
+replay through `workspace recover`. The states themselves, and the control that
+performs each transition, are drawn as one diagram in the
+[Control plane reference](../../../reference/control-and-policy/control-plane.md).
+This chain is load-bearing for the worker and recovery code, but the **PI does
+not treat it as approval**. It is plumbing, and its design serves execution:
 
 **Pending work exists so dispatch never starts before scope is explicit.** A
 request carries input refs, output intents, and checks before execution. A file

@@ -61,6 +61,9 @@ A pending source request is cancelled as superseded; a terminal source remains
 terminal and is marked as superseded. Retry only when its original arguments
 remain correct. If an ID, reference, path, target, or other scope-bearing field
 must change, submit a new original operation instead of amending the request.
+See the request lifecycle diagram in the
+[Control plane reference](../../reference/control-and-policy/control-plane.md)
+for the states `amend` and `retry` each accept.
 
 **5. Clear open blockers before adding more work.**
 

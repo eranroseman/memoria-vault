@@ -66,6 +66,19 @@ similarity suggestions because the PI chooses the relationship.
 Notice that the link is directional: the contextual-burden note supports the
 receptivity note.
 
+The graph you just built — the `supports` arrow runs from the second note, the
+first path in the `memoria link` command, to the first note:
+
+```mermaid
+flowchart LR
+    second["Second note<br/>Burden is partly contextual<br/>your own synthesis, no --work-id"]
+    first["First note<br/>JITAI receptivity varies by burden"]
+    work["Work from Tutorial 02"]
+
+    second ==>|"supports"| first
+    first -.->|"records the source Work (work_id)"| work
+```
+
 ## What you should have seen
 
 - Notes are the durable synthesis unit.

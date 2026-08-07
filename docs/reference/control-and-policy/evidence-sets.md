@@ -89,6 +89,31 @@ ledger is rebuildable by replaying those authoritative event-log entries in
 an intact or restored workspace. Exporting/importing a journal into a
 folder copy that excludes `.memoria` is outside this reference's scope.
 
+What each store holds, how long it lasts, and how it reaches the export gate:
+
+```mermaid
+flowchart TB
+    marker["Inline marker on a draft claim<br/>durable source: mint-once id and the ordered items= list"]
+    sets["evidence_sets, SQLite<br/>derived active state, rebuilt from the markers"]
+    ledger["evidence_bindings ledger<br/>first observed claim hash, or null when the block cannot resolve<br/>immutable: survives marker removal, later rebuilds never refresh it"]
+    journal["evidence-minted journal event<br/>evidence ID, block reference, claim hash<br/>append-only: appended at first binding"]
+    standing["Catalog standing<br/>joined live at verify time, never cached into the record"]
+    verify{"Verification findings"}
+    blocked["Permanent block<br/>no disposition clears it; the cure is editing the draft or the grounds"]
+    exported["Draft exports"]
+
+    marker --> sets
+    marker -->|"first observed"| ledger
+    marker -->|"at first binding"| journal
+    journal -.->|"replay in an intact or restored workspace"| ledger
+    ledger -->|"block_text_sha256 copied into the record"| sets
+    sets --> verify
+    marker -->|"claim block hash"| verify
+    standing -->|"retracted or superseded blocks; archived is advisory"| verify
+    verify -->|"claim block hash differs from the stored mint-once binding: evidence-text-drift"| blocked
+    verify -->|"no permanent block attaches; every hold cleared by a matching disposition"| exported
+```
+
 Source-span refs use stable `work_id`, never citekeys. Citekeys are rendered
 only during export.
 

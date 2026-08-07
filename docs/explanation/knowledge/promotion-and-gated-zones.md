@@ -24,6 +24,33 @@ there; the boundary is the **state transition** and its trace. Machine writes
 stage first, promote through the trusted writer, and record provenance. PI edits
 are direct and then observed/backfilled. Foreign writes are quarantined by scan.
 
+Three write origins, three distinct mechanics, one read boundary they all land
+on:
+
+```mermaid
+flowchart TD
+    machine["Machine write"]
+    stage["Stage"]
+    writer["Promote through the trusted writer"]
+    prov["Record provenance"]
+
+    pi["PI edit"]
+    observed["Observed and backfilled"]
+
+    foreign["Foreign write"]
+
+    boundary["Read boundary: the state transition<br/>and its trace, not a file move"]
+    canonical["Canonical readers consume<br/>checked knowledge Concepts<br/>and checked catalog rows"]
+    outside["Records that do not enter<br/>the checked search index or Ask path"]
+
+    machine --> stage --> writer --> prov --> boundary
+    pi -- "direct" --> observed --> boundary
+    foreign -- "quarantined by scan" --> boundary
+
+    boundary -- "checked" --> canonical
+    boundary -- "unchecked or quarantined" --> outside
+```
+
 What is deliberately not reintroduced: a per-write approval loop. The PI enters
 for direction, curation, direct edits, and high-risk `ask` flags, not as a
 rubber stamp on every machine write.

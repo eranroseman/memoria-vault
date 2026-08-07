@@ -13,6 +13,18 @@ levers: **Watch for** terms that fit no artifact yet, and **Muted** terms to
 suppress. This chapter exercises a new project, a watch entry, and a mute
 entry.
 
+Where each effective steering token comes from, and what subtracts one:
+
+```mermaid
+flowchart LR
+    projects[Active projects] -->|project| effective[Effective steering]
+    hubs[Hubs] -->|hub| effective
+    questions[Unresolved question notes] -->|question note| effective
+    watch["steering.md: Watch for"] -->|watch| effective
+    muted["steering.md: Muted"] -.-x|"subtracts tokens, even when an active project contributes them"| effective
+    effective --> show["memoria steering show: each effective token and its provenance"]
+```
+
 ## Steps
 
 **1. Read the effective steering.**

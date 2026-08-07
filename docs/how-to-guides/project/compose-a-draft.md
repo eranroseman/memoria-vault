@@ -60,6 +60,33 @@ PI disposition can clear eligible evidence-review work, but it cannot clear
 `evidence-text-drift` or `evidence-text-unbound`; repair the anchored claim or
 its evidence marker instead.
 
+The loop, with the evidence-review gate and the two findings no disposition can
+clear:
+
+```mermaid
+flowchart TD
+    slice["memoria project slice<br/>writes outline.md"]
+    outline["Edit the outline<br/>the list order is the draft order"]
+    compose["memoria project compose"]
+    verify["memoria project verify"]
+    disposition{"Record the PI disposition<br/>memoria project resolve-evidence"}
+    rework["Edit the draft or supporting checked notes"]
+    repair["Repair the anchored claim or its evidence marker<br/>no PI disposition clears these"]
+    export["Export the verified draft"]
+
+    slice --> outline --> compose --> verify
+    verify -->|"no unresolved evidence item"| export
+    verify -->|"reports an evidence item"| disposition
+    disposition -->|"accept — clears the export hold"| export
+    disposition -->|"reject — keeps it blocking"| rework
+    disposition -->|"edit — records a fix-the-marker intent"| rework
+    disposition -->|"defer — suppresses the review item until the next UTC calendar day"| rework
+    rework --> verify
+    verify -.->|"evidence-text-drift"| repair
+    verify -.->|"evidence-text-unbound"| repair
+    repair --> verify
+```
+
 ## Promote reusable prose
 
 If a passage should become durable knowledge:

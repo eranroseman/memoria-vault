@@ -34,6 +34,30 @@ journal records preserve execution evidence. This page does not cover the
 separate diagnostics plane described in
 [Telemetry architecture](telemetry-architecture.md).
 
+Both evidence streams, each derived end to end with nothing crossing between
+them:
+
+```mermaid
+flowchart TB
+    subgraph audit ["Audit evidence"]
+        writes["Policy-gated adapter writes"]
+        auditLog["Policy audit log — forensic and append-only<br/>records individual gated adapter writes"]
+        linter["Linter<br/>groups policy-audit rows by request_id"]
+        digest["Per-request audit digests<br/>system/logs/sessions/"]
+        writes --> auditLog
+        auditLog --> linter
+        linter --> digest
+    end
+
+    subgraph execution ["Execution evidence — not inputs to the session digest"]
+        request["Worker requests"]
+        rows["SQLite request rows"]
+        journal["Journal events"]
+        request --> rows
+        request --> journal
+    end
+```
+
 The exact paths, writers, and retention contract belong in [Memory
 substrates](../../reference/pipelines-and-io/memory-substrates.md) and [Policy audit
 log](../../reference/control-and-policy/policy-audit-log.md).

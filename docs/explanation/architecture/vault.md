@@ -66,6 +66,42 @@ edits. The write boundary above is the trusted worker plus staging, read
 barrier, quarantine, journal, and git history; optional adapters may add
 pre-tool gates on top of that stack, but may not replace it.
 
+Both write paths, the guard that fronts the machine one, and the quarantine
+branch:
+
+```mermaid
+flowchart TD
+    subgraph machine ["Machine write path: each layer depends only on the one below"]
+        mediated["Mediated write<br/>exactly one declared actor:<br/>pi, agent, operation, or integrity"]
+        guard{"Fixed actor guard"}
+        rejected["Rejected before<br/>any payload processing"]
+        worker["Trusted worker"]
+        staging["Staging"]
+        checks["Runtime checks"]
+        mediated --> guard
+        guard -- "wrong actor for a protected operation" --> rejected
+        guard -- "actor matches" --> worker
+        worker --> staging
+        staging --> checks
+    end
+
+    pi_edit["PI direct file edit"]
+    foreign["Foreign or untraced bundle write"]
+    vault["Vault files"]
+    journal["Journal"]
+    git["git history"]
+    scan["Integrity scan"]
+    quarantined["Quarantined: read surfaces that require<br/>passing checks cannot consume it"]
+
+    checks -- "only the trusted worker materializes outputs" --> vault
+    checks --> journal
+    journal --> git
+    pi_edit -- "direct; the contract does not extend here" --> vault
+    pi_edit -. "the worker observes and backfills" .-> journal
+    foreign --> scan
+    scan --> quarantined
+```
+
 ## Archived is a state, not a folder
 
 Archive/retraction state is runtime state, not a folder move. Current readers use

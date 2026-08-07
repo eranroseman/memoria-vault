@@ -25,6 +25,34 @@ use `stage_url_source()` with stdlib HTML text extraction.
 
 ## Pipeline contract
 
+The route each entry format takes into unchecked staging, then through the
+enrichment gate to the read barrier:
+
+```mermaid
+flowchart TD
+    doi["DOI payload"] --> catalogWorker["stage_catalog_source / worker capture-source"]
+    url["URL snapshot"] --> urlWorker["stage_url_source / worker capture-url-source"]
+    pdf["PDF bytes"] --> pdfWorker["stage_pdf_source / worker capture-pdf-source"]
+    bibtex["BibTeX entry"] --> router{"memoria work import per-entry router<br/>normalizes each entry type; never fetches"}
+    csl["CSL-JSON item"] --> router
+
+    router -->|"mapped webpage with a URL"| urlWorker
+    router -->|"eligible article or direct-PDF report<br/>with a resolvable PMC/arXiv/.pdf fetch"| remoteWorker["PI-only worker capture-remote-pdf-source<br/>PMCID, arXiv, or direct-PDF descriptor; no PDF bytes"]
+    router -->|"everything else: metadata-only"| catalogWorker
+    remoteWorker -->|"authorizes and resolves, then passes bytes"| pdfWorker
+
+    catalogWorker --> staged["Unchecked SQLite catalog row<br/>+ durable blobs under .memoria/blobs/source-content/"]
+    urlWorker --> staged
+    pdfWorker --> staged
+
+    staged -->|"DOI-bearing entry"| gate{"worker enrich-source<br/>required DOI providers, provenance, retraction checks"}
+    gate -->|"checks pass"| checked["Checked catalog row<br/>+ bibliography.bib refresh"]
+    gate -->|"incomplete record"| attention["Blocked with attention"]
+
+    checked -->|"check_status = checked"| search["Search and retrieval"]
+    staged -. unchecked rows and blobs .-> notIndexed["Not indexed by the checked-only search input rebuild"]
+```
+
 | Step | Owner | Output |
 | --- | --- | --- |
 | Capture event | worker `capture-source` / `capture_source()` | First journal `run` event with `workflow: capture_source`, before durable content is written. |
