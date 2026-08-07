@@ -10,9 +10,9 @@ The canonical record of scope and readiness is GitHub: the
 [milestones](https://github.com/eranroseman/memoria-vault/milestones) (a
 milestone is a release) and the
 [open issues](https://github.com/eranroseman/memoria-vault/issues). This page
-is the published decoder for the release vocabulary and workstream codes the
-docs use, plus a dated status snapshot. When this page and the milestone
-disagree, the milestone wins.
+is the published decoder for the release vocabulary the docs use and the
+workstream codes, plus a dated status snapshot. When this page and the
+milestone disagree, the milestone wins.
 
 *Snapshot date: 2026-08-01.*
 
@@ -56,8 +56,8 @@ nothing implies they work before they ship.
 
 ## Workstream decoder
 
-Docs pages cite work packages by code ("Planned beta.1 — K1"). The codes group
-into lettered workstreams; per-package readiness lives in the
+Work packages are cited by code only on this page. The codes group into
+lettered workstreams; per-package readiness lives in the
 [milestone](https://github.com/eranroseman/memoria-vault/milestones), not here.
 
 | Code | Workstream | What it covers |
