@@ -91,6 +91,19 @@ repos:
         exclude: ^docs/superpowers/
         stages: [manual]
 
+      # Just the Docs renders mermaid client-side, so a malformed fence fails no
+      # build and no test -- it only shows readers an error box. `mermaid@` here
+      # must stay equal to `mermaid.version` in docs/_config.yml; the gate fails
+      # on drift and tests/test_mermaid_parse_gate.py pins the pair.
+      - id: mermaid-parse
+        name: mermaid-parse
+        language: node
+        entry: node scripts/checks/mermaid_parse.mjs
+        additional_dependencies: [mermaid@10.9.1, jsdom@30.0.1]
+        files: ^docs/.*\.md$
+        exclude: ^docs/superpowers/
+        stages: [manual]
+
       # Scope/exclusions are owned by cspell.json (files + ignorePaths +
       # enableGlobDot); there is no file list to mirror here.
       - id: cspell
