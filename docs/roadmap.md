@@ -7,8 +7,9 @@ permalink: /roadmap/
 # Roadmap & status
 
 Milestones mark intended-release scope when one is set; not every release
-gets one. The per-release record is the frozen `design-history/` chapter.
-This page is descriptive, not canonical.
+gets one. The per-release record is the frozen
+[design history](https://github.com/eranroseman/memoria-vault/blob/main/design-history/README.md)
+chapter. This page is descriptive, not canonical.
 
 *Snapshot date: 2026-08-01.*
 

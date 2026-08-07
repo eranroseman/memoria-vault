@@ -55,4 +55,6 @@ decisions live in [design history](https://github.com/eranroseman/memoria-vault/
 forward-looking decisions live in the working records under `docs/superpowers/`
 until they are accepted, rejected, or closed into design history. Milestones
 mark intended-release scope when one is set; the per-release record is the
-frozen `design-history/` chapter.
+frozen
+[design history](https://github.com/eranroseman/memoria-vault/blob/main/design-history/README.md)
+chapter.

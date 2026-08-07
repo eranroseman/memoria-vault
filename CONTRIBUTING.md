@@ -44,7 +44,7 @@ See [Quickstart](docs/how-to-guides/setup/quickstart.md) for the product install
 | Work | Home |
 |---|---|
 | Bugs, enhancements, docs fixes, and questions | [GitHub issues](https://github.com/eranroseman/memoria-vault/issues) |
-| Release scope | GitHub milestones (a milestone is a release) |
+| Release scope | GitHub milestones, when one is set; the frozen `design-history/` chapter is the per-release record |
 | Working specs and plans | `docs/superpowers/` (tracked, not published) |
 | Decisions and durable rationale | [Design history](design-history/README.md) |
 
@@ -139,10 +139,12 @@ is required, and the replacement path.
 
 ## Releases and changelog
 
-A milestone is a release. There is no release automation right now:
-`CHANGELOG.md` is a hand-curated dated record, and versioning, tags, and GitHub
-Releases return with release tooling when distribution needs them. Do not
-hand-cut a release or hand-tag as part of an ordinary PR.
+A milestone marks intended-release scope when one is set — not every release
+gets one. The per-release record is the frozen `design-history/` chapter.
+There is no release automation right now: `CHANGELOG.md` is a hand-curated
+dated record, and versioning, tags, and GitHub Releases return with release
+tooling when distribution needs them. Do not hand-cut a release or hand-tag as
+part of an ordinary PR.
 
 ## Questions?
 
