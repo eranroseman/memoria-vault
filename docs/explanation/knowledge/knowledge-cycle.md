@@ -13,7 +13,7 @@ why the vault compounds instead of merely accumulating files.
 
 ## Pull, not push
 
-> **Planned beta.1 — O2/W2:** Project-pulled admission and the complete
+> **Planned beta.1:** Project-pulled admission and the complete
 > project-close harvest loop described below are target-state.
 
 The cycle is inquiry-first: a project opens with a question or thesis, gap

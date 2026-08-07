@@ -80,16 +80,16 @@ only when it calls the same request lifecycle, checks, and write boundary.
 
 Memoria never reads a claim and asks whether it is true; it asks how the claim is grounded in evidence. No single node is judged true or false — the system asserts only how a change affects knowledge-graph integrity. "Checked" means required checks and grounds passed, never a truth verdict; dispositions record judgment events, they do not adjudicate content.
 
-> **Planned — G4 (beta.1/B1) and V1 (beta.1):** The complete Toulmin
-> warrant graph and its checking model are planned across these milestones. Today,
-> `checked` covers shipped checks, not the complete Toulmin warrant graph.
+> **Planned (beta.1):** The complete Toulmin warrant graph and its
+> checking model are not yet shipped. Today, `checked` covers shipped checks,
+> not the complete Toulmin warrant graph.
 
 **12. Origin-blind consequences.**
 
 The origin of a change — human, machine, or LLM — does not affect its *epistemic* consequences. When a claim is found wrong, the grounding consequences propagate across the graph identically whoever authored it; flags, demotions, and blast radius are origin-blind. Write and revert *authority*, by contrast, stays origin-gated: human-authored spans are never auto-destroyed, machine material auto-reverts. Origin is provenance, not authorization.
 
-> **Planned — G5 (beta.1/B1):** Origin-blind epistemic consequence and
-> blast-radius propagation are planned for this milestone. Today, write and revert
+> **Planned (beta.1):** Origin-blind epistemic consequence and
+> blast-radius propagation are not yet shipped. Today, write and revert
 > authority remains origin-gated as stated above.
 
 ---
