@@ -92,6 +92,13 @@ def test_hook_is_wired_and_pins_its_dependencies() -> None:
     )
 
 
+def test_hook_entry_points_at_a_script_that_exists() -> None:
+    """The entry is a path, not an installed bin, so a rename breaks it silently."""
+    entry = _hook()["entry"].split()
+    assert entry[0] == "node"
+    assert (ROOT / entry[1]).is_file(), f"{entry[1]} does not exist"
+
+
 def test_gate_parses_the_same_mermaid_version_the_site_renders() -> None:
     """The gate's whole value depends on this. Drift here makes it lie."""
     site = yaml.safe_load(SITE_CONFIG.read_text(encoding="utf-8"))["mermaid"]["version"]

@@ -13,8 +13,39 @@
 import { readFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
 
 const require = createRequire(import.meta.url);
+
+// pre-commit installs node `additional_dependencies` into a global prefix
+// (`<env>/lib/node_modules`) that Node's resolver never searches for a script
+// run by path -- only published bins like markdownlint resolve their own deps.
+// So look there explicitly, finding the prefix from the env's bin on PATH.
+function envModuleRoot() {
+  for (const dir of (process.env.PATH ?? "").split(path.delimiter)) {
+    const match = /^(.*node_env[^/]*)[/\\]bin[/\\]?$/.exec(dir);
+    if (match) return path.join(match[1], "lib", "node_modules");
+  }
+  return null;
+}
+
+// A local node_modules (a developer who ran npm install) wins; the pre-commit
+// prefix is the fallback. Either way the version check below is what decides
+// whether the resolved copy is the one the site renders.
+async function load(name) {
+  try {
+    return await import(name);
+  } catch (error) {
+    if (error?.code !== "ERR_MODULE_NOT_FOUND") throw error;
+  }
+  const root = envModuleRoot();
+  if (!root) throw new Error(`cannot find ${name}: no node_env on PATH and no local node_modules`);
+  const dir = path.join(root, name);
+  const meta = JSON.parse(await readFile(path.join(dir, "package.json"), "utf8"));
+  const entry =
+    meta.exports?.["."]?.import ?? meta.exports?.["."]?.default ?? meta.module ?? meta.main;
+  return import(pathToFileURL(path.join(dir, entry)).href);
+}
 
 const FENCE = /^([ \t]*)```mermaid[ \t]*$/;
 
@@ -36,6 +67,20 @@ function fences(text) {
   return found;
 }
 
+// Read from package.json rather than mermaid's export: this runs before jsdom
+// is set up, and importing mermaid without a DOM throws.
+async function installedMermaidVersion() {
+  try {
+    return require("mermaid/package.json").version;
+  } catch (error) {
+    if (error?.code !== "MODULE_NOT_FOUND") throw error;
+  }
+  const root = envModuleRoot();
+  if (!root) throw new Error("cannot find mermaid: no node_env on PATH and no local node_modules");
+  const meta = JSON.parse(await readFile(path.join(root, "mermaid", "package.json"), "utf8"));
+  return meta.version;
+}
+
 function siteVersion(repoRoot) {
   const config = require("node:fs").readFileSync(
     path.join(repoRoot, "docs/_config.yml"),
@@ -54,7 +99,7 @@ async function main() {
   if (files.length === 0) return 0;
 
   const repoRoot = process.cwd();
-  const installed = require("mermaid/package.json").version;
+  const installed = await installedMermaidVersion();
   const site = siteVersion(repoRoot);
   if (site && installed !== site) {
     console.error(
@@ -64,15 +109,14 @@ async function main() {
     return 1;
   }
 
-  const { JSDOM } = await import("jsdom");
-  const dom = new JSDOM("<!doctype html><body></body>", {
-    pretendToBeVisual: true,
-  });
+  // jsdom first: mermaid touches `document` while its module body runs, so the
+  // globals have to exist before it is imported.
+  const { JSDOM } = await load("jsdom");
+  const dom = new JSDOM("<!doctype html><body></body>", { pretendToBeVisual: true });
   global.window = dom.window;
   global.document = dom.window.document;
-  global.DOMPurify = undefined;
 
-  const { default: mermaid } = await import("mermaid");
+  const { default: mermaid } = await load("mermaid");
   mermaid.initialize({ startOnLoad: false, securityLevel: "strict" });
 
   const errors = [];

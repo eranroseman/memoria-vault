@@ -95,6 +95,11 @@ repos:
       # build and no test -- it only shows readers an error box. `mermaid@` here
       # must stay equal to `mermaid.version` in docs/_config.yml; the gate fails
       # on drift and tests/test_mermaid_parse_gate.py pins the pair.
+      # Unlike markdownlint and cspell, whose entry is an installed bin that
+      # resolves its own deps, this entry is one of our own scripts. pre-commit
+      # installs these dependencies into a global prefix that Node's resolver
+      # does not search for a script run by path, so the script finds that
+      # prefix itself -- see the comment on `envModuleRoot`.
       - id: mermaid-parse
         name: mermaid-parse
         language: node
