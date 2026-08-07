@@ -55,6 +55,33 @@ triples into `concept_edges` — so drift is detectable and one side is always
 authority. Tensions and edge metadata (`edge_id`, `attributes_json`) are
 database-owned; they never mirror frontmatter.
 
+Three kinds of datum, three homes, and the two declared one-direction
+projections:
+
+```mermaid
+flowchart TD
+    subgraph placement ["The placement rule: one home per datum, chosen by who authored it"]
+        authored["Authored content:<br/>notes, frontmatter, steering"]
+        judged["Judged state:<br/>verdicts, dispositions, provenance"]
+        derived["Derived values:<br/>counts, health, saturation"]
+        files["Files: part of the bundle, portable"]
+        db["Database: engine-space,<br/>re-derivable trust"]
+        computed["Computed on read or projected one-way,<br/>never stored as if authored"]
+        authored --> files
+        judged --> db
+        derived --> computed
+    end
+
+    subgraph projections ["Data that appears in both places is a declared one-direction projection, so drift is detectable"]
+        catalog["Catalog (authority)"]
+        bib["bibliography.bib"]
+        triples["Concept-frontmatter triples (authority)"]
+        edges["concept_edges"]
+        catalog -- "one-direction projection" --> bib
+        triples -- "one-direction projection" --> edges
+    end
+```
+
 ### Provenance actors
 
 `observe_pi_edit` attributes unmediated file edits to `pi` by design: an edit

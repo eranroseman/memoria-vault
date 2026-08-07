@@ -38,6 +38,32 @@ unchecked until the scan catches up. Freshness is eventual; honesty is
 immediate. No consumer is ever told "checked" about bytes the checks never
 saw.
 
+The two planes and the barrier branch that joins them:
+
+```mermaid
+flowchart TD
+    subgraph acid ["ACID trust plane: a verdict either committed or it didn't"]
+        judgment["Judgment state:<br/>verdicts, provenance, the request queue,<br/>the hash-chained event log"]
+        sqlite["SQLite under .memoria/<br/>WAL, full synchronous durability,<br/>CHECK constraints,<br/>append-only triggers on the journal"]
+        judgment -- "lives in" --> sqlite
+    end
+
+    subgraph base ["BASE knowledge plane: an edit exists before the engine has scanned it"]
+        files["The knowledge itself: plain files,<br/>edited by the researcher<br/>with any tool at any time"]
+    end
+
+    subgraph barrier ["Fail-closed read barrier: freshness is eventual; honesty is immediate"]
+        compare{"Does the file's hash match<br/>its checked state?"}
+        served["Served as checked"]
+        denied["Read denies rather than serving stale trust:<br/>content is treated as unchecked<br/>until the scan catches up"]
+        compare -- "matches" --> served
+        compare -- "does not match:<br/>an unscanned edit,<br/>an unmaterialized output" --> denied
+    end
+
+    sqlite -- "checked state" --> compare
+    files -- "file's hash" --> compare
+```
+
 ## Cross-substrate operations
 
 > **Planned (beta.1):** The complete cross-substrate recovery sequence described below is not yet shipped.

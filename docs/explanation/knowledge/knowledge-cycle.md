@@ -47,6 +47,48 @@ drafts, and promotes selected passages back into unchecked notes for review.
 raise Inbox attention, which can trigger new capture work. What you write shows
 what is missing; what you catalog next is shaped by what you tried to write.
 
+The forward path below is the overview loop from
+[The model](../../README.md#the-model), extended with the gates and the gap
+feedback that make it a cycle. Diamonds are human gates: each task is
+individually triggered, often after a long gap.
+
+```mermaid
+flowchart TD
+    capture["Capture: a source arrives as an unchecked catalog row<br/>source text in the blob store"]
+    enrich["Enrichment records provider evidence"]
+    work["Checked Work"]
+    inbox["Inbox attention"]
+    gate1{"Human gate"}
+    notes["Claim-bearing notes"]
+    gate2{"Human gate"}
+    links["Confirmed links in the graph"]
+    gate3{"Human gate"}
+    slice["Project slice:<br/>the intended evidence set"]
+    outline["Map claims into outline.md"]
+    draft["Compose draft.md"]
+    verify["Verify evidence markers"]
+    gate4{"Human gate"}
+    export["Export clean drafts"]
+    promote["Promote selected passages<br/>back into unchecked notes"]
+    gate5{"Human gate"}
+
+    capture --> enrich
+    enrich -- "passing rows become checked" --> work
+    enrich -- "failed or contested rows" --> inbox
+    work --> gate1
+    gate1 -- "much later, if ever — the PI distills claims" --> notes
+    notes --> gate2
+    gate2 -- "only after a claim-bearing note exists" --> links
+    links --> gate3
+    gate3 -- "once enough claims accumulate" --> slice
+    slice --> outline --> draft --> verify --> gate4
+    gate4 --> export --> promote --> gate5
+    gate5 -- "for review" --> notes
+    outline -. "mapping exposes gaps" .-> inbox
+    verify -. "verification exposes gaps" .-> inbox
+    inbox -. "can trigger new capture work" .-> capture
+```
+
 ## Why the cycle is not a linear path
 
 The cycle describes direction, not a required timeline. A note can remain

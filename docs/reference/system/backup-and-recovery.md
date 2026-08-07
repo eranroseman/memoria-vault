@@ -83,6 +83,40 @@ Git-ignored `.memoria/restore-transaction.json` marker records which live
 components existed and binds the rollback directory and stage to the live
 vault with a transaction identity.
 
+Where each interruption leaves the transaction, and what `memoria workspace
+recover` does from there:
+
+```mermaid
+stateDiagram-v2
+    state "Sibling staging - no live component moved" as Staging
+    state "Snapshot validated" as Validated
+    state "Live WAL or rollback journal saved in the bound rollback directory" as Preserved
+    state ".memoria/restore-transaction.json present - swap unresolved" as Unresolved
+    state "Swap complete - workspace-restored event appended" as Swapped
+    state "Saved live components and prior backup stamp restored" as RolledBack
+    state "Marker in cleanup" as Cleanup
+    state "Sibling rollback directory kept as recovery material" as Material
+    state "Marker and sibling directories left intact for the PI" as Inspect
+
+    [*] --> Staging : memoria workspace restore
+    Staging --> Validated : validation passes
+    Staging --> [*] : refused - older than the committed journal head, or an unavailable or unreadable Git anchor
+    Validated --> Preserved : before the marker is published
+    Preserved --> Unresolved : marker binds the rollback directory and stage by transaction identity
+    Unresolved --> Swapped : the live swap succeeds
+    Swapped --> Cleanup : resulting chain verified, backup source preserved
+    Unresolved --> RolledBack : recover - originals not moved before interruption are preserved
+    Unresolved --> Material : recover - restoring the prior live components also fails
+    Unresolved --> Inspect : recover cannot determine the pre-swap state
+    RolledBack --> Cleanup : recovered database journal verified when one exists, cleanup phase recorded
+    Cleanup --> Cleanup : interrupted cleanup resumes - contents removed before their transaction identities
+    Cleanup --> [*] : retained journal verified, staging data removed, cleanup completed
+    note right of RolledBack
+        A pre-swap workspace without a database
+        remains without one after rollback.
+    end note
+```
+
 - A successful swap appends a PI-attributed `workspace-restored` event,
   verifies the resulting chain, preserves the backup source, and removes
   staging data.
@@ -112,6 +146,41 @@ the PI to inspect rather than guessing.
 A separate `.memoria/backup-transaction.json` marker covers every publication.
 Before the first rename, it identity-binds the staged replacement and, when
 present, the prior target to one random transaction.
+
+The same lifecycle for a publication, from the temporary sibling to the last
+identity cleanup:
+
+```mermaid
+stateDiagram-v2
+    state "Target validated, journal verified and reconciled" as Journal
+    state "Temporary sibling written" as Staged
+    state ".memoria/backup-transaction.json present - publication unresolved" as Unresolved
+    state "Bound identities and recognized backup material validated" as Recognized
+    state "Prior target restored" as Prior
+    state "Unpublished first snapshot removed" as FirstGone
+    state "Marker in cleanup - retained target keeps its matching identity" as Cleanup
+    state "Marker removed" as MarkerGone
+    state "Transaction material preserved for PI inspection" as Inspect
+
+    [*] --> Journal : memoria workspace backup
+    Journal --> Staged : write the temporary sibling outside the live vault
+    Journal --> [*] : refused - an existing target that fails the same validation used by restore
+    Staged --> Unresolved : marker published before the first rename
+    Unresolved --> Cleanup : the publish rename completes
+    Unresolved --> Recognized : memoria workspace recover
+    Unresolved --> Inspect : recovery cannot validate the transaction material
+    Recognized --> Prior : restore the prior target
+    Recognized --> FirstGone : remove an unpublished first snapshot
+    Recognized --> Cleanup : retain a replacement whose publish rename completed
+    Prior --> [*]
+    FirstGone --> [*]
+    Cleanup --> MarkerGone : local backup stamp written, sibling transaction material removed
+    MarkerGone --> [*] : best-effort target identity cleanup follows
+    note right of MarkerGone
+        An interrupted identity cleanup may leave that
+        inert metadata in an otherwise valid backup target.
+    end note
+```
 
 - For an unresolved publication marker, recovery validates those identities
   and recognized backup material before it restores the prior target, removes

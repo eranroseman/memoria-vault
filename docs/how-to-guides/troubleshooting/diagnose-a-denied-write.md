@@ -21,6 +21,28 @@ workspace file or projection is missing.
 
 ## Steps
 
+Run the four checks in order. Each exit is a row of the Common Outcomes table
+below:
+
+```mermaid
+flowchart TD
+    symptom["A CLI command or optional adapter reports a write,<br/>but the expected workspace file or projection is missing"]
+    symptom --> s1{"1. Check request state<br/>memoria status, memoria request list"}
+
+    s1 -->|"failed or pending request"| failed["failed request"]
+    s1 -->|"no failed or pending request"| s2{"2. Check the audit log<br/>memoria journal verify, memoria journal tail,<br/>system/logs/audit.jsonl"}
+
+    s2 -->|"matching deny"| deny["deny"]
+    s2 -->|"matching dry_run"| dryRun["dry_run"]
+    s2 -->|"no matching deny or dry_run"| s3{"3. Scan Concept edits and tracked-projection drift<br/>memoria workspace scan"}
+
+    s3 -->|"direct PI edit journaled,<br/>Concept marked unchecked"| conceptEdit["observed Concept edit"]
+    s3 -->|"changed projection quarantined, regenerated<br/>only when it has a current authoritative owner"| projection["changed tracked projection"]
+    s3 -->|"scan reports no Concept edit<br/>and no quarantined projection"| s4{"4. Check generated projections<br/>memoria workspace rebuild"}
+
+    s4 -->|"a direct edit to a generated target<br/>is not authoritative"| projection
+```
+
 **1. Check request state.**
 
 ```bash

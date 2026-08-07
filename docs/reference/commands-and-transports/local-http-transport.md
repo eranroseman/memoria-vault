@@ -54,6 +54,43 @@ The intended caller is a local trusted adapter attached to one workspace.
 
 ## Lifecycle and rendezvous
 
+The rendezvous sequence — the server writes the runtime record, while
+`memoria handshake` and `memoria serve --stop` only read it:
+
+```mermaid
+sequenceDiagram
+    participant Server as HTTP server (memoria serve --http)
+    participant Record as Owner-only runtime record
+    participant Handshake as memoria handshake --vault
+    participant Stop as memoria serve --stop
+
+    Note over Server,Record: Server boot
+    Server->>Record: publish port, token, PID, boot ID,<br/>engine version, start time
+
+    Note over Record,Handshake: Adapters should call handshake rather than<br/>reading the record directly
+    Handshake->>Record: read record
+    Handshake->>Handshake: check the recorded PID is live
+    Handshake->>Server: GET /v1/status (unauthenticated lifecycle probe)
+    alt PID live and boot ID matches the probe
+        Server-->>Handshake: ok, boot_id, engine_version
+        Note over Handshake: record accepted
+    else no live server
+        Handshake->>Server: --spawn starts a detached<br/>serve --http --on-demand --ephemeral
+        Server->>Record: publish new record
+    end
+
+    Note over Server: --on-demand exits after --idle-exit (default 900 seconds)<br/>with no successful bearer-authenticated requests.<br/>The status probe does not reset the timer.
+
+    Note over Record,Stop: Shutdown
+    Stop->>Record: read recorded token and boot ID
+    Stop->>Server: POST /v1/shutdown<br/>bearer token + X-Memoria-Boot-Id
+    alt boot ID matches this server boot
+        Server-->>Stop: 200 {"ok": true, "stopping": true}
+    else stale coordinates (a replacement server is running)
+        Server-->>Stop: 409 {"ok": false, "error": "stale server"}
+    end
+```
+
 Each live server publishes an owner-only runtime record outside the vault in a
 private, per-vault local-state directory. It carries the selected port, token,
 PID, boot ID, engine version, and start time. Adapters should use

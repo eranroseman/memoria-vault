@@ -60,6 +60,18 @@ A citation passes through up to four states. Conversions are mostly one-way.
 | **B — Live Word fields** | `.docx` with Zotero fields | Advisor feedback rounds on Word | Pandoc + `zotero.lua` filter → Word + Zotero plugin |
 | **C — Live LibreOffice** | `.odt` with Reference Marks | Advisor feedback rounds on LibreOffice | Pandoc → `.odt` → Zotero RTF/ODF Scan |
 
+Routes A, B, and C each convert the draft's citekeys one way into a different
+end state:
+
+```mermaid
+flowchart LR
+    citekey["Citekey<br/>source form in the Obsidian Markdown draft<br/>always editable here"]
+
+    citekey -->|"Route A — Pandoc static (default)<br/>pandoc --citeproc, bibliography.bib, CSL style"| static["Pandoc-static<br/>rendered text string in .docx / .odt<br/>Frozen — no restyling"]
+    citekey -->|"Route B — Live Word fields<br/>Pandoc + zotero.lua filter"| word["Word field<br/>binary field code in .docx with Zotero fields<br/>Live; restyle via Zotero Word plugin"]
+    citekey -->|"Route C — Live LibreOffice<br/>Pandoc to .odt, then Zotero RTF/ODF Scan"| mark["Reference Mark<br/>field code in .odt with Reference Marks<br/>Live; restyle via Zotero LibreOffice plugin"]
+```
+
 ---
 
 ## Editor feature comparison

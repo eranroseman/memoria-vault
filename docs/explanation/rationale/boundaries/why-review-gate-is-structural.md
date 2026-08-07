@@ -81,6 +81,31 @@ The request/attention projection carries exactly this: `open`, `resolved`, or
 `deferred`. These states are not annotations, and they are separate from
 `check_status`.
 
+The two tracks side by side — nothing connects them:
+
+```mermaid
+flowchart TD
+    subgraph machine ["Machine promotion path: agents and operations can stage proposals"]
+        stage["Machine work stages<br/>an unchecked proposal"]
+        checks["Declared checks run"]
+        envelope["Engine request envelope<br/>and trusted-writer checks"]
+        checked["check_status = checked:<br/>consumable by checked-only readers"]
+        stage --> checks
+        checks --> envelope
+        envelope -- "only when required checks and grounds<br/>exist as recorded state" --> checked
+    end
+
+    subgraph pi ["PI attention path: the PI decides how attention items are handled"]
+        attention["Attention item<br/>open"]
+        resolved["resolved"]
+        deferred["deferred"]
+        blocked["Review-gated mutations denied<br/>until resolved"]
+        attention -- "apply / reject" --> resolved
+        attention -- "defer" --> deferred
+        attention -- "at block loudness" --> blocked
+    end
+```
+
 ---
 
 ## The agent verdict is not the review

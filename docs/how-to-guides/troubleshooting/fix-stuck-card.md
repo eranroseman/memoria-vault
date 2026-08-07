@@ -33,6 +33,10 @@ intents.
 | `cancelled` | Retry only work explicitly cancelled by the PI and not marked as superseded. |
 | Human decision needed | Use `memoria attention list` and resolve the attention item after review. |
 
+See the request lifecycle diagram in the
+[Control plane reference](../../reference/control-and-policy/control-plane.md)
+for how these states connect and which control moves a request between them.
+
 Cancel obsolete work instead of retrying forever:
 
 ```bash
