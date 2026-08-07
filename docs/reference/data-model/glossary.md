@@ -194,8 +194,7 @@ queue, open integrity flags, and a health-band count of open `flag` /
 `alert` attention projections) — over a **Places** band of durable corpus
 homes (Library: `digests/`, `fulltexts/`, `bibliography.bib`; Knowledge:
 `notes/`, `hubs/`; Project: `projects/`). It requires no persisted
-navigation note. The standalone CLI does not render it. Planned — see
-[Roadmap](../../roadmap.md).
+navigation note. The standalone CLI does not render it. Planned.
 
 ### Queue
 
@@ -260,7 +259,7 @@ integrity-check operations as request rows via
 `enqueue_integrity_sweep`, then runs them itself. See
 [Sweeps](../pipelines-and-io/sweeps.md).
 
-### Task/request
+### Task/request {#task-request}
 
 A unit of work represented by a SQLite request row. Attention
 projections are PI-facing views over work that needs review.
@@ -332,7 +331,7 @@ The pipeline stage that brings an external source into the
 [Catalog](#catalog): capture writes an unchecked catalog row plus raw
 and extracted-text blobs, and enrichment checks the row once required
 DOI providers and retraction checks pass. See
-[Ingest](../pipelines-and-io/ingest.md).
+[Ingest routing](../pipelines-and-io/ingest.md).
 
 ### links (frontmatter)
 
@@ -378,7 +377,7 @@ Not a field name on its own; use the specific field. A Concept's
 read verdict is **`check_status`** in runtime state; request state lives in
 SQLite. Prefer the precise field name over a bare "state".
 
-### steering.md
+### steering.md {#steering-md}
 
 The vault-root watch/mute override: `## Watch for` bullets boost and
 `## Muted` bullets suppress discovery-ranking relevance tokens, on top
@@ -396,7 +395,7 @@ name of the Cockpit `--triage` screen (worklist / review / flow) that
 surfaces the queue. See
 [Work the action queue](../../how-to-guides/inbox/work-the-action-queue.md).
 
-### vocabulary (system/vocabulary.md)
+### vocabulary (system/vocabulary.md) {#vocabulary}
 
 The PI-editable controlled-vocabulary artifact governing catalog Work
 `research_area`/`methodology` metadata and claim-bearing note `topics`,
@@ -495,7 +494,7 @@ content, and rolls its detectors up into the PASS / REVIEW / FAIL
 verdict band. See
 [Linter: detectors and auto-fix](../analysis-and-surfaces/linter.md).
 
-### Peer reviewer
+### Peer-reviewer
 
 The independent, skeptical verification posture
 (`posture: peer-reviewer`) on the judgment-based prompt operations
