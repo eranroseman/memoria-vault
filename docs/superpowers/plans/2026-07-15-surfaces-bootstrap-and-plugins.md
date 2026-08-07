@@ -13913,14 +13913,7 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
 > **NOT EXECUTED (2026-08-02). This task is still open — tracked as issue
 > #1690.** It was assigned with
 > U3-PLUG.9/.10 and could not be run: it needs an interactive desktop Obsidian
-> session with a human operator, and it Consumes `memoria` on PATH, which is
-> broken repo-wide right now — the shared `.venv` console script resolves
-> through `__editable__.memoria_vault-*.pth` to
-> `.claude/worktrees/deps/src`, a worktree that no longer exists, so `memoria
-> --version` raises `ModuleNotFoundError: No module named 'memoria_vault'`
-> from any directory. (`python -m pytest` is unaffected: it gets `src/` from
-> the pytest path config, not from the venv.) **Whoever runs this must first
-> reinstall the engine from this branch.** Two steps also need the network
+> session with a human operator. Two steps also need the network
 > (installing a light and a dark community theme) and several need visual
 > judgment no harness can supply. Three preconditions *were* verified
 > statically, so the session need not spend time on them:
