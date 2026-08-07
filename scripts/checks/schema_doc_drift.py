@@ -25,6 +25,15 @@ SCHEMA_KEYS = {
 
 
 def load_types(schemas_dir: Path) -> dict[str, dict[str, Any]]:
+    """Read types/*.yaml. Deliberately not `vocabulary.schema.load_types`.
+
+    This gate asks one narrow question -- do the reference docs match the type
+    schemas -- so it reads whatever type files it is pointed at. The shared
+    loader enforces a broader contract: it requires `concept-types.yaml` and
+    rejects any type whose `concept_type` is not a registry member. Routing
+    this gate through it would make every synthetic fixture satisfy Concept-type
+    validity that the docs check does not care about. Keep the parse local.
+    """
     out: dict[str, dict[str, Any]] = {}
     for path in sorted((schemas_dir / "types").glob("*.yaml")):
         data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
