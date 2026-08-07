@@ -42,6 +42,10 @@ should feel like a co-PI, not a knowledge base. Product pitch:
 - Present options with pros/cons and a recommendation — never a bare list.
 - Any addition must name the expensive, recurring failure it prevents; prefer
   deletion > mechanism > rule > checker.
+- Every plan task carries a verification step — a command and its expected
+  result — ahead of the step that changes anything. `main` moves faster than
+  plans are authored, so a task whose premises aren't re-checked at execution
+  time is the one that ships a stale one.
 
 ## Parallel delegation
 
@@ -91,7 +95,9 @@ label indexes real work instead of restating facts GitHub already tracks.
   then drop rows whose `issue_dependencies_summary.blocked_by` is nonzero
   (`gh api repos/{owner}/{repo}/issues/N`). The label is a triage-time verdict;
   the assignee and blocker checks are read live, so they catch what changed
-  after triage.
+  after triage. GitHub's search index lags writes by seconds, so a `--search`
+  count taken straight after a batch label change under-reports — confirm with
+  per-issue reads.
 - **Intake.** Before filing, search open issues and closed `wontfix` issues
   by glossary concept, not just by wording. Bodies cite symbols
   (`file.py::function`) and commit shas — never bare line numbers or plan
@@ -109,6 +115,11 @@ label indexes real work instead of restating facts GitHub already tracks.
   blocker tables.
 - **Decisions.** Resolve as a comment, then close. Term-level rulings also
   land in the glossary.
+- **Rejections.** A rejected *enhancement* also gets a `.out-of-scope/<concept>.md`
+  entry — one file per concept, appending to its prior-request list rather than
+  adding a second file. `/triage` writes it at close and reads it at intake, so
+  the same idea is not re-litigated from scratch. Already-implemented requests
+  and rejected bugs stay closed issues only; the intake search covers those.
 
 ## Agent skills
 
