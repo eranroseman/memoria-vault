@@ -17,8 +17,9 @@ the required Concept-type registry in
 Each type schema must name a registry member; a schema directory without that
 registry is invalid.
 The shared loader/validator is
-`src/memoria_vault/runtime/vocabulary/schema.py`; the linter, pre-commit
-hook, and package-seed tests all read it.
+`src/memoria_vault/runtime/vocabulary/schema.py`. The linter, the vault's
+pre-commit hook, the trusted writer, `memoria init`, the state layer, and the
+tests all reach the schemas through it rather than parsing the YAML themselves.
 
 Per-type schemas currently exist for `code-artifact`, `digest`, `fulltext`,
 `hub`, `note`, and `project`.

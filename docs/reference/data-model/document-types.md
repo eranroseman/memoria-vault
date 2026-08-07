@@ -19,8 +19,9 @@ Each type schema declares its `category`, `concept_type` registry membership,
 it lives in `folders.yaml`'s `homes:` map. There is no "initial read state" in
 frontmatter either: `check_status` lives in SQLite only, never in a Concept
 file (see [Verdict state is not
-frontmatter](frontmatter.md#verdict-state-is-not-frontmatter)). The linter,
-pre-commit hook, trusted writer, and tests read those YAML files directly.
+frontmatter](frontmatter.md#verdict-state-is-not-frontmatter)). The linter, the
+vault's pre-commit hook, the trusted writer, and the tests all read those YAML
+files through the shared loader, never by parsing them themselves.
 
 The current schema defines 6 document types: `code-artifact`, `digest`,
 `fulltext`, `hub`, `note`, and `project`.
