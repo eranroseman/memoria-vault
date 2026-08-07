@@ -2,8 +2,17 @@
 
 Facts for AI agents working in `eranroseman/memoria-vault`. *How* work happens
 is owned by the installed superpowers skills (brainstorm → plan → TDD/SDD →
-review → finish), not by this file. Human contributors: see
-[CONTRIBUTING.md](CONTRIBUTING.md).
+review → finish) and, for issue work, by `/triage` — not by this file.
+
+[CONTRIBUTING.md](CONTRIBUTING.md) is not a human-only file. It holds the craft
+this one deliberately does not restate, and those sections bind agents too:
+**Coding conventions**, **Documentation authoring conventions**, and the
+**Pull requests** checklist. Read them before writing code, docs, or a PR. Its
+Development setup and Releases sections are for human contributors.
+
+Operating policy — the gate, merge rules, the shared index, where work is
+tracked — lives here and only here. When the two files appear to disagree about
+policy, this one is right and the other has drifted.
 
 ## What Memoria is
 

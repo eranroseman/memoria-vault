@@ -9,7 +9,7 @@ installer, runtime package, packaged workspace seed, and docs are welcome.
 - Open an issue first for significant changes: new operation surfaces, installer
   overhauls, schema changes, provider integrations, or architecture decisions.
 - Small docs, typo, script, and test fixes can go straight to a PR.
-- AI agents follow [AGENTS.md](AGENTS.md) for repo facts and the installed superpowers skills for how work happens.
+- AI agents follow [AGENTS.md](AGENTS.md) for repo facts, the installed superpowers skills for how work happens, and `/triage` for issue work.
 
 ## Development setup
 
@@ -44,30 +44,24 @@ See [Quickstart](docs/how-to-guides/setup/quickstart.md) for the product install
 | Work | Home |
 |---|---|
 | Bugs, enhancements, docs fixes, and questions | [GitHub issues](https://github.com/eranroseman/memoria-vault/issues) |
-| Release scope | GitHub milestones, when one is set; the frozen `design-history/` chapter is the per-release record |
+| Rejected enhancements | `.out-of-scope/<concept>.md`, one file per concept |
 | Working specs and plans | `docs/superpowers/` (tracked, not published) |
 | Decisions and durable rationale | [Design history](design-history/README.md) |
 
-Labels stay few and closed. `bug` and `enhancement` mark category;
-`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, and
-`wontfix` are the triage state machine (see AGENTS.md's
-[Issue conventions](AGENTS.md#issue-conventions) for what each one means and
-when agents apply it). A triaged issue carries exactly one of each.
-`documentation` is a subject tag outside that machine, and bot-managed labels
-such as `dependencies`, `python`, and `github_actions` round out the set. No
-priority tier is added on top.
+Release scope, the label vocabulary, and the triage state machine are policy —
+they live in [AGENTS.md](AGENTS.md), under Ground truth and Issue conventions.
+Read them there rather than here; a copy in this file would be free to drift,
+and has.
 
 ## Testing and verification
 
-`python scripts/verify` is the one gate. It runs lint, the product-integrity
-checks, the test suite, an offline end-to-end smoke, and syntax checks; CI
-requires it plus `gitleaks`. Which pytest levels the gate runs is owned by
-`PYTEST_MARKERS` in `scripts/verify`. Target a subset while iterating with
+Run `python scripts/verify` before every PR — what it covers and what CI
+requires are in [AGENTS.md](AGENTS.md), Ground truth.
+
+Which pytest levels the gate runs is owned by `PYTEST_MARKERS` in
+`scripts/verify`. Target a subset while iterating with
 `python3 -m pytest tests/ -q -m unit` (or `contract`, `static`); levels the
 gate excludes run the same way on demand.
-
-Do not test installers against the real `~/Memoria`; use a disposable vault
-under `test-vault/`.
 
 ## Coding conventions
 
@@ -122,20 +116,21 @@ Keep one scope per branch and PR. Each session works in its own worktree (see
 
 Before opening a PR:
 
-- Claim or reference the issue when one exists.
+- Reference the issue when one exists. Agents claim it first — see
+  [AGENTS.md](AGENTS.md), Issue conventions.
 - Rebase on `origin/main`.
 - Stage only files you changed.
 - Run `python scripts/verify`.
 - Open the PR against `main` and fill out the template.
 
-`main` requires a PR plus the `verify` and `gitleaks` checks, and merges by squash.
+Branch protection and merge policy are in [AGENTS.md](AGENTS.md), Ground truth.
 
 ## Commit style
 
-No commit-message format is required. Clear, lowercase, imperative subjects are
-encouraged; [Conventional Commits](https://www.conventionalcommits.org/) prefixes
-(`feat`, `fix`, `docs`, `refactor`, `chore`, `test`, `research`) are a fine
-convention and earn back a required role if release automation returns.
+No format is required — see [AGENTS.md](AGENTS.md), Ground truth. Clear,
+lowercase, imperative subjects are encouraged;
+[Conventional Commits](https://www.conventionalcommits.org/) prefixes (`feat`,
+`fix`, `docs`, `refactor`, `chore`, `test`, `research`) are a fine convention.
 
 Call out breaking changes explicitly — CLI command or JSON-contract changes,
 vault folder restructuring, provider/config field renames, and required
@@ -144,8 +139,9 @@ is required, and the replacement path.
 
 ## Releases and changelog
 
-A milestone marks intended-release scope when one is set — not every release
-gets one. The per-release record is the frozen `design-history/` chapter.
+What a milestone means and where the per-release record lives are in
+[AGENTS.md](AGENTS.md), Ground truth.
+
 There is no release automation right now: `CHANGELOG.md` is a hand-curated
 dated record, and versioning, tags, and GitHub Releases return with release
 tooling when distribution needs them. Do not hand-cut a release or hand-tag as
@@ -154,5 +150,5 @@ part of an ordinary PR.
 ## Questions?
 
 Open a [GitHub Discussion](https://github.com/eranroseman/memoria-vault/discussions)
-or file an issue. Leave it unlabelled — triage assigns the category and state
+or file an issue. Leave it unlabeled — triage assigns the category and state
 roles.
