@@ -33,6 +33,29 @@ bootstrap is the clone/entry point; installing requires the whole repo. See
 [Bootstrap installer](bootstrap-installer.md) for the installer's design and
 [Installer (bootstrap)](../../../reference/system/installer.md) for the component inventories.
 
+The four path kinds, and where each one ends up:
+
+```mermaid
+flowchart TD
+    subgraph repo ["The repo holds four kinds of path"]
+        installers["Bootstrap installers at the repo root<br/>scripts/install.sh and scripts/install.ps1,<br/>run once by end users"]
+        seed["Workspace seed and installable package<br/>src/memoria_vault/, read by the CLI<br/>initializer, operations, and tests"]
+        adapter["Obsidian adapter source<br/>.obsidian/plugins/memoria-obsidian/"]
+        docs["docs/<br/>for developers and contributors only"]
+    end
+
+    derive["The installer derives the running workspace:<br/>install the package, then call<br/>memoria init at a working location"]
+    workspace["Deployed workspace: self-contained;<br/>new workspaces install the<br/>Memoria plugin by default"]
+    pages["GitHub Pages URL,<br/>never a relative path"]
+
+    adapter -- "lives in the workspace seed itself" --> seed
+    installers -- "installing requires the whole repo" --> derive
+    seed --> derive
+    derive --> workspace
+    docs -. "never shipped at runtime -<br/>the deployed workspace does not carry docs/" .-x workspace
+    workspace -. "so any reference from a workspace-resident<br/>file to docs/ is a" .-> pages
+```
+
 The old `vault-template/` tree was removed in
 [alpha.20](https://github.com/eranroseman/memoria-vault/blob/main/design-history/20-alpha.20.md). A second source tree had
 become a retention mechanism for empty directories, historical files, dashboards,

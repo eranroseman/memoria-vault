@@ -48,6 +48,29 @@ Either way — seed corpus or local file — capture creates a worker request,
 writes a catalog row, stores source blobs under
 `.memoria/blobs/source-content/`, and journals the capture.
 
+Both entry branches land in the same place, and the steps below run from
+there:
+
+```mermaid
+flowchart TD
+    seed["memoria seed install<br/>the seed corpus, from the shipped manifest"]
+    local["memoria work add --file<br/>one local file, offline"]
+    capture["The same capture path<br/>creates a worker request"]
+    row["Catalog row<br/>the Work, unchecked at capture"]
+    blobs["Source blobs under<br/>.memoria/blobs/source-content/"]
+    journal["Journaled capture"]
+    checked["Checked Work"]
+    digest["Digest<br/>the first source-derived artifact"]
+
+    seed --> capture
+    local --> capture
+    capture --> row
+    capture --> blobs
+    capture --> journal
+    row -->|"memoria work update --check-status checked"| checked
+    checked -->|"memoria work digest"| digest
+```
+
 **3. Inspect one Work record.**
 
 List the catalog and pick one `work_id` (from the seed install output or
@@ -108,6 +131,8 @@ source-derived artifact you can inspect.
 - A digest is source-derived material keyed by `work_id`.
 
 For more detail on capturing sources by DOI, URL, or PDF:
-[Capture and ingest](../how-to-guides/library/capture-and-ingest.md).
+[Capture and ingest](../how-to-guides/library/capture-and-ingest.md). For the
+routing inside the capture path:
+[Ingest routing](../reference/pipelines-and-io/ingest.md).
 
 Next: [03: Connect notes](03-connect-notes.md).

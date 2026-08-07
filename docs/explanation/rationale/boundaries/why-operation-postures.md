@@ -57,6 +57,10 @@ actor that disposes. That split keeps conversation from becoming writing,
 production from grading itself, and deterministic operations from masquerading as
 judgment.
 
+[Operation postures](../../execution/operation-postures/README.md) diagrams
+those postures against the write boundary and the PI;
+[Surfaces](../../surfaces/README.md) shows the same fan-in from every surface.
+
 ## Why one Co-PI fronts everything
 
 Splitting conversation across many agents creates a UX failure: *who do I talk
