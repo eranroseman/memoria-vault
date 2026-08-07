@@ -1,4 +1,5 @@
 ackerman
+actioned
 affordances
 amershi
 andrej
@@ -153,6 +154,7 @@ luan
 luhmann
 mamykina
 massw
+mattpocock
 mecir
 memex
 memora
@@ -331,6 +333,8 @@ venv
 vikunja
 virtualenv
 vsearch
+wayfinder
+Wayfinding
 wikilink
 wikilinked
 wikilinking
