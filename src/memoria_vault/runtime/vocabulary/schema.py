@@ -5,8 +5,8 @@
 with per-type frontmatter schemas (`types/<type>.yaml`), the Concept-type roster
 (`concept-types.yaml`), the type→folder map (`folders.yaml`), and the controlled
 vocabulary (`system/vocabulary.md`).
-This module is the reader shared by the Linter, the pre-commit hook,
-`memoria init`, package-spine tests, and no-Bases seed tests, so a schema change is a
+This module is the reader shared by the Linter, the pre-commit hook, the trusted
+writer, `memoria init`, the state layer, and the tests, so a schema change is a
 one-file edit, never a hunt across hardcoded lists.
 
 Field kinds: str | int | bool | date | list | map | link | links | ulid | literal:<value>
