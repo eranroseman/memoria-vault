@@ -3116,9 +3116,8 @@ and 100-work Zotero export, live model dispatch for a grounded first answer,
 and human wall-clock triage timing. "This is not a pytest task: it is a
 measured protocol run on a real vault." No agent session can stand in for it.
 
-**Defect found in this task's own body while auditing (fix before the run):**
-the instrumentation-verification step below grepped
-`"$VAULT"/.memoria/journal/*.jsonl`; the working command is:
+**The instrumentation-verification step below confirms disposition events
+landed, by querying `event_log` directly:**
 
 ```
 sqlite3 "$VAULT/.memoria/memoria.sqlite" \
