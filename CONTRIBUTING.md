@@ -6,9 +6,8 @@ installer, runtime package, packaged workspace seed, and docs are welcome.
 ## Before you start
 
 - Check [open issues](https://github.com/eranroseman/memoria-vault/issues) to avoid duplicate work.
-- Open an issue first for significant changes: new operation surfaces, installer
-  overhauls, schema changes, provider integrations, or architecture decisions.
-- Small docs, typo, script, and test fixes can go straight to a PR.
+- Which changes need an issue opened first, and which can go straight to a PR,
+  is in [AGENTS.md](AGENTS.md#issue-conventions), Issue conventions.
 - AI agents follow [AGENTS.md](AGENTS.md) for repo facts, the installed superpowers skills for how work happens, and `/triage` for issue work.
 
 ## Development setup
@@ -41,22 +40,21 @@ See [Quickstart](docs/how-to-guides/setup/quickstart.md) for the product install
 
 ## Where work lives
 
-| Work | Home |
-|---|---|
-| Bugs, enhancements, docs fixes, and questions | [GitHub issues](https://github.com/eranroseman/memoria-vault/issues) |
-| Rejected enhancements | `.out-of-scope/<concept>.md`, one file per concept |
-| Working specs and plans | `docs/superpowers/` (tracked, not published) |
-| Decisions and durable rationale | [Design history](design-history/README.md) |
+File work as [GitHub issues](https://github.com/eranroseman/memoria-vault/issues);
+[design history](design-history/README.md) holds the decisions and durable
+rationale behind the current shape.
 
-Release scope, the label vocabulary, and the triage state machine are policy —
-they live in [AGENTS.md](AGENTS.md), under Ground truth and Issue conventions.
-Read them there rather than here; a copy in this file would be free to drift,
-and has.
+Everything else about where work is tracked — working specs and plans,
+rejected-enhancement records, release scope, the label vocabulary, the triage
+state machine — is policy. It lives in [AGENTS.md](AGENTS.md), under
+[Where things live](AGENTS.md#where-things-live) and
+[Issue conventions](AGENTS.md#issue-conventions). Read it there rather than
+here; a second copy would be free to drift, and was.
 
 ## Testing and verification
 
 Run `python scripts/verify` before every PR — what it covers and what CI
-requires are in [AGENTS.md](AGENTS.md), Ground truth.
+requires are in [AGENTS.md](AGENTS.md#ground-truth), Ground truth.
 
 Which pytest levels the gate runs is owned by `PYTEST_MARKERS` in
 `scripts/verify`. Target a subset while iterating with
@@ -117,18 +115,19 @@ Keep one scope per branch and PR. Each session works in its own worktree (see
 Before opening a PR:
 
 - Reference the issue when one exists. Agents claim it first — see
-  [AGENTS.md](AGENTS.md), Issue conventions.
+  [AGENTS.md](AGENTS.md#issue-conventions), Issue conventions.
 - Rebase on `origin/main`.
-- Stage only files you changed.
+- Stage explicit paths — see [AGENTS.md](AGENTS.md#ground-truth), Ground truth.
 - Run `python scripts/verify`.
 - Open the PR against `main` and fill out the template.
 
-Branch protection and merge policy are in [AGENTS.md](AGENTS.md), Ground truth.
+Branch protection and merge policy are in [AGENTS.md](AGENTS.md#ground-truth),
+Ground truth.
 
 ## Commit style
 
-No format is required — see [AGENTS.md](AGENTS.md), Ground truth. Clear,
-lowercase, imperative subjects are encouraged;
+Commit-message format policy is in [AGENTS.md](AGENTS.md#ground-truth),
+Ground truth. Clear, lowercase, imperative subjects are encouraged;
 [Conventional Commits](https://www.conventionalcommits.org/) prefixes (`feat`,
 `fix`, `docs`, `refactor`, `chore`, `test`, `research`) are a fine convention.
 
@@ -140,7 +139,7 @@ is required, and the replacement path.
 ## Releases and changelog
 
 What a milestone means and where the per-release record lives are in
-[AGENTS.md](AGENTS.md), Ground truth.
+[AGENTS.md](AGENTS.md#where-things-live), Where things live.
 
 There is no release automation right now: `CHANGELOG.md` is a hand-curated
 dated record, and versioning, tags, and GitHub Releases return with release
@@ -150,5 +149,5 @@ part of an ordinary PR.
 ## Questions?
 
 Open a [GitHub Discussion](https://github.com/eranroseman/memoria-vault/discussions)
-or file an issue. Leave it unlabeled — triage assigns the category and state
-roles.
+or file an issue. Leave labeling to triage — see [AGENTS.md](AGENTS.md#issue-conventions),
+Issue conventions.

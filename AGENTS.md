@@ -8,7 +8,9 @@ review → finish) and, for issue work, by `/triage` — not by this file.
 this one deliberately does not restate, and those sections bind agents too:
 **Coding conventions**, **Documentation authoring conventions**, and the
 **Pull requests** checklist. Read them before writing code, docs, or a PR. Its
-Development setup and Releases sections are for human contributors.
+**Development setup** walkthrough is for human contributors; from **Releases and
+changelog**, only the rule against hand-cutting a release or hand-tagging in an
+ordinary PR binds agents.
 
 Operating policy — the gate, merge rules, the shared index, where work is
 tracked — lives here and only here. When the two files appear to disagree about
@@ -97,7 +99,13 @@ label indexes real work instead of restating facts GitHub already tracks.
   a title prefix. `documentation` is a subject tag outside the machine, as are
   the Dependabot-written labels. An issue that has not been triaged carries no
   role at all — that is a meaningful state, and it is the first bucket
-  `/triage` surfaces.
+  `/triage` surfaces. The vocabulary is closed: those roles plus `documentation`
+  and the Dependabot labels are the whole set, with no priority or severity
+  tier on top.
+- **Filing.** Significant changes — new operation surfaces, installer
+  overhauls, schema changes, provider integrations, architecture decisions —
+  get an issue before the work starts. Small docs, typo, script, and test fixes
+  can go straight to a PR.
 - **Dispatch query** — what an agent may start right now: `ready-for-agent`,
   unassigned, no open blocker.
   `gh issue list --state open --limit 500 --label ready-for-agent --search 'no:assignee'`,
