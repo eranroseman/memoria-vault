@@ -32,9 +32,8 @@ The self-improvement loop (fixed harness, one metric, keep-or-discard) applied t
 
 The SQLite record of every source the vault knows: Works, their
 identifiers and provenance, and the work-graph edges discovered for
-them. Sources enter the catalog before any knowledge work; its only
-file-backed faces are `digests/` and `fulltexts/`. See
-[Ingest](../pipelines-and-io/ingest.md) for how sources arrive.
+them. Sources enter the catalog before any knowledge work. See
+[Ingest routing](../pipelines-and-io/ingest.md) for how sources arrive.
 
 ### Co-PI
 
@@ -69,8 +68,10 @@ runtime state.
 ### memoria doctor
 
 The diagnostic command family (`memoria doctor`,
-`memoria doctor bundle`): read-only checks of installation,
-configuration, runner reachability, and bundle health. See
+`memoria doctor bundle`, `memoria doctor self-test`): read-only checks
+of installation, configuration, runner reachability, and bundle health.
+Its one writing member is `memoria doctor --repair`, which restores
+runtime scaffold files and missing view preferences. See
 [Installer](../system/installer.md) and
 [Failure modes](../system/failure-modes.md).
 
@@ -91,15 +92,20 @@ executed through `memoria operation run`.
 ### PI
 
 The human principal investigator who owns and runs the vault. Makes
-every triage, disposition, and promotion decision. Single-user by design.
+every triage and disposition decision; promotion is the structural gate
+those decisions feed, not a per-write approval loop. Single-user by
+design.
 
 ### Provenance
 
-The umbrella term for recorded origin, in two senses: the OKF
+The umbrella term for recorded origin, in three senses: the OKF
 frontmatter fields on Concepts ([generated](#generated),
 [sources](#sources), [verified](#verified)), stamped by the trusted
-writer and never reconstructed; and pattern provenance — the record
-of which AI-research design patterns Memoria borrowed, adapted,
+writer and never reconstructed; catalog field provenance — the
+per-field record of which provider won a [Work](#work)'s value, kept
+in the `field_provenance` table
+(`src/memoria_vault/runtime/schema.sql`); and pattern provenance — the
+record of which AI-research design patterns Memoria borrowed, adapted,
 referenced, or ignored, and why
 ([Pattern provenance](../evidence-and-integrations/pattern-provenance.md)).
 
@@ -127,7 +133,14 @@ runtime state.
 
 ### Toulmin roles
 
-The six argument components (Claim, Grounds, Warrant, Backing, Qualifier, Rebuttal) that type the knowledge graph and its consequence propagation. Planned — see [Roadmap](../../roadmap.md).
+The six argument components (Claim, Grounds, Warrant, Backing,
+Qualifier, Rebuttal) that type the knowledge graph and its consequence
+propagation. Three of them ship today as `links:` relations —
+`warrant`, `qualifier`, and `rebuttal`, listed in
+[Frontmatter fields](frontmatter.md#links-and-catalog-resources) — and
+the typed consequences they carry propagate on a change. Typing the
+whole knowledge graph by all six roles is planned — see
+[Roadmap](../../roadmap.md).
 
 ### Trusted writer
 
@@ -327,12 +340,13 @@ distinction and its rationale are explained in
 
 ### loudness
 
-The urgency band on an attention card's frontmatter; the band roster is
-specified in
-[Empirical events](../control-and-policy/empirical-events.md#enum-values)
-and `src/memoria_vault/runtime/attention/loudness.py`. `block` is
-pull-only: an open block card pauses delegation and review-gated
-promotion until the PI resolves it.
+The urgency band on an attention card's frontmatter: `quiet`,
+`notice`, `alert`, or `block`
+(`src/memoria_vault/runtime/attention/inbox.py`, and specified in
+[Empirical events](../control-and-policy/empirical-events.md#enum-values)).
+`block` is pull-only: an open block card pauses delegation and
+review-gated promotion until the PI resolves it
+(`src/memoria_vault/runtime/attention/loudness.py`).
 
 ### Promotion
 
@@ -440,7 +454,7 @@ as a `telemetry_events` row in `.memoria/memoria.sqlite`
 [event_log](#event_log). The payload roster and enums are specified
 in [Empirical events](../control-and-policy/empirical-events.md).
 Distinct from the [Audit log](#audit-log) (policy decisions) and the
-[Journal](#journal) (synchronization export).
+[Journal](#journal).
 
 ### event_log {#event_log}
 
@@ -449,8 +463,8 @@ engine state changes, such as operation-request evidence, PI
 dispositions, and evidence mints
 (`src/memoria_vault/runtime/schema.sql`). One of three observability
 trails: `event_log` is the source of truth for what operations did,
-the [Journal](#journal) is its derived per-machine JSONL export, and
-the [Audit log](#audit-log) is the separate write-gate
+the per-machine [journal](#journal) JSONL files are its derived
+export, and the [Audit log](#audit-log) is the separate write-gate
 policy-decision trail. Distinct from
 [Empirical event](#empirical-event) payloads, which land in the
 unrelated `telemetry_events` table instead. See
