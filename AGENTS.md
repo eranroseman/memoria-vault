@@ -110,6 +110,24 @@ label indexes real work instead of restating facts GitHub already tracks.
 - **Decisions.** Resolve as a comment, then close. Term-level rulings also
   land in the glossary.
 
+## Agent skills
+
+### Issue tracker
+
+GitHub issues in `eranroseman/memoria-vault`, driven through `gh`. See
+`docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+The five canonical triage roles, label strings unchanged. What each one means
+and when it applies is in [Issue conventions](#issue-conventions) above; the
+role-to-string mapping is in `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context. Canonical vocabulary is the glossary, reached via the root
+`CONTEXT.md` stub; ADRs live in `docs/adr/`. See `docs/agents/domain.md`.
+
 ## Cross-tool parity (Codex, Kilo)
 
 Codex and Kilo read this file natively. Justified asymmetries, platform-
