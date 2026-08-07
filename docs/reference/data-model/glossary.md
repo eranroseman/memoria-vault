@@ -144,11 +144,14 @@ whole knowledge graph by all six roles is planned — see
 
 ### Trusted writer
 
-The single runtime component allowed to write Concept files: it stamps
-`generated` and `sources` provenance at staging and `verified` at
-promotion, and enforces the frontmatter schema on every write
+The single runtime component that creates, stages, and promotes
+Concepts, and the only one that stamps provenance: `generated` and
+`sources` at staging, `verified` at promotion
 (`src/memoria_vault/runtime/trusted_writer.py`). Operations never write
-Concepts directly.
+Concepts directly. One piece of runtime machinery writes past it: when
+a typed consequence propagates, the propagation labeler
+(`src/memoria_vault/runtime/propagation.py`) sets exactly `stale` and
+`consequence` on an affected Concept's frontmatter.
 
 ### verified
 
@@ -229,7 +232,10 @@ pending jobs.
 
 ### Handoff payload
 
-The self-contained block that provisions the next worker; its fields are specified in the [Control plane reference](../control-and-policy/control-plane.md).
+One idempotent map-proposal block the [Linter](#linter) mints from a
+current hub-threshold finding, for the PI to act on; `hubs/` stays
+PI-curated. See
+[System action operations](../commands-and-transports/system-actions-operations.md).
 
 ### Runner
 
@@ -287,9 +293,9 @@ a surface to display. Not a separate durable type — it reads the same
 
 ### Check status
 
-The runtime read-state verdict for Concepts:
-`unchecked`, `checked`, or `quarantined`. It lives in SQLite/read API surfaces,
-not Concept frontmatter.
+The runtime read-state verdict for Concepts and catalog Works:
+`unchecked`, `checked`, or `quarantined`. It lives in SQLite/read API
+surfaces, not Concept frontmatter.
 
 ### Concept
 
