@@ -101,8 +101,8 @@ behavior — anything not shipped is marked *planned* here and everywhere else.
 - **When a source falls, you will see everything it was holding up** *(planned
   — typed blast-radius propagation)*.
 - **A first real answer from your own corpus in under 30 minutes** *(planned —
-  the onboarding bar; it ships with the telemetry that measures
-  it rather than asserting it)*.
+  the onboarding bar; it ships with the telemetry that measures it rather than
+  asserting it)*.
 
 ## Who it's for
 

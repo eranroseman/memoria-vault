@@ -68,9 +68,8 @@ Typing the roles types the consequences: when a node falls, its dependents exper
 
 ## The autoresearch loop
 
-> **Planned:** The beta.1 precursors are event plumbing and frozen
-> evaluation; the measured keep-or-discard autoresearch overnight loop ships in
-> beta.2.
+> **Planned:** The beta.1 precursors are event plumbing and frozen evaluation;
+> the measured keep-or-discard autoresearch overnight loop ships in beta.2.
 
 The fourth pillar is Karpathy's autoresearch framing — a fixed harness, one metric, keep-or-discard, run overnight — the self-improving trial-and-error loop that the contemporary [autoresearch systems](../../../reference/evidence-and-integrations/bibliography.md#liu2026autoresearchclaw) also pursue. Memoria applies it narrowly: to improve its *own instruments* — detectors, prompts, gates — by measuring a change against a frozen benchmark and keeping only what beats the bar.
 
