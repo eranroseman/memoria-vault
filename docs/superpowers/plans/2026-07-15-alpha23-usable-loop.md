@@ -3116,14 +3116,8 @@ and 100-work Zotero export, live model dispatch for a grounded first answer,
 and human wall-clock triage timing. "This is not a pytest task: it is a
 measured protocol run on a real vault." No agent session can stand in for it.
 
-**Defect found in this task's own body while auditing (fix before the run):**
-the instrumentation-verification step below greps
-`"$VAULT"/.memoria/journal/*.jsonl`. **No such file exists** — the authoritative
-journal is the SQLite `event_log` table (`runtime/state.py` `_insert_journal_row`
-/ `read_event_log`), and nothing in `src/` writes a JSONL journal. As written the
-glob matches nothing, `wc -l` prints `0`, and the step's own rule ("Zero is a
-hard failure of LOOP.4's implementation — stop and file the bug") fires a false
-alarm on a perfectly instrumented run. The working command is:
+**The instrumentation-verification step below confirms disposition events
+landed, by querying `event_log` directly:**
 
 ```
 sqlite3 "$VAULT/.memoria/memoria.sqlite" \
@@ -3210,9 +3204,6 @@ cannot be satisfied by unrelated events.
   matches a resolution from the previous step:
 
   ```
-  # Corrected 2026-08-02 — the printed `grep … .memoria/journal/*.jsonl | wc -l`
-  # matched nothing (no JSONL journal exists) and printed a false 0. See the
-  # defect note above this Steps list.
   sqlite3 "$VAULT/.memoria/memoria.sqlite" \
     "SELECT COUNT(*) FROM event_log WHERE event_type='disposition';"   # must be >= 1
   ```

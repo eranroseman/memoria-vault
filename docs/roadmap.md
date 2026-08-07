@@ -6,13 +6,10 @@ permalink: /roadmap/
 
 # Roadmap & status
 
-The canonical record of scope and readiness is GitHub: the
-[milestones](https://github.com/eranroseman/memoria-vault/milestones) (a
-milestone is a release) and the
-[open issues](https://github.com/eranroseman/memoria-vault/issues). This page
-is the published decoder for the release vocabulary the docs use and the
-workstream codes, plus a dated status snapshot. When this page and the
-milestone disagree, the milestone wins.
+Milestones mark intended-release scope when one is set; not every release
+gets one. The per-release record is the frozen
+[design history](https://github.com/eranroseman/memoria-vault/blob/main/design-history/README.md)
+chapter. This page is descriptive, not canonical.
 
 *Snapshot date: 2026-08-01.*
 
@@ -57,8 +54,10 @@ nothing implies they work before they ship.
 ## Workstream decoder
 
 Work packages are cited by code only on this page. The codes group into
-lettered workstreams; per-package readiness lives in the
-[milestone](https://github.com/eranroseman/memoria-vault/milestones), not here.
+lettered workstreams. Per-package readiness is tracked on the
+[issues themselves](https://github.com/eranroseman/memoria-vault/issues) (see
+the [`needs-owner` label](https://github.com/eranroseman/memoria-vault/labels/needs-owner)
+for issues gated on an owner decision, a PI session, or real-vault data).
 
 | Code | Workstream | What it covers |
 | --- | --- | --- |

@@ -44,13 +44,16 @@ See [Quickstart](docs/how-to-guides/setup/quickstart.md) for the product install
 | Work | Home |
 |---|---|
 | Bugs, enhancements, docs fixes, and questions | [GitHub issues](https://github.com/eranroseman/memoria-vault/issues) |
-| Release scope | GitHub milestones (a milestone is a release) |
+| Release scope | GitHub milestones, when one is set; the frozen `design-history/` chapter is the per-release record |
 | Working specs and plans | `docs/superpowers/` (tracked, not published) |
 | Decisions and durable rationale | [Design history](design-history/README.md) |
 
-Labels stay minimal: use `bug` and `documentation` for repo-wide search, plus
-bot-managed labels such as `dependencies`, `python`, and `github_actions`. Do not
-recreate status, priority, or subsystem taxonomies as labels.
+Labels stay few and closed: `bug`, `documentation`, `security`, and `tests`
+mark category; `needs-triage`, `needs-owner`, and `wontfix` track the
+multi-agent tracker's workflow (see AGENTS.md's
+[Issue conventions](AGENTS.md#issue-conventions) for what each one means and
+when agents apply it); bot-managed labels such as `dependencies`, `python`,
+and `github_actions` round out the set. No priority tier is added on top.
 
 ## Testing and verification
 
@@ -139,12 +142,15 @@ is required, and the replacement path.
 
 ## Releases and changelog
 
-A milestone is a release. There is no release automation right now:
-`CHANGELOG.md` is a hand-curated dated record, and versioning, tags, and GitHub
-Releases return with release tooling when distribution needs them. Do not
-hand-cut a release or hand-tag as part of an ordinary PR.
+A milestone marks intended-release scope when one is set — not every release
+gets one. The per-release record is the frozen `design-history/` chapter.
+There is no release automation right now: `CHANGELOG.md` is a hand-curated
+dated record, and versioning, tags, and GitHub Releases return with release
+tooling when distribution needs them. Do not hand-cut a release or hand-tag as
+part of an ordinary PR.
 
 ## Questions?
 
 Open a [GitHub Discussion](https://github.com/eranroseman/memoria-vault/discussions)
-or file an issue. Use `bug` or `documentation` only when they apply.
+or file an issue. Use `bug`, `documentation`, `security`, or `tests` only when
+they apply.
