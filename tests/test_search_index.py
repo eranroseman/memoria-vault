@@ -9,6 +9,7 @@ from memoria_vault.runtime import state
 from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.search_index import (
     _bm25,
+    _bundle_roots,
     _tokens,
     checked_concepts,
     checked_search_universe,
@@ -479,6 +480,22 @@ def test_gated_document_rides_through_as_stratum_count_without_text(tmp_path: Pa
     assert "zzquarantinesecret" not in payload
     assert "notes/gated.md" not in payload
     assert "notes/quarantined.md" not in payload
+
+
+def test_bundle_roots_honors_the_categories_fallback(tmp_path: Path) -> None:
+    """A vault declaring only `categories` still has bundle roots.
+
+    `schema.bundle_roots` falls back to `categories` when `bundle_roots` is
+    absent, so every other consumer sees the roots of such a vault. Search read
+    `bundle_roots` alone, so it silently indexed nothing there.
+    """
+    schemas = tmp_path / ".memoria/schemas"
+    schemas.mkdir(parents=True)
+    (schemas / "folders.yaml").write_text(
+        "categories: [notes, hubs]\nhomes: {}\n", encoding="utf-8"
+    )
+
+    assert _bundle_roots(tmp_path) == ["notes", "hubs"]
 
 
 def test_answer_query_trace_reports_counts_scores_and_rerank_off(tmp_path: Path) -> None:

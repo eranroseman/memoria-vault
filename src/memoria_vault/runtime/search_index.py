@@ -11,8 +11,6 @@ from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
 
-import yaml
-
 from memoria_vault.runtime import indexing, retrieval_pipeline, state
 from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.audit import sha256_bytes, sha256_file
@@ -25,11 +23,15 @@ from memoria_vault.runtime.vaultio import (
     parse_frontmatter,
     safe_read,
 )
+from memoria_vault.runtime.vocabulary import schema
 from memoria_vault.runtime.vocabulary.edges import thesis_rel
 
 SEARCH_INPUT_ROOT = ".memoria/index/search/checked"
 SEARCH_MANIFEST = ".memoria/index/search/manifest.json"
 SEARCHABLE_TYPES = frozenset({"digest", "note", "hub", "project"})
+# Bundle roots search will scan. Broader than SEARCHABLE_TYPES' homes: `fulltexts`
+# is scanned so a checked fulltext's text is reachable, then filtered by type.
+SEARCHABLE_ROOTS = frozenset({"notes", "hubs", "projects", "digests", "fulltexts"})
 
 
 def rebuild_checked_search_index(vault: Path, *, context: OperationContext) -> dict[str, Any]:
@@ -505,13 +507,11 @@ def _hard_staleness(path: str, frontmatter: dict[str, Any]) -> dict[str, Any]:
 
 
 def _bundle_roots(vault: Path) -> list[str]:
-    folders = yaml.safe_load(
-        (Path(vault) / ".memoria/schemas/folders.yaml").read_text(encoding="utf-8")
-    )
+    folders = schema.load_folders(Path(vault) / ".memoria/schemas") or {}
     return [
         normalize_path(root)
-        for root in folders.get("bundle_roots") or []
-        if normalize_path(root) in {"notes", "hubs", "projects", "digests", "fulltexts"}
+        for root in schema.bundle_roots(folders)
+        if normalize_path(root) in SEARCHABLE_ROOTS
     ]
 
 
