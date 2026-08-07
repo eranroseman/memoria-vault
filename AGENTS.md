@@ -57,9 +57,10 @@ Pattern: `superpowers:dispatching-parallel-agents`.
   `docs/superpowers/` holds working specs and plans (tracked, not published).
 - Backlog lives in GitHub issues. A milestone marks intended-release scope
   when one is set — not every release gets one; the frozen `design-history/`
-  chapter is the per-release record. No separate status/readiness fields
-  beyond the labels in "Issue conventions" below, no release parent-issue
-  ceremony.
+  chapter is the per-release record. No separate status/readiness fields; the
+  labels in "Issue conventions" below record owner-gated facts and feed the
+  derived pull query — they are not a stored readiness verdict. No release
+  parent-issue ceremony.
 - Canonical term definitions live in `docs/reference/data-model/glossary.md`
   (one definition per term, usage rulings included) — read it before naming
   things, add new rulings there, and never start a second glossary. Root
@@ -79,20 +80,23 @@ hours at this merge rate.
   `wontfix` at close makes rejections searchable. There is deliberately no
   `ready-for-agent` label.
 - **Pull query** — "what can an agent start right now": open, unassigned,
-  not `needs-owner`, not `needs-triage`, and no open blocker:
-  `gh issue list --state open --search 'no:assignee -label:needs-owner -label:needs-triage'`,
+  not `needs-owner`, not `needs-triage`, and no blocker recorded:
+  `gh issue list --state open --limit 500 --search 'no:assignee -label:needs-owner -label:needs-triage'`,
   then drop rows whose `issue_dependencies_summary.blocked_by` is nonzero
   (`gh api repos/{owner}/{repo}/issues/N`).
 - **Intake.** Before filing, search open issues and closed `wontfix` issues
   by glossary concept, not just by wording. Bodies cite symbols
   (`file.py::function`) and commit shas — never bare line numbers or plan
   task IDs; both rot.
-- **Claim.** An agent working an issue assigns itself as its first write
-  (`gh issue edit N --add-assignee @me`); unassigned = unclaimed. Unassign
-  on abandonment; a stale assignee with no activity is unclaimed — remove it
-  on sight.
-- **Ordering.** Native `blocked_by` edges only, issue → issue (they clear
-  themselves when the blocker closes). No prose blocker tables.
+- **Claim.** An agent working an issue assigns itself as its first write,
+  before any other change (`gh issue edit N --add-assignee @me`); unassigned
+  = unclaimed, first writer wins. Every agent session authenticates as the
+  same GitHub identity, so the assignee field marks an issue claimed — it
+  does not identify which session holds the claim. Unassign your own claim on
+  abandonment; do not remove another session's assignment on suspicion of
+  staleness — reclaiming an abandoned issue is an owner call.
+- **Ordering.** Native `blocked_by` edges only, issue → issue. No prose
+  blocker tables.
 - **Decisions.** Resolve as a comment, then close. Term-level rulings also
   land in the glossary.
 

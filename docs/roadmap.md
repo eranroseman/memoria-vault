@@ -54,9 +54,10 @@ nothing implies they work before they ship.
 ## Workstream decoder
 
 Work packages are cited by code only on this page. The codes group into
-lettered workstreams. Per-package readiness is tracked on the issues
-themselves (see the `needs-owner` label for issues gated on an owner
-decision, a PI session, or real-vault data).
+lettered workstreams. Per-package readiness is tracked on the
+[issues themselves](https://github.com/eranroseman/memoria-vault/issues) (see
+the [`needs-owner` label](https://github.com/eranroseman/memoria-vault/labels/needs-owner)
+for issues gated on an owner decision, a PI session, or real-vault data).
 
 | Code | Workstream | What it covers |
 | --- | --- | --- |
