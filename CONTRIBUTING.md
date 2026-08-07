@@ -48,12 +48,14 @@ See [Quickstart](docs/how-to-guides/setup/quickstart.md) for the product install
 | Working specs and plans | `docs/superpowers/` (tracked, not published) |
 | Decisions and durable rationale | [Design history](design-history/README.md) |
 
-Labels stay few and closed: `bug`, `documentation`, `security`, and `tests`
-mark category; `needs-triage`, `needs-owner`, and `wontfix` track the
-multi-agent tracker's workflow (see AGENTS.md's
+Labels stay few and closed. `bug` and `enhancement` mark category;
+`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, and
+`wontfix` are the triage state machine (see AGENTS.md's
 [Issue conventions](AGENTS.md#issue-conventions) for what each one means and
-when agents apply it); bot-managed labels such as `dependencies`, `python`,
-and `github_actions` round out the set. No priority tier is added on top.
+when agents apply it). A triaged issue carries exactly one of each.
+`documentation` is a subject tag outside that machine, and bot-managed labels
+such as `dependencies`, `python`, and `github_actions` round out the set. No
+priority tier is added on top.
 
 ## Testing and verification
 
@@ -152,5 +154,5 @@ part of an ordinary PR.
 ## Questions?
 
 Open a [GitHub Discussion](https://github.com/eranroseman/memoria-vault/discussions)
-or file an issue. Use `bug`, `documentation`, `security`, or `tests` only when
-they apply.
+or file an issue. Leave it unlabelled — triage assigns the category and state
+roles.

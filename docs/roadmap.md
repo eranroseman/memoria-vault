@@ -56,8 +56,9 @@ nothing implies they work before they ship.
 Work packages are cited by code only on this page. The codes group into
 lettered workstreams. Per-package readiness is tracked on the
 [issues themselves](https://github.com/eranroseman/memoria-vault/issues) (see
-the [`needs-owner` label](https://github.com/eranroseman/memoria-vault/labels/needs-owner)
-for issues gated on an owner decision, a PI session, or real-vault data).
+the [`ready-for-human` label](https://github.com/eranroseman/memoria-vault/labels/ready-for-human)
+for issues needing judgment, a PI session, external access, or real-vault
+data).
 
 | Code | Workstream | What it covers |
 | --- | --- | --- |
