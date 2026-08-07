@@ -150,7 +150,7 @@ flowchart LR
 | Term | Meaning |
 | --- | --- |
 | PI | The human principal investigator. The PI decides what enters the vault and what can be cited. |
-| Co-PI | The read-only conversational posture behind `memoria ask`. See [The Co-PI](explanation/execution/operation-postures/co-pi.md) for its full mission. |
+| Co-PI | The research-partner role behind `memoria ask` — read-only conversation over the checked corpus. See [The Co-PI](explanation/execution/operation-postures/co-pi.md) for its full mission. |
 | Operations | Checked capability-backed units of work such as capture, enrich, digest, ask, verify, and export. |
 | Request table | The SQLite control plane. It records operation requests, status, blockers, review, and completion. |
 | Workspace | The local folder tree. It holds knowledge bundles, catalog state, attention projections, and system outputs. |
