@@ -69,25 +69,35 @@ Pattern: `superpowers:dispatching-parallel-agents`.
 
 ## Issue conventions
 
-The tracker stores only monotonic or owner-gated facts; readiness is always
-derived, never stored — a stored "ready" claim about code state goes stale in
-hours at this merge rate.
+The tracker runs the `triage` skill's state machine. Readiness is authored
+rather than derived, but only by a triage session that checks the request
+isn't already built, verifies the claim, and attaches a durable brief — so the
+label indexes real work instead of restating facts GitHub already tracks.
 
-- **Labels.** Category (`bug`, `documentation`, `security`, `tests`) at
-  filing, in labels — never as title prefixes. `needs-triage` on every
-  agent-filed issue; the owner removes it by ruling. `needs-owner` when only
-  an owner act clears the issue (a decision, a PI session, real-vault data).
-  `wontfix` at close makes rejections searchable. There is deliberately no
-  `ready-for-agent` label.
-- **Pull query** — "what can an agent start right now": open, unassigned,
-  not `needs-owner`, not `needs-triage`, and no blocker recorded:
-  `gh issue list --state open --limit 500 --search 'no:assignee -label:needs-owner -label:needs-triage'`,
+- **Labels.** Every triaged issue carries exactly one **category** role —
+  `bug` or `enhancement` — and exactly one **state** role: `needs-triage`
+  (maintainer must evaluate), `needs-info` (waiting on the reporter),
+  `ready-for-agent` (specified, brief attached, safe for an AFK agent),
+  `ready-for-human` (needs judgment, a PI session, external access, or
+  real-vault data), or `wontfix`. Two state roles on one issue is a defect:
+  flag it and ask, never guess which wins. Category goes in labels, never in
+  a title prefix. `documentation` is a subject tag outside the machine, as are
+  the Dependabot-written labels. An issue that has not been triaged carries no
+  role at all — that is a meaningful state, and it is the first bucket
+  `/triage` surfaces.
+- **Dispatch query** — what an agent may start right now: `ready-for-agent`,
+  unassigned, no open blocker.
+  `gh issue list --state open --limit 500 --label ready-for-agent --search 'no:assignee'`,
   then drop rows whose `issue_dependencies_summary.blocked_by` is nonzero
-  (`gh api repos/{owner}/{repo}/issues/N`).
+  (`gh api repos/{owner}/{repo}/issues/N`). The label is a triage-time verdict;
+  the assignee and blocker checks are read live, so they catch what changed
+  after triage.
 - **Intake.** Before filing, search open issues and closed `wontfix` issues
   by glossary concept, not just by wording. Bodies cite symbols
   (`file.py::function`) and commit shas — never bare line numbers or plan
-  task IDs; both rot.
+  task IDs; both rot. The same rule governs briefs: a brief may sit in
+  `ready-for-agent` for weeks, so it states interfaces and behavioral
+  contracts, not file paths.
 - **Claim.** An agent working an issue assigns itself as its first write,
   before any other change (`gh issue edit N --add-assignee @me`); unassigned
   = unclaimed, first writer wins. Every agent session authenticates as the
