@@ -40,7 +40,7 @@ saw.
 
 ## Cross-substrate operations
 
-> **Planned (beta.1 — K3):** The complete cross-substrate recovery sequence described below is not yet shipped.
+> **Planned (beta.1):** The complete cross-substrate recovery sequence described below is not yet shipped.
 
 Operations that touch both planes (stage → validate → promote → journal →
 git) run as an outbox-style sequence coordinated from SQLite, with

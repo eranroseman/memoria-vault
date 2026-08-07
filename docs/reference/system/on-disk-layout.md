@@ -149,7 +149,7 @@ preferences, but preserves an existing PI-owned view preference.
 | `.gitignore` | `memoria init` installs it so generated DBs, journals, indexes, blobs, and local caches stay out of git. |
 | `Start here.md` | Vault-root front door: tutorial links, the CLI-first entry point, and the co-PI variant pointer. The onboarding runway's Obsidian opener deep-links to it when present, else opens the vault root. |
 | `.memoria/config/providers.yaml` | Provider config for enrichment and operation runners. |
-| `.memoria/config/feedback.yaml` | Shadow-first I1 feedback flag (`production_enabled`, default false), read by `feedback_production_enabled` and surfaced read-only in `memoria doctor bundle`. |
+| `.memoria/config/feedback.yaml` | Shadow-first feedback flag (`production_enabled`, default false), read by `feedback_production_enabled` and surfaced read-only in `memoria doctor bundle`. |
 | `.memoria/eval/alpha15-seeded-errors.json` | Seeded-error verdict bundle read by CLI, worker, and seeded-error runtime tests. |
 | `.memoria/patterns/_preamble.md` | Shared operation prompt preamble read by operation prompt assembly. |
 | `.memoria/schemas/folders.yaml` | Type homes, staging roots, quarantine root, and `memoria init` skeleton. |
@@ -181,7 +181,7 @@ Runtime-only (created in the deployed vault, never shipped):
 | Path | Created by | Holds |
 | --- | --- | --- |
 | `.memoria/config/attention.yaml` | the PI, by hand | Attention-queue knobs, both optional and both honored the moment the file exists: `order_by:` reorders or drops the ranking factors (`priority`, `loudness`, `impact`, `staleness`, `age`; the block pin is not a factor and always sorts first), and `producers:` maps a `raised_by` name to `active`, `quiet` (its future cards mint at the quiet band) or `paused` (its card-minting run becomes a recorded no-op). Absent, unreadable, or partly unknown, every knob falls back to the shipped default. Deliberately never seeded: the shipped order is `attention.config.DEFAULT_ORDER_BY`, and a seeded copy would be an authoritative second source that silently pins an old ranking on every vault created before a change to it. |
-| `.memoria/config/decision-rules.yaml` | `memoria decision-rule set` and the `apply-decision-rule-notices` operation | The pre-registered decision rules (I1 spec §5) with their per-vault `armed`/`fired`/`retired` status. Absent by default; the shipped registry is `decision_rules.DEFAULT_RULES_YAML`. When the file exists it **replaces** the shipped registry rather than overriding one row of it, so the first write materializes every rule — which is why a hand-edited one-entry file drops the rest and why the command exists. |
+| `.memoria/config/decision-rules.yaml` | `memoria decision-rule set` and the `apply-decision-rule-notices` operation | The pre-registered decision rules with their per-vault `armed`/`fired`/`retired` status. Absent by default; the shipped registry is `decision_rules.DEFAULT_RULES_YAML`. When the file exists it **replaces** the shipped registry rather than overriding one row of it, so the first write materializes every rule — which is why a hand-edited one-entry file drops the rest and why the command exists. |
 | `.memoria/data/retraction_watch.csv` | retraction refresh command | The local Retraction Watch index. |
 | `.memoria/.venv/` | installer | The vault-local Python used by the Memoria CLI/runtime package. |
 | `.git/hooks/pre-commit` | installer | The pre-commit hook (once the vault is a git repo). |
