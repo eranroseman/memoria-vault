@@ -484,11 +484,15 @@ def test_trace_panel_builder_is_reached_with_the_contract_limit_and_scope(
     a permanently-unresolved builder (or a widened limit, or a dropped scope) is
     otherwise invisible: the panel just stays pending and every test stays green.
     """
-    # Once T.1 lands the real builder, the deep screen must actually reach it.
-    if hasattr(cockpit, "trace_panel"):
-        live = cockpit.assemble_deep(vault, PROJECT_REL)["trace"]
-        assert "pending" not in live
-        assert {"events", "total", "shown"} <= set(live)
+    # trace_panel is unconditionally defined (engine/cockpit.py:193), so no hasattr
+    # guard. NOTE: this suite still has ~19 other raising=False guards (mostly
+    # against engine_api) that may target attributes legitimately absent — do not
+    # sweep them blind; each needs the same per-symbol check applied here before its
+    # hedge comes off. A sweep is its own issue with its own evidence (#1748).
+    # The deep screen must actually reach the real builder.
+    live = cockpit.assemble_deep(vault, PROJECT_REL)["trace"]
+    assert "pending" not in live
+    assert {"events", "total", "shown"} <= set(live)
 
     calls: list[tuple[Path, str, dict[str, Any]]] = []
 
@@ -496,7 +500,7 @@ def test_trace_panel_builder_is_reached_with_the_contract_limit_and_scope(
         calls.append((vault_arg, project_arg, kwargs))
         return {"source_action": "journal.list", "events": [], "total": 0, "shown": 0}
 
-    monkeypatch.setattr(cockpit, "trace_panel", recording_trace_panel, raising=False)
+    monkeypatch.setattr(cockpit, "trace_panel", recording_trace_panel)
     scope = ["projects", "notes", "inbox"]
 
     trace = cockpit.assemble_deep(vault, PROJECT_REL, read_scope=scope)["trace"]
