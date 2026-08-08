@@ -41,9 +41,34 @@ Run `gh issue view <number> --comments`.
 
 Used by `/wayfinder`. The **map** is a single issue with **child** issues as tickets.
 
-- **Map**: a single issue labelled `wayfinder:map`, holding the Notes / Decisions-so-far / Fog body. `gh issue create --label wayfinder:map`.
+- **Map**: a single issue labeled `wayfinder:map`, holding the Notes / Decisions-so-far / Fog body. `gh issue create --label wayfinder:map`.
 - **Child ticket**: an issue linked to the map as a GitHub sub-issue (`gh api` on the sub-issues endpoint). Where sub-issues aren't enabled, add the child to a task list in the map body and put `Part of #<map>` at the top of the child body. Labels: `wayfinder:<type>` (`research`/`prototype`/`grilling`/`task`). Once claimed, the ticket is assigned to the driving dev.
 - **Blocking**: GitHub's **native issue dependencies** — the canonical, UI-visible representation. Add an edge with `gh api --method POST repos/<owner>/<repo>/issues/<child>/dependencies/blocked_by -F issue_id=<blocker-db-id>`, where `<blocker-db-id>` is the blocker's numeric **database id** (`gh api repos/<owner>/<repo>/issues/<n> --jq .id`, _not_ the `#number` or `node_id`). GitHub reports `issue_dependencies_summary.blocked_by` (open blockers only — the live gate). Where dependencies aren't available, fall back to a `Blocked by: #<n>, #<n>` line at the top of the child body. A ticket is unblocked when every blocker is closed.
 - **Frontier query**: list the map's open children (`gh issue list --state open`, scoped to the map's sub-issues / task list), drop any with an open blocker (`issue_dependencies_summary.blocked_by > 0`, or an open issue in the `Blocked by` line) or an assignee; first in map order wins.
 - **Claim**: `gh issue edit <n> --add-assignee @me` — the session's first write.
 - **Resolve**: `gh issue comment <n> --body "<answer>"`, then `gh issue close <n>`, then append a context pointer (gist + link) to the map's Decisions-so-far.
+
+## Intake — before you file
+
+Search first, by **glossary concept rather than by wording**: open issues, and
+closed `wontfix` issues, and `.out-of-scope/*.md`. The same idea filed twice in
+different words is the failure this prevents.
+
+Bodies cite **symbols** (`file.py::function`) and **commit shas** — never bare
+line numbers or plan task IDs. Both rot: a line citation in this repo went stale
+in four days, and a plan task ID outlives the plan file that defined it by
+exactly zero commits, because retirement here means deletion.
+
+The same rule governs agent briefs. A brief may sit in `ready-for-agent` for
+weeks while the codebase moves under it, so it states interfaces and behavioral
+contracts, not file paths.
+
+## Rejections — when you close
+
+A rejected **enhancement** also gets a `.out-of-scope/<concept>.md` entry: one
+file per concept, appending to that file's prior-request list rather than adding
+a second file. `/triage` writes it at close and reads it at intake, so the same
+idea is not re-litigated from scratch.
+
+Already-implemented requests and rejected bugs stay closed issues only — the
+intake search covers those.

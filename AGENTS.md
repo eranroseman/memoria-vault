@@ -2,8 +2,19 @@
 
 Facts for AI agents working in `eranroseman/memoria-vault`. *How* work happens
 is owned by the installed superpowers skills (brainstorm → plan → TDD/SDD →
-review → finish), not by this file. Human contributors: see
-[CONTRIBUTING.md](CONTRIBUTING.md).
+review → finish) and, for issue work, by `/triage` — not by this file.
+
+This file holds what you can break before you would think to look something up:
+the gate, merge rules, the shared index, how work is tracked. It lives here and
+only here — when the two files appear to disagree about policy, this one is
+right and the other has drifted.
+
+Everything else is consulted at the moment of the task.
+[CONTRIBUTING.md](CONTRIBUTING.md) and `docs/agents/` carry the craft this file
+deliberately does not restate — docs conventions when you write docs, coding
+conventions when you write code, the PR checklist when you open one, the
+tracker configuration when you touch issues. Nothing there is human-only in a
+way that excludes you; read the part your task needs.
 
 ## What Memoria is
 
@@ -25,7 +36,11 @@ should feel like a co-PI, not a knowledge base. Product pitch:
   earns back with release tooling).
 - **The git index is shared per checkout** — two sessions or subagents in one
   checkout can sweep each other's staged files into a commit. Stage explicit
-  paths, never `git add -A`; see Cross-tool parity for per-tool isolation.
+  paths, never `git add -A`; a `PreToolUse` hook rejects the sweep forms. Each
+  session works in its own worktree, created from the main checkout:
+  `git worktree add .claude/worktrees/<name> -b wip/<name> origin/main`, then
+  `EnterWorktree(path: ".claude/worktrees/<name>")`. Codex does this by
+  default. Per-tool differences: `docs/agents/cross-tool-parity.md`.
 - **Test only against disposable vaults under `test-vault/`** (never a personal
   vault). The installed test-vault carries its own nested `.git` (vault
   versioning is product behavior) and must stay reconstructible — `git clean
@@ -42,11 +57,10 @@ should feel like a co-PI, not a knowledge base. Product pitch:
 - Present options with pros/cons and a recommendation — never a bare list.
 - Any addition must name the expensive, recurring failure it prevents; prefer
   deletion > mechanism > rule > checker.
-
-## Parallel delegation
-
-Multi-step task: name independent subtasks, dispatch subagents in parallel.
-Pattern: `superpowers:dispatching-parallel-agents`.
+- Every plan task carries a verification step — a command and its expected
+  result — ahead of the step that changes anything. `main` moves faster than
+  plans are authored, so a task whose premises aren't re-checked at execution
+  time is the one that ships a stale one.
 
 ## Where things live
 
@@ -65,7 +79,11 @@ Pattern: `superpowers:dispatching-parallel-agents`.
   (one definition per term, usage rulings included) — read it before naming
   things, add new rulings there, and never start a second glossary. Root
   `CONTEXT.md` is a pointer stub routing to it (and back here) for tools
-  that look for that file by convention.
+  that look for that file by convention. ADRs live in `docs/adr/`, written
+  when a decision resolves rather than scaffolded ahead of one.
+- The engineering skills read their per-repo configuration from
+  `docs/agents/`: `issue-tracker.md`, `triage-labels.md`, `domain.md`
+  (single-context), and `cross-tool-parity.md`.
 
 ## Issue conventions
 
@@ -74,30 +92,27 @@ rather than derived, but only by a triage session that checks the request
 isn't already built, verifies the claim, and attaches a durable brief — so the
 label indexes real work instead of restating facts GitHub already tracks.
 
-- **Labels.** Every triaged issue carries exactly one **category** role —
-  `bug` or `enhancement` — and exactly one **state** role: `needs-triage`
-  (maintainer must evaluate), `needs-info` (waiting on the reporter),
-  `ready-for-agent` (specified, brief attached, safe for an AFK agent),
-  `ready-for-human` (needs judgment, a PI session, external access, or
-  real-vault data), or `wontfix`. Two state roles on one issue is a defect:
-  flag it and ask, never guess which wins. Category goes in labels, never in
-  a title prefix. `documentation` is a subject tag outside the machine, as are
-  the Dependabot-written labels. An issue that has not been triaged carries no
-  role at all — that is a meaningful state, and it is the first bucket
-  `/triage` surfaces.
-- **Dispatch query** — what an agent may start right now: `ready-for-agent`,
-  unassigned, no open blocker.
+- **Labels.** A triaged issue carries exactly one **category** role (`bug`,
+  `enhancement`) and exactly one **state** role (`needs-triage`, `needs-info`,
+  `ready-for-agent`, `ready-for-human`, `wontfix`) — meanings in
+  `docs/agents/triage-labels.md`. Two state roles is a defect: flag it and ask,
+  never guess which wins. Category goes in labels, never in a title prefix. An issue
+  that has not been triaged carries no role at all — a meaningful state, and the first
+  bucket `/triage` surfaces. The vocabulary is closed: those roles plus
+  `documentation` and the Dependabot labels are the whole set, with no priority
+  or severity tier on top.
+- **Filing.** Significant changes — new operation surfaces, installer
+  overhauls, schema changes, provider integrations, architecture decisions —
+  get an issue before the work starts. Small docs, typo, script, and test fixes
+  can go straight to a PR.
+- **Frontier** — the issues an agent may start right now, and the only ones:
+  `ready-for-agent`, unassigned, unblocked.
   `gh issue list --state open --limit 500 --label ready-for-agent --search 'no:assignee'`,
   then drop rows whose `issue_dependencies_summary.blocked_by` is nonzero
   (`gh api repos/{owner}/{repo}/issues/N`). The label is a triage-time verdict;
-  the assignee and blocker checks are read live, so they catch what changed
-  after triage.
-- **Intake.** Before filing, search open issues and closed `wontfix` issues
-  by glossary concept, not just by wording. Bodies cite symbols
-  (`file.py::function`) and commit shas — never bare line numbers or plan
-  task IDs; both rot. The same rule governs briefs: a brief may sit in
-  `ready-for-agent` for weeks, so it states interfaces and behavioral
-  contracts, not file paths.
+  assignee and blockers are read live, so they catch what changed after triage.
+  GitHub's search index lags writes by seconds — after a batch label change,
+  confirm a `--search` count with per-issue reads.
 - **Claim.** An agent working an issue assigns itself as its first write,
   before any other change (`gh issue edit N --add-assignee @me`); unassigned
   = unclaimed, first writer wins. Every agent session authenticates as the
@@ -105,55 +120,11 @@ label indexes real work instead of restating facts GitHub already tracks.
   does not identify which session holds the claim. Unassign your own claim on
   abandonment; do not remove another session's assignment on suspicion of
   staleness — reclaiming an abandoned issue is an owner call.
-- **Ordering.** Native `blocked_by` edges only, issue → issue. No prose
-  blocker tables.
+- **Ordering.** Native `blocked_by` edges only, issue → issue.
 - **Decisions.** Resolve as a comment, then close. Term-level rulings also
   land in the glossary.
 
-## Agent skills
-
-### Issue tracker
-
-GitHub issues in `eranroseman/memoria-vault`, driven through `gh`. See
-`docs/agents/issue-tracker.md`.
-
-### Triage labels
-
-The five canonical triage roles, label strings unchanged. What each one means
-and when it applies is in [Issue conventions](#issue-conventions) above; the
-role-to-string mapping is in `docs/agents/triage-labels.md`.
-
-### Domain docs
-
-Single-context. Canonical vocabulary is the glossary, reached via the root
-`CONTEXT.md` stub; ADRs live in `docs/adr/`. See `docs/agents/domain.md`.
-
-## Cross-tool parity (Codex, Kilo)
-
-Codex and Kilo read this file natively. Justified asymmetries, platform-
-appropriate mechanism per case:
-
-- **Security review:** Claude runs it through always-on security-guidance hooks;
-  Codex has no passive-hook equivalent, so it runs an explicit `codex-security`
-  scan on installer or runtime-policy changes.
-- **Write perimeter:** Claude via native permission prompts and bash sandboxing;
-  Codex via the sandbox's `writable_roots`.
-- **Session isolation:** Codex isolates each session in its own worktree by
-  default, under `.worktrees/`; Claude has to run `git worktree add
-  .claude/worktrees/<name> -b wip/<name> origin/main`, then
-  `EnterWorktree(path: ".claude/worktrees/<name>")` before editing. Both
-  directories are gitignored and both stay — two tools' live working areas.
-  The split is forced: Claude Code manages only `.claude/worktrees/`, and
-  `EnterWorktree` anywhere else raises a `safetyCheck` prompt that cannot be
-  pre-approved. Create new worktrees from the main checkout — `EnterWorktree`
-  refuses to create one from inside another worktree (switching into an
-  existing managed worktree by `path` is allowed).
-- **Claude-side repo policy:** the checked-in `.claude/settings.json` carries
-  what AGENTS.md promises about Claude sessions — the process spine
-  (superpowers, pinned) and security-guidance enablement, a recurring-safe-
-  command allowlist, and a `PreToolUse` hook
-  (`.claude/hooks/block-git-add-all.py`) that rejects unbounded staging per the
-  shared-index rule above. Codex needs no equivalent: its default worktree
-  isolation gives each session a private index.
+Filing an issue or closing one? `docs/agents/issue-tracker.md` carries the
+intake search and the rejection record.
 
 `CLAUDE.md` is a loader (`@AGENTS.md`) with no content of its own.
