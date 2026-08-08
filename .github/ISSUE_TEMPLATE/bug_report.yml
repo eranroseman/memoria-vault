@@ -1,6 +1,6 @@
 name: Bug Report
 description: Report a broken or unexpected behavior in Memoria
-labels: ["bug"]
+labels: ["bug", "needs-triage"]
 assignees: []
 body:
   - type: markdown
