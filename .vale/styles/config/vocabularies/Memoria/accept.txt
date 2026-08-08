@@ -6,6 +6,17 @@
 # deliberately absent: Vale.Terms would fire on link text like zotero.org and
 # frontmatter slugs. TokenIgnores is not the fix — it disables Vale's markdown
 # scoping and floods code spans with false positives.
+#
+# Admission test, run it rather than reason about it: append the candidate, then
+#   pre-commit run vale --hook-stage manual --all-files
+# and revert unless it passes clean. Vale lints frontmatter too, so a term that
+# could appear in a future permalink fails later even when it passes today.
+#
+# A term earns a place only if it both drifts and enforces cleanly. Measured
+# 2026-08: the terms that drift (github, markdown, zotero, obsidian) all fail
+# the test, and the terms that pass it (SQLite, Pandoc, Python) are already
+# spelled consistently everywhere, so enforcing them prevents nothing. That
+# intersection being empty is why this list has stayed at five.
 Diátaxis
 Karpathy
 Luhmann
