@@ -47,8 +47,8 @@ drafts, and promotes selected passages back into unchecked notes for review.
 raise Inbox attention, which can trigger new capture work. What you write shows
 what is missing; what you catalog next is shaped by what you tried to write.
 
-The forward path below is the overview loop from
-[The model](../../README.md#the-model), extended with the gates and the gap
+The forward path below is the overview loop from the
+[Overview](../../overview.md), extended with the gates and the gap
 feedback that make it a cycle. Diamonds are human gates: each task is
 individually triggered, often after a long gap.
 

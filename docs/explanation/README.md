@@ -18,9 +18,10 @@ surface, and the Inbox shows the decisions that need attention now. Optional
 adapters may present chat, board, or editor views, but they do not replace the
 CLI/engine authority.
 
-Start with [Home](../README.md) if the basic vocabulary is unfamiliar. If you
-need to *do* something, see [How-to guides](../how-to-guides/). If you need exact
-values, field names, runtime contracts, or configuration formats, see
+Start with [Home](../README.md) for the product introduction and
+[Overview](../overview.md) for the compact system model. If you need to *do*
+something, see [How-to guides](../how-to-guides/). If you need exact values,
+field names, runtime contracts, or configuration formats, see
 [Reference](../reference/). If you want the maintained rationale and decision
 history, see [Design rationale](rationale/README.md).
 
@@ -37,7 +38,7 @@ history, see [Design rationale](rationale/README.md).
 
 ## Entry points by background
 
-**New to Memoria:** Read [Home](../README.md), then
+**New to Memoria:** Read [Home](../README.md), [Overview](../overview.md), then
 [Architecture](architecture/README.md), [Knowledge](knowledge/README.md), and
 [Request control plane](execution/control-plane/README.md). Design rationale
 explains why those choices were made.

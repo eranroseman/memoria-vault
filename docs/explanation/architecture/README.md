@@ -13,7 +13,9 @@ durable flow is: PI intent enters through CLI commands or file edits, operations
 run through the request lifecycle, checked outputs materialize into the
 workspace, and the vault keep-set remains readable without the runtime.
 
-The shared terms behind this section are defined in [Home](../../README.md).
+The shared terms behind this section are defined in the
+[Glossary](../../reference/data-model/glossary.md); [Overview](../../overview.md)
+offers a short orientation.
 The short version: the PI works through CLI and files; the engine turns requests
 into checked or staged workspace state; optional adapters can wrap the engine,
 but they do not own the write path.

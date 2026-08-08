@@ -18,6 +18,7 @@ Start from the symptom you're seeing. Each guide takes one failure mode from sym
 | An agent's write didn't land — denied, or never reached the gate  | [Diagnose a denied or blocked write](diagnose-a-denied-write.md) |
 | Provider/full-text enrichment is empty after ingest               | [Fix empty enrichment after ingest](fix-empty-enrichment.md)    |
 | An optional editor field filter returns nothing though notes are valid | [Fix missing query results](fix-missing-query-results.md)   |
+| A vault Git branch unexpectedly diverges                          | [Recover a divergent vault branch](resolve-a-diverged-vault-branch.md) |
 
 ## When several failures appear at once
 

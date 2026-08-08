@@ -2,7 +2,7 @@
 title: Configure the optional gateway runner
 parent: Setup
 grand_parent: How-to guides
-nav_order: 5
+nav_order: 6
 ---
 
 # Configure the optional gateway runner

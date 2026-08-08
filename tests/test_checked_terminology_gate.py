@@ -30,12 +30,20 @@ def test_forward_order_violation_is_found(tmp_path: Path) -> None:
     inversion (an existing root that gets skipped finds nothing)."""
     base = _tree(tmp_path, {"docs/a.md": "intro\nA checked concept is approved by the PI.\n"})
 
-    assert gate.errors(base) == ["docs/a.md:2: checked must not mean approved/verified/trusted"]
+    assert gate.errors(base) == [
+        "docs/a.md:2: checked must not mean approval, a PI gate, verification, or trust"
+    ]
 
 
 def test_reversed_order_violation_is_found(tmp_path: Path) -> None:
     """Kills a dropped second pattern: bad word before 'checked'."""
     base = _tree(tmp_path, {"docs/a.md": "Approved once the item is checked.\n"})
+
+    assert len(gate.errors(base)) == 1
+
+
+def test_present_tense_approval_equivalence_is_found(tmp_path: Path) -> None:
+    base = _tree(tmp_path, {"docs/a.md": "The PI approves a checked concept.\n"})
 
     assert len(gate.errors(base)) == 1
 
@@ -101,3 +109,35 @@ def test_matching_is_case_insensitive(tmp_path: Path) -> None:
     base = _tree(tmp_path, {"docs/a.md": "CHECKED items are APPROVED.\n"})
 
     assert len(gate.errors(base)) == 1
+
+
+@pytest.mark.parametrize(
+    "wording",
+    [
+        "Nothing counts as checked until the PI says so.",
+        "Nothing enters checked knowledge without passing through you.",
+        "Nothing enters checked knowledge without passing through the PI.",
+        "Nothing enters checked knowledge without passing through PI.",
+        "The PI review gate makes a Concept checked.",
+        "A checked Concept must pass through the PI gate.",
+    ],
+)
+def test_pi_gate_equivalence_is_found(tmp_path: Path, wording: str) -> None:
+    """Reject universal PI-gate wording that the approval-word patterns miss."""
+    base = _tree(tmp_path, {"docs/a.md": wording})
+
+    assert len(gate.errors(base)) == 1
+
+
+def test_distinct_pi_route_and_checked_verdict_are_accepted(tmp_path: Path) -> None:
+    base = _tree(
+        tmp_path,
+        {
+            "docs/a.md": (
+                "A PI-operated mark-checked route can record a disposition and a checked verdict "
+                "together; they remain separate facts."
+            )
+        },
+    )
+
+    assert gate.errors(base) == []

@@ -7,7 +7,9 @@ nav_order: 7
 
 # Consequence propagation
 
-> **Planned (beta.1):** Typed graph propagation and eager write-time marking described below are target-state.
+> **Shipped:** Typed consequence propagation and eager write-time marking run in
+> the current graph substrate. Typing the complete six-role Toulmin graph
+> remains planned for beta.1.
 
 Memoria's central operation is what happens *after* a change to the knowledge
 base. Any change or addition — a new claim, an edited note, a new or changed
@@ -31,6 +33,59 @@ experience different events:
 
 Typed roles are what let the graph route each dependent to the right
 disposition.
+
+## The shipped routing graph
+
+The engine follows only the routes below. The standard closure direction is
+source to target; `extends` is the exception, traversed from its base target
+back to its extending source. One warrant or license can therefore affect more
+than one claim.
+
+```mermaid
+flowchart TB
+    supporting["Fallen supporting / source Concept"]
+    supported["Supported / target claim"]
+    base["Fallen base / target Concept"]
+    extending["Extending / source Concept"]
+    evidenceInput["Fallen evidence or derivation input"]
+    evidenceDependent["Dependent claim or artifact"]
+    grounds["grounds-lost"]
+
+    license["Fallen warrant or license source Concept"]
+    claimA["Claim A"]
+    claimB["Claim B"]
+    warrantLost["warrant-lost"]
+
+    qualifier["Fallen qualifier source Concept"]
+    qualifierAffected["Bounded / target claim"]
+    qualifierRegression["qualifier-regression"]
+
+    rebuttalSource["Changed rebuttal or exception Concept,<br/>or added rebuttal edge"]
+    rebuttalTarget["Target claim"]
+    rebuttalStrengthened["rebuttal-strengthened"]
+
+    supporting -- "supports: source to target" --> supported --> grounds
+    base -- "extends: target to source" --> extending --> grounds
+    evidenceInput -- "evidence or derived" --> evidenceDependent --> grounds
+
+    license -- "warrant: source to target" --> claimA
+    license -- "warrant: source to target" --> claimB
+    claimA --> warrantLost
+    claimB --> warrantLost
+
+    qualifier -- "qualifier: source to target" --> qualifierAffected --> qualifierRegression
+
+    rebuttalSource -- "rebuttal: direct seed only" --> rebuttalTarget --> rebuttalStrengthened
+```
+
+`rebuttal-strengthened` is a direct seed result: when a rebuttal or exception
+Concept changes, its `rebuttal` relation marks the target claim; adding a
+`rebuttal` edge likewise marks that edge's target claim. It is not a generic
+transitive hop.
+The traversal deliberately does not continue through `rebuttal`,
+`contradicts`, or `tension`; those relations do not route a generic consequence.
+There is no `grounds` relation — grounds loss follows the shipped
+`supports`, `extends`, evidence, and derivation routes shown above.
 
 ## Consequences are marked at write time
 

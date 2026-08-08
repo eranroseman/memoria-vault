@@ -1,21 +1,19 @@
-"""The bwrap sandbox's isolation properties, most pinned behaviorally.
+"""The bwrap sandbox's isolation properties, pinned behaviorally.
 
 These execute real code inside the real sandbox. Locally they skip when bwrap
 is unavailable (the pwsh precedent), but under MEMORIA_REQUIRE_SANDBOX=1 (CI) a
 skip becomes a hard failure, so a runner-image change cannot silently return
 this module to never running.
-
-Knowingly unpinned: --die-with-parent. It only matters when the *runner
-process itself* is killed out from under a live sandboxed child, which this
-module has no way to produce without forking the test process; no test here
-or elsewhere in tests/ exercises it (`git grep die-with-parent -- tests/` is
-empty).
 """
 
 from __future__ import annotations
 
 import json
 import os
+import signal
+import subprocess
+import sys
+import time
 from pathlib import Path
 
 import pytest
@@ -137,6 +135,85 @@ def test_a_run_that_overstays_its_timeout_is_failed_and_says_so(sandbox_vault: P
     assert run["run_status"] == "failed"
     assert run["timeout_result"] == "timeout"
     assert run["exit_status"] == 124
+
+
+def test_sandboxed_code_dies_when_its_runner_is_killed(sandbox_vault: Path) -> None:
+    heartbeat_rel = "projects/project-alpha/code/parent-death/outputs/heartbeat.txt"
+    heartbeat = sandbox_vault / heartbeat_rel
+    _probe_artifact(
+        sandbox_vault,
+        "parent-death",
+        "from pathlib import Path\n"
+        "import time\n"
+        "heartbeat = Path('/outputs/heartbeat.txt')\n"
+        "scratch = Path('/outputs/heartbeat.tmp')\n"
+        "counter = 0\n"
+        "while True:\n"
+        "    scratch.write_text(f'{counter}\\n', encoding='utf-8')\n"
+        "    scratch.replace(heartbeat)\n"
+        "    counter += 1\n"
+        "    time.sleep(0.1)\n",
+        declared_outputs=[heartbeat_rel],
+    )
+    helper_program = (
+        "import sys\n"
+        "sys.path.insert(0, sys.argv[1])\n"
+        "from pathlib import Path\n"
+        "from memoria_vault.runtime.code.execution import run_artifact\n"
+        "run_artifact(Path(sys.argv[2]), 'parent-death', "
+        "run_id='parent-death-1', timeout_s=60)\n"
+    )
+    helper = subprocess.Popen(
+        [
+            sys.executable,
+            "-c",
+            helper_program,
+            str(Path(__file__).parents[1] / "src"),
+            str(sandbox_vault),
+        ],
+        start_new_session=True,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+
+    try:
+        seen: set[int] = set()
+        progress_deadline = time.monotonic() + 10
+        while len(seen) < 2 and time.monotonic() < progress_deadline:
+            try:
+                seen.add(int(heartbeat.read_text(encoding="utf-8").strip()))
+            except (FileNotFoundError, ValueError):
+                pass
+            assert helper.poll() is None, f"artifact runner exited early: {helper.returncode}"
+            time.sleep(0.05)
+        assert len(seen) >= 2, "sandbox heartbeat did not advance"
+
+        os.kill(helper.pid, signal.SIGKILL)
+        helper.wait(timeout=5)
+
+        last_value = heartbeat.read_text(encoding="utf-8")
+        stable_since = time.monotonic()
+        stability_deadline = stable_since + 8
+        while time.monotonic() < stability_deadline:
+            time.sleep(0.1)
+            value = heartbeat.read_text(encoding="utf-8")
+            if value != last_value:
+                last_value = value
+                stable_since = time.monotonic()
+            if time.monotonic() - stable_since >= 2:
+                break
+        else:
+            pytest.fail("sandbox heartbeat continued after its runner was killed")
+    finally:
+        try:
+            os.killpg(helper.pid, signal.SIGKILL)
+        except ProcessLookupError:
+            pass
+        try:
+            helper.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            helper.kill()
+            helper.wait(timeout=5)
 
 
 def test_stdout_is_truncated_at_the_declared_cap(sandbox_vault: Path) -> None:

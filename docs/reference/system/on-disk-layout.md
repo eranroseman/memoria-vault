@@ -71,7 +71,7 @@ writable runtime directories are created from `folders.yaml`:
 ├── vault.json               Git-tracked creation receipt: vault identity and bundle hashes, written once at init (see below)
 ├── blobs/                   gitignored provider payloads and staged source content
 ├── code-runs/<run-id>/      gitignored recorded code-execution run artifacts
-├── journal/                 derived per-machine JSONL synchronization exports
+├── journal/                 derived, reconstructible per-machine JSONL exports
 ├── journal-head             Git-tracked live hash-chain tip for the event log
 ├── backup-transaction.json  Git-ignored identity-bound backup recovery marker
 ├── restore-transaction.json Git-ignored interrupted-restore recovery marker
@@ -101,7 +101,8 @@ record; trust-sensitive readers query it in event order.
 - A journal append commits to `event_log` first, then advances the
   working-tree `journal-head`; the committed Git value must remain a prefix of
   the live chain.
-- The per-machine JSONL files are derived exports for synchronization.
+- The per-machine JSONL files are derived, reconstructible exports; they are
+  never the source of truth.
 - `memoria workspace scan` holds the workspace writer lock while it verifies
   the chain and export subset, removes an incomplete final JSONL fragment, and
   re-emits any missing export rows.

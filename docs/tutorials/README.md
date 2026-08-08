@@ -24,6 +24,7 @@ create a fresh vault, then move through the numbered pages in order.
 | [05: Verify evidence](05-verify-evidence.md) | Resolve one evidence review result |
 | [06: Close loop](06-close-loop.md) | Refresh projections and make the workspace commit-ready |
 | [07: Customize](07-customize.md) | Watch, mute, and see steering derive from active projects |
+| [08: A captured first session](first-session-transcript.md) | Read one offline, source-to-export CLI traversal with captured output |
 
 For exact command flags, use the [CLI reference](../reference/commands-and-transports/cli.md). For task
 recipes outside the tutorial path, use the [How-to guides](../how-to-guides/README.md).
