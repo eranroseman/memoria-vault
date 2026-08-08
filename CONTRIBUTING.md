@@ -70,6 +70,13 @@ gate excludes run the same way on demand.
   gates every shell script under `scripts/` through the pinned pre-commit hook.
 - **PowerShell:** `scripts/install.ps1` targets Windows PowerShell 5.1. Test on
   Windows when the change affects Windows behavior.
+- **Configuration is read, not restated.** A literal copy of a config value
+  drifts the moment the source changes, and nothing fails until behavior is
+  already wrong. `search_index` re-spelled `folders.yaml`'s bundle roots and so
+  missed the `categories` fallback every other consumer honored — search
+  silently indexed nothing on a vault that declared only that key. A docs gate
+  re-spelled `docs/_config.yml`'s exclude list and kept treating an excluded
+  directory as published. Load through the shared reader instead.
 - **Optional adapters:** do not add installed profile packages or lane overrides
   to the package seed; adapters must wrap the standalone CLI/engine boundary.
 - **Docs:** follow [Diátaxis](https://diataxis.fr/): tutorials teach, how-to
