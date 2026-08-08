@@ -70,6 +70,13 @@ gate excludes run the same way on demand.
   gates every shell script under `scripts/` through the pinned pre-commit hook.
 - **PowerShell:** `scripts/install.ps1` targets Windows PowerShell 5.1. Test on
   Windows when the change affects Windows behavior.
+- **Configuration is read, not restated.** A literal copy of a config value
+  drifts the moment the source changes, and nothing fails until behavior is
+  already wrong. `search_index` re-spelled `folders.yaml`'s bundle roots and so
+  missed the `categories` fallback every other consumer honored — search
+  silently indexed nothing on a vault that declared only that key. A docs gate
+  re-spelled `docs/_config.yml`'s exclude list and kept treating an excluded
+  directory as published. Load through the shared reader instead.
 - **Optional adapters:** do not add installed profile packages or lane overrides
   to the package seed; adapters must wrap the standalone CLI/engine boundary.
 - **Docs:** follow [Diátaxis](https://diataxis.fr/): tutorials teach, how-to
@@ -106,6 +113,15 @@ Memoria-specific ones.
   anchor.
 - **Spelling:** American English (`-ize`/`-or`); `cspell` is the gate. Add a real
   unknown term to `project-words.txt` (lowercase, sorted) — never inline-suppress.
+- **Diagrams:** the site renders mermaid client-side, and `mermaid-parse` gates
+  fence syntax against the version `docs/_config.yml` pins — so what needs
+  saying here is what a parser cannot see. A diagram earns its place only where
+  prose makes the reader assemble a structure: a graph, a branching flow, a
+  state machine. Every node and edge traces to prose on the page; nothing the
+  page marks Planned is drawn, and the diagram supplements the prose rather
+  than replacing it. Never set per-fence `config:` or `theme:` frontmatter — the
+  site theme is pinned deliberately and a fence that restyles itself drifts from
+  it. Break labels with `<br/>`, and quote any label containing `()[]{}#;:,./`.
 
 ## Pull requests
 
