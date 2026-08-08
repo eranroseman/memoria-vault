@@ -83,7 +83,8 @@ should feel like a co-PI, not a knowledge base. Product pitch:
   when a decision resolves rather than scaffolded ahead of one.
 - The engineering skills read their per-repo configuration from
   `docs/agents/`: `issue-tracker.md`, `triage-labels.md`, `domain.md`
-  (single-context), and `cross-tool-parity.md`.
+  (single-context), `cross-tool-parity.md`, and
+  `consistency-audit-brief.md`.
 
 ## Issue conventions
 
