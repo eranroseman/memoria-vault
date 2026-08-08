@@ -4,17 +4,17 @@ Facts for AI agents working in `eranroseman/memoria-vault`. *How* work happens
 is owned by the installed superpowers skills (brainstorm → plan → TDD/SDD →
 review → finish) and, for issue work, by `/triage` — not by this file.
 
-[CONTRIBUTING.md](CONTRIBUTING.md) is not a human-only file. It holds the craft
-this one deliberately does not restate, and those sections bind agents too:
-**Coding conventions**, **Documentation authoring conventions**, and the
-**Pull requests** checklist. Read them before writing code, docs, or a PR. Its
-**Development setup** walkthrough is for human contributors; from **Releases and
-changelog**, only the rule against hand-cutting a release or hand-tagging in an
-ordinary PR binds agents.
+This file holds what you can break before you would think to look something up:
+the gate, merge rules, the shared index, how work is tracked. It lives here and
+only here — when the two files appear to disagree about policy, this one is
+right and the other has drifted.
 
-Operating policy — the gate, merge rules, the shared index, where work is
-tracked — lives here and only here. When the two files appear to disagree about
-policy, this one is right and the other has drifted.
+Everything else is consulted at the moment of the task.
+[CONTRIBUTING.md](CONTRIBUTING.md) and `docs/agents/` carry the craft this file
+deliberately does not restate — docs conventions when you write docs, coding
+conventions when you write code, the PR checklist when you open one, the
+tracker configuration when you touch issues. Nothing there is human-only in a
+way that excludes you; read the part your task needs.
 
 ## What Memoria is
 
@@ -113,12 +113,6 @@ label indexes real work instead of restating facts GitHub already tracks.
   assignee and blockers are read live, so they catch what changed after triage.
   GitHub's search index lags writes by seconds — after a batch label change,
   confirm a `--search` count with per-issue reads.
-- **Intake.** Before filing, search open issues and closed `wontfix` issues
-  by glossary concept, not just by wording. Bodies cite symbols
-  (`file.py::function`) and commit shas — never bare line numbers or plan
-  task IDs; both rot. The same rule governs briefs: a brief may sit in
-  `ready-for-agent` for weeks, so it states interfaces and behavioral
-  contracts, not file paths.
 - **Claim.** An agent working an issue assigns itself as its first write,
   before any other change (`gh issue edit N --add-assignee @me`); unassigned
   = unclaimed, first writer wins. Every agent session authenticates as the
@@ -129,10 +123,8 @@ label indexes real work instead of restating facts GitHub already tracks.
 - **Ordering.** Native `blocked_by` edges only, issue → issue.
 - **Decisions.** Resolve as a comment, then close. Term-level rulings also
   land in the glossary.
-- **Rejections.** A rejected *enhancement* also gets a `.out-of-scope/<concept>.md`
-  entry — one file per concept, appending to its prior-request list rather than
-  adding a second file. `/triage` writes it at close and reads it at intake, so
-  the same idea is not re-litigated from scratch. Already-implemented requests
-  and rejected bugs stay closed issues only; the intake search covers those.
+
+Filing an issue or closing one? `docs/agents/issue-tracker.md` carries the
+intake search and the rejection record.
 
 `CLAUDE.md` is a loader (`@AGENTS.md`) with no content of its own.
