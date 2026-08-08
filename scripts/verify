@@ -76,6 +76,8 @@ GATES: list[Gate] = [
     Gate(["python3", "scripts/checks/checked_terminology_gate.py"]),
     Gate(["python3", "scripts/checks/plugin_provenance_doctor.py"]),
     Gate(["python3", "scripts/checks/doc_claims_gate.py"]),
+    Gate(["python3", "scripts/checks/doc_link_targets.py"]),
+    Gate(["python3", "scripts/checks/doc_cited_paths.py"]),
     Gate(["python3", "scripts/checks/control_plane_actor_gate.py"]),
     # a docs-only diff provably cannot change packaging, so the wheel gate is skipped
     Gate(["python3", "scripts/checks/wheel_gate.py"], docs=False),
