@@ -13,7 +13,6 @@
     "timonwong.shellcheck",
     "foxundermoon.shell-format",
     "streetsidesoftware.code-spell-checker",
-    "kilocode.kilo-code",
-    "elijah-potter.harper"
+    "kilocode.kilo-code"
   ]
 }
