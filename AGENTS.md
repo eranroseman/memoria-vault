@@ -104,7 +104,11 @@ label indexes real work instead of restating facts GitHub already tracks.
 - **Filing.** Significant changes — new operation surfaces, installer
   overhauls, schema changes, provider integrations, architecture decisions —
   get an issue before the work starts. Small docs, typo, script, and test fixes
-  can go straight to a PR.
+  can go straight to a PR. File it with no roles at all and let `/triage`
+  assign them; an issue carrying a category but no state role sits outside
+  every triage bucket and is never surfaced. The two issue templates are the
+  exception — a human picking one has already chosen the category, so they
+  pre-fill it alongside `needs-triage`.
 - **Frontier** — the issues an agent may start right now, and the only ones:
   `ready-for-agent`, unassigned, unblocked.
   `gh issue list --state open --limit 500 --label ready-for-agent --search 'no:assignee'`,

@@ -1,5 +1,6 @@
 name: Feature Request
 description: Propose a new workflow, capability, CLI behavior, or optional adapter for Memoria
+labels: ["enhancement", "needs-triage"]
 assignees: []
 body:
   - type: markdown
