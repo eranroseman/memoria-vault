@@ -111,12 +111,16 @@ label indexes real work instead of restating facts GitHub already tracks.
   pre-fill it alongside `needs-triage`.
 - **Frontier** — the issues an agent may start right now, and the only ones:
   `ready-for-agent`, unassigned, unblocked.
-  `gh issue list --state open --limit 500 --label ready-for-agent --search 'no:assignee'`,
-  then drop rows whose `issue_dependencies_summary.blocked_by` is nonzero
-  (`gh api repos/{owner}/{repo}/issues/N`). The label is a triage-time verdict;
-  assignee and blockers are read live, so they catch what changed after triage.
-  GitHub's search index lags writes by seconds — after a batch label change,
-  confirm a `--search` count with per-issue reads.
+
+  ```
+  gh issue list --state open --limit 500 --search 'label:ready-for-agent no:assignee -is:blocked'
+  ```
+
+  The label is a triage-time verdict; assignee and `-is:blocked` are read live,
+  so they catch what changed after triage. GitHub's search index lags writes by
+  seconds — after a batch label change, confirm a count with per-issue reads.
+  The same string is the filter for a board view, so keep the two identical
+  rather than re-deriving one from the other.
 - **Claim.** An agent working an issue assigns itself as its first write,
   before any other change (`gh issue edit N --add-assignee @me`); unassigned
   = unclaimed, first writer wins. Every agent session authenticates as the
