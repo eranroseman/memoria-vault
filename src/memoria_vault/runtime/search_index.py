@@ -29,13 +29,13 @@ from memoria_vault.runtime.vocabulary.edges import thesis_rel
 SEARCH_INPUT_ROOT = ".memoria/index/search/checked"
 SEARCH_MANIFEST = ".memoria/index/search/manifest.json"
 SEARCHABLE_TYPES = frozenset({"digest", "note", "hub", "project"})
-# Bundle roots the disk walk covers. Wider than SEARCHABLE_TYPES' homes, and
-# `fulltexts` is the difference: a `fulltext` document is walked and then dropped
-# by the type filter, so the walk only ever feeds its excluded-strata counts.
-# Fulltext content reaches search by another route entirely -- as a generated
-# Work document built from the catalog (`_checked_work_documents`), which is
-# appended after the walk and never passes through that filter.
-SEARCHABLE_ROOTS = frozenset({"notes", "hubs", "projects", "digests", "fulltexts"})
+# Bundle roots the disk walk covers: the homes of the types the walk can
+# actually surface. `fulltexts` is deliberately absent -- a `fulltext` document
+# is dropped by the type filter whatever its verdict, so walking it only counted
+# it in `excluded_strata`, promising that checking it would surface it. Fulltext
+# content reaches search as a generated Work document built from the catalog
+# (`_checked_work_documents`), appended after the walk and never filtered here.
+SEARCHABLE_ROOTS = frozenset({"notes", "hubs", "projects", "digests"})
 
 
 def rebuild_checked_search_index(vault: Path, *, context: OperationContext) -> dict[str, Any]:

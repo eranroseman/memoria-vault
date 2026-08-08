@@ -482,6 +482,30 @@ def test_gated_document_rides_through_as_stratum_count_without_text(tmp_path: Pa
     assert "notes/quarantined.md" not in payload
 
 
+def test_excluded_strata_ignore_types_checking_could_never_surface(tmp_path: Path) -> None:
+    """`excluded_strata` counts what checking would make searchable.
+
+    A `fulltext` file is dropped by `SEARCHABLE_TYPES` whatever its verdict, so
+    counting it as `unchecked` promises the PI that checking it would surface
+    it. It would not. Fulltext content reaches search as a generated Work
+    document instead, built from the catalog.
+    """
+    vault = workspace(tmp_path)
+    note(vault, "pending", "unchecked", "alpha body")
+
+    fulltext = vault / "fulltexts" / "source.md"
+    fulltext.parent.mkdir(parents=True, exist_ok=True)
+    fulltext.write_text(
+        "---\ntype: fulltext\ncheck_status: unchecked\ntitle: source\n---\nalpha body\n",
+        encoding="utf-8",
+    )
+    set_db_status(vault, fulltext, "fulltext", "unchecked")
+
+    universe = checked_search_universe(vault)
+
+    assert universe["excluded_strata"]["unchecked"] == 1
+
+
 def test_bundle_roots_honors_the_categories_fallback(tmp_path: Path) -> None:
     """A vault declaring only `categories` still has bundle roots.
 
