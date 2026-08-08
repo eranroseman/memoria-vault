@@ -20,8 +20,9 @@ copy.
 Research vaults fail two ways: sources pile up and never connect, or synthesis
 drifts from what the papers actually said. Both are bookkeeping failures.
 Memoria gives the bookkeeping — filing, linking, checking, re-checking — to the
-engine and keeps every judgment call with the researcher. Nothing enters
-checked knowledge and nothing exports without passing through you.
+engine and keeps every judgment call with the researcher. The runtime admits
+material to checked readers only after its applicable declared checks and
+grounds pass; the researcher owns judgment, disposition, and export decisions.
 
 ## What it guarantees
 
@@ -35,8 +36,10 @@ the milestone.
 
 Start at the published docs:
 [eranroseman.github.io/memoria-vault](https://eranroseman.github.io/memoria-vault/).
-For the system model, see [Home](docs/README.md); for the command surface,
+For the system model, see [Overview](docs/overview.md); for the command surface,
 [CLI](docs/reference/commands-and-transports/cli.md).
+For one complete offline source-to-export CLI example, read
+[A captured first session](docs/tutorials/first-session-transcript.md).
 
 ## Install From Main
 

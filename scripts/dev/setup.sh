@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # Memoria dev bootstrap — run ONCE per fresh clone to wire the local quality gate.
 #
-#   bash scripts/dev/setup.sh                 # Python tooling + pre-commit hooks
+#   bash scripts/dev/setup.sh                 # Python tooling + verification SDK + hooks
 #
-# This sets up the CONTRIBUTOR toolchain (the pre-commit hook + linters). It does
-# NOT install or run the Memoria product — that is scripts/install.sh. Idempotent;
-# safe to re-run. Hook environments are pinned in .pre-commit-config.yaml.
+# This sets up the CONTRIBUTOR toolchain (the pre-commit hook + linters).
+# It does NOT install or run the Memoria product — that is scripts/install.sh.
+# Idempotent; safe to re-run. Hook environments are pinned in .pre-commit-config.yaml.
 set -eu
 
 unset CDPATH
@@ -26,7 +26,7 @@ if command -v mise >/dev/null 2>&1; then
   fi
 fi
 
-echo "==> Installing Python dev tooling"
+echo "==> Installing Python development and verification dependencies"
 PY=$(command -v python3 || command -v python || true)
 if [ -n "$PY" ]; then
   if "$PY" -m pip install --quiet -r requirements-dev.txt; then
@@ -34,10 +34,10 @@ if [ -n "$PY" ]; then
   else
     note "pip install failed — install requirements-dev.txt manually for local lint parity"
   fi
-  if "$PY" -m pip install --quiet -e .; then
-    note "Memoria package installed editable"
+  if "$PY" -m pip install --quiet -e ".[mcp]"; then
+    note "editable package and MCP SDK installed for local full verification"
   else
-    note "editable install failed — run manually: $PY -m pip install -e ."
+    note "MCP SDK needed by local full verification is missing — run manually: $PY -m pip install -e \".[mcp]\""
   fi
 else
   note "python not found — install Python 3.12+ first"

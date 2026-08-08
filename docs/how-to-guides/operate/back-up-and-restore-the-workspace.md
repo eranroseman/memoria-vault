@@ -86,5 +86,6 @@ marker rather than guessing at partial state.
 ## Related
 
 - Full contract and failure-mode detail: [Backup and recovery](../../reference/system/backup-and-recovery.md)
+- Unexpected branch divergence: [Recover a divergent vault branch](../troubleshooting/resolve-a-diverged-vault-branch.md)
 - Recovery symptoms and responses: [Failure modes](../../reference/system/failure-modes.md)
 - Live workspace paths: [On-disk layout](../../reference/system/on-disk-layout.md)

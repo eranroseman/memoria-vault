@@ -2,7 +2,7 @@
 title: Add a second vault
 parent: Setup
 grand_parent: How-to guides
-nav_order: 6
+nav_order: 7
 ---
 
 # Add a second vault

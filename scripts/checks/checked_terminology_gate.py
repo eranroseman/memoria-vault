@@ -21,10 +21,24 @@ SKIP_PARTS = {
     "scripts/checks/checked_terminology_gate.py",
 }
 SUFFIXES = {".md", ".py", ".sh", ".ps1", ".yaml", ".yml"}
-BAD_WORD = r"(?:approved|approval|verified|trusted(?![- ]writer))"
+BAD_WORD = r"(?:approv(?:e|es|ed|al)|verified|trusted(?![- ]writer))"
 PATTERNS = (
     re.compile(rf"\b(?:checked|check_status)\b.{{0,100}}\b{BAD_WORD}\b", re.I),
     re.compile(rf"\b{BAD_WORD}\b.{{0,100}}\b(?:checked|check_status)\b", re.I),
+    re.compile(
+        r"\bnothing\s+(?:counts|counted)\s+as\s+checked\s+until\s+(?:you|the\s+PI|PI)\b",
+        re.I,
+    ),
+    re.compile(
+        r"\bnothing\s+enters\s+checked\s+knowledge\s+without\s+passing\s+through\s+(?:you|the\s+PI|PI)\b",
+        re.I,
+    ),
+    re.compile(
+        r"\b(?:the\s+PI|PI)\s+(?:review\s+)?gate\b.{0,100}\b(?:checked|check_status)\b", re.I
+    ),
+    re.compile(
+        r"\b(?:checked|check_status)\b.{0,100}\b(?:the\s+PI|PI)\s+(?:review\s+)?gate\b", re.I
+    ),
 )
 
 
@@ -49,7 +63,9 @@ def errors(base: Path = ROOT) -> list[str]:
             for line_no, line in enumerate(lines, start=1):
                 if any(pattern.search(line) for pattern in PATTERNS):
                     rel = path.relative_to(base).as_posix()
-                    out.append(f"{rel}:{line_no}: checked must not mean approved/verified/trusted")
+                    out.append(
+                        f"{rel}:{line_no}: checked must not mean approval, a PI gate, verification, or trust"
+                    )
     return out
 
 

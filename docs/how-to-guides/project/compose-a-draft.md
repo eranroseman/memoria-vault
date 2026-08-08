@@ -108,6 +108,7 @@ The promoted note is unchecked until reviewed.
 ## Related
 
 - Argument analysis before drafting: [Analyze a project argument](analyze-a-project-argument.md)
+- Batch-review evidence sets after verification: [Work the evidence-set review queue](work-the-evidence-set-review-queue.md)
 - Export the verified draft: [Export a draft](export-a-draft.md)
 - Routes, states, and failure modes: [Export routes and formats](../../reference/pipelines-and-io/export.md)
 - Project type: [Document types](../../reference/data-model/document-types.md)

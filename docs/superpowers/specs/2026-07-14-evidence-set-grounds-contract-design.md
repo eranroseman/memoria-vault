@@ -1,8 +1,8 @@
 # Evidence-set / grounds contract — beta.1 design
 
 Date: 2026-07-14. Status: **design (PI-approved in session), pre-plan**.
-Issue: #1293. Owns the V2 `evidence-set-contract` freeze blocker and the
-warrant-terminology ruling scheduled by `warrant-ontology-brief.md`.
+Issue: #1293. Owns the V2 `evidence-set-contract` freeze blocker and its
+grounds-terminology ruling.
 
 This spec is the concrete schema/state contract #1293's acceptance criteria
 demand. It was stress-tested by a first-principles rethink-audit (blinded
@@ -29,14 +29,13 @@ together) replay to identical findings.
 
 Under the Toulmin pillar, an evidence set is **grounds** (the facts backing a
 claim); **warrant** is the inference license connecting grounds to claim — a
-different concept, owned by the six-role argument graph (G4) and the
-warrant-ontology brief. The beta.1 design's "Warrant = an evidence-set"
-wording (§1.4) is the collision the brief required this session to resolve.
+different concept, owned by the six-role argument graph (G4) and its
+ontology brief. The beta.1 design's former "Warrant = an evidence-set"
+wording (§1.4) was the collision this contract resolves.
 
 **Ruling: full identifier sweep, warrant → grounds**, for every use of
-"warrant" that means the evidence-set concept. Highlights (the complete
-file:line manifest:
-[2026-07-14-warrant-grounds-rename-manifest.md](2026-07-14-warrant-grounds-rename-manifest.md)):
+"warrant" that means the evidence-set concept. The completed sweep's durable
+rulings are:
 
 - `code-warrant:` marker-item prefix → `code-grounds:`
 - `CodeWarrantRef` → `CodeGroundsRef`; `parse_code_warrant_ref` →
@@ -45,9 +44,8 @@ file:line manifest:
   default, `schema.sql` CHECK, `state.py` validation set)
 - `under-warranted` gap kind → `under-grounded` (both the `GAP_KINDS` value
   and the two prose docs that echo it)
-- docs prose per manifest, including "executable warrant(s)" /
-  "computed-warrants" (8 sites) and "checks passed and warrants resolve"
-  (5 sites) → grounds language
+- evidence-set prose uses grounds language, including executable and computed
+  grounds and resolution checks
 
 **Do not touch** (Toulmin-correct already): the `unstated-warrant` finding,
 the six-role graph's warrant role, `warrant-ontology-brief.md`, the NLI
@@ -149,13 +147,11 @@ computed     %%ev: ev-5e8f6a02 items=code-grounds:run-8842:fig3-table:sha256:<64
 
 ### One derivation, one owner
 
-The shipped code has two divergent derivations: `_derived_evidence_type`
-(`state.py`, rebuild path — never counts works, and a code item masks even a
-nested set) and `_draft_evidence_type` (`knowledge.py`, compose path — can
-only produce implicit/single-span/multi-span). Both are replaced by **one**
-function in `state.py` implementing R1–R4; compose calls it. This closes two
-confirmed review escapes: cross-work spans deriving `multi-span`
-(unreviewed), and code items masking combinations (unreviewed).
+At the time this design was written, the rebuild and compose paths had divergent
+derivations, allowing cross-work spans to derive `multi-span` (unreviewed) and
+code items to mask combinations (unreviewed). The shipped runtime now has one
+R1–R4 implementation, `state.derive_evidence_type()`, which supplies the
+derived row type. That single owner closes those historical review escapes.
 
 ## 5. Resolution, state, and nesting
 
@@ -338,9 +334,8 @@ Slices 3–6 are small independent PRs; nothing blocks alpha.21.
 
 ## Appendix: session artifacts
 
-Produced 2026-07-14 during the PI design session. Persisted in-repo: the
-rename sweep manifest (43 files audited, per-hit classification) —
-[2026-07-14-warrant-grounds-rename-manifest.md](2026-07-14-warrant-grounds-rename-manifest.md).
+Produced 2026-07-14 during the PI design session. The now-retired rename-sweep
+working manifest audited 43 files; its durable rulings are folded into §2.
 Session-ephemeral (conclusions folded into this spec): the blinded
 clean-slate design and its 17-finding adversarial critique, four prior-art
 research digests (integrity/attestation, legal citators, document-embedded

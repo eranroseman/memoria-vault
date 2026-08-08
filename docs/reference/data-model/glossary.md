@@ -12,7 +12,7 @@ Term definitions for Memoria, organized by domain. One definition per term; disa
 Memoria is a phase-gated personal knowledge-production tool for one
 researcher; these are its canonical terms and usage rulings.
 
-For the short version of the core terms, see [Home](../../README.md).
+For the short orientation to the core terms, see [Overview](../../overview.md).
 
 ---
 
@@ -280,8 +280,8 @@ sweep in any editor or adapter view.
 A file-backed Inbox projection (`candidate`, `gap`,
 `flag`, `alert`, `work-prompt`) carrying PI-facing work. Its current state is
 in `inbox/*.md`; it is not a durable Concept. SQLite holds associated
-request/control history, and per-machine journal JSONL files are derived
-synchronization exports.
+request/control history, and per-machine journal JSONL files are derived,
+reconstructible exports.
 
 ### Card
 
@@ -481,9 +481,8 @@ The append-only, hash-chained record of engine state changes: the
 journal proper is the chain kept in the [event_log](#event_log)
 SQLite table, enforced by its append-only triggers and checked by
 `memoria journal verify` (`src/memoria_vault/cli.py`). The
-per-machine `.memoria/journal/<machine>.jsonl` files are its derived
-export for multi-machine synchronization and recovery —
-reconstructible, never the source of truth. See
+per-machine `.memoria/journal/<machine>.jsonl` files are derived,
+reconstructible exports, never the source of truth. See
 [Backup and recovery](../system/backup-and-recovery.md).
 
 ### Linter

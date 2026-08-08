@@ -29,9 +29,10 @@ bash -n scripts/install.sh
 bash scripts/install.sh --dry-run
 ```
 
-`scripts/dev/setup.sh` sets up the contributor toolchain only; it does not install or run
-Memoria. Runtime package dependencies come from `pyproject.toml` and install into
-the workspace-local `.memoria/.venv`.
+`scripts/dev/setup.sh` sets up the contributor toolchain. It installs the repository
+package editable with its optional MCP SDK so `python scripts/verify` can exercise the MCP
+transport. It does not install or run a vault-local Memoria runtime; the product installer
+puts runtime dependencies in the workspace-local `.memoria/.venv`.
 The `cspell` and `markdownlint` hooks run in pre-commit-managed Node
 environments; do not run `npm ci` at the repo root for prose checks.
 Recommended VS Code extensions are listed in [.vscode/extensions.json](.vscode/extensions.json).
