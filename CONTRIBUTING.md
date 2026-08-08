@@ -113,6 +113,15 @@ Memoria-specific ones.
   anchor.
 - **Spelling:** American English (`-ize`/`-or`); `cspell` is the gate. Add a real
   unknown term to `project-words.txt` (lowercase, sorted) — never inline-suppress.
+- **Diagrams:** the site renders mermaid client-side, and `mermaid-parse` gates
+  fence syntax against the version `docs/_config.yml` pins — so what needs
+  saying here is what a parser cannot see. A diagram earns its place only where
+  prose makes the reader assemble a structure: a graph, a branching flow, a
+  state machine. Every node and edge traces to prose on the page; nothing the
+  page marks Planned is drawn, and the diagram supplements the prose rather
+  than replacing it. Never set per-fence `config:` or `theme:` frontmatter — the
+  site theme is pinned deliberately and a fence that restyles itself drifts from
+  it. Break labels with `<br/>`, and quote any label containing `()[]{}#;:,./`.
 
 ## Pull requests
 
