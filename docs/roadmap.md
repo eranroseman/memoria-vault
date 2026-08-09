@@ -106,7 +106,7 @@ the working specs:
   exists).
 - Dense/hybrid retrieval as the *default* (BM25 stays until a pre-registered
   spike beats it on the real corpus).
-- The code-execution lane and executable warrants.
+- The code-execution lane and executable grounds.
 - Warrant-node reification (evidence-gated on observed warrant usage).
 - The autoresearch overnight loop (needs a scheduler and real gold tasks).
 - 1000-scale seed-corpus load (disposition telemetry must exist first).

@@ -2,7 +2,7 @@
 title: Export a draft
 parent: Project
 grand_parent: How-to guides
-nav_order: 3
+nav_order: 4
 ---
 
 # Export a draft
@@ -110,6 +110,7 @@ pandoc projects/<project>/<draft>.md \
 
 ## Related
 
+- Clear batch evidence-review work before export: [Work the evidence-set review queue](work-the-evidence-set-review-queue.md)
 - Routes, states, and failure modes: [Export routes and formats](../../reference/pipelines-and-io/export.md)
 - The generated `.bib` behind the bibliography: [Set up Zotero](../setup/set-up-zotero.md)
 - The works-cited projection: [Bibliography](../../reference/evidence-and-integrations/bibliography.md)

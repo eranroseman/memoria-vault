@@ -13,7 +13,9 @@ and review enforceable. The standalone runtime implements those boundaries
 through the CLI, SQLite request table, worker operations, runtime policy, and
 checked workspace.
 
-For the current shared vocabulary, start with [Home](../README.md).
+For the current shared vocabulary, start with the
+[Glossary](../../../reference/data-model/glossary.md); [Overview](../../../overview.md)
+offers a short orientation.
 
 ---
 

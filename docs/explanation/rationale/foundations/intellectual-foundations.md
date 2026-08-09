@@ -57,8 +57,9 @@ arguments, building hubs) remains human.
 
 ## Toulmin's argument model
 
-> **Planned:** The six-role graph and typed consequence propagation described
-> here ship with the graph substrate in the beta.1 milestone.
+> **Partly shipped:** Typed consequence propagation, including the current
+> `warrant`, `qualifier`, and `rebuttal` relations, is live. Typing the
+> complete six-role Toulmin graph remains planned for beta.1.
 
 Stephen Toulmin's model of argument (1958) gives the knowledge graph its logical basis. An argument decomposes into six roles — Claim, Grounds, Warrant, Backing, Qualifier, and Rebuttal — and Memoria makes those roles the *types* of the graph rather than leaving argument structure implicit in prose.
 

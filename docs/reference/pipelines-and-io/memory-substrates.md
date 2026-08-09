@@ -31,7 +31,7 @@ provider, scope, lifespan, backing store, and contents.
 | --- | --- |
 | Program memory is the PI's steering | Derived from active projects, hubs, and unresolved question notes. The PI authors only `steering.md`'s watch/mute bullet override. |
 | Project memory is the per-project channel | Anything that must survive across operations within one project. Archives with the project. |
-| Audit memory is append-only | The policy gate writes an entry at every decision; operations append to SQLite's authoritative `event_log`, which emits per-machine JSONL synchronization exports, and record model-call evidence. |
+| Audit memory is append-only | The policy gate writes an entry at every decision; operations append to SQLite's authoritative `event_log`, which emits derived, reconstructible per-machine JSONL exports, and record model-call evidence. |
 | Request memory is per-request, not global | When work resumes, the request row and journal provide the durable handoff. |
 | Adapter memory is never authoritative | External chat/session history can inform a human but cannot replace checked workspace state. |
 | Working memory is not shared | One operation's in-session reasoning never bleeds into another's. |

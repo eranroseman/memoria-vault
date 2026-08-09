@@ -725,10 +725,12 @@ schema-enforced. Shipped templates (note/hub/project) are minimal placeholders a
 - **hub:** answers three questions — framing / curating / planning (a hub doing only
   the first two is static).
 - **project:** body carries thesis/direction; `outline.md`/`draft.md` are artifacts.
-- **Evidence markers (project drafts):** inline `%%ev: ev-<8hex> type=… state=…
-  items=work_id#^pNNNN%%` markers are the **durable source**; the SQLite `evidence_sets`
-  table is derived/rebuilt from them. Items reference stable `work_id#^pNNNN` source
-  spans (never citekeys).
+- **Evidence markers (project drafts):** inline
+  `%%ev: ev-<8hex> items=<item>|<item>|…%%` markers are the **durable source**:
+  their mint-once id and ordered items. The SQLite `evidence_sets` table is
+  derived/rebuilt from them; type, completeness, and review routing are derived,
+  never marker-stored. Items reference stable `work_id#^pNNNN` source spans
+  (never citekeys).
 - **Typed links / wikilinks:** `links` relations are exactly
   `supports`/`contradicts`/`extends` → **local** Concept targets. `[[Target]]`,
   `[[Target|alias]]`, `[[Target#heading]]` are unwrapped; external URLs (`://`,
@@ -2505,15 +2507,19 @@ is a schema question resolved in `data-structure-analysis.md` Part 8, not here."
 Taking each candidate in turn, not hedging:
 
 **Does `evidence_sets` already serve this role? No — and nothing about it needs to
-change.** Its real shape — `id, block_ref, items_json, type, state, review_required,
-run_id` — already gives a claim its originating verbatim span, structurally:
-`block_ref` is the claim's own location; `items_json` holds one-or-more pointers into
-source spans, each in the `work_id#^pNNNN` form `runtime/evidence.py`'s
-`SourceSpanRef`/`_SOURCE_SPAN_RE` already parses, or a chained `ev-xxxxxxxx` id for a
-multi-hop warrant; `type`/`state`/`review_required` already distinguish
+change.** The SQLite table stores `id`, `block_ref`, `items_json`, `type`,
+`completeness_status`, `review_required`, `run_id`, and `block_text_sha256`; its
+normalized derived read row exposes `items` decoded from `items_json`. Together,
+they already give a claim its originating verbatim span, structurally: `block_ref`
+is the claim's own location; `items` holds zero-or-more references: a source span in
+the `work_id#^pNNNN` form `runtime/evidence.py`'s
+`SourceSpanRef`/`_SOURCE_SPAN_RE` parses, a chained `ev-xxxxxxxx` id for multi-hop
+grounds, or a `code-grounds:…` artifact reference. An empty item list is an implicit
+set. `type`, `completeness_status`, and `review_required` are
+materialized derived state, never marker-stored fields; together they distinguish
 single-span/multi-span/multi-hop/implicit and completeness. This *is* "a claim carries
 its originating verbatim span," already built. What it was never built to do is store
-or index the text at those pointers — `items_json` is a list of references, never the
+or index the text at those pointers — `items` is a list of references, never the
 referenced text, and `evidence_sets` has no relationship to FTS5 or `vec0`. The gap is
 not in `evidence_sets`'s shape; it's that the spans its pointers name were never
 themselves an independently retrievable row anywhere. Zero schema change to

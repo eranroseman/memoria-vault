@@ -236,6 +236,7 @@ the lock closes.
 ## Related
 
 - [Back up and restore the workspace](../../how-to-guides/operate/back-up-and-restore-the-workspace.md) — how-to steps.
+- [Recover a divergent vault branch](../../how-to-guides/troubleshooting/resolve-a-diverged-vault-branch.md) — preserve and recover one coherent Git-plus-runtime lineage.
 - [Failure modes](failure-modes.md) — recovery symptoms and responses.
 - [On-disk layout](on-disk-layout.md) — live workspace paths.
 - [CLI](../commands-and-transports/cli.md) — command inventory.

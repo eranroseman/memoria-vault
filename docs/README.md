@@ -10,11 +10,11 @@ topic: overview
 **The AI does the bookkeeping. You keep the judgment.**
 
 Memoria is a local research engine for one researcher. It turns what you read
-into checked notes, linked arguments, and drafts whose every citation must
+into [checked](explanation/knowledge/what-checked-means.md) notes, linked arguments, and drafts whose every citation must
 resolve against a real source before anything leaves the workspace.
 
 [Get started](how-to-guides/setup/quickstart.md) ·
-[See a first session](#a-first-session) ·
+[See a captured session](tutorials/first-session-transcript.md) ·
 [GitHub](https://github.com/eranroseman/memoria-vault)
 
 **Status: v0.1 alpha source install** — what works today and what is still
@@ -38,38 +38,12 @@ keeps every judgment call with you.
 
 ## <a id="a-first-session"></a>A first session
 
-The shape of one traversal, start to finish, run from the vault folder
-(placeholders in angle brackets; the annotated walkthrough starts at
-[Tutorial 02](tutorials/02-first-source.md) and runs through the
-[tutorial sequence](tutorials/README.md)):
-
-```text
-$ memoria work add --workspace . --pdf <paper.pdf>
-# the paper lands in the catalog as a work: source bytes stored as
-# provenance blobs, full text extracted, the capture journaled
-
-$ memoria work update --workspace . <work-id> --check-status checked
-# the PI gate in one line: nothing counts as checked until you say so
-
-$ memoria work digest --workspace . <work-id>
-# a structured digest of the checked full text, for reading and linking
-
-$ memoria new note --workspace . "<claim title>" --mode claim \
-    --work-id <work-id> --body "<what the paper actually showed>"
-# one claim note, linked to the source it came from
-
-$ memoria ask --workspace . --question "<your question>"
-# the checked sources that answer it, ranked, with honest unknowns
-# (local BM25; no provider key needed)
-
-$ memoria project verify --workspace . projects/<project>/project.md
-# with a project draft in place (create, check, slice, compose — the
-# Tutorial 04 loop): draft findings are reported; you resolve each one
-
-$ memoria project export --workspace . projects/<project>/project.md --draft
-# the draft export refuses unless every citation resolves — and the
-# refusal names the failing citation
-```
+Read the [captured first-session transcript](tutorials/first-session-transcript.md)
+for one real, deterministic offline CLI run: source capture, checking, digest,
+source-backed claim, project slice, Ask output, evidence hold, PI disposition,
+and a successful citation-bearing Markdown export. It is a five-minute read,
+not a claim about execution time. The paced [tutorial sequence](tutorials/README.md)
+starts with [Tutorial 01](tutorials/01-system-tour.md).
 
 ## What Memoria guarantees
 
@@ -113,8 +87,9 @@ has thought *"I know I read this somewhere"* or *"can I actually still cite
 this?"*
 
 If you want an AI that writes your paper for you, this is not it — and that is
-the point. Memoria is not an autonomous researcher: nothing enters checked
-knowledge and nothing exports without passing through you.
+the point. Memoria is not an autonomous researcher: the PI owns research
+judgment and disposition, while the runtime admits material to checked readers
+only after the applicable declared checks and grounds pass.
 
 ## Why not just…
 
@@ -135,45 +110,19 @@ defensible claims and drafts. The engine proposes; the PI disposes.
 ```mermaid
 flowchart LR
     capture[Capture and enrich] --> digest[Digest]
-    digest --> candidates[Candidate claims and links]
-    candidates --> gate{PI review gate}
-    gate --> knowledge[Checked knowledge]
+    digest --> checked[Checked source material]
+    checked --> candidates[Candidate claims and links]
+    candidates --> review[PI curation and disposition]
+    review --> knowledge[Linked knowledge]
     knowledge --> draft[Draft]
     draft --> verify[Verify findings]
-    verify --> gate
-    gate --> export[Export]
+    verify --> review
+    review --> export[Export]
     export -. a citation fails to resolve .-> refused[Refused, finding named]
 ```
 
-### The five terms
-
-| Term | Meaning |
-| --- | --- |
-| PI | The human principal investigator. The PI decides what enters the vault and what can be cited. |
-| Co-PI | The research-partner role behind `memoria ask` — read-only conversation over the checked corpus. See [The Co-PI](explanation/execution/operation-postures/co-pi.md) for its full mission. |
-| Operations | Checked capability-backed units of work such as capture, enrich, digest, ask, verify, and export. |
-| Request table | The SQLite control plane. It records operation requests, status, blockers, review, and completion. |
-| Workspace | The local folder tree. It holds knowledge bundles, catalog state, attention projections, and system outputs. |
-
-### The working loop
-
-1. Find a source.
-2. Capture and enrich it into the catalog.
-3. Distill checked Works into notes.
-4. Link claims into a project argument.
-5. Draft from current claims.
-6. Verify the draft and resolve findings.
-7. Archive or revise as the project changes.
-
-The loop compounds because each step leaves a typed, linkable artifact in the
-vault. Nothing important depends only on chat history.
-
-### The control rule
-
-Operations propose; the PI disposes. CLI commands, observed file changes, and
-scheduled jobs can create request rows, attention prompts, and staged outputs
-within their manifest scope. Promotion into review-gated knowledge stays
-PI-directed and policy-gated.
+For the compact system model, its core terms, and the working loop, see the
+[Overview](overview.md).
 
 ---
 
@@ -181,7 +130,7 @@ PI-directed and policy-gated.
 
 | I want to…                                  | Go here                                                                                           |
 | ------------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| **Understand the system model**             | [The model](#the-model)                                                                           |
+| **Understand the system model**             | [Overview](overview.md)                                                                           |
 | **Get set up for the first time**           | [Quickstart — set up your vault](how-to-guides/setup/quickstart.md)                                |
 | **Do something specific**                   | [How-to guides](how-to-guides/README.md)                                                          |
 | **Look up a field, command, or schema**     | [Reference](reference/README.md)                                                                  |
@@ -195,7 +144,7 @@ PI-directed and policy-gated.
 ## Common tasks
 
 **First session**
-[Quickstart](how-to-guides/setup/quickstart.md) · [01: System tour](tutorials/01-system-tour.md) · [Set up the vault](how-to-guides/setup/set-up-the-vault.md)
+[Quickstart](how-to-guides/setup/quickstart.md) · [Captured first session](tutorials/first-session-transcript.md) · [01: System tour](tutorials/01-system-tour.md) · [Set up the vault](how-to-guides/setup/set-up-the-vault.md)
 
 **Daily work — sources**
 [Capture and ingest](how-to-guides/library/capture-and-ingest.md) · [Discuss a paper](how-to-guides/library/discuss-a-paper.md)

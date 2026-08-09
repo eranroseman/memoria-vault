@@ -47,7 +47,7 @@ suggestions until accepted.
 
 **Note candidates.** `note` is the single atomic note type. Machine-proposed
 notes are checked Concepts whose candidate state lives in SQLite's authoritative
-event log; per-machine JSONL files are derived synchronization exports. The PI
+event log; per-machine JSONL files are derived, reconstructible exports. The PI
 still decides whether to accept, edit, reject, or link them.
 
 **Gap analysis.** The runtime compares checked catalog, fulltext, and digest

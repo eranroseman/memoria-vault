@@ -37,16 +37,18 @@ Provider settings live under `<workspace>/.memoria/config/providers.yaml` and
 environment variables consumed by the standalone CLI/engine. There is no
 profile `.env` propagation step in the standalone baseline.
 
-**3. Confirm the workspace is synced and clean.**
+**3. Confirm the local workspace is clean.**
 
 ```bash
 cd <workspace>
-git pull --ff-only
 git status --short
 ```
 
-Expected: a clean fast-forward or no remote changes. A diverged branch means
-another machine pushed while this one was offline; resolve before starting work.
+Expected: no output. The supported operating model is one local workstation and
+one writer. Git records history and supports recovery; it does not synchronize
+Memoria runtime state between writers. If Git reports an unexpected divergent
+branch, stop before starting work and follow [Recover a divergent vault
+branch](../troubleshooting/resolve-a-diverged-vault-branch.md).
 
 Then run `memoria attention list --workspace .` and work the open Inbox items.
 If an optional adapter implements the planned rail, its health band may point
@@ -60,11 +62,14 @@ and repair the adapter separately.
 
 **search index stale** — rebuild it with [Rebuild the search index](../operate/rebuild-the-search-index.md).
 
-**Sync incomplete** — notes created on another device are not queryable until
-sync completes; check Git/sync status before blaming retrieval.
+**Unexpected Git divergence** — do not resolve a `.memoria/journal-head`
+conflict or merge two journal-bearing histories. Preserve the histories and
+follow [Recover a divergent vault branch](../troubleshooting/resolve-a-diverged-vault-branch.md).
 
 ## Related
 
 - Safe mode: [Safe mode](../troubleshooting/safe-mode.md)
+- Unexpected divergence: [Recover a divergent vault branch](../troubleshooting/resolve-a-diverged-vault-branch.md)
 - Rebuild search index: [Rebuild the search index](../operate/rebuild-the-search-index.md)
+- Backup procedure: [Back up and restore the workspace](../operate/back-up-and-restore-the-workspace.md)
 - Failure catalog: [Failure modes](../../reference/system/failure-modes.md)
