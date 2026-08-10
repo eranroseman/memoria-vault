@@ -1,7 +1,7 @@
 # Consistency-audit brief
 
 Standing scope for `consistency-audit` runs against this repository. The skill
-is cross-repo and holds the method — enumerate, read, verify, triage, report.
+is cross-repo and holds the method.
 This file holds what is specific to Memoria: the surfaces worth naming, the
 concerns that recur here, and the things a generic audit would waste effort on.
 
@@ -26,8 +26,8 @@ gate's job, and repeating them by hand produces noise that looks like signal:
 | `mermaid-parse` | diagram fences parse at the pinned mermaid version |
 | `cspell`, `vale`, `markdownlint` | spelling, terminology casing, structure |
 
-If the audit finds a *class* these miss, that is a `graduate` finding — propose
-the gate, do not propose a recurring manual sweep.
+If the audit finds a *class* these miss, the deliverable is a *gate spec* —
+propose the gate, do not propose a recurring manual sweep.
 
 ## Standing concerns
 
@@ -68,10 +68,10 @@ Excluded unless asked, each for a stated reason:
   citations live here and are not defects; they record where code used to be.
 - `test-vault/` — gitignored build artifact.
 
-## Where a `record` finding goes
+## Where a *record* deliverable goes
 
-The skill's `record` verdict wants the reason written down in the home that owns
-that class of ruling. Here:
+The skill's *record* deliverable wants the reason written down in the home that
+owns that class of ruling. Here:
 
 | Class | Home | Machine form |
 | --- | --- | --- |
