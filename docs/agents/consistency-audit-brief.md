@@ -8,13 +8,14 @@ concerns that recur here, and the things a generic audit would waste effort on.
 The skill reads this file itself at scope time; there is nothing to pass when
 invoking it.
 
-Nothing here overrides the skill. In particular its verify rule stands: a first
-observation is a hypothesis until confirmed against repository evidence.
+Nothing here overrides the skill. In particular its Iron Law stands: no finding
+reaches the report until you have tried to refute it.
 
-## Do not re-audit what a gate already owns
+## Do not re-audit what a checker already owns
 
-`scripts/verify` runs these every commit. Findings in their territory are the
-gate's job, and repeating them by hand produces noise that looks like signal:
+`scripts/verify` runs these every commit; this repo's one gate is what the skill
+calls a *checker*. Candidates in their territory are its job, and repeating them
+by hand produces noise that looks like signal:
 
 | Gate | Owns |
 | --- | --- |
@@ -26,7 +27,7 @@ gate's job, and repeating them by hand produces noise that looks like signal:
 | `mermaid-parse` | diagram fences parse at the pinned mermaid version |
 | `cspell`, `vale`, `markdownlint` | spelling, terminology casing, structure |
 
-If the audit finds a *class* these miss, the deliverable is a *gate spec* —
+If the audit finds a *class* these miss, the deliverable is a *checker spec* —
 propose the gate, do not propose a recurring manual sweep.
 
 ## Standing concerns
@@ -42,7 +43,7 @@ in this repository; do not go looking for one.)
 `docs/reference/system/on-disk-layout.md` and the `docs/reference/data-model/`
 pages. Every deviation cites the doc that defines the shape. Audit the **seed**,
 not `test-vault/`: that directory is gitignored and reconstructible, so a
-finding there describes a build artifact and dies at the next rebuild.
+candidate there describes a build artifact and dies at the next rebuild.
 
 **External links.** For each external URL in published docs, classify it
 `essential` (a real source, a spec, a cited work) or `internalize` (content
