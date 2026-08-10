@@ -58,8 +58,10 @@ documents it. Unpublished targets take a GitHub blob URL, per CONTRIBUTING.
 
 ## Scope defaults
 
-Audit `docs/` (published), `src/memoria_vault/product/workspace_seed/`,
-`AGENTS.md`, `CONTRIBUTING.md`, and the `docs/agents/` configuration pages.
+Audit `docs/` (published), `src/memoria_vault/product/workspace_seed/`, the
+`docs/agents/` configuration pages, and every Markdown file at the repository
+root — `AGENTS.md`, `CHANGELOG.md`, `CLAUDE.md`, `CODE_OF_CONDUCT.md`,
+`CONTEXT.md`, `CONTRIBUTING.md`, `README.md`, `SECURITY.md`.
 
 Excluded unless asked, each for a stated reason:
 
@@ -68,6 +70,11 @@ Excluded unless asked, each for a stated reason:
 - `docs/superpowers/` — working records, point-in-time. Thirty rotted code
   citations live here and are not defects; they record where code used to be.
 - `test-vault/` — gitignored build artifact.
+- Everything else tracked — `src/` outside the seed, `tests/`, `scripts/`,
+  `packages/`, `.github/`, and the root config files. These are code and
+  configuration: read them freely as *evidence* for a finding, but they are not
+  audited as prose surfaces. A contradiction inside them belongs to a code
+  review.
 
 ## Where a *record* deliverable goes
 
