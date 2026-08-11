@@ -116,7 +116,9 @@ docstring-code-format = true
 #
 # Deliberately OFF: E1/E2/E3, W291/293, E501, COM, ISC, Q -- the formatter owns
 # layout (COM/ISC actively conflict with it). T20 (print is intentional in CLI),
-# LOG/G (no logging), PTH (already 100% pathlib), ANN/D (docstring presence is a judgement call, not a lint gate — see AGENTS.md §Python style),
+# LOG/G (no logging), PTH (pathlib everywhere except the atomic-replace and chmod
+# paths in backup/rendezvous/secrets/vaultio, where the os call is the clearer
+# primitive), ANN/D (docstring presence is a judgement call, not a lint gate — see AGENTS.md §Python style),
 # SIM/PERF/FURB (opinionated terseness-over-clarity refactors).
 select = [
   "F", "E4", "E7", "E9", "W", "B", "I", "UP", "C4", "PIE", "RUF",
