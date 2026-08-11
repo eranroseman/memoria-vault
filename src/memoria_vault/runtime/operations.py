@@ -72,7 +72,7 @@ _USAGE_FIELDS = (
 )
 
 
-class TokenCeilingReached(RuntimeError):
+class TokenCeilingReachedError(RuntimeError):
     """The process token ceiling is spent; raised before any dispatch.
 
     A `RuntimeError` subclass so the documented breaker contract (a
@@ -1254,7 +1254,7 @@ def _require_token_budget(operation_id: str) -> None:
     ceiling = _token_ceiling()
     spent = _TOKEN_LEDGER["total_tokens"]
     if ceiling and spent >= ceiling:
-        raise TokenCeilingReached(
+        raise TokenCeilingReachedError(
             f"{operation_id} refused: model token ceiling reached "
             f"({spent} of {ceiling} tokens spent this process; "
             f"raise or unset {TOKEN_CEILING_ENV} to continue)"
@@ -1307,7 +1307,9 @@ def _pydantic_ai_chat(
         "timeout": float(params.get("timeout", os.environ.get("MEMORIA_MODEL_TIMEOUT", 90))),
     }
     try:
-        Agent, OpenAIChatModel, OpenAIProvider = _load_pydantic_ai_openai()
+        # The loader returns classes, so PascalCase is correct; N806 sees only
+        # a non-lowercase name bound in a function.
+        Agent, OpenAIChatModel, OpenAIProvider = _load_pydantic_ai_openai()  # noqa: N806
         provider_kwargs = {"base_url": base_url, "api_key": api_key}
         model = OpenAIChatModel(runner["model"], provider=OpenAIProvider(**provider_kwargs))
         agent = Agent(model)

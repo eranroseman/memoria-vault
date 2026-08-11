@@ -18,7 +18,7 @@ from memoria_vault.engine.surface_contract import http_routes
 from memoria_vault.runtime import http_transport, state, worker
 from memoria_vault.runtime.http_transport import (
     MAX_BODY_BYTES,
-    PayloadTooLarge,
+    PayloadTooLargeError,
     _dispatch,
     _scope_intersection,
     is_authorized,
@@ -421,7 +421,7 @@ def test_http_transport_route_status_codes(workspace: Path) -> None:
         workspace,
         "POST",
         "/operation/run",
-        lambda: _raise(PayloadTooLarge("request body too large")),
+        lambda: _raise(PayloadTooLargeError("request body too large")),
     )
 
     assert (unknown, unknown_status) == (
