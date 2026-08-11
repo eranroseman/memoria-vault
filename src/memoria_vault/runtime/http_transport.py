@@ -92,7 +92,7 @@ def origin_allowed(origin: str | None) -> bool:
     return origin is None or origin == ALLOWED_ORIGIN
 
 
-class PayloadTooLarge(ValueError):
+class PayloadTooLargeError(ValueError):
     pass
 
 
@@ -194,7 +194,7 @@ def make_http_server(
         def _json_body(self) -> dict[str, Any]:
             length = int(self.headers.get("Content-Length") or "0")
             if length > MAX_BODY_BYTES:
-                raise PayloadTooLarge("request body too large")
+                raise PayloadTooLargeError("request body too large")
             if length == 0:
                 return {}
             data = json.loads(self.rfile.read(length).decode("utf-8"))
@@ -309,7 +309,7 @@ def _dispatch(
             return _write(workspace, path, body()), HTTPStatus.OK
     except FileNotFoundError as exc:
         return {"ok": False, "error": str(exc)}, HTTPStatus.NOT_FOUND
-    except PayloadTooLarge as exc:
+    except PayloadTooLargeError as exc:
         return {"ok": False, "error": str(exc)}, HTTPStatus.REQUEST_ENTITY_TOO_LARGE
     except Exception as exc:  # noqa: BLE001 -- HTTP boundary returns JSON errors.
         return {"ok": False, "error": str(exc)}, HTTPStatus.BAD_REQUEST

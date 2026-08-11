@@ -4130,7 +4130,7 @@ def _search_status(workspace: Path) -> dict[str, Any]:
 
 def _runner_status(workspace: Path, provider: str | None, *, live: bool = False) -> dict[str, Any]:
     from memoria_vault.runtime.operations import (
-        TokenCeilingReached,
+        TokenCeilingReachedError,
         _load_pydantic_ai_openai,
         _pydantic_ai_chat,
         _resolve_runner_api_key,
@@ -4169,7 +4169,9 @@ def _runner_status(workspace: Path, provider: str | None, *, live: bool = False)
         error = str(exc)
     else:
         try:
-            Agent, OpenAIChatModel, OpenAIProvider = _load_pydantic_ai_openai()
+            # The loader returns classes, so PascalCase is correct; N806 sees only
+            # a non-lowercase name bound in a function.
+            Agent, OpenAIChatModel, OpenAIProvider = _load_pydantic_ai_openai()  # noqa: N806
             checks["runner_dependency"] = True
             provider_kwargs = {"base_url": base_url, "api_key": api_key}
             model = OpenAIChatModel(model_name, provider=OpenAIProvider(**provider_kwargs))
@@ -4185,7 +4187,7 @@ def _runner_status(workspace: Path, provider: str | None, *, live: bool = False)
                     "Reply with a short confirmation that the Memoria runner is reachable.",
                 )
                 checks["runner_live_dispatch"] = True
-        except TokenCeilingReached as exc:
+        except TokenCeilingReachedError as exc:
             # Refused before any dispatch, from our own constants and integers:
             # the diagnostic is actionable and reflects no adapter state.
             error = str(exc)
