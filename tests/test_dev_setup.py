@@ -37,7 +37,7 @@ def test_dev_bootstrap_describes_mcp_as_local_verification_support() -> None:
 def test_dev_bootstrap_provisions_the_package_local_adapter_build_dependency() -> None:
     script = SETUP.read_text(encoding="utf-8")
 
-    assert 'if npm ci --prefix packages/memoria-obsidian; then' in script
+    assert "if npm ci --prefix packages/memoria-obsidian; then" in script
     assert "Obsidian adapter build dependency installed from packages/memoria-obsidian" in script
     assert (
         "Obsidian adapter build dependency install failed — run manually: "

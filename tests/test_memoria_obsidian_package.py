@@ -14,10 +14,7 @@ pytestmark = pytest.mark.contract
 
 PLUGIN = ROOT / "packages" / "memoria-obsidian"
 SOURCE = PLUGIN / "src"
-SEED_PLUGIN = ROOT / (
-    "src/memoria_vault/product/workspace_seed/"
-    ".obsidian/plugins/memoria-obsidian"
-)
+SEED_PLUGIN = ROOT / ("src/memoria_vault/product/workspace_seed/.obsidian/plugins/memoria-obsidian")
 SOURCE_MODULES = (
     "handshake.js",
     "main.js",
@@ -148,7 +145,9 @@ def test_memoria_obsidian_committed_release_artifact_is_current() -> None:
     assert result.returncode == 0, result.stdout + result.stderr
 
 
-def test_memoria_obsidian_seeded_release_artifact_loads_without_sibling_modules(tmp_path: Path) -> None:
+def test_memoria_obsidian_seeded_release_artifact_loads_without_sibling_modules(
+    tmp_path: Path,
+) -> None:
     workspace = tmp_path / "vault"
     workspace.mkdir()
     seed_bundles(workspace, bundle_names=["obsidian"])

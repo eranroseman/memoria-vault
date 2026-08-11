@@ -71,7 +71,9 @@ def test_plugin_init_command_uses_workspace_flag_and_noninteractive_confirmation
         "if include_section canvas; then", 1
     )[0]
 
-    assert 'show_command "memoria init --workspace test-vault/u3-plug-manual --yes"' in plugin_section
+    assert (
+        'show_command "memoria init --workspace test-vault/u3-plug-manual --yes"' in plugin_section
+    )
     assert 'show_command "memoria init test-vault/u3-plug-manual"' not in plugin_section
 
 

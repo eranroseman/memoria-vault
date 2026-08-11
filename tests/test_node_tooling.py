@@ -84,7 +84,9 @@ def test_obsidian_adapter_build_dependency_is_pinned_and_provisioned_in_ci():
     assert package["scripts"]["build"] == "node scripts/build.mjs"
     assert package["scripts"]["check"] == "node scripts/build.mjs --check"
     assert RELEASE_TAG.fullmatch(package["devDependencies"]["esbuild"])
-    assert lock["packages"][""]["devDependencies"]["esbuild"] == package["devDependencies"]["esbuild"]
+    assert (
+        lock["packages"][""]["devDependencies"]["esbuild"] == package["devDependencies"]["esbuild"]
+    )
 
     steps = workflow["jobs"]["verify"]["steps"]
     install_index = next(
@@ -92,7 +94,9 @@ def test_obsidian_adapter_build_dependency_is_pinned_and_provisioned_in_ci():
         for index, step in enumerate(steps)
         if step.get("run") == "npm ci --prefix packages/memoria-obsidian"
     )
-    verify_index = next(index for index, step in enumerate(steps) if step.get("run") == "python scripts/verify")
+    verify_index = next(
+        index for index, step in enumerate(steps) if step.get("run") == "python scripts/verify"
+    )
     assert steps[install_index]["name"] == "Install Obsidian adapter build dependency"
     assert install_index < verify_index
 
