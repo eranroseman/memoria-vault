@@ -332,9 +332,11 @@ Kept apart from the findings, per the skill: `unverified` is not a verdict.
    plus the observed shape of a comparable command, not on a successful run.
 3. **Nine refutation reasons**, above.
 
-Two further candidates were raised in wave 2 but are **not** unverified, because
-they reconcile by substance to candidates already judged: C23's skeptic
-re-raised the `tmp/tutorial` scratch folder (the substance of C18, `refuted`),
+Three further candidates were raised in wave 2 but are **not** unverified,
+because they reconcile by substance to candidates already judged: C22's skeptic
+re-raised the `01:54` quantifier (the substance of C21, confirmed as **F8**,
+which is why that finding carries two independent confirmations); C23's skeptic
+re-raised the `tmp/tutorial` scratch folder (the substance of C18, `refuted`);
 and C25's skeptic re-raised "Check or repair" with no repair branch (the
 substance of C11, confirmed as **F3**).
 
@@ -374,9 +376,10 @@ substance of C11, confirmed as **F3**).
   (`02:9`) matches the manifest's eight `- id:` rows exactly. No Obsidian,
   Zotero or MCP-host claim in these nine files required an upstream check.
 - **Candidates:** 23 raised by the two readers, reconciled to 18 distinct
-  defects; 2 more raised by the probes; 8 more raised by skeptics while judging;
-  3 raised in wave 2, of which 2 reconciled to existing candidates. **28
-  candidates, 9 confirmed, 19 refuted, 1 left unverified.**
+  defects; 2 more raised by the probes; 8 more raised by skeptics while judging
+  wave 1; 4 more raised while judging wave 2, of which 3 reconciled by substance
+  to candidates already in the set and 1 was left unverified. **28 candidates, 9
+  confirmed, 19 refuted, 1 left unverified.**
 - **Agents:** 2 readers, 28 skeptics and routing judges, all
   `consistency-audit-inspector`. No candidate was judged by the reader that
   raised it; no candidate was judged by the skeptic that raised it.
@@ -489,6 +492,11 @@ Verbatim, as recorded at the moment each arose:
 > wave 2 that I cannot route gets recorded under "could not verify"
 > (`unverified`, which the skill says is never a verdict), never silently dropped
 > and never rounded to a finding.
+
+A seventh deviation, not an ambiguity but an omission: the skill's Documentation
+step says "Use writing-clearly-and-concisely skill if available." It is
+available in this session and it was not invoked. This report was written
+without it. Disclosed rather than quietly left out of the record.
 
 Two of these produced the run's two most valuable results. **#4** is why F1 and
 F6 exist at all: both were raised by the lead from probe output rather than by a
