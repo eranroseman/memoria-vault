@@ -46,8 +46,8 @@ File work as [GitHub issues](https://github.com/eranroseman/memoria-vault/issues
 rationale behind the current shape.
 
 Everything else about where work is tracked — working specs and plans,
-rejected-enhancement records, release scope, the label vocabulary, the triage
-state machine — is policy. It lives in [AGENTS.md](AGENTS.md), under
+rejected-enhancement records, release scope, the label vocabulary and the rules
+for applying it — is policy. It lives in [AGENTS.md](AGENTS.md), under
 [Where things live](AGENTS.md#where-things-live) and
 [Issue conventions](AGENTS.md#issue-conventions). Read it there rather than
 here; a second copy would be free to drift, and was.
