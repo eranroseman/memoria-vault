@@ -34,7 +34,15 @@ package editable with its optional MCP SDK so `python scripts/verify` can exerci
 transport. It does not install or run a vault-local Memoria runtime; the product installer
 puts runtime dependencies in the workspace-local `.memoria/.venv`.
 The `cspell` and `markdownlint` hooks run in pre-commit-managed Node
-environments; do not run `npm ci` at the repo root for prose checks.
+environments; no root `node_modules/` install is required for prose checks.
+When developing the Obsidian adapter, install and check only its package; do
+not run `npm ci` at the repo root:
+
+```bash
+npm ci --prefix packages/memoria-obsidian
+npm run check --prefix packages/memoria-obsidian
+```
+
 Recommended VS Code extensions are listed in [.vscode/extensions.json](.vscode/extensions.json).
 
 See [Quickstart](docs/how-to-guides/setup/quickstart.md) for the product install walkthrough.
