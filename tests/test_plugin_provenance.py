@@ -10,6 +10,19 @@ from tests.paths import ROOT
 pytestmark = pytest.mark.static
 
 
+def test_plugin_scope_doctor_allowlist_is_exact_release_roster():
+    assert doctor.ALLOWED_SEED_OBSIDIAN_FILES == {
+        Path("app.json"),
+        Path("community-plugins.json"),
+        Path("core-plugins.json"),
+        Path("graph.json"),
+        Path("plugins/memoria-obsidian/main.js"),
+        Path("plugins/memoria-obsidian/manifest.json"),
+        Path("plugins/memoria-obsidian/styles.css"),
+        Path("types.json"),
+    }
+
+
 def test_plugin_scope_doctor_accepts_standalone_repo():
     assert doctor.check(ROOT) == []
 

@@ -39,7 +39,7 @@ from tests.helpers import ROOT, init_cli_workspace, write_checked_note
 
 pytestmark = pytest.mark.contract
 
-PLUGIN = ROOT / "src/memoria_vault/product/workspace_seed/.obsidian/plugins/memoria-obsidian"
+PLUGIN = ROOT / "packages/memoria-obsidian/src"
 VIEWSPEC_JS = PLUGIN / "viewspec.js"
 RELATE_JS = PLUGIN / "relate.js"
 CREDENTIAL_ENV_NAMES = (

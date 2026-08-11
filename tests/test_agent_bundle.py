@@ -221,8 +221,8 @@ def test_bundle_files_registry_covers_every_shipped_bundle_file():
     """The manifest roster is derived from what ships, not retyped.
 
     A third hand-written roster silently under-records the manifest the first
-    time a file joins `workspace_seed/.claude/` or the plugin (U3-PLUG's
-    `viewspec.js`), so every roster is compared against what actually ships.
+    time a file joins `workspace_seed/.claude/` or the generated plugin
+    release artifacts, so every roster is compared against what actually ships.
     The agent bundle draws from two producers — the walked package tree and
     U4-A's `copi_bundle_files()` — so it is checked against their union, and
     the two must stay disjoint: a path claimed by both would have two sources
@@ -234,6 +234,11 @@ def test_bundle_files_registry_covers_every_shipped_bundle_file():
     assert rendered, "U4-A enumerates no rendered bundle file"
     assert not set(packaged) & set(rendered)
     assert sorted(bundles.BUNDLE_FILES["agent"]) == sorted(packaged + rendered)
+    assert bundles.BUNDLE_FILES["obsidian"] == (
+        ".obsidian/plugins/memoria-obsidian/main.js",
+        ".obsidian/plugins/memoria-obsidian/manifest.json",
+        ".obsidian/plugins/memoria-obsidian/styles.css",
+    )
     assert sorted(bundles.BUNDLE_FILES["obsidian"]) == sorted(
         cli._seed_tree_file_targets(OBSIDIAN_PLUGIN_REL, OBSIDIAN_PLUGIN_REL)
     )

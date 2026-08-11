@@ -17,6 +17,7 @@ __pycache__/
 
 # Node deps for the repo-local qmd code-search engine (devDependency; pinned via package-lock.json)
 /node_modules/
+packages/memoria-obsidian/node_modules/
 
 # Jekyll build artifacts (published via GitHub Pages from /docs)
 docs/_site/
