@@ -46,7 +46,9 @@ NODE_SUITE_FILES = (
 )
 
 _LOAD_PROBE = """
-const path = require("node:path");
+import { createRequire } from "node:module";
+import path from "node:path";
+const require = createRequire(import.meta.url);
 const Module = require("node:module");
 class Plugin {
   constructor() {
@@ -83,9 +85,7 @@ const PluginClass = require(path.join(directory, "main.js"));
 if (typeof PluginClass !== "function") {
   throw new Error("plugin entrypoint did not export a class");
 }
-(async () => new PluginClass().onload())().catch((error) => {
-  process.nextTick(() => { throw error; });
-});
+await new PluginClass().onload();
 """
 
 
@@ -103,7 +103,7 @@ def _run_node_suite() -> subprocess.CompletedProcess[str]:
     Discovery is unaffected: this runs the same files as `npm test`.
     """
     return subprocess.run(
-        ["node", "--test", "--test-reporter=tap"],
+        ["node", "--test", "--experimental-test-isolation=none", "--test-reporter=tap"],
         cwd=PLUGIN,
         text=True,
         capture_output=True,
@@ -157,7 +157,7 @@ def test_memoria_obsidian_seeded_release_artifact_loads_without_sibling_modules(
     assert 'require("./' not in (seeded / "main.js").read_text(encoding="utf-8")
 
     result = subprocess.run(
-        ["node", "-e", _LOAD_PROBE, str(seeded)],
+        ["node", "--input-type=module", "-e", _LOAD_PROBE, str(seeded)],
         text=True,
         capture_output=True,
         check=False,
