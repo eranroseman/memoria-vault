@@ -5,11 +5,7 @@ is cross-repo and holds the method.
 This file holds what is specific to Memoria: the surfaces worth naming, the
 concerns that recur here, and the things a generic audit would waste effort on.
 
-The skill reads this file itself at scope time; there is nothing to pass when
-invoking it.
-
-Nothing here overrides the skill. In particular its Iron Law stands: no finding
-reaches the report until you have tried to refute it.
+Nothing here overrides the skill.
 
 ## Do not re-audit what a checker already owns
 

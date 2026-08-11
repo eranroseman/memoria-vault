@@ -1,8 +1,7 @@
 # AGENTS.md — Memoria
 
 Facts for AI agents working in `eranroseman/memoria-vault`. *How* work happens
-is owned by the installed superpowers skills (brainstorm → plan → TDD/SDD →
-review → finish) and, for issue work, by `/triage` — not by this file.
+is owned by your installed skills — configured per user, not by this file.
 
 This file holds what you can break before you would think to look something up:
 the gate, merge rules, the shared index, how work is tracked. It lives here and
@@ -39,8 +38,8 @@ should feel like a co-PI, not a knowledge base. Product pitch:
   paths, never `git add -A`; a `PreToolUse` hook rejects the sweep forms. Each
   session works in its own worktree, created from the main checkout:
   `git worktree add .claude/worktrees/<name> -b wip/<name> origin/main`, then
-  `EnterWorktree(path: ".claude/worktrees/<name>")`. Codex does this by
-  default. Per-tool differences: `docs/agents/cross-tool-parity.md`.
+  `EnterWorktree(path: ".claude/worktrees/<name>")`. Per-tool differences,
+  including which tools do this by default: `docs/agents/cross-tool-parity.md`.
 - **Test only against disposable vaults under `test-vault/`** (never a personal
   vault). The installed test-vault carries its own nested `.git` (vault
   versioning is product behavior) and must stay reconstructible — `git clean
@@ -88,26 +87,26 @@ should feel like a co-PI, not a knowledge base. Product pitch:
 
 ## Issue conventions
 
-The tracker runs the `triage` skill's state machine. Readiness is authored
-rather than derived, but only by a triage session that checks the request
-isn't already built, verifies the claim, and attaches a durable brief — so the
-label indexes real work instead of restating facts GitHub already tracks.
+Readiness is authored rather than derived, but only by a triage session that
+checks the request isn't already built, verifies the claim, and attaches a
+durable brief — so the label indexes real work instead of restating facts
+GitHub already tracks.
 
 - **Labels.** A triaged issue carries exactly one **category** role (`bug`,
   `enhancement`) and exactly one **state** role (`needs-triage`, `needs-info`,
   `ready-for-agent`, `ready-for-human`, `wontfix`) — meanings in
   `docs/agents/triage-labels.md`. Two state roles is a defect: flag it and ask,
   never guess which wins. Category goes in labels, never in a title prefix. An issue
-  that has not been triaged carries no role at all — a meaningful state, and the first
-  bucket `/triage` surfaces. The vocabulary is closed: those roles plus
+  that has not been triaged carries no role at all — a meaningful state, not an
+  oversight. The vocabulary is closed: those roles plus
   `documentation` and the Dependabot labels are the whole set, with no priority
   or severity tier on top.
 - **Filing.** Significant changes — new operation surfaces, installer
   overhauls, schema changes, provider integrations, architecture decisions —
   get an issue before the work starts. Small docs, typo, script, and test fixes
-  can go straight to a PR. File it with no roles at all and let `/triage`
-  assign them; an issue carrying a category but no state role sits outside
-  every triage bucket and is never surfaced. The two issue templates are the
+  can go straight to a PR. File it with no roles at all and let triage assign
+  them; an issue carrying a category but no state role is never surfaced for
+  triage at all. The two issue templates are the
   exception — a human picking one has already chosen the category, so they
   pre-fill it alongside `needs-triage`.
 - **Frontier** — the issues an agent may start right now, and the only ones:
