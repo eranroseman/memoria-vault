@@ -231,7 +231,7 @@ def test_mypy_gate_is_source_scoped_and_pinned_for_offline_manual_checks():
 
 
 def test_python_editor_applies_ruff_import_and_fix_actions_on_save():
-    """Keep saved Python aligned with the Ruff gate's fixes."""
+    """Keep saved Python aligned with the pinned Ruff and MyPy gates."""
     raw_settings = VSCODE_SETTINGS.read_text(encoding="utf-8")
     settings = json.loads(re.sub(r"^\s*//.*$", "", raw_settings, flags=re.MULTILINE))
 
@@ -241,6 +241,14 @@ def test_python_editor_applies_ruff_import_and_fix_actions_on_save():
     code_actions = python_settings["editor.codeActionsOnSave"]
     assert code_actions["source.organizeImports.ruff"] == "explicit"
     assert code_actions["source.fixAll.ruff"] == "explicit"
+
+    # The extension uses requirements-dev's pinned MyPy; Pylance remains useful
+    # for language features, but its unpinned type checker must not disagree.
+    assert settings["mypy-type-checker.importStrategy"] == "fromEnvironment"
+    assert settings["python.analysis.typeCheckingMode"] == "off"
+
+    extensions = json.loads((ROOT / ".vscode" / "extensions.json").read_text(encoding="utf-8"))
+    assert "ms-python.mypy-type-checker" in extensions["recommendations"]
 
 
 def test_coverage_audit_tool_is_pinned_for_contributors():

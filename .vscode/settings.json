@@ -22,6 +22,8 @@
   "powershell.scriptAnalysis.settingsPath": "scripts/PSScriptAnalyzerSettings.psd1",
   "ruff.nativeServer": "on",
   "ruff.importStrategy": "fromEnvironment",
+  "mypy-type-checker.importStrategy": "fromEnvironment",
+  "python.analysis.typeCheckingMode": "off",
   "editor.formatOnSaveMode": "file",
   "[javascript]": {
     "editor.defaultFormatter": "oxc.oxc-vscode",
