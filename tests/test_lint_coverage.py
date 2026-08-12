@@ -280,8 +280,10 @@ function Get-Module {
     param([switch] $ListAvailable, [string] $Name)
     [pscustomobject]@{ Name = "PSScriptAnalyzer" }
 }
+$script:gitInvocations = @()
 function git {
     param([Parameter(ValueFromRemainingArguments = $true)][string[]] $Arguments)
+    $script:gitInvocations += ,@($Arguments)
     if ($Arguments.Count -ne 2 -or $Arguments[0] -ne "ls-files" -or $Arguments[1] -ne "*.ps1") {
         throw "expected git ls-files '*.ps1'"
     }
@@ -295,7 +297,10 @@ function Invoke-ScriptAnalyzer {
     return $null
 }
 & [scriptblock]::Create($env:PSSA_COMMAND)
-$script:capturedPaths
+[pscustomobject]@{
+    gitInvocations = @($script:gitInvocations)
+    capturedPaths = @($script:capturedPaths)
+} | ConvertTo-Json -Compress -Depth 4
 """
     environment = dict(os.environ)
     environment["PSSA_COMMAND"] = pssa_command
@@ -308,4 +313,6 @@ $script:capturedPaths
         env=environment,
     )
     assert result.returncode == 0, result.stderr
-    assert result.stdout.splitlines() == ["fixtures/first.ps1", "fixtures/second.ps1"]
+    captured = json.loads(result.stdout)
+    assert captured["gitInvocations"] == [["ls-files", "*.ps1"]]
+    assert captured["capturedPaths"] == ["fixtures/first.ps1", "fixtures/second.ps1"]
