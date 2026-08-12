@@ -10,7 +10,7 @@ from http.client import HTTPException
 from pathlib import Path
 from typing import Any
 from urllib.parse import unquote, urlsplit, urlunsplit
-from urllib.request import HTTPRedirectHandler, build_opener
+from urllib.request import HTTPRedirectHandler, Request, build_opener
 from xml.parsers import expat
 
 from memoria_vault.product.seed_corpus import load_seed_manifest
@@ -25,6 +25,7 @@ MAX_TAR_TOTAL_BYTES = 32 * 1024 * 1024
 MAX_PDF_MEMBER_BYTES = 32 * 1024 * 1024
 MAX_PMC_XML_ELEMENTS = 1024
 MAX_SEED_DIAGNOSTIC_BYTES = 1_024
+SEED_FETCH_USER_AGENT = "Memoria/0.1 (+https://github.com/eranroseman/memoria-vault)"
 
 
 def _bounded_seed_error(value: BaseException) -> str:
@@ -64,7 +65,8 @@ class _CappedTarStream:
 
 def _default_opener(url: str):
     """Open a URL with the resolver's fixed timeout and no redirect following."""
-    return build_opener(_NoRedirect()).open(url, timeout=30.0)
+    request = Request(url, headers={"User-Agent": SEED_FETCH_USER_AGENT})
+    return build_opener(_NoRedirect()).open(request, timeout=30.0)
 
 
 def resolve_fetch(

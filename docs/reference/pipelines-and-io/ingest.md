@@ -66,7 +66,7 @@ flowchart TD
 | Import run artifacts | `memoria work import` at command return | Skips entries whose `work_id` is already in the catalog, then finalizes once, after the post-loop index refresh: one run-scoped `import-<run_id>` worklist with one quiet card, ranked duplicates → retraction → failed → unmapped, plus one [`import-run.v1`](../control-and-policy/empirical-events.md) telemetry row. A run with nothing to judge mints no worklist and no card. A retried import mints a new `run_id` and reports the retry, not the original run. |
 | URL snapshot | `stage_url_source()` / worker `capture-url-source` | Fetches one URL, preserves raw HTML, extracts plain text with stdlib `HTMLParser`, and writes an unchecked catalog row plus source-content blobs. |
 | PDF import | `stage_pdf_source()` / worker `capture-pdf-source` | PyMuPDF is a standard runtime dependency. Before parsing, `stage_pdf_source()` rejects raw PDF input larger than 32 MiB; it also rejects documents above 1,000 pages or more than 8 MiB of extracted UTF-8 text before writing an unchecked catalog row plus source-content blobs. |
-| Policy-bound remote PDF capture | internal import-admission request / PI worker `capture-remote-pdf-source` | Accepts a PMCID, arXiv, or direct-PDF descriptor but no PDF bytes; the PI-only worker authorizes and resolves it before passing bytes to `stage_pdf_source()`. This is an internal route, not a new CLI command. |
+| Policy-bound remote PDF capture | internal import-admission request / PI worker `capture-remote-pdf-source` | Accepts a PMCID, arXiv, or direct-PDF descriptor but no PDF bytes; the PI-only worker authorizes every resolved URL, refuses redirects, and passes admitted bytes to the standard 32 MiB / 1,000-page / 8 MiB `stage_pdf_source()` boundary. This is an internal route, not a new CLI command. |
 | Metadata merge | `capture_source()` / `enrich_source()` | Recapturing or enriching the same stable `work_id` merges non-empty identifiers, CSL-JSON fields, metadata status, and link lists instead of dropping previously captured source metadata. |
 | Metadata-derived entities | `capture_source()` / `enrich_source()` | Records deterministic person, venue, organization, and source graph rows from CSL/OpenAlex metadata; exact duplicate checks read these rows. |
 | Metadata check | `check_source_metadata()` / worker `check-source-metadata` | Flags missing catalog basics, conflicting DOI metadata, duplicate source IDs, deterministic duplicate Work candidates, and duplicate person/entity identifiers for PI review. |
@@ -80,11 +80,22 @@ flowchart TD
 
 - DOI enrichment fetches provider-discovered open-access text only when the
   operation manifest allows that URL.
-- `capture-remote-pdf-source` has a separate finite policy: PMC OA record,
-  PMC PDF, PMC package, Frontiers article, ACL Anthology, Sociologica article,
-  and arXiv PDF prefixes only. A direct-PDF host outside those seven prefixes
-  fails its worker job before an opener runs; it is never silently downgraded
-  into generic metadata capture.
+- `capture-remote-pdf-source` uses a no-redirect resolver. Every initial or
+  derived URL must be authorized against these ten explicit prefixes:
+
+  - `https://www.ncbi.nlm.nih.gov/pmc/utils/oa/`
+  - `https://ftp.ncbi.nlm.nih.gov/pub/pmc/oa_pdf/`
+  - `https://ftp.ncbi.nlm.nih.gov/pub/pmc/oa_package/`
+  - `https://www.frontiersin.org/journals/psychology/articles/`
+  - `https://www.frontiersin.org/journals/education/articles/`
+  - `https://www.frontiersin.org/journals/artificial-intelligence/articles/`
+  - `https://discovery.ucl.ac.uk/id/eprint/10077673/1/`
+  - `https://aclanthology.org/`
+  - `https://sociologica.unibo.it/article/download/`
+  - `https://export.arxiv.org/pdf/`
+
+  A URL outside this finite policy fails its worker job before an opener runs;
+  it is never silently downgraded into generic metadata capture.
 - Portable imports can carry ISBN metadata, but the standalone runtime has no
   `work add --isbn` enrichment route.
 - Source/entity Markdown is never created during import; checked catalog state

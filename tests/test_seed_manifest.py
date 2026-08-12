@@ -26,12 +26,66 @@ EXPECTED_IDS = [
     "chen-2018-undesirable-difficulty",
     "moreira-2019-retrieval-practice",
     "settles-2016-spaced-repetition",
-    "morrison-2020-offloading",
+    "hu-luo-fleming-2019-metamemory-offloading",
     "ose-askvik-2020-handwriting",
     "schmidt-2018-luhmann-card-index",
     "mirzababaei-2021-toulmin-agent",
     "asai-2024-openscholar",
 ]
+
+EXPECTED_DIRECT_ROWS = {
+    "chen-2018-undesirable-difficulty": {
+        "identifier": "doi:10.3389/fpsyg.2018.01483",
+        "license": "CC BY 4.0",
+        "method": "pdf-url",
+        "url": "https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2018.01483/pdf",
+    },
+    "moreira-2019-retrieval-practice": {
+        "identifier": "doi:10.3389/feduc.2019.00005",
+        "license": "CC BY",
+        "method": "pdf-url",
+        "url": "https://www.frontiersin.org/journals/education/articles/10.3389/feduc.2019.00005/pdf",
+    },
+    "ose-askvik-2020-handwriting": {
+        "identifier": "doi:10.3389/fpsyg.2020.01810",
+        "license": "CC BY 4.0",
+        "method": "pdf-url",
+        "url": "https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2020.01810/pdf",
+    },
+    "mirzababaei-2021-toulmin-agent": {
+        "identifier": "doi:10.3389/frai.2021.645516",
+        "license": "CC BY 4.0",
+        "method": "pdf-url",
+        "url": "https://www.frontiersin.org/journals/artificial-intelligence/articles/10.3389/frai.2021.645516/pdf",
+    },
+    "hu-luo-fleming-2019-metamemory-offloading": {
+        "identifier": "doi:10.1016/j.cognition.2019.104012",
+        "license": "CC BY 4.0",
+        "method": "pdf-url",
+        "url": "https://discovery.ucl.ac.uk/id/eprint/10077673/1/Fleming_A%20role%20for%20metamemory%20in%20cognitive%20offloading_VoR.pdf",
+    },
+}
+
+UNCHANGED_ROWS = {
+    "settles-2016-spaced-repetition": {
+        "identifier": "doi:10.18653/v1/P16-1174",
+        "license": "CC BY 4.0",
+        "method": "pdf-url",
+        "url": "https://aclanthology.org/P16-1174.pdf",
+    },
+    "schmidt-2018-luhmann-card-index": {
+        "identifier": "doi:10.6092/issn.1971-8853/8350",
+        "license": "CC BY 4.0",
+        "method": "pdf-url",
+        "url": "https://sociologica.unibo.it/article/download/8350/8272",
+    },
+    "asai-2024-openscholar": {
+        "identifier": "arxiv:2411.14199v1",
+        "license": "CC BY 4.0",
+        "method": "arxiv-pdf",
+        "url": "https://export.arxiv.org/pdf/2411.14199v1",
+    },
+}
 
 _BAD_ROW_TEMPLATE = """
 - id: bad-row
@@ -73,32 +127,22 @@ def test_license_impl_start_check() -> None:
             )
 
 
-def test_fetch_methods_match_spec_table() -> None:
+def test_shipped_rows_pin_direct_sources() -> None:
     assert SEED_FETCH_METHODS == {"pmc-oa", "pdf-url", "arxiv-pdf"}
-    rows = load_seed_manifest()
-    methods = {row["id"]: row["fetch"]["method"] for row in rows}
-
-    assert methods == {
-        "chen-2018-undesirable-difficulty": "pmc-oa",
-        "moreira-2019-retrieval-practice": "pdf-url",
-        "settles-2016-spaced-repetition": "pdf-url",
-        "morrison-2020-offloading": "pmc-oa",
-        "ose-askvik-2020-handwriting": "pmc-oa",
-        "schmidt-2018-luhmann-card-index": "pdf-url",
-        "mirzababaei-2021-toulmin-agent": "pmc-oa",
-        "asai-2024-openscholar": "arxiv-pdf",
-    }
-    urls = {row["id"]: row["fetch"]["url"] for row in rows}
-    assert urls["asai-2024-openscholar"] == "https://export.arxiv.org/pdf/2411.14199v1"
-    for row_id in (
-        "chen-2018-undesirable-difficulty",
-        "morrison-2020-offloading",
-        "ose-askvik-2020-handwriting",
-        "mirzababaei-2021-toulmin-agent",
-    ):
-        assert urls[row_id].startswith(
-            "https://www.ncbi.nlm.nih.gov/pmc/utils/oa/oa.fcgi?id=PMC"
-        ), row_id
+    rows = {row["id"]: row for row in load_seed_manifest()}
+    assert set(rows) == set(EXPECTED_DIRECT_ROWS) | set(UNCHANGED_ROWS)
+    for row_id, expected in {**EXPECTED_DIRECT_ROWS, **UNCHANGED_ROWS}.items():
+        row = rows[row_id]
+        assert row["identifier"] == expected["identifier"]
+        assert row["license"] == expected["license"]
+        assert row["fetch"] == {"method": expected["method"], "url": expected["url"]}
+    assert "morrison-2020-offloading" not in rows
+    assert rows["hu-luo-fleming-2019-metamemory-offloading"]["title"] == (
+        "A role for metamemory in cognitive offloading"
+    )
+    assert rows["hu-luo-fleming-2019-metamemory-offloading"]["role"] == (
+        "External-memory and cognitive-offloading anchor"
+    )
 
 
 def test_paper_repo_affordance_pairs() -> None:

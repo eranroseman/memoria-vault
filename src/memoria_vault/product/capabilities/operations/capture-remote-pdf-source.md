@@ -12,7 +12,10 @@ allowed_network:
 - https://www.ncbi.nlm.nih.gov/pmc/utils/oa/
 - https://ftp.ncbi.nlm.nih.gov/pub/pmc/oa_pdf/
 - https://ftp.ncbi.nlm.nih.gov/pub/pmc/oa_package/
-- https://www.frontiersin.org/articles/
+- https://www.frontiersin.org/journals/psychology/articles/
+- https://www.frontiersin.org/journals/education/articles/
+- https://www.frontiersin.org/journals/artificial-intelligence/articles/
+- https://discovery.ucl.ac.uk/id/eprint/10077673/1/
 - https://aclanthology.org/
 - https://sociologica.unibo.it/article/download/
 - https://export.arxiv.org/pdf/

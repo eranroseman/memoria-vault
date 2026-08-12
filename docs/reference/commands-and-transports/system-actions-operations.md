@@ -93,13 +93,26 @@ export, or egress policy.
 | Update Work | worker operation `update-work` | Applies PI-owned Work metadata, standing, and classification changes to the SQLite catalog row, then records the journal event through the worker request queue. |
 | Capture URL source | worker operation `capture-url-source` + runtime helper (`stage_url_source`) | Fetches one URL, preserves raw HTML, extracts plain text with stdlib `HTMLParser`, and writes an unchecked catalog row plus source-content blobs. |
 | Capture PDF source | worker operation `capture-pdf-source` + runtime helper (`stage_pdf_source`) | PyMuPDF is a standard runtime dependency. Before parsing, `stage_pdf_source()` rejects raw PDF input larger than 32 MiB; it also rejects documents above 1,000 pages or more than 8 MiB of extracted UTF-8 text before it writes an unchecked catalog row plus source-content blobs. |
-| Capture remote PDF source | PI-only worker operation `capture-remote-pdf-source` + `resolve_fetch` / `stage_pdf_source` | Validates an imported fetch descriptor and metadata separately, authorizes every resolver URL against the seven-prefix PMC/Frontiers/ACL/Sociologica/arXiv policy, then stages the resolved PDF. It accepts no caller-supplied PDF bytes and is not a new CLI command. |
+| Capture remote PDF source | PI-only worker operation `capture-remote-pdf-source` + `resolve_fetch` / `stage_pdf_source` | Validates an imported fetch descriptor and metadata separately, authorizes every resolved URL against the finite policy, refuses redirects, then applies the standard 32 MiB / 1,000-page / 8 MiB PDF boundary. It accepts no caller-supplied PDF bytes and is not a new CLI command. |
 | Seed corpus install | PI-only worker operation `seed-install` + the local PDF capture seam | Iterates the shipped seed-corpus manifest, skips rows already present in the catalog, downloads each remaining row keyless over https under the manifest's finite network allowlist, and stages the bytes as unchecked catalog Work rows. Onboarding is a PI action; agent surfaces cannot trigger these fetches. |
 | Regenerate bibliography | runtime capture helper (`write_references_bib`) / worker operation `regenerate-references-bib` | Rebuilds `bibliography.bib` from checked SQLite catalog rows and can commit the projection plus journal event through the worker. |
 | Capture trace | trusted writer + journal | Records `run`, `derived`, and `check-fired` events for the catalog Work row; raw blobs stay gitignored and are referenced by path + hash. |
 | Extract typed edge candidates | trusted writer materialization (`commit_writer_changes`) | Parses explicit argument-class body links such as `[[supports::notes/x.md]]` into unchecked `edge-candidate` attention prompts in the same commit, neutralizing copied title/target prose; bare `[[wikilink]]` body links create no typed edge candidate at all. |
 | Create Concept | engine API (`write_new_concept`) + worker operation `create-concept` | Queues PI or CLI-agent `note`/`hub`/`project` creation through the request envelope, validates and commits the Concept through the trusted writer, and leaves it `unchecked` until a later `check` operation passes. |
 | Foreign-write quarantine | worker operation `trace-integrity-scan` + trusted writer (`quarantine_untraced_from_status` / `quarantine_untraced`) | Scans git-status or explicit bundle paths, moves untraced bundle files into `.memoria/quarantine/`, and records a failed `trace-integrity` check event. |
+
+The remote-PDF policy authorizes exactly these ten prefixes:
+
+- `https://www.ncbi.nlm.nih.gov/pmc/utils/oa/`
+- `https://ftp.ncbi.nlm.nih.gov/pub/pmc/oa_pdf/`
+- `https://ftp.ncbi.nlm.nih.gov/pub/pmc/oa_package/`
+- `https://www.frontiersin.org/journals/psychology/articles/`
+- `https://www.frontiersin.org/journals/education/articles/`
+- `https://www.frontiersin.org/journals/artificial-intelligence/articles/`
+- `https://discovery.ucl.ac.uk/id/eprint/10077673/1/`
+- `https://aclanthology.org/`
+- `https://sociologica.unibo.it/article/download/`
+- `https://export.arxiv.org/pdf/`
 
 ## Operation runner (`memoria_vault.runtime.operations`)
 

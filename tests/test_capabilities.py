@@ -24,6 +24,19 @@ from tests.helpers import ROOT, call_with_context, git, init_git
 
 pytestmark = pytest.mark.contract
 
+EXPECTED_REMOTE_PDF_NETWORK = [
+    "https://www.ncbi.nlm.nih.gov/pmc/utils/oa/",
+    "https://ftp.ncbi.nlm.nih.gov/pub/pmc/oa_pdf/",
+    "https://ftp.ncbi.nlm.nih.gov/pub/pmc/oa_package/",
+    "https://www.frontiersin.org/journals/psychology/articles/",
+    "https://www.frontiersin.org/journals/education/articles/",
+    "https://www.frontiersin.org/journals/artificial-intelligence/articles/",
+    "https://discovery.ucl.ac.uk/id/eprint/10077673/1/",
+    "https://aclanthology.org/",
+    "https://sociologica.unibo.it/article/download/",
+    "https://export.arxiv.org/pdf/",
+]
+
 
 def write_capability_index(vault: Path, *args, **kwargs):
     return call_with_context(_write_capability_index, vault, *args, **kwargs)
@@ -46,15 +59,8 @@ def test_capability_index_renderer_covers_shipped_operations() -> None:
         "https://api.unpaywall.org/",
         "https://api.semanticscholar.org/",
     ]
-    assert rows["capture-remote-pdf-source"]["allowed_network"] == [
-        "https://www.ncbi.nlm.nih.gov/pmc/utils/oa/",
-        "https://ftp.ncbi.nlm.nih.gov/pub/pmc/oa_pdf/",
-        "https://ftp.ncbi.nlm.nih.gov/pub/pmc/oa_package/",
-        "https://www.frontiersin.org/articles/",
-        "https://aclanthology.org/",
-        "https://sociologica.unibo.it/article/download/",
-        "https://export.arxiv.org/pdf/",
-    ]
+    assert rows["capture-remote-pdf-source"]["allowed_network"] == EXPECTED_REMOTE_PDF_NETWORK
+    assert rows["seed-install"]["allowed_network"] == EXPECTED_REMOTE_PDF_NETWORK
     assert rows["compile-source-digest"]["trust"]["source"] == "product"
     assert rows["compile-source-digest"]["trust"]["sha256"].startswith("sha256:")
     assert rows["compile-source-digest"]["path"].startswith("product/capabilities/operations/")

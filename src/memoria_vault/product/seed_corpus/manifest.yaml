@@ -11,8 +11,8 @@
   license: CC BY 4.0
   license_evidence: "https://www.frontiersin.org/articles/10.3389/fpsyg.2018.01483/full"
   fetch:
-    method: pmc-oa
-    url: "https://www.ncbi.nlm.nih.gov/pmc/utils/oa/oa.fcgi?id=PMC6099118"
+    method: pdf-url
+    url: "https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2018.01483/pdf"
   role: "Tension pair A: desirable difficulty effects shrink or reverse for high-element-interactivity material"
 
 - id: moreira-2019-retrieval-practice
@@ -22,7 +22,7 @@
   license_evidence: "https://www.frontiersin.org/articles/10.3389/feduc.2019.00005/full"
   fetch:
     method: pdf-url
-    url: "https://www.frontiersin.org/articles/10.3389/feduc.2019.00005/pdf"
+    url: "https://www.frontiersin.org/journals/education/articles/10.3389/feduc.2019.00005/pdf"
   role: "Tension pair B: retrieval practice benefits complex authentic classroom material"
 
 - id: settles-2016-spaced-repetition
@@ -36,15 +36,15 @@
   role: "Extends the testing effect to deployed adaptive scheduling"
   repo: "https://github.com/duolingo/halflife-regression"
 
-- id: morrison-2020-offloading
-  title: "Offloading items from memory: individual differences in cognitive offloading in a short-term memory task"
-  identifier: "doi:10.1186/s41235-019-0201-4"
+- id: hu-luo-fleming-2019-metamemory-offloading
+  title: "A role for metamemory in cognitive offloading"
+  identifier: "doi:10.1016/j.cognition.2019.104012"
   license: CC BY 4.0
-  license_evidence: "https://cognitiveresearchjournal.springeropen.com/articles/10.1186/s41235-019-0201-4"
+  license_evidence: "https://discovery.ucl.ac.uk/id/eprint/10077673/"
   fetch:
-    method: pmc-oa
-    url: "https://www.ncbi.nlm.nih.gov/pmc/utils/oa/oa.fcgi?id=PMC6942100"
-  role: "External-memory/offloading anchor (registered report); supports the card-index row"
+    method: pdf-url
+    url: "https://discovery.ucl.ac.uk/id/eprint/10077673/1/Fleming_A%20role%20for%20metamemory%20in%20cognitive%20offloading_VoR.pdf"
+  role: "External-memory and cognitive-offloading anchor"
 
 - id: ose-askvik-2020-handwriting
   title: "The Importance of Cursive Handwriting Over Typewriting for Learning in the Classroom: A High-Density EEG Study of 12-Year-Old Children and Young Adults"
@@ -52,8 +52,8 @@
   license: CC BY 4.0
   license_evidence: "https://www.frontiersin.org/articles/10.3389/fpsyg.2020.01810/full"
   fetch:
-    method: pmc-oa
-    url: "https://www.ncbi.nlm.nih.gov/pmc/utils/oa/oa.fcgi?id=PMC7399101"
+    method: pdf-url
+    url: "https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2020.01810/pdf"
   role: "Note-taking medium (encoding vs storage); in tension with the offloading row's storage framing"
 
 - id: schmidt-2018-luhmann-card-index
@@ -72,8 +72,8 @@
   license: CC BY 4.0
   license_evidence: "https://www.frontiersin.org/articles/10.3389/frai.2021.645516/full"
   fetch:
-    method: pmc-oa
-    url: "https://www.ncbi.nlm.nih.gov/pmc/utils/oa/oa.fcgi?id=PMC8680349"
+    method: pdf-url
+    url: "https://www.frontiersin.org/journals/artificial-intelligence/articles/10.3389/frai.2021.645516/pdf"
   role: "Toulmin argumentation operationalized in an agent; bridges to the OpenScholar row"
 
 - id: asai-2024-openscholar

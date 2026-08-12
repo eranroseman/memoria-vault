@@ -128,7 +128,9 @@ def test_worker_capture_pdf_source_fails_before_partial_write(tmp_path: Path, mo
     assert not (vault / ".memoria/journal").exists()
 
 
-REMOTE_PDF_URL = "https://www.frontiersin.org/articles/10.3389/feduc.2019.00005/pdf"
+REMOTE_PDF_URL = (
+    "https://www.frontiersin.org/journals/education/articles/10.3389/feduc.2019.00005/pdf"
+)
 
 
 def _remote_pdf_payload(url: str = REMOTE_PDF_URL) -> dict:

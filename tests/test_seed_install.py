@@ -14,6 +14,7 @@ from contextlib import redirect_stderr, redirect_stdout
 from http.client import IncompleteRead
 from pathlib import Path
 from urllib.error import HTTPError
+from urllib.request import Request
 
 import pytest
 
@@ -30,7 +31,7 @@ from tests.helpers import (
 pytestmark = pytest.mark.contract
 
 PDF_BYTES = b"%PDF-1.4 seed fixture bytes\n"
-PDF_URL = "https://www.frontiersin.org/articles/10.3389/feduc.2019.00005/pdf"
+PDF_URL = "https://www.frontiersin.org/journals/education/articles/10.3389/feduc.2019.00005/pdf"
 PMC_RECORD_URL = "https://www.ncbi.nlm.nih.gov/pmc/utils/oa/oa.fcgi?id=PMC6099118"
 PMC_PDF_URL = "https://ftp.ncbi.nlm.nih.gov/pub/pmc/oa_pdf/aa/bb/PMC6099118.pdf"
 PMC_TGZ_URL = "https://ftp.ncbi.nlm.nih.gov/pub/pmc/oa_package/aa/bb/PMC6099118.tar.gz"
@@ -135,6 +136,30 @@ def test_resolve_fetch_downloads_a_direct_pdf_after_authorization() -> None:
     assert opener.calls == [PDF_URL]
 
 
+def test_default_opener_sends_a_transparent_user_agent_without_redirects(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class FakeOpener:
+        def open(self, request: Request, *, timeout: float) -> _FakeResponse:
+            assert isinstance(request, Request)
+            assert request.full_url == PDF_URL
+            assert request.get_header("User-agent") == (
+                "Memoria/0.1 (+https://github.com/eranroseman/memoria-vault)"
+            )
+            assert timeout == 30.0
+            return _FakeResponse(PDF_BYTES)
+
+    def fake_build_opener(*handlers: object) -> FakeOpener:
+        assert len(handlers) == 1
+        assert isinstance(handlers[0], seed_install._NoRedirect)
+        return FakeOpener()
+
+    monkeypatch.setattr(seed_install, "build_opener", fake_build_opener)
+
+    with seed_install._default_opener(PDF_URL) as response:
+        assert response.read() == PDF_BYTES
+
+
 def test_resolve_fetch_requires_an_explicit_authorizer() -> None:
     with pytest.raises(TypeError):
         seed_install.resolve_fetch(_pdf_row(), opener=_poisoned_opener)  # type: ignore[call-arg]
@@ -160,7 +185,9 @@ def test_resolve_fetch_authorizes_before_opening_a_direct_pdf() -> None:
 
 
 def test_resolve_fetch_canonicalizes_a_default_port_and_host_before_authorizing() -> None:
-    source_url = "https://WWW.FRONTIERSIN.ORG:443/articles/10.3389/feduc.2019.00005/pdf"
+    source_url = (
+        "https://WWW.FRONTIERSIN.ORG:443/journals/education/articles/10.3389/feduc.2019.00005/pdf"
+    )
     canonical_url = PDF_URL
     opener = _opener({canonical_url: PDF_BYTES})
     authorized: list[str] = []
@@ -883,16 +910,7 @@ def test_memoria_seed_install_cli_end_to_end_offline(tmp_path, capsys, monkeypat
 
     workspace = init_cli_workspace(tmp_path, capsys)
     _patch_pdf_pages(monkeypatch)
-    responses: dict[str, bytes] = {}
-    for row in load_seed_manifest():
-        url = row["fetch"]["url"]
-        if row["fetch"]["method"] == "pmc-oa":
-            pmcid = url.rsplit("=", 1)[-1]
-            href = f"ftp://ftp.ncbi.nlm.nih.gov/pub/pmc/oa_pdf/{pmcid}.pdf"
-            responses[url] = _pmc_xml(("pdf", href))
-            responses[f"https://ftp.ncbi.nlm.nih.gov/pub/pmc/oa_pdf/{pmcid}.pdf"] = PDF_BYTES
-        else:
-            responses[url] = PDF_BYTES
+    responses = {row["fetch"]["url"]: PDF_BYTES for row in load_seed_manifest()}
     monkeypatch.setattr("memoria_vault.runtime.seed_install._default_opener", _opener(responses))
 
     rc = main(["seed", "install", "--workspace", str(workspace), "--json"])
