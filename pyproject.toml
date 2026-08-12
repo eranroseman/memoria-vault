@@ -118,7 +118,7 @@ docstring-code-format = true
 # Deliberately OFF: E1/E2/E3, E501, COM, ISC, Q -- the formatter owns layout
 # (COM/ISC actively conflict with it). T20 (print is intentional in CLI), LOG/G
 # (no logging), PTH (explicit filesystem primitives and two intentional Path('.')
-# defaults in structural-impact logic and a backup test are clearer at their sites),
+# uses in structural-impact logic and a backup test are clearer at their sites),
 # ANN/D (docstring presence is a judgement call, not a lint gate -- see AGENTS.md
 # §Python style), SIM/PERF/FURB
 # (opinionated terseness-over-clarity refactors).
