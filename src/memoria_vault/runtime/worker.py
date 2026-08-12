@@ -16,6 +16,7 @@ from memoria_vault.runtime import state
 from memoria_vault.runtime.jsonl import append_jsonl
 from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.paths import normalize_path
+from memoria_vault.runtime.seed_install import SeedInstallAllFailed, seed_install
 from memoria_vault.runtime.time import now_iso
 from memoria_vault.runtime.trusted_writer import (
     OperationContext,
@@ -232,6 +233,17 @@ def _run_claimed_job(vault: Path, job: dict[str, Any], machine: str | None) -> d
         job = {**job, "bound_context": operation_context_record(context)}
         state.set_request_running(vault, context.request_id, job)
         result = _run_job(vault, job, context)
+    except SeedInstallAllFailed as exc:
+        job.update(
+            {
+                "status": "failed",
+                "failed_at": now_iso(),
+                "error": str(exc),
+                "diagnostics": exc.diagnostics,
+            }
+        )
+        _finish_job(vault, "failed", job)
+        return job
     except Exception as exc:  # noqa: BLE001 -- worker records failed jobs instead of losing them.
         job.update({"status": "failed", "failed_at": now_iso(), "error": str(exc)})
         _finish_job(vault, "failed", job)
@@ -1508,7 +1520,6 @@ def _op_seed_install(
     policy: dict[str, Any],
 ) -> dict[str, Any]:
     from memoria_vault.runtime.operations import require_allowed_network
-    from memoria_vault.runtime.seed_install import seed_install
 
     # The fetch is never implicit. Every other network-touching operation
     # validates its payload before reaching the resolver, so a generic

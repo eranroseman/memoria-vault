@@ -10,6 +10,7 @@ import io
 import json
 import re
 import tarfile
+from contextlib import redirect_stderr, redirect_stdout
 from http.client import IncompleteRead
 from pathlib import Path
 from urllib.error import HTTPError
@@ -17,6 +18,7 @@ from urllib.error import HTTPError
 import pytest
 
 from memoria_vault.runtime import seed_install, state
+from memoria_vault.runtime.content_security import neutralize_untrusted_markdown
 from tests.helpers import (
     call_with_context,
     copy_memoria_dirs,
@@ -748,16 +750,24 @@ def test_seed_install_continues_past_a_failed_row(tmp_path, monkeypatch) -> None
     assert state.catalog_source(vault, good["id"]) is not None
 
 
-def test_seed_install_fails_only_when_zero_rows_present(tmp_path, monkeypatch) -> None:
+def test_seed_install_all_failed_raises_bounded_diagnostics(tmp_path, monkeypatch) -> None:
     vault = _workspace(tmp_path)
-    _patch_pdf_pages(monkeypatch)
-    row = _seed_row()
-    opener = _opener({PDF_URL: b"<html>outage page</html>"})
+    first, second = _seed_row(), _seed_row()
+    second["id"] = "second-failure"
+    hostile = "<img src=x onerror=alert(1)> " + "é" * 2_000
 
-    with pytest.raises(ValueError, match="zero rows present") as exc:
-        _run_seed_install(vault, rows=[row], opener=opener)
+    def fail(row, **_kwargs):
+        raise ValueError(f"{row['id']}: {hostile}")
 
-    assert row["id"] in str(exc.value)
+    monkeypatch.setattr(seed_install, "resolve_fetch", fail)
+    with pytest.raises(seed_install.SeedInstallAllFailed) as exc_info:
+        _run_seed_install(vault, rows=[first, second])
+
+    diagnostics = exc_info.value.diagnostics
+    assert diagnostics["admitted"] == []
+    assert diagnostics["skipped"] == []
+    assert [entry["id"] for entry in diagnostics["failed"]] == [first["id"], second["id"]]
+    assert all(len(entry["error"].encode("utf-8")) <= 1_024 for entry in diagnostics["failed"])
     assert _telemetry_steps(vault) == []
 
 
@@ -904,6 +914,64 @@ def test_memoria_seed_install_cli_end_to_end_offline(tmp_path, capsys, monkeypat
     assert rc == 0
     assert payload["result"]["admitted"] == []
     assert sorted(payload["result"]["skipped"]) == all_ids
+
+
+def test_seed_install_all_failed_cli_and_request_show_preserve_safe_diagnostics(
+    tmp_path, capsys, monkeypatch
+) -> None:
+    from memoria_vault.cli import main
+
+    workspace = init_cli_workspace(tmp_path, capsys)
+    first, second = _seed_row(), _seed_row()
+    second["id"] = "second-failure"
+    hostile = "<img src=x onerror=alert(1)> " + "é" * 2_000
+
+    monkeypatch.setattr(
+        "memoria_vault.runtime.seed_install.load_seed_manifest",
+        lambda: [first, second],
+    )
+
+    def fail(row, **_kwargs):
+        raise ValueError(f"{row['id']}: {hostile}")
+
+    monkeypatch.setattr("memoria_vault.runtime.seed_install.resolve_fetch", fail)
+
+    rc = main(["seed", "install", "--workspace", str(workspace), "--json"])
+    payload = json.loads(capsys.readouterr().out)
+    assert rc == 1
+    diagnostics = payload["result"]["diagnostics"]
+    assert diagnostics["admitted"] == []
+    assert diagnostics["skipped"] == []
+    assert [entry["id"] for entry in diagnostics["failed"]] == [first["id"], second["id"]]
+
+    rc = main(
+        [
+            "request",
+            "show",
+            payload["job"]["request_id"],
+            "--workspace",
+            str(workspace),
+            "--json",
+        ]
+    )
+    request_payload = json.loads(capsys.readouterr().out)
+    assert rc == 0
+    request_failed = request_payload["request"]["job"]["diagnostics"]["failed"]
+    assert [entry["id"] for entry in request_failed] == [first["id"], second["id"]]
+    assert [entry["error"] for entry in request_failed] == [
+        neutralize_untrusted_markdown(entry["error"]) for entry in diagnostics["failed"]
+    ]
+
+    stream = io.StringIO()
+    with redirect_stdout(stream), redirect_stderr(stream):
+        rc = main(["seed", "install", "--workspace", str(workspace)])
+    text = stream.getvalue()
+    assert rc == 1
+    first_line = f"failed row {first['id']}:"
+    second_line = f"failed row {second['id']}:"
+    assert first_line in text
+    assert second_line in text
+    assert text.index(first_line) < text.index(second_line) < text.index("FAILED:")
 
 
 def test_seed_install_worker_authorizes_every_url_against_the_operation_policy(
