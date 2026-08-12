@@ -85,10 +85,7 @@ module.exports = class MemoriaObsidianPlugin extends Plugin {
       name: "Memoria: Open attention pane",
       callback: () => this.activateAttentionView(),
     });
-    this.registerView(
-      VIEW_TYPE_EVIDENCE_REVIEW,
-      (leaf) => new EvidenceReviewView(leaf, this),
-    );
+    this.registerView(VIEW_TYPE_EVIDENCE_REVIEW, (leaf) => new EvidenceReviewView(leaf, this));
     this.addCommand({
       id: "open-evidence-review",
       name: "Memoria: Open evidence review",
@@ -161,9 +158,7 @@ module.exports = class MemoriaObsidianPlugin extends Plugin {
       callback: () => this.graduateScratchEdges(),
     });
     if (this.app.workspace.on && this.registerEvent) {
-      this.registerEvent(
-        this.app.workspace.on("active-leaf-change", () => this.updateForkBadge()),
-      );
+      this.registerEvent(this.app.workspace.on("active-leaf-change", () => this.updateForkBadge()));
     }
     this.renderPill();
   }
@@ -256,7 +251,9 @@ module.exports = class MemoriaObsidianPlugin extends Plugin {
   }
 
   async stopSession() {
-    const duration = this.sessionStartedAt ? Math.max(1, (Date.now() - this.sessionStartedAt) / 1000) : 1;
+    const duration = this.sessionStartedAt
+      ? Math.max(1, (Date.now() - this.sessionStartedAt) / 1000)
+      : 1;
     await this.recordEvent(
       this.baseEvent("session.stopped", {
         workflow: "session",
@@ -349,9 +346,7 @@ module.exports = class MemoriaObsidianPlugin extends Plugin {
       );
     }
     const skipped = (fork.unresolved || []).length;
-    new Notice(
-      `Memoria queued ${added.length} link edge(s); skipped ${skipped} unresolved.`,
-    );
+    new Notice(`Memoria queued ${added.length} link edge(s); skipped ${skipped} unresolved.`);
   }
 
   async recordDisposition(fields) {
@@ -383,7 +378,11 @@ module.exports = class MemoriaObsidianPlugin extends Plugin {
         this.previewShown = true;
         new Notice(`Memoria event preview: ${event.event_type}`);
       }
-      await this.postOperation("empirical-event-record", event, `empirical-event:${event.event_id}`);
+      await this.postOperation(
+        "empirical-event-record",
+        event,
+        `empirical-event:${event.event_id}`,
+      );
       this.renderPill();
     } catch (error) {
       await this.queueEvent(event);
@@ -761,8 +760,7 @@ class AttentionView extends ItemView {
       });
       return;
     }
-    const blocks =
-      this.view && this.view.version === "view-spec.v1" ? this.view.blocks || [] : [];
+    const blocks = this.view && this.view.version === "view-spec.v1" ? this.view.blocks || [] : [];
     this.cards = sortCards(blocks.filter((block) => block && block.kind === "card"));
     this.extras = blocks.filter((block) => !block || block.kind !== "card");
     this.selected = Math.max(0, Math.min(this.selected, this.cards.length - 1));
@@ -836,10 +834,7 @@ class AttentionView extends ItemView {
     const actionEl = event.target.closest("button[data-operation-id]");
     if (actionEl) {
       const payload = JSON.parse(actionEl.getAttribute("data-payload") || "{}");
-      await this.plugin.enqueueNamedOperation(
-        actionEl.getAttribute("data-operation-id"),
-        payload,
-      );
+      await this.plugin.enqueueNamedOperation(actionEl.getAttribute("data-operation-id"), payload);
       await this.refresh();
       return;
     }
@@ -915,8 +910,7 @@ class EvidenceReviewView extends ItemView {
       });
       return;
     }
-    const blocks =
-      this.view && this.view.version === "view-spec.v1" ? this.view.blocks || [] : [];
+    const blocks = this.view && this.view.version === "view-spec.v1" ? this.view.blocks || [] : [];
     // Server queue order is the review order (spec §6) — never re-sorted.
     this.cards = blocks.filter(isEvidenceCard);
     this.extras = blocks.filter((block) => !isEvidenceCard(block));
@@ -1002,10 +996,7 @@ class EvidenceReviewView extends ItemView {
     const actionEl = event.target.closest("button[data-operation-id]");
     if (actionEl) {
       const payload = JSON.parse(actionEl.getAttribute("data-payload") || "{}");
-      await this.plugin.enqueueNamedOperation(
-        actionEl.getAttribute("data-operation-id"),
-        payload,
-      );
+      await this.plugin.enqueueNamedOperation(actionEl.getAttribute("data-operation-id"), payload);
       // Edit records "I will repair the marker", which is work in the draft:
       // the deep link is how that decision reaches the block it is about.
       // No `expandedRef` guard: an action button only exists inside the
@@ -1086,29 +1077,34 @@ class RelateModal extends Modal {
     });
     new Setting(contentEl)
       .setName("Warrant (optional)")
-      .setDesc("A `warrant` relation links a license note; Warrant text annotates the selected edge.")
+      .setDesc(
+        "A `warrant` relation links a license note; Warrant text annotates the selected edge.",
+      )
       .addTextArea((text) => text.onChange((value) => (this.warrant = value)));
     new Setting(contentEl).addButton((button) =>
-      button.setButtonText("Queue edge").setCta().onClick(async () => {
-        let operation;
-        try {
-          operation = buildRelateOperation({
-            fromPath: this.fromPath,
-            relation: this.relation,
-            toPath: this.toPath,
-            warrant: this.warrant,
-            roster,
-          });
-        } catch (error) {
-          new Notice(error.message);
-          return;
-        }
-        // A refused enqueue keeps the form standing: the request the PI typed
-        // is still the request they want, and retyping it is the cost.
-        if (await this.plugin.enqueueNamedOperation(operation.operationId, operation.payload)) {
-          this.close();
-        }
-      }),
+      button
+        .setButtonText("Queue edge")
+        .setCta()
+        .onClick(async () => {
+          let operation;
+          try {
+            operation = buildRelateOperation({
+              fromPath: this.fromPath,
+              relation: this.relation,
+              toPath: this.toPath,
+              warrant: this.warrant,
+              roster,
+            });
+          } catch (error) {
+            new Notice(error.message);
+            return;
+          }
+          // A refused enqueue keeps the form standing: the request the PI typed
+          // is still the request they want, and retyping it is the cost.
+          if (await this.plugin.enqueueNamedOperation(operation.operationId, operation.payload)) {
+            this.close();
+          }
+        }),
     );
   }
 }
@@ -1147,15 +1143,13 @@ class MemoriaSettingTab extends PluginSettingTab {
   display() {
     const { containerEl } = this;
     containerEl.empty();
-    new Setting(containerEl)
-      .setName("Enable collection")
-      .addToggle((toggle) =>
-        toggle.setValue(this.plugin.settings.enabled).onChange(async (value) => {
-          this.plugin.settings.enabled = value;
-          await this.plugin.saveSettings();
-          this.plugin.renderPill();
-        }),
-      );
+    new Setting(containerEl).setName("Enable collection").addToggle((toggle) =>
+      toggle.setValue(this.plugin.settings.enabled).onChange(async (value) => {
+        this.plugin.settings.enabled = value;
+        await this.plugin.saveSettings();
+        this.plugin.renderPill();
+      }),
+    );
     new Setting(containerEl)
       .setName("Engine command")
       .setDesc("Command used to reach the Memoria CLI (e.g. `wsl memoria` on WSL2 hosts).")
@@ -1165,22 +1159,18 @@ class MemoriaSettingTab extends PluginSettingTab {
           await this.plugin.saveSettings();
         }),
       );
-    new Setting(containerEl)
-      .setName("Default project ID")
-      .addText((text) =>
-        text.setValue(this.plugin.settings.defaultProjectId).onChange(async (value) => {
-          this.plugin.settings.defaultProjectId = value.trim();
-          await this.plugin.saveSettings();
-        }),
-      );
-    new Setting(containerEl)
-      .setName("Retention days")
-      .addText((text) =>
-        text.setValue(String(this.plugin.settings.retentionDays)).onChange(async (value) => {
-          this.plugin.settings.retentionDays = Number(value) || DEFAULT_SETTINGS.retentionDays;
-          await this.plugin.saveSettings();
-        }),
-      );
+    new Setting(containerEl).setName("Default project ID").addText((text) =>
+      text.setValue(this.plugin.settings.defaultProjectId).onChange(async (value) => {
+        this.plugin.settings.defaultProjectId = value.trim();
+        await this.plugin.saveSettings();
+      }),
+    );
+    new Setting(containerEl).setName("Retention days").addText((text) =>
+      text.setValue(String(this.plugin.settings.retentionDays)).onChange(async (value) => {
+        this.plugin.settings.retentionDays = Number(value) || DEFAULT_SETTINGS.retentionDays;
+        await this.plugin.saveSettings();
+      }),
+    );
   }
 }
 
@@ -1196,26 +1186,41 @@ class EventModal extends Modal {
     contentEl.empty();
     contentEl.addClass("memoria-event-modal");
     contentEl.createEl("h2", { text: "Memoria event" });
-    const fields = { workflow: "gap", decision: "defer", outcome: "fallback", reason_code: "other" };
+    const fields = {
+      workflow: "gap",
+      decision: "defer",
+      outcome: "fallback",
+      reason_code: "other",
+    };
     new Setting(contentEl)
       .setName("Workflow")
-      .addText((text) => text.setValue(fields.workflow).onChange((value) => (fields.workflow = value)));
+      .addText((text) =>
+        text.setValue(fields.workflow).onChange((value) => (fields.workflow = value)),
+      );
     if (this.eventType === "disposition.recorded") {
       new Setting(contentEl)
         .setName("Decision")
-        .addText((text) => text.setValue(fields.decision).onChange((value) => (fields.decision = value)));
+        .addText((text) =>
+          text.setValue(fields.decision).onChange((value) => (fields.decision = value)),
+        );
     }
     if (this.eventType === "fallback.recorded") {
       new Setting(contentEl)
         .setName("Outcome")
-        .addText((text) => text.setValue(fields.outcome).onChange((value) => (fields.outcome = value)));
+        .addText((text) =>
+          text.setValue(fields.outcome).onChange((value) => (fields.outcome = value)),
+        );
     }
     new Setting(contentEl)
       .setName("Reason code")
-      .addText((text) => text.setValue(fields.reason_code).onChange((value) => (fields.reason_code = value)));
-    new Setting(contentEl)
-      .addButton((button) =>
-        button.setButtonText("Record").setCta().onClick(async () => {
+      .addText((text) =>
+        text.setValue(fields.reason_code).onChange((value) => (fields.reason_code = value)),
+      );
+    new Setting(contentEl).addButton((button) =>
+      button
+        .setButtonText("Record")
+        .setCta()
+        .onClick(async () => {
           if (this.eventType === "disposition.recorded") {
             await this.plugin.recordDisposition(fields);
           } else {
@@ -1223,7 +1228,7 @@ class EventModal extends Modal {
           }
           this.close();
         }),
-      );
+    );
   }
 }
 
@@ -1241,19 +1246,23 @@ class OperationModal extends Modal {
     contentEl.createEl("h2", { text: "Queue Memoria operation" });
     new Setting(contentEl)
       .setName("Operation ID")
-      .addText((text) => text.setValue(operationId).onChange((value) => (operationId = value.trim())));
+      .addText((text) =>
+        text.setValue(operationId).onChange((value) => (operationId = value.trim())),
+      );
     new Setting(contentEl)
       .setName("Payload JSON")
       .addTextArea((text) => text.setValue(payloadText).onChange((value) => (payloadText = value)));
-    new Setting(contentEl)
-      .addButton((button) =>
-        button.setButtonText("Queue").setCta().onClick(async () => {
+    new Setting(contentEl).addButton((button) =>
+      button
+        .setButtonText("Queue")
+        .setCta()
+        .onClick(async () => {
           const payload = JSON.parse(payloadText || "{}");
           if (await this.plugin.enqueueNamedOperation(operationId, payload)) {
             this.close();
           }
         }),
-      );
+    );
   }
 }
 
@@ -1272,10 +1281,13 @@ class ForkNameModal extends Modal {
       .setName("Scratch name")
       .addText((text) => text.setValue(name).onChange((value) => (name = value.trim())));
     new Setting(contentEl).addButton((button) =>
-      button.setButtonText("Queue fork").setCta().onClick(async () => {
-        await this.onSubmit(name);
-        this.close();
-      }),
+      button
+        .setButtonText("Queue fork")
+        .setCta()
+        .onClick(async () => {
+          await this.onSubmit(name);
+          this.close();
+        }),
     );
   }
 }

@@ -17,9 +17,12 @@ function loudnessClass(block) {
 }
 
 function unknownBlock(block) {
-  return node("div", "memoria-block-unknown", `Unknown block type: ${String(block && block.kind)}`, [
-    node("pre", "memoria-block-unknown-raw", JSON.stringify(block)),
-  ]);
+  return node(
+    "div",
+    "memoria-block-unknown",
+    `Unknown block type: ${String(block && block.kind)}`,
+    [node("pre", "memoria-block-unknown-raw", JSON.stringify(block))],
+  );
 }
 
 function renderBlock(block) {
@@ -82,7 +85,9 @@ function renderCard(block) {
   }
   const tipping = [];
   if (block.tipped_by) {
-    tipping.push(node("span", "memoria-card-tipped-label", "tipped by: " + String(block.tipped_by)));
+    tipping.push(
+      node("span", "memoria-card-tipped-label", "tipped by: " + String(block.tipped_by)),
+    );
   }
   if (block.certainty) {
     tipping.push(node("span", "memoria-certainty-chip", String(block.certainty)));

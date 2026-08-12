@@ -93,7 +93,9 @@ var require_schema = __commonJS({
       const eventType = stringField(payload, "event_type");
       const requiredForType = EVENT_REQUIRED_FIELDS[eventType];
       if (!requiredForType) {
-        throw new Error(`event_type must be one of: ${Object.keys(EVENT_REQUIRED_FIELDS).sort().join(", ")}`);
+        throw new Error(
+          `event_type must be one of: ${Object.keys(EVENT_REQUIRED_FIELDS).sort().join(", ")}`
+        );
       }
       for (const field of [...BASE_REQUIRED_FIELDS, ...requiredForType]) {
         if (missing(payload[field])) {
@@ -109,7 +111,9 @@ var require_schema = __commonJS({
           event[field] = stringField(payload, field);
         }
       }
-      if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(event.event_id)) {
+      if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+        event.event_id
+      )) {
         throw new Error("event_id must be a UUID");
       }
       if (Number.isNaN(Date.parse(event.timestamp)) || !/(Z|[+-]\d\d:\d\d)$/.test(event.timestamp)) {
@@ -328,7 +332,11 @@ var require_pill = __commonJS({
         };
       }
       if (missingCredential) {
-        return { state: "key-needed", text: `Memoria \xB7 ${openCount} open \xB7 key needed`, tone: "accent" };
+        return {
+          state: "key-needed",
+          text: `Memoria \xB7 ${openCount} open \xB7 key needed`,
+          tone: "accent"
+        };
       }
       return { state: "connected", text: `Memoria \xB7 ${openCount} open`, tone: "green" };
     }
@@ -360,9 +368,12 @@ var require_viewspec = __commonJS({
       return value ? ` memoria-loudness-${value}` : "";
     }
     function unknownBlock(block) {
-      return node("div", "memoria-block-unknown", `Unknown block type: ${String(block && block.kind)}`, [
-        node("pre", "memoria-block-unknown-raw", JSON.stringify(block))
-      ]);
+      return node(
+        "div",
+        "memoria-block-unknown",
+        `Unknown block type: ${String(block && block.kind)}`,
+        [node("pre", "memoria-block-unknown-raw", JSON.stringify(block))]
+      );
     }
     function renderBlock2(block) {
       if (!block || typeof block !== "object") {
@@ -423,7 +434,9 @@ var require_viewspec = __commonJS({
       }
       const tipping = [];
       if (block.tipped_by) {
-        tipping.push(node("span", "memoria-card-tipped-label", "tipped by: " + String(block.tipped_by)));
+        tipping.push(
+          node("span", "memoria-card-tipped-label", "tipped by: " + String(block.tipped_by))
+        );
       }
       if (block.certainty) {
         tipping.push(node("span", "memoria-certainty-chip", String(block.certainty)));
@@ -624,10 +637,7 @@ module.exports = class MemoriaObsidianPlugin extends Plugin {
       name: "Memoria: Open attention pane",
       callback: () => this.activateAttentionView()
     });
-    this.registerView(
-      VIEW_TYPE_EVIDENCE_REVIEW,
-      (leaf) => new EvidenceReviewView(leaf, this)
-    );
+    this.registerView(VIEW_TYPE_EVIDENCE_REVIEW, (leaf) => new EvidenceReviewView(leaf, this));
     this.addCommand({
       id: "open-evidence-review",
       name: "Memoria: Open evidence review",
@@ -700,9 +710,7 @@ module.exports = class MemoriaObsidianPlugin extends Plugin {
       callback: () => this.graduateScratchEdges()
     });
     if (this.app.workspace.on && this.registerEvent) {
-      this.registerEvent(
-        this.app.workspace.on("active-leaf-change", () => this.updateForkBadge())
-      );
+      this.registerEvent(this.app.workspace.on("active-leaf-change", () => this.updateForkBadge()));
     }
     this.renderPill();
   }
@@ -872,9 +880,7 @@ module.exports = class MemoriaObsidianPlugin extends Plugin {
       );
     }
     const skipped = (fork.unresolved || []).length;
-    new Notice(
-      `Memoria queued ${added.length} link edge(s); skipped ${skipped} unresolved.`
-    );
+    new Notice(`Memoria queued ${added.length} link edge(s); skipped ${skipped} unresolved.`);
   }
   async recordDisposition(fields) {
     await this.recordEvent(
@@ -903,7 +909,11 @@ module.exports = class MemoriaObsidianPlugin extends Plugin {
         this.previewShown = true;
         new Notice(`Memoria event preview: ${event.event_type}`);
       }
-      await this.postOperation("empirical-event-record", event, `empirical-event:${event.event_id}`);
+      await this.postOperation(
+        "empirical-event-record",
+        event,
+        `empirical-event:${event.event_id}`
+      );
       this.renderPill();
     } catch (error) {
       await this.queueEvent(event);
@@ -1308,10 +1318,7 @@ var AttentionView = class extends ItemView {
     const actionEl = event.target.closest("button[data-operation-id]");
     if (actionEl) {
       const payload = JSON.parse(actionEl.getAttribute("data-payload") || "{}");
-      await this.plugin.enqueueNamedOperation(
-        actionEl.getAttribute("data-operation-id"),
-        payload
-      );
+      await this.plugin.enqueueNamedOperation(actionEl.getAttribute("data-operation-id"), payload);
       await this.refresh();
       return;
     }
@@ -1448,10 +1455,7 @@ var EvidenceReviewView = class extends ItemView {
     const actionEl = event.target.closest("button[data-operation-id]");
     if (actionEl) {
       const payload = JSON.parse(actionEl.getAttribute("data-payload") || "{}");
-      await this.plugin.enqueueNamedOperation(
-        actionEl.getAttribute("data-operation-id"),
-        payload
-      );
+      await this.plugin.enqueueNamedOperation(actionEl.getAttribute("data-operation-id"), payload);
       if (payload.decision === "edit") {
         this.plugin.app.workspace.openLinkText(this.expandedRef, "", false);
       }
@@ -1519,7 +1523,9 @@ var RelateModal = class extends Modal {
         text.setValue(path);
       });
     });
-    new Setting(contentEl).setName("Warrant (optional)").setDesc("A `warrant` relation links a license note; Warrant text annotates the selected edge.").addTextArea((text) => text.onChange((value) => this.warrant = value));
+    new Setting(contentEl).setName("Warrant (optional)").setDesc(
+      "A `warrant` relation links a license note; Warrant text annotates the selected edge."
+    ).addTextArea((text) => text.onChange((value) => this.warrant = value));
     new Setting(contentEl).addButton(
       (button) => button.setButtonText("Queue edge").setCta().onClick(async () => {
         let operation;
@@ -1605,15 +1611,28 @@ var EventModal = class extends Modal {
     contentEl.empty();
     contentEl.addClass("memoria-event-modal");
     contentEl.createEl("h2", { text: "Memoria event" });
-    const fields = { workflow: "gap", decision: "defer", outcome: "fallback", reason_code: "other" };
-    new Setting(contentEl).setName("Workflow").addText((text) => text.setValue(fields.workflow).onChange((value) => fields.workflow = value));
+    const fields = {
+      workflow: "gap",
+      decision: "defer",
+      outcome: "fallback",
+      reason_code: "other"
+    };
+    new Setting(contentEl).setName("Workflow").addText(
+      (text) => text.setValue(fields.workflow).onChange((value) => fields.workflow = value)
+    );
     if (this.eventType === "disposition.recorded") {
-      new Setting(contentEl).setName("Decision").addText((text) => text.setValue(fields.decision).onChange((value) => fields.decision = value));
+      new Setting(contentEl).setName("Decision").addText(
+        (text) => text.setValue(fields.decision).onChange((value) => fields.decision = value)
+      );
     }
     if (this.eventType === "fallback.recorded") {
-      new Setting(contentEl).setName("Outcome").addText((text) => text.setValue(fields.outcome).onChange((value) => fields.outcome = value));
+      new Setting(contentEl).setName("Outcome").addText(
+        (text) => text.setValue(fields.outcome).onChange((value) => fields.outcome = value)
+      );
     }
-    new Setting(contentEl).setName("Reason code").addText((text) => text.setValue(fields.reason_code).onChange((value) => fields.reason_code = value));
+    new Setting(contentEl).setName("Reason code").addText(
+      (text) => text.setValue(fields.reason_code).onChange((value) => fields.reason_code = value)
+    );
     new Setting(contentEl).addButton(
       (button) => button.setButtonText("Record").setCta().onClick(async () => {
         if (this.eventType === "disposition.recorded") {
@@ -1637,7 +1656,9 @@ var OperationModal = class extends Modal {
     let operationId = "analyze-gaps";
     let payloadText = "{}";
     contentEl.createEl("h2", { text: "Queue Memoria operation" });
-    new Setting(contentEl).setName("Operation ID").addText((text) => text.setValue(operationId).onChange((value) => operationId = value.trim()));
+    new Setting(contentEl).setName("Operation ID").addText(
+      (text) => text.setValue(operationId).onChange((value) => operationId = value.trim())
+    );
     new Setting(contentEl).setName("Payload JSON").addTextArea((text) => text.setValue(payloadText).onChange((value) => payloadText = value));
     new Setting(contentEl).addButton(
       (button) => button.setButtonText("Queue").setCta().onClick(async () => {

@@ -82,15 +82,10 @@ async function installedMermaidVersion() {
 }
 
 function siteVersion(repoRoot) {
-  const config = require("node:fs").readFileSync(
-    path.join(repoRoot, "docs/_config.yml"),
-    "utf8",
-  );
+  const config = require("node:fs").readFileSync(path.join(repoRoot, "docs/_config.yml"), "utf8");
   // Deliberately a regex rather than a YAML dependency: this gate should not
   // grow a parser to read one pinned string.
-  const match = /^\s*version:\s*"?([\d.]+)"?\s*$/m.exec(
-    config.slice(config.indexOf("mermaid:")),
-  );
+  const match = /^\s*version:\s*"?([\d.]+)"?\s*$/m.exec(config.slice(config.indexOf("mermaid:")));
   return match ? match[1] : null;
 }
 

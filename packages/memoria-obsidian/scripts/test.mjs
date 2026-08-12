@@ -162,10 +162,26 @@ const EVIDENCE_REVIEW_VIEW_JSON = {
             kind: "action-row",
             id: "ev-0011aabb-actions",
             actions: [
-              { label: "Accept", operation_id: "resolve-evidence", payload: { evidence_id: "ev-0011aabb", decision: "accept" } },
-              { label: "Reject", operation_id: "resolve-evidence", payload: { evidence_id: "ev-0011aabb", decision: "reject" } },
-              { label: "Edit", operation_id: "resolve-evidence", payload: { evidence_id: "ev-0011aabb", decision: "edit" } },
-              { label: "Defer", operation_id: "resolve-evidence", payload: { evidence_id: "ev-0011aabb", decision: "defer" } },
+              {
+                label: "Accept",
+                operation_id: "resolve-evidence",
+                payload: { evidence_id: "ev-0011aabb", decision: "accept" },
+              },
+              {
+                label: "Reject",
+                operation_id: "resolve-evidence",
+                payload: { evidence_id: "ev-0011aabb", decision: "reject" },
+              },
+              {
+                label: "Edit",
+                operation_id: "resolve-evidence",
+                payload: { evidence_id: "ev-0011aabb", decision: "edit" },
+              },
+              {
+                label: "Defer",
+                operation_id: "resolve-evidence",
+                payload: { evidence_id: "ev-0011aabb", decision: "defer" },
+              },
             ],
           },
         ],
@@ -688,10 +704,7 @@ try {
     options.url.endsWith("/v1/status")
       ? { status: 200, json: { ok: true } }
       : { status: 401, json: { ok: false, error: "unauthorized" } };
-  await assert.rejects(
-    ladderToken.authedJson("/v1/views/attention?summary=true"),
-    /token invalid/,
-  );
+  await assert.rejects(ladderToken.authedJson("/v1/views/attention?summary=true"), /token invalid/);
   assert.equal(ladderToken.connectionStatus, "token-invalid");
   assert.equal(ladderToken.pillState, "token-invalid");
   const ladderTokenRequests = requests.slice(ladderTokenFrom);
@@ -793,7 +806,9 @@ try {
   assert.equal(keyed.missingCredential, "ANTHROPIC_API_KEY");
   assert.deepEqual(keyed.linkRelations, [], "a non-list roster is dropped, never rendered");
   assert.equal(keyed.pillState, "key-needed");
-  assert.ok(keyed.statusBar.children.some((child) => child.text === "Memoria · 2 open · key needed"));
+  assert.ok(
+    keyed.statusBar.children.some((child) => child.text === "Memoria · 2 open · key needed"),
+  );
   respond = null;
   await keyed.poll();
   assert.equal(keyed.missingCredential, "", "a resolved credential clears the nag");
@@ -1125,10 +1140,7 @@ try {
   );
   assert.deepEqual(
     withClass(root, "memoria-loudness-dot").map((node) => node.cls),
-    [
-      "memoria-loudness-dot memoria-loudness-block",
-      "memoria-loudness-dot memoria-loudness-notice",
-    ],
+    ["memoria-loudness-dot memoria-loudness-block", "memoria-loudness-dot memoria-loudness-notice"],
   );
   assert.deepEqual(
     withClass(root, "memoria-row").map((node) => node.getAttribute("data-row-index")),
@@ -1352,14 +1364,7 @@ try {
 
   // 27b) With a roster: rendered verbatim, in the served order, and the one the
   // builder validates against.
-  const servedRoster = [
-    "contradicts",
-    "extends",
-    "qualifier",
-    "rebuttal",
-    "supports",
-    "warrant",
-  ];
+  const servedRoster = ["contradicts", "extends", "qualifier", "rebuttal", "supports", "warrant"];
   plugin.linkRelations = servedRoster;
   plugin.app.vault.getMarkdownFiles = () => [
     { path: "notes/active.md" },
@@ -1516,7 +1521,10 @@ try {
       ? { status: 200, json: ATTENTION_VIEW_JSON }
       : { status: 200, json: SUMMARY_JSON };
   await view.refresh();
-  const relateButton = withClass(withClass(root, "memoria-attention-header")[0], "memoria-action")[0];
+  const relateButton = withClass(
+    withClass(root, "memoria-attention-header")[0],
+    "memoria-action",
+  )[0];
   assert.equal(relateButton.text, "Relate…");
   const modalsBefore = modals.length;
   fireClick(relateButton);
@@ -1539,7 +1547,9 @@ try {
   assert.equal(reviewView.getViewType(), "memoria-evidence-review");
   assert.equal(reviewView.getDisplayText(), "Memoria Evidence Review");
   assert.ok(plugin.commands.includes("open-evidence-review"));
-  const reviewCommand = plugin.commandRoster.find((command) => command.id === "open-evidence-review");
+  const reviewCommand = plugin.commandRoster.find(
+    (command) => command.id === "open-evidence-review",
+  );
   assert.equal(reviewCommand.name, "Memoria: Open evidence review");
   let reviewOpens = 0;
   plugin.activateEvidenceReviewView = async () => {
@@ -1561,8 +1571,7 @@ try {
     ["http://127.0.0.1:43210/v1/views/evidence-review"],
     "the pane reads its own view, unfiltered, and nothing else",
   );
-  const reviewRowTitles = () =>
-    withClass(reviewRoot, "memoria-row-title").map((node) => node.text);
+  const reviewRowTitles = () => withClass(reviewRoot, "memoria-row-title").map((node) => node.text);
   const reviewCardTitles = () =>
     withClass(reviewRoot, "memoria-card-title").map((node) => node.text);
   // Spec section 6: the batch order *is* the review order. The payload lists the
@@ -1606,7 +1615,9 @@ try {
     "memoria-analysis is-collapsed",
   ]);
   const actionButtons = () =>
-    withClass(reviewRoot, "memoria-action").filter((node) => node.getAttribute("data-operation-id"));
+    withClass(reviewRoot, "memoria-action").filter((node) =>
+      node.getAttribute("data-operation-id"),
+    );
   assert.deepEqual(
     actionButtons().map((node) => [
       node.text,
@@ -1640,10 +1651,10 @@ try {
   // The same control closes it: a disclosure that only opens is a one-way
   // door, and the PI cannot put the machine's opinion back out of view.
   await reviewView.onClick(clickOn(analysisToggle()));
-  assert.deepEqual(
-    expandedClasses().slice(-2),
-    ["memoria-analysis-toggle", "memoria-analysis is-collapsed"],
-  );
+  assert.deepEqual(expandedClasses().slice(-2), [
+    "memoria-analysis-toggle",
+    "memoria-analysis is-collapsed",
+  ]);
   assert.equal(analysisToggle().text, "Show analysis (machine)");
   await reviewView.onClick(clickOn(analysisToggle()));
   reviewView.onKey({ key: "Enter", preventDefault() {} });
@@ -1905,10 +1916,10 @@ try {
   queuedFrom = requests.length;
   controlNamed(forkModal, "Scratch name").type("  Try Layout!  ");
   await buttonLabeled(forkModal, "Queue fork").click();
-  assert.deepEqual(postBodiesSince(queuedFrom).map((body) => body.operation_id), [
-    "fork-project-canvas",
-    "empirical-event-record",
-  ]);
+  assert.deepEqual(
+    postBodiesSince(queuedFrom).map((body) => body.operation_id),
+    ["fork-project-canvas", "empirical-event-record"],
+  );
   assert.deepEqual(postBodiesSince(queuedFrom)[0], {
     operation_id: "fork-project-canvas",
     payload: { project_path: "projects/alpha/project.md", name: "Try Layout!" },
@@ -2068,9 +2079,7 @@ try {
   ]);
   // The unresolved rows are counted out loud: an edge the engine could not
   // read is a relation that silently did not happen.
-  assert.deepEqual(notices.slice(mark), [
-    "Memoria queued 2 link edge(s); skipped 1 unresolved.",
-  ]);
+  assert.deepEqual(notices.slice(mark), ["Memoria queued 2 link edge(s); skipped 1 unresolved."]);
 
   // 29f) Nothing graduates off an unreadable fork or off a non-scratch file.
   respond = serveForks([{ path: forkRow.path, error: "unreadable scratch canvas" }]);

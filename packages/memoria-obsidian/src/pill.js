@@ -40,7 +40,11 @@ function computePill({ connection, openCount, lastPollAt, missingCredential }) {
     };
   }
   if (missingCredential) {
-    return { state: "key-needed", text: `Memoria · ${openCount} open · key needed`, tone: "accent" };
+    return {
+      state: "key-needed",
+      text: `Memoria · ${openCount} open · key needed`,
+      tone: "accent",
+    };
   }
   return { state: "connected", text: `Memoria · ${openCount} open`, tone: "green" };
 }

@@ -61,10 +61,7 @@ test("parseHandshake returns coordinates and rejects partial payloads", () => {
   });
   assert.throws(() => parseHandshake("not json"), /handshake: stdout is not JSON/);
   assert.throws(() => parseHandshake("{}"), /handshake: missing port/);
-  assert.throws(
-    () => parseHandshake(JSON.stringify({ port: 1 })),
-    /handshake: missing token/,
-  );
+  assert.throws(() => parseHandshake(JSON.stringify({ port: 1 })), /handshake: missing token/);
   assert.throws(
     () => parseHandshake(JSON.stringify({ port: 1, token: "t" })),
     /handshake: missing boot_id/,

@@ -86,14 +86,18 @@ function validateEvent(payload) {
   if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
     throw new Error("empirical event payload must be an object");
   }
-  const unknown = Object.keys(payload).filter((key) => !ALLOWED_FIELDS.has(key)).sort();
+  const unknown = Object.keys(payload)
+    .filter((key) => !ALLOWED_FIELDS.has(key))
+    .sort();
   if (unknown.length) {
     throw new Error(`empirical event contains unsupported fields: ${unknown.join(", ")}`);
   }
   const eventType = stringField(payload, "event_type");
   const requiredForType = EVENT_REQUIRED_FIELDS[eventType];
   if (!requiredForType) {
-    throw new Error(`event_type must be one of: ${Object.keys(EVENT_REQUIRED_FIELDS).sort().join(", ")}`);
+    throw new Error(
+      `event_type must be one of: ${Object.keys(EVENT_REQUIRED_FIELDS).sort().join(", ")}`,
+    );
   }
   for (const field of [...BASE_REQUIRED_FIELDS, ...requiredForType]) {
     if (missing(payload[field])) {
@@ -109,7 +113,11 @@ function validateEvent(payload) {
       event[field] = stringField(payload, field);
     }
   }
-  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(event.event_id)) {
+  if (
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+      event.event_id,
+    )
+  ) {
     throw new Error("event_id must be a UUID");
   }
   if (Number.isNaN(Date.parse(event.timestamp)) || !/(Z|[+-]\d\d:\d\d)$/.test(event.timestamp)) {
