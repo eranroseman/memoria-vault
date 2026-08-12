@@ -792,7 +792,7 @@ OPERATION_REGISTRY: dict[str, dict] = {
     # real "done" path would have zero coverage. The literal event_id below
     # has no `{}` placeholders, so it needs no doubled braces. Payload is a
     # fully valid `session.started` empirical event
-    # (validate_empirical_event, engine/empirical_events.py);
+    # via validate_empirical_event in engine/empirical_events.py;
     # dispatches to operations.py:record_empirical_event, which since I1 T.3
     # inserts one `telemetry_events` row and returns (no journal append, no
     # commit, no file outputs: `"outputs": []`). `telemetry_events` is not in
@@ -849,7 +849,7 @@ OPERATION_REGISTRY: dict[str, dict] = {
     },
     # worker.py:567-586 pops project_path (required); the rest of the
     # payload is passed through as `paper_plan` to
-    # knowledge.py:frame_project_paper. frame-paper is a
+    # the knowledge module's frame_project_paper function. frame-paper is a
     # PROTECTED_OPERATION_ACTORS "pi"-only op (worker.py:61); same
     # actor-check-fires-first shape as acknowledge-attention above —
     # confirmed live.
@@ -932,7 +932,7 @@ OPERATION_REGISTRY: dict[str, dict] = {
         "expect": "done",
     },
     # worker.py:59, 907-924 pops target_path (required), dispatching to
-    # trusted_writer.py:mark_checked. mark-checked is a
+    # the trusted_writer module's mark_checked function. mark-checked is a
     # PROTECTED_OPERATION_ACTORS "pi"-only op; same actor-check-fires-first
     # shape as acknowledge-attention — confirmed live: refused before
     # mark_checked's own body runs, regardless of target_path's real check
@@ -966,7 +966,7 @@ OPERATION_REGISTRY: dict[str, dict] = {
     },
     # worker.py:62, 700-722 pops project_path (required)/title/passage
     # (required)/work_id (optional), dispatching to
-    # knowledge.py:promote_draft_passage. promote-draft-passage is a
+    # the knowledge module's promote_draft_passage function. promote-draft-passage is a
     # PROTECTED_OPERATION_ACTORS "pi"-only op; same actor-check-fires-first
     # shape as acknowledge-attention — confirmed live.
     "promote-draft-passage": {
@@ -1012,7 +1012,7 @@ OPERATION_REGISTRY: dict[str, dict] = {
     },
     # worker.py:56, 424-445 pops work_id (required)/response (required)
     # plus optional prompt/project_id, dispatching to
-    # operations.py:record_copi_interview_turn. record-copi-interview is a
+    # the operations module's record_copi_interview_turn function. record-copi-interview is a
     # PROTECTED_OPERATION_ACTORS "pi"-only op; same actor-check-fires-first
     # shape as acknowledge-attention — confirmed live.
     "record-copi-interview": {

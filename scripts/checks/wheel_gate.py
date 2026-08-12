@@ -126,6 +126,7 @@ def _build_wheel(tmp: Path) -> Path:
         ],
         capture_output=True,
         text=True,
+        check=False,
     )
     if run.returncode != 0:
         sys.exit(f"wheel-gate: build failed:\n{run.stdout}\n{run.stderr}")
@@ -168,7 +169,7 @@ def _run_or_exit(cmd: list[str], *, step: str) -> str:
     raise FileNotFoundError before there is any CompletedProcess to check.
     """
     try:
-        result = subprocess.run(cmd, capture_output=True, text=True)
+        result = subprocess.run(cmd, capture_output=True, text=True, check=False)
     except OSError as exc:
         sys.exit(f"wheel-gate: {step} failed: {exc}")
     if result.returncode != 0:

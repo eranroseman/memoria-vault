@@ -548,7 +548,7 @@ def read_concept(
     workspace: Path, target: str, *, read_scope: list[str] | None = None
 ) -> dict[str, Any]:
     workspace = Path(workspace)
-    path = _resolve_concept_path(workspace, target)
+    path = resolve_concept_path(workspace, target)
     if path is None:
         work = state.catalog_source(workspace, target)
         if work is None:
@@ -1174,7 +1174,7 @@ def _unique_rel(workspace: Path, rel: str) -> str:
         index += 1
 
 
-def _resolve_concept_path(workspace: Path, target: str) -> Path | None:
+def resolve_concept_path(workspace: Path, target: str) -> Path | None:
     raw = Path(target)
     direct = raw if raw.is_absolute() else workspace / raw
     if direct.is_file():

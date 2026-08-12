@@ -281,7 +281,7 @@ def test_explicit_batch_rolls_back_when_second_insert_fails(tmp_path, capsys, mo
     before = _event_count(vault)
     anchor_path = vault / state.JOURNAL_HEAD_REL
     anchor_before = anchor_path.read_text(encoding="utf-8") if anchor_path.exists() else None
-    original_insert = state._insert_journal_row_conn
+    original_insert = state.insert_journal_row_conn
     insert_count = 0
 
     def fail_second_insert(conn, row, *, machine):
@@ -291,7 +291,7 @@ def test_explicit_batch_rolls_back_when_second_insert_fails(tmp_path, capsys, mo
             raise RuntimeError("second batch insert crashed")
         original_insert(conn, row, machine=machine)
 
-    monkeypatch.setattr(state, "_insert_journal_row_conn", fail_second_insert)
+    monkeypatch.setattr(state, "insert_journal_row_conn", fail_second_insert)
 
     with pytest.raises(RuntimeError, match="second batch insert crashed"):
         trusted_writer.append_explicit_event_batch(
@@ -440,7 +440,7 @@ def test_reconcile_reemits_db_only_event_to_recorded_machine(tmp_path, capsys):
         "actor": "operation",
         "machine": "journal-test",
     }
-    state._append_journal_row(vault, event, machine="journal-test")
+    state.append_journal_row(vault, event, machine="journal-test")
     state.write_journal_head_anchor(vault)
 
     assert trusted_writer.reconcile_journal_export(vault) == 1
@@ -456,7 +456,7 @@ def test_reconcile_preserves_duplicate_payload_counts(tmp_path, capsys):
         actor="operation",
         machine="journal-test",
     )
-    state._append_journal_row(vault, event, machine="journal-test")
+    state.append_journal_row(vault, event, machine="journal-test")
     state.write_journal_head_anchor(vault)
 
     assert trusted_writer.reconcile_journal_export(vault) == 1
@@ -526,7 +526,7 @@ def test_reconcile_rejects_jsonl_only_rows_before_repair(tmp_path, capsys):
         **db_only,
         "run_id": "forged-export-only",
     }
-    state._append_journal_row(vault, db_only, machine="journal-test")
+    state.append_journal_row(vault, db_only, machine="journal-test")
     state.write_journal_head_anchor(vault)
     append_jsonl(vault / ".memoria/journal/journal-test.jsonl", [jsonl_only])
 
@@ -546,7 +546,7 @@ def test_workspace_scan_repairs_db_only_jsonl_before_other_work(tmp_path, capsys
         "actor": "operation",
         "machine": "journal-test",
     }
-    state._append_journal_row(vault, event, machine="journal-test")
+    state.append_journal_row(vault, event, machine="journal-test")
     state.write_journal_head_anchor(vault)
 
     assert main(["workspace", "scan", "--workspace", str(vault), "--json"]) == 0
@@ -611,7 +611,7 @@ def test_workspace_scan_reemits_unterminated_complete_tail_and_db_only_row(tmp_p
         "actor": "operation",
         "machine": "journal-test",
     }
-    state._append_journal_row(vault, db_only, machine="journal-test")
+    state.append_journal_row(vault, db_only, machine="journal-test")
     state.write_journal_head_anchor(vault)
 
     assert main(["workspace", "scan", "--workspace", str(vault), "--json"]) == 0
@@ -632,7 +632,7 @@ def test_workspace_scan_discards_unterminated_complete_jsonl_only_tail(tmp_path,
         "actor": "operation",
         "machine": "journal-test",
     }
-    state._append_journal_row(vault, authoritative, machine="journal-test")
+    state.append_journal_row(vault, authoritative, machine="journal-test")
     state.write_journal_head_anchor(vault)
     path = vault / ".memoria/journal/journal-test.jsonl"
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -841,7 +841,7 @@ def test_append_and_reconcile_do_not_overlap_their_journal_snapshots(tmp_path, c
     reconcile_lock_attempted = threading.Event()
     export_scan_started = threading.Event()
     thread_role = threading.local()
-    original_insert = state._insert_journal_row_conn
+    original_insert = state.insert_journal_row_conn
     original_exports = trusted_writer._iter_journal_exports
     original_workspace_lock = state.workspace_lock
 
@@ -861,7 +861,7 @@ def test_append_and_reconcile_do_not_overlap_their_journal_snapshots(tmp_path, c
         with original_workspace_lock(vault):
             yield
 
-    monkeypatch.setattr(state, "_insert_journal_row_conn", pause_after_authoritative_write)
+    monkeypatch.setattr(state, "insert_journal_row_conn", pause_after_authoritative_write)
     monkeypatch.setattr(trusted_writer, "_iter_journal_exports", observe_export_scan)
     monkeypatch.setattr(state, "workspace_lock", observe_workspace_lock)
 
@@ -907,7 +907,7 @@ def test_journal_verify_cli_waits_for_inflight_append(tmp_path, capsys, monkeypa
     release_append = threading.Event()
     verify_lock_attempted = threading.Event()
     emitted: list[dict] = []
-    original_insert = state._insert_journal_row_conn
+    original_insert = state.insert_journal_row_conn
     original_lock = cli._workspace_lock
 
     def pause_after_authoritative_write(conn, event, *, machine):
@@ -925,7 +925,7 @@ def test_journal_verify_cli_waits_for_inflight_append(tmp_path, capsys, monkeypa
         emitted.append(payload)
         return 0 if payload["ok"] else 1
 
-    monkeypatch.setattr(state, "_insert_journal_row_conn", pause_after_authoritative_write)
+    monkeypatch.setattr(state, "insert_journal_row_conn", pause_after_authoritative_write)
     monkeypatch.setattr(cli, "_workspace_lock", observe_verify_lock)
     monkeypatch.setattr(cli, "_emit", capture_emit)
 
@@ -999,7 +999,7 @@ def test_reconcile_rejects_invalid_jsonl_before_db_only_repair(
         "actor": "operation",
         "machine": "journal-test",
     }
-    state._append_journal_row(vault, db_only, machine="journal-test")
+    state.append_journal_row(vault, db_only, machine="journal-test")
     state.write_journal_head_anchor(vault)
     path = vault / ".memoria/journal/journal-test.jsonl"
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -1023,7 +1023,7 @@ def test_reconcile_rejects_extra_duplicate_before_db_only_repair(tmp_path, capsy
         **event,
         "run_id": "must-not-be-emitted",
     }
-    state._append_journal_row(vault, db_only, machine="journal-test")
+    state.append_journal_row(vault, db_only, machine="journal-test")
     state.write_journal_head_anchor(vault)
     path = vault / ".memoria/journal/journal-test.jsonl"
     append_jsonl(path, [event])

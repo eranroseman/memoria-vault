@@ -100,7 +100,7 @@ def test_untracked_file_edit_is_detected(tmp_path: Path) -> None:
     # note_claim is created through the worker/queue path (enqueue_operation +
     # run_next_job), which never appends to system/logs/audit.jsonl -- that
     # log is only written by the policy-engine write path
-    # (memoria_vault.runtime.policy.engine.PolicyEngine.complete_write), so
+    # through PolicyEngine.complete_write in memoria_vault.runtime.policy.engine, so
     # vault_hash_drift (which walks audit.jsonl) has nothing to compare an
     # edited note_claim against and never fires. bibliography.bib, by
     # contrast, is a tracked generated projection: check_tracked_projections

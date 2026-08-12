@@ -292,10 +292,10 @@ def rebuild_evidence_sets_and_journal_mints(
     with state.workspace_lock(vault):
         if _has_unterminated_journal_export_tail(vault):
             reconcile_journal_export(vault)
-        marker_rows, duplicate_ids = state._evidence_marker_rows(vault, run_id=run_id)
+        marker_rows, duplicate_ids = state.evidence_marker_rows(vault, run_id=run_id)
         with state.connect(vault) as conn:
             conn.execute("BEGIN IMMEDIATE")
-            rebuild = state._replace_evidence_sets_conn(conn, marker_rows)
+            rebuild = state.replace_evidence_sets_conn(conn, marker_rows)
             if duplicate_ids:
                 rebuild["duplicate_ids"] = duplicate_ids
             for minted in rebuild.get("minted", []):
@@ -309,7 +309,7 @@ def rebuild_evidence_sets_and_journal_mints(
                     context=context,
                     request=request,
                 )
-                state._insert_journal_row_conn(conn, event, machine=context.machine)
+                state.insert_journal_row_conn(conn, event, machine=context.machine)
                 events.append(event)
         if events:
             state.write_journal_head_anchor(vault)
@@ -343,7 +343,7 @@ def append_explicit_event_batch(
         with state.connect(vault) as conn:
             conn.execute("BEGIN IMMEDIATE")
             for row in rows:
-                state._insert_journal_row_conn(conn, row, machine=machine_name)
+                state.insert_journal_row_conn(conn, row, machine=machine_name)
         state.write_journal_head_anchor(vault)
         append_jsonl(_journal_path(vault, machine_name), rows)
     return rows
@@ -1144,8 +1144,8 @@ def _target_path(path: str) -> str:
 
 
 def _bundle_for_target(contract: dict[str, Any], target: str) -> str:
-    for root in contract["folders"].get("bundle_roots") or ():
-        root = str(root).strip("/")
+    for configured_root in contract["folders"].get("bundle_roots") or ():
+        root = str(configured_root).strip("/")
         if target == root or target.startswith(root + "/"):
             return root
     raise ValueError(f"target is outside bundle roots: {target}")
@@ -1440,7 +1440,7 @@ def _append_decorated_event(vault: Path, event: dict[str, Any], *, machine: str)
     with state.workspace_lock(vault):
         if _has_unterminated_journal_export_tail(vault):
             reconcile_journal_export(vault)
-        state._append_journal_row(vault, event, machine=machine)
+        state.append_journal_row(vault, event, machine=machine)
         state.write_journal_head_anchor(vault)
         append_jsonl(_journal_path(vault, machine), [event])
 

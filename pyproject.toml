@@ -131,6 +131,13 @@ select = [
   "PGH",   # blanket `# noqa` / `# type: ignore` (RUF100 catches only the *unused* form)
   "TID",   # relative imports creeping into a flat package
   "EXE",   # shebang/executable-bit drift on the scripts the gate invokes by path
+  # Small and real -- 36 sites at admission (2026-08), each a defect class rather
+  # than a style position:
+  "SLF",       # private-member access -- 19 in src/scripts; tests exempted below
+  "ERA",       # commented-out code -- src was already clean
+  "PLW1508",   # os.environ.get with a non-string default
+  "PLW1510",   # subprocess.run without check= -- a silently ignored failure
+  "PLW2901",   # loop variable overwritten inside its own body
 ]
 ignore = [
   "E731",    # lambda-to-name -- idiomatic for concise test helpers.
@@ -151,9 +158,10 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-# Tests legitimately use assert and run trusted subprocesses; bandit there is noise.
+# Tests legitimately use assert, run trusted subprocesses, and reach into internals;
+# bandit and private-member access there are intentional white-box-test noise.
 # E402: test helpers do sys.path manipulation before imports.
-"tests/**" = ["S", "E402"]
+"tests/**" = ["S", "E402", "SLF001"]
 # The e2e smoke harness uses assert as its assertion mechanism, like the tests.
 "scripts/test_vault/e2e_smoke.py" = ["S101"]
 "scripts/**" = ["E402"]

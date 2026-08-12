@@ -254,10 +254,10 @@ def _mask_markdown_ranges(text: str, ranges: list[tuple[int, int]]) -> str:
         return text
     masked: list[str] = []
     copied_until = 0
-    for start, end in sorted(ranges):
+    for range_start, end in sorted(ranges):
         if end <= copied_until:
             continue
-        start = max(start, copied_until)
+        start = max(range_start, copied_until)
         masked.append(text[copied_until:start])
         masked.append(_mask_markdown_code(text[start:end]))
         copied_until = end
@@ -460,7 +460,8 @@ def _has_pandoc_table_syntax(text: str) -> bool:
 def _table_container_text(text: str) -> str:
     """Flatten quote/list prefixes before fail-closed table visibility checks."""
     lines: list[str] = []
-    for line in _markdown_lines(text):
+    for raw_line in _markdown_lines(text):
+        line = raw_line
         while match := _CITATION_TABLE_CONTAINER_PREFIX_RE.match(line):
             line = line[match.end() :]
         lines.append(line)
@@ -1185,7 +1186,7 @@ def _direct_evidence_marker_matches(text: str) -> list[tuple[re.Match[str], Evid
     return matches
 
 
-def _evidence_marker_occurrences_from_markdown(
+def evidence_marker_occurrences_from_markdown(
     text: str,
 ) -> list[tuple[EvidenceMarker, bool]]:
     """Return raw evidence markers and whether each is a direct visible occurrence."""

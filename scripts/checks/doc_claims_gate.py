@@ -98,8 +98,8 @@ def _load_cli_paths(root: Path) -> frozenset[str]:
 
     def walk(parser: argparse.ArgumentParser, prefix: tuple[str, ...] = ()) -> set[str]:
         paths = {prefix} if prefix else set()
-        for action in parser._actions:
-            if isinstance(action, argparse._SubParsersAction):
+        for action in parser._actions:  # noqa: SLF001 -- argparse parser-tree introspection.
+            if isinstance(action, argparse._SubParsersAction):  # noqa: SLF001 -- argparse parser-tree introspection.
                 for name, sub in action.choices.items():
                     paths |= walk(sub, (*prefix, name))
         return paths
@@ -138,7 +138,9 @@ def _runnable_cli_paths(root: Path) -> frozenset[str]:
 
     def walk(parser: argparse.ArgumentParser, prefix: tuple[str, ...] = ()) -> set[tuple[str, ...]]:
         subparser_actions = [
-            action for action in parser._actions if isinstance(action, argparse._SubParsersAction)
+            action
+            for action in parser._actions  # noqa: SLF001 -- argparse parser-tree introspection.
+            if isinstance(action, argparse._SubParsersAction)  # noqa: SLF001 -- argparse parser-tree introspection.
         ]
         paths: set[tuple[str, ...]] = set()
         if prefix and (parser.get_default("handler") is not None or not subparser_actions):

@@ -105,9 +105,9 @@ def main(argv: list[str] | None = None) -> int:
         print(f"memoria: {secrets_report['warning']}", file=sys.stderr)
     parser = _build_parser()
     args = parser.parse_args(argv)
-    args._secrets_loaded_from_file = frozenset(secrets_report["loaded"])
-    args._secrets_warning = secrets_report["warning"]
-    args._secrets_path = secrets_report["path"]
+    args.secrets_loaded_from_file = frozenset(secrets_report["loaded"])
+    args.secrets_warning = secrets_report["warning"]
+    args.secrets_path = secrets_report["path"]
     try:
         return args.handler(args)
     except BrokenPipeError:
@@ -905,7 +905,7 @@ def _run_onboarding_for_args(workspace: Path, args: argparse.Namespace) -> dict[
         # would silently send a loopback Zotero probe through an ambient
         # proxy. This CLI command is the production call site that fix
         # exists for.
-        url_open=onboarding._open_zotero_probe,
+        url_open=onboarding.open_zotero_probe,
     )
     # Spec §5 gap resolution 3: "onboard done" is a *completed* runway, and this
     # is the single choke point for both `memoria onboard` and `init --onboard`.
@@ -982,9 +982,9 @@ def _doctor_payload(
 
     payload["credentials"] = credential_report(
         workspace,
-        loaded_from_file=getattr(args, "_secrets_loaded_from_file", None),
+        loaded_from_file=getattr(args, "secrets_loaded_from_file", None),
     )
-    if warning := getattr(args, "_secrets_warning", ""):
+    if warning := getattr(args, "secrets_warning", ""):
         payload["warning"] = warning
     return payload
 
@@ -1110,13 +1110,13 @@ def _cmd_secrets_list(args: argparse.Namespace) -> int:
     workspace = Path(args.workspace).resolve() if args.workspace else None
     payload: dict[str, Any] = {
         "ok": True,
-        "path": getattr(args, "_secrets_path", str(secrets_path())),
+        "path": getattr(args, "secrets_path", str(secrets_path())),
         "credentials": credential_report(
             workspace,
-            loaded_from_file=getattr(args, "_secrets_loaded_from_file", None),
+            loaded_from_file=getattr(args, "secrets_loaded_from_file", None),
         ),
     }
-    if warning := getattr(args, "_secrets_warning", ""):
+    if warning := getattr(args, "secrets_warning", ""):
         payload["warning"] = warning
     return _emit(payload, args)
 
@@ -2075,7 +2075,7 @@ def _cmd_list(args: argparse.Namespace) -> int:
 
 def _cmd_export(args: argparse.Namespace) -> int:
     workspace = _workspace(args)
-    path = engine_api._resolve_concept_path(workspace, args.target)
+    path = engine_api.resolve_concept_path(workspace, args.target)
     if path is None:
         return _fail(f"target not found: {args.target}", json_output=args.json)
     content = path.read_text(encoding="utf-8")
@@ -2610,9 +2610,12 @@ def _cmd_review_stats(args: argparse.Namespace) -> int:
     # One line per metric, derived from the summary itself, so a metric added
     # to it reaches the human front without a second list to keep in step.
     for key, value in summary.items():
-        if isinstance(value, dict):
-            value = "  ".join(f"{name} {count}" for name, count in value.items())
-        print(f"{key}: {value}")
+        display_value = (
+            "  ".join(f"{name} {count}" for name, count in value.items())
+            if isinstance(value, dict)
+            else value
+        )
+        print(f"{key}: {display_value}")
     return 0
 
 

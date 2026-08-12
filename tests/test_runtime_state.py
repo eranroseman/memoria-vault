@@ -580,7 +580,7 @@ def test_sqlite_journal_is_append_only_and_hash_chained(tmp_path: Path) -> None:
 
 def test_private_journal_storage_requires_matching_payload_machine(tmp_path: Path) -> None:
     with pytest.raises(AssertionError, match="machine"):
-        state._append_journal_row(
+        state.append_journal_row(
             tmp_path,
             {"event": "manual", "timestamp": "2026-07-12T00:00:00Z", "machine": "a"},
             machine="b",
@@ -604,7 +604,7 @@ def test_private_journal_storage_does_not_normalize_machine(
         "machine": "already_normalized",
     }
 
-    state._append_journal_row(tmp_path, event, machine="already_normalized")
+    state.append_journal_row(tmp_path, event, machine="already_normalized")
 
     with state.connect(tmp_path) as conn:
         row = conn.execute("SELECT machine, payload_json FROM event_log").fetchone()

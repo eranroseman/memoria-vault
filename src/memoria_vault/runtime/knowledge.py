@@ -2718,7 +2718,7 @@ def _verify_project_draft_snapshot(
     rows_by_id = {str(row["id"]): row for row in state.evidence_sets(vault)}
     draft_occurrence_ids = {
         marker.evidence_id
-        for marker, _is_direct in state._evidence_marker_occurrences_from_markdown(draft["content"])
+        for marker, _is_direct in state.evidence_marker_occurrences_from_markdown(draft["content"])
     }
     findings = [
         {
@@ -2739,7 +2739,7 @@ def _verify_project_draft_snapshot(
     disposed = _disposed_evidence_digests(vault)
     for row in draft["evidence_sets"]:
         stored_block_hash = row.get("block_text_sha256")
-        current_block_hash = state._block_text_sha256_from_text(
+        current_block_hash = state.block_text_sha256_from_text(
             draft["content"],
             row["block_ref"],
         )

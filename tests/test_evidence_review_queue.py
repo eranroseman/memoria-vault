@@ -48,7 +48,7 @@ def _row(**overrides: Any) -> dict[str, Any]:
         "completeness_status": "evidence-incomplete",
         "review_required": True,
         "run_id": "",
-        "block_text_sha256": state._block_text_sha256_from_text(CONTENT, BLOCK_REF),
+        "block_text_sha256": state.block_text_sha256_from_text(CONTENT, BLOCK_REF),
     }
     row.update(overrides)
     return row
@@ -63,7 +63,7 @@ def _span_row(**overrides: Any) -> dict[str, Any]:
             "items": ["source-alpha#^p0001"],
             "type": "single-span",
             "review_required": False,
-            "block_text_sha256": state._block_text_sha256_from_text(CONTENT, SPAN_BLOCK_REF),
+            "block_text_sha256": state.block_text_sha256_from_text(CONTENT, SPAN_BLOCK_REF),
             **overrides,
         }
     )
@@ -78,7 +78,7 @@ def _code_row(**overrides: Any) -> dict[str, Any]:
             "items": [CODE_ITEM],
             "type": "computed",
             "review_required": False,
-            "block_text_sha256": state._block_text_sha256_from_text(CONTENT, CODE_BLOCK_REF),
+            "block_text_sha256": state.block_text_sha256_from_text(CONTENT, CODE_BLOCK_REF),
             **overrides,
         }
     )
@@ -92,7 +92,7 @@ def _hop_row(**overrides: Any) -> dict[str, Any]:
             "block_ref": HOP_BLOCK_REF,
             "items": ["ev-11111111", "source-beta#^p0002"],
             "type": "multi-hop",
-            "block_text_sha256": state._block_text_sha256_from_text(BETA_CONTENT, HOP_BLOCK_REF),
+            "block_text_sha256": state.block_text_sha256_from_text(BETA_CONTENT, HOP_BLOCK_REF),
             **overrides,
         }
     )
@@ -168,17 +168,17 @@ def _event(
 
 
 def test_block_canonical_text_excises_anchor_and_marker() -> None:
-    canonical = state._block_canonical_text_from_text(CONTENT, BLOCK_REF)
+    canonical = state.block_canonical_text_from_text(CONTENT, BLOCK_REF)
 
     assert canonical == "An implicit synthesis claim."
-    assert state._block_text_sha256_from_text(CONTENT, BLOCK_REF) == (
+    assert state.block_text_sha256_from_text(CONTENT, BLOCK_REF) == (
         "sha256:" + hashlib.sha256(canonical.encode("utf-8")).hexdigest()
     )
 
 
 def test_block_canonical_text_returns_none_for_unresolvable_ref() -> None:
-    assert state._block_canonical_text_from_text(CONTENT, "draft.md#^blk-99999999") is None
-    assert state._block_text_sha256_from_text(CONTENT, "draft.md#^blk-99999999") is None
+    assert state.block_canonical_text_from_text(CONTENT, "draft.md#^blk-99999999") is None
+    assert state.block_text_sha256_from_text(CONTENT, "draft.md#^blk-99999999") is None
 
 
 # --- V2R-B.2: pure evidence-set queue, facets, and filters --------------------
