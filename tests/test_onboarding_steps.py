@@ -318,7 +318,7 @@ def test_seed_manifest_work_ids_default_loader_reads_the_shipped_manifest() -> N
             "chen-2018-undesirable-difficulty",
             "moreira-2019-retrieval-practice",
             "settles-2016-spaced-repetition",
-            "morrison-2020-offloading",
+            "hu-luo-fleming-2019-metamemory-offloading",
             "ose-askvik-2020-handwriting",
             "schmidt-2018-luhmann-card-index",
             "mirzababaei-2021-toulmin-agent",

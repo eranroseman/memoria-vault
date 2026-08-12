@@ -19,7 +19,7 @@ Shared dependency-light helpers for operation code live under `memoria_vault.run
 | Operation | Primary entry point | Request surface | Direct callers | What it does |
 | --- | --- | --- | --- | --- |
 | Engine read/write API | `memoria_vault.engine.api` | CLI `--json` / optional transports | CLI, tests, HTTP/MCP transports | Owns verdict-tagged read projections, read-scope filtering, adapter view specs, and request-envelope writes for transports. |
-| Capture | `memoria_vault.runtime.capture` | SQLite worker request for `capture-source`, `capture-bibtex-source`, `capture-url-source`, `capture-pdf-source`, `capture-remote-pdf-source`, and `regenerate-references-bib` | worker, tests, debug sessions | Records capture runs, writes source blobs, stages DOI and portable imports unchecked, and materializes checked catalog projections through the worker path. PyMuPDF is a standard runtime dependency. Before parsing, `stage_pdf_source()` rejects raw PDF input larger than 32 MiB; it also rejects documents above 1,000 pages or more than 8 MiB of extracted UTF-8 text. The internal PI-only remote-PDF route authorizes each resolver URL against its finite seven-prefix policy before it stages bytes. It is not a separate CLI command. |
+| Capture | `memoria_vault.runtime.capture` | SQLite worker request for `capture-source`, `capture-bibtex-source`, `capture-url-source`, `capture-pdf-source`, `capture-remote-pdf-source`, and `regenerate-references-bib` | worker, tests, debug sessions | Records capture runs, writes source blobs, stages DOI and portable imports unchecked, and materializes checked catalog projections through the worker path. PyMuPDF is a standard runtime dependency. Before parsing, `stage_pdf_source()` rejects raw PDF input larger than 32 MiB; it also rejects documents above 1,000 pages or more than 8 MiB of extracted UTF-8 text. The internal PI-only remote-PDF route authorizes every resolved URL against its finite ten-prefix policy, refuses redirects, and applies the same PDF boundary before it stages bytes. It is not a separate CLI command. |
 | Source enrichment | `memoria_vault.runtime.enrichment` | SQLite worker request for `enrich-source` | worker, tests, debug sessions | Fetches required DOI provider payloads, records provenance and graph rows, routes failed or contested records to attention, and checks passing sources. |
 | Trusted writer | `memoria_vault.runtime.trusted_writer` | SQLite worker request | worker, tests, debug sessions | Stages and promotes Concepts through worker checks, observes PI edits, quarantines untraced changes, extracts typed links, and commits selected writer paths plus the journal. |
 | Worker requests | `memoria_vault.runtime.worker` | CLI / operator-managed scheduled jobs | operator-managed scheduler, CLI, tests, debug sessions | Persists request state in SQLite and executes trusted-write, capture, enrichment, synthesis, integrity, project, projection, attention, eval, and prompt-operation jobs. |
@@ -37,6 +37,19 @@ Shared dependency-light helpers for operation code live under `memoria_vault.run
 | Eval telemetry | `memoria eval run`; `memoria_vault.runtime.eval.*` | None | operator-managed scheduler, CI, PI | Dispatches and scores workspace-authored vault-eval tasks. |
 | Linter | `memoria_vault.runtime.sweeps.linter.detectors`; `session_summary`; `hub_handoff` | None | operator-managed scheduler, CI, pre-commit, PI | Validates schemas, links, graph health, and audit-chain integrity; `session_summary.py` generates deterministic per-request audit digests, while `hub_handoff` produces opt-in hub-threshold handoffs. |
 | Batch worklists | `memoria_vault.runtime.attention.worklists` | None | Reports, tests, PI | Emits `worklist-item` rows (per [checked means checks passed, not a human verdict](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)) from a report and raises one aggregate Inbox `work-prompt` for the batch. |
+
+The remote-PDF network policy contains exactly these ten prefixes:
+
+- `https://www.ncbi.nlm.nih.gov/pmc/utils/oa/`
+- `https://ftp.ncbi.nlm.nih.gov/pub/pmc/oa_pdf/`
+- `https://ftp.ncbi.nlm.nih.gov/pub/pmc/oa_package/`
+- `https://www.frontiersin.org/journals/psychology/articles/`
+- `https://www.frontiersin.org/journals/education/articles/`
+- `https://www.frontiersin.org/journals/artificial-intelligence/articles/`
+- `https://discovery.ucl.ac.uk/id/eprint/10077673/1/`
+- `https://aclanthology.org/`
+- `https://sociologica.unibo.it/article/download/`
+- `https://export.arxiv.org/pdf/`
 
 ## Related
 

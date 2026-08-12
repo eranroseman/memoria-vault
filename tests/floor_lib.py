@@ -21,6 +21,9 @@ from tests.paths import ROOT
 from tests.pdf_fixtures import VALID_TEXT_PDF_BYTES
 
 _SEED_CACHE: Path | None = None
+REMOTE_PDF_URL = (
+    "https://www.frontiersin.org/journals/education/articles/10.3389/feduc.2019.00005/pdf"
+)
 
 _NOTE_TEMPLATE = """---
 type: {concept_type}
@@ -630,7 +633,7 @@ OPERATION_REGISTRY: dict[str, dict] = {
         "payload": {
             "fetch": {
                 "method": "pdf-url",
-                "url": "https://www.frontiersin.org/articles/floor.pdf",
+                "url": REMOTE_PDF_URL,
             },
             "capture": {
                 "work_id": "floor-sweep-remote-pdf",

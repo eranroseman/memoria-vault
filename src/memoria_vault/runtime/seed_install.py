@@ -10,7 +10,7 @@ from http.client import HTTPException
 from pathlib import Path
 from typing import Any
 from urllib.parse import unquote, urlsplit, urlunsplit
-from urllib.request import HTTPRedirectHandler, build_opener
+from urllib.request import HTTPRedirectHandler, Request, build_opener
 from xml.parsers import expat
 
 from memoria_vault.product.seed_corpus import load_seed_manifest
@@ -24,6 +24,19 @@ MAX_TAR_MEMBERS = 128
 MAX_TAR_TOTAL_BYTES = 32 * 1024 * 1024
 MAX_PDF_MEMBER_BYTES = 32 * 1024 * 1024
 MAX_PMC_XML_ELEMENTS = 1024
+MAX_SEED_DIAGNOSTIC_BYTES = 1_024
+SEED_FETCH_USER_AGENT = "Memoria/0.1 (+https://github.com/eranroseman/memoria-vault)"
+
+
+def _bounded_seed_error(value: BaseException) -> str:
+    return str(value).encode("utf-8")[:MAX_SEED_DIAGNOSTIC_BYTES].decode("utf-8", errors="ignore")
+
+
+class SeedInstallAllFailed(ValueError):  # noqa: N818 -- public contract names the outcome.
+    def __init__(self, diagnostics: dict[str, list[Any]]) -> None:
+        self.diagnostics = diagnostics
+        names = ", ".join(str(entry["id"]) for entry in diagnostics["failed"]) or "<no rows>"
+        super().__init__(f"seed install left zero rows present; failed rows: {names}")
 
 
 class _NoRedirect(HTTPRedirectHandler):
@@ -52,7 +65,8 @@ class _CappedTarStream:
 
 def _default_opener(url: str):
     """Open a URL with the resolver's fixed timeout and no redirect following."""
-    return build_opener(_NoRedirect()).open(url, timeout=30.0)
+    request = Request(url, headers={"User-Agent": SEED_FETCH_USER_AGENT})
+    return build_opener(_NoRedirect()).open(request, timeout=30.0)
 
 
 def resolve_fetch(
@@ -294,12 +308,11 @@ def seed_install(
                 csl_json=_row_csl(row),
             )
         except Exception as exc:  # noqa: BLE001 -- per-row honesty: name the row, keep going.
-            failed.append({"id": work_id, "error": str(exc)})
+            failed.append({"id": work_id, "error": _bounded_seed_error(exc)})
             continue
         admitted.append(work_id)
     if not admitted and not skipped:
-        names = ", ".join(entry["id"] for entry in failed) or "<no rows>"
-        raise ValueError(f"seed install left zero rows present; failed rows: {names}")
+        raise SeedInstallAllFailed({"admitted": admitted, "skipped": skipped, "failed": failed})
     notices: list[str] = []
     if not _has_active_project(vault):
         notices.append(

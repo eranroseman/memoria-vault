@@ -331,6 +331,16 @@ def _neutralized_request_error(error: Any) -> Any:
     return neutralize_untrusted_markdown(error)
 
 
+def _neutralize_request_diagnostics(value: Any) -> Any:
+    if isinstance(value, str):
+        return neutralize_untrusted_markdown(value)
+    if isinstance(value, list):
+        return [_neutralize_request_diagnostics(item) for item in value]
+    if isinstance(value, dict):
+        return {key: _neutralize_request_diagnostics(item) for key, item in value.items()}
+    return value
+
+
 def request_summary(row: Any) -> dict[str, Any]:
     return {
         "request_id": row["request_id"],
@@ -346,6 +356,11 @@ def request_detail(row: Any) -> dict[str, Any]:
     job = json.loads(row["job_json"])
     if "error" in job:
         job = {**job, "error": _neutralized_request_error(job["error"])}
+    if "diagnostics" in job:
+        job = {
+            **job,
+            "diagnostics": _neutralize_request_diagnostics(job["diagnostics"]),
+        }
     return {
         **request_summary(row),
         "args": json.loads(row["args_json"]),

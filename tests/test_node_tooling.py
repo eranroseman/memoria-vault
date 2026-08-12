@@ -88,14 +88,19 @@ def test_obsidian_adapter_build_dependency_is_pinned_and_provisioned_in_ci():
         lock["packages"][""]["devDependencies"]["esbuild"] == package["devDependencies"]["esbuild"]
     )
 
-    steps = workflow["jobs"]["verify"]["steps"]
+    # The gate runs in the `shards` matrix job; `verify` is the fan-in that owns
+    # the required-check name. Every shard installs the adapter build dependency,
+    # because the roster it runs is decided at run time.
+    steps = workflow["jobs"]["shards"]["steps"]
     install_index = next(
         index
         for index, step in enumerate(steps)
         if step.get("run") == "npm ci --prefix packages/memoria-obsidian"
     )
     verify_index = next(
-        index for index, step in enumerate(steps) if step.get("run") == "python scripts/verify"
+        index
+        for index, step in enumerate(steps)
+        if step.get("run", "").startswith("python scripts/verify")
     )
     assert steps[install_index]["name"] == "Install Obsidian adapter build dependency"
     assert install_index < verify_index

@@ -25,7 +25,22 @@ permissions:
   pull-requests: read  # the change-scope step reads a PR's changed files
 
 jobs:
-  verify:
+  # One leg per `SHARDS` entry in scripts/verify. The union of the shards is the
+  # full roster and tests/test_verify_script.py asserts it, so a sharded CI run
+  # verifies exactly what a bare local `python scripts/verify` verifies.
+  #
+  # This job is deliberately NOT named `verify`: a matrix publishes one check per
+  # leg (`shards (lint)`, `shards (contract)`, ...), so naming it `verify` would
+  # delete the `verify` check that `main` requires and block every PR. The
+  # aggregating job below owns that name.
+  #
+  # fail-fast is off so one red shard does not cancel the others and hide a
+  # second, unrelated failure behind it.
+  shards:
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [lint, contract, runtime, sweep]
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -148,7 +163,8 @@ jobs:
           VERIFY_DOCS_ONLY: ${{ steps.scope.outputs.docs_only == 'true' && '1' || '0' }}
           MEMORIA_REQUIRE_SANDBOX: "1"
           PYTEST_XDIST_AUTO_NUM_WORKERS: ${{ steps.cpu.outputs.workers }}
-        run: python scripts/verify
+          SHARD: ${{ matrix.shard }}
+        run: python scripts/verify --shard "$SHARD"
       # actions/cache saves in a post step, after every normal step, so this
       # prunes environments for hook revisions no longer in the config before the
       # cache is written. Without it the chain grows unboundedly — vale's
@@ -158,3 +174,25 @@ jobs:
       # failed run saves nothing at all and pruning it would buy nothing.
       - name: Drop hook environments no longer referenced by the config
         run: pre-commit gc
+
+  # The required check `main` protection names. It exists so branch protection can
+  # keep pinning one stable name while the matrix above grows or shrinks.
+  #
+  # `if: always()` so a cancelled or skipped shard still resolves this job rather
+  # than leaving the required check pending forever; the result comparison then
+  # fails on anything that is not a clean success.
+  verify:
+    needs: shards
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Require every shard to have succeeded
+        env:
+          RESULT: ${{ needs.shards.result }}
+        run: |
+          echo "shards result -> $RESULT"
+          if [ "$RESULT" != "success" ]; then
+            echo "::error::verify shards did not all succeed ($RESULT)"
+            exit 1
+          fi
