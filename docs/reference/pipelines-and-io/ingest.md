@@ -18,9 +18,9 @@ The runtime helper `memoria_vault.runtime.capture.stage_catalog_source()` handle
 source payloads: it records a capture run, writes raw and extracted text blobs,
 writes source metadata into SQLite catalog state, and records derived
 aspects/edges there. Portable BibTeX/CSL imports use the same unchecked SQLite
-staging path. The PDF adapter `stage_pdf_source()` uses the optional PyMuPDF
-parser when it is installed to extract page text, rejecting inputs above 1,000
-pages or 8 MiB of cumulative UTF-8 extracted text before staging. URL snapshots
+staging path. PyMuPDF is a standard runtime dependency. Before parsing,
+`stage_pdf_source()` rejects raw PDF input larger than 32 MiB; it also rejects
+documents above 1,000 pages or more than 8 MiB of extracted UTF-8 text. URL snapshots
 use `stage_url_source()` with stdlib HTML text extraction.
 
 ## Pipeline contract
@@ -65,7 +65,7 @@ flowchart TD
 | Import entry routing | `memoria work import` per-entry router | Normalizes each entry's type onto the shipped `article/book/webpage/software/dataset/report` vocabulary, then routes it: a mapped webpage with a URL goes to the operation `capture-url-source`, an eligible article or direct-PDF report with a resolvable PMC/arXiv/`.pdf` fetch goes to the PI-only operation `capture-remote-pdf-source`, and everything else stays on the metadata-only operation `capture-source`. The command itself never fetches. |
 | Import run artifacts | `memoria work import` at command return | Skips entries whose `work_id` is already in the catalog, then finalizes once, after the post-loop index refresh: one run-scoped `import-<run_id>` worklist with one quiet card, ranked duplicates → retraction → failed → unmapped, plus one [`import-run.v1`](../control-and-policy/empirical-events.md) telemetry row. A run with nothing to judge mints no worklist and no card. A retried import mints a new `run_id` and reports the retry, not the original run. |
 | URL snapshot | `stage_url_source()` / worker `capture-url-source` | Fetches one URL, preserves raw HTML, extracts plain text with stdlib `HTMLParser`, and writes an unchecked catalog row plus source-content blobs. |
-| PDF import | `stage_pdf_source()` / worker `capture-pdf-source` | Parses raw PDF bytes into page-headed text behind text-coherence, 1,000-page, and 8 MiB extracted-text guards before writing an unchecked catalog row plus source-content blobs. |
+| PDF import | `stage_pdf_source()` / worker `capture-pdf-source` | PyMuPDF is a standard runtime dependency. Before parsing, `stage_pdf_source()` rejects raw PDF input larger than 32 MiB; it also rejects documents above 1,000 pages or more than 8 MiB of extracted UTF-8 text before writing an unchecked catalog row plus source-content blobs. |
 | Policy-bound remote PDF capture | internal import-admission request / PI worker `capture-remote-pdf-source` | Accepts a PMCID, arXiv, or direct-PDF descriptor but no PDF bytes; the PI-only worker authorizes and resolves it before passing bytes to `stage_pdf_source()`. This is an internal route, not a new CLI command. |
 | Metadata merge | `capture_source()` / `enrich_source()` | Recapturing or enriching the same stable `work_id` merges non-empty identifiers, CSL-JSON fields, metadata status, and link lists instead of dropping previously captured source metadata. |
 | Metadata-derived entities | `capture_source()` / `enrich_source()` | Records deterministic person, venue, organization, and source graph rows from CSL/OpenAlex metadata; exact duplicate checks read these rows. |
@@ -93,8 +93,8 @@ flowchart TD
   gates remain follow-on work.
 
 The current extraction inputs are normalized markdown text, staged DOI payloads,
-one BibTeX entry, one CSL-JSON item file, one URL snapshot, or PDF bytes when
-the optional PyMuPDF parser is installed.
+one BibTeX entry, one CSL-JSON item file, one URL snapshot, or PDF bytes parsed
+by the standard PyMuPDF runtime dependency.
 
 ## Catalog Work Record
 

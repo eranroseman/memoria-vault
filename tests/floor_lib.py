@@ -5,6 +5,7 @@ Spec: docs/superpowers/specs/2026-07-13-development-pipeline-spec.md §3.4.
 
 from __future__ import annotations
 
+import base64
 import contextlib
 import difflib
 import hashlib
@@ -17,6 +18,7 @@ import tempfile
 from pathlib import Path
 
 from tests.paths import ROOT
+from tests.pdf_fixtures import VALID_TEXT_PDF_BYTES
 
 _SEED_CACHE: Path | None = None
 
@@ -611,26 +613,15 @@ OPERATION_REGISTRY: dict[str, dict] = {
         "expect": "done",
         "creates": [".memoria/blobs/source-content/floorsweep2025/content.txt"],
     },
-    # worker.py:1301-1339 (`_run_capture_pdf_source_operation`) requires
-    # work_id/title/description/raw_pdf_base64, dispatching to
-    # capture.py:stage_pdf_source -> _extract_pdf_pages, which does `import
-    # fitz` (PyMuPDF) and raises `RuntimeError("PDF capture requires
-    # PyMuPDF from the vault MCP requirements")` on ImportError
-    # (capture.py:783-787) before ever looking at the payload bytes.
-    # PyMuPDF is not in requirements-dev.txt (it ships only with the
-    # separate vault-MCP requirements) and is not importable in this
-    # environment — confirmed live: any raw_pdf_base64 refuses identically.
-    # This is a real, by-design refusal (a clean typed error on a missing
-    # optional native dependency), not a code defect.
     "capture-pdf-source": {
         "payload": {
             "work_id": "floor-sweep-pdf",
             "title": "Floor sweep PDF source",
             "description": "A PDF captured by the floor sweep.",
-            "raw_pdf_base64": "JVBERi0xLjQKZmxvb3Igc3dlZXAgZml4dHVyZQo=",
+            "raw_pdf_base64": base64.b64encode(VALID_TEXT_PDF_BYTES).decode("ascii"),
         },
-        "expect": "refused",
-        "reason": "PDF capture requires PyMuPDF",
+        "expect": "done",
+        "creates": [".memoria/blobs/source-content/floor-sweep-pdf/content.txt"],
     },
     # O2 A.2 adds a policy-bound remote-PDF operation. The floor sweep runs as
     # actor=agent, so this PI-only operation refuses before resolver, policy,
