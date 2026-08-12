@@ -27,6 +27,7 @@ from memoria_vault.runtime.vaultio import write_bytes_durable, write_text_durabl
 WORK_ASPECT_ORDER = ("context", "key_idea", "method", "outcome", "limitation", "assumption")
 _BIBLIOGRAPHY_CITEKEY_RE = re.compile(r"^[A-Za-z0-9](?:[A-Za-z0-9_]|[.:+/-][A-Za-z0-9_])*$")
 # Bound retained parser output from untrusted PDFs before it can exhaust a worker.
+MAX_PDF_RAW_BYTES = 32 * 1024 * 1024
 MAX_PDF_PAGE_COUNT = 1_000
 MAX_PDF_EXTRACTED_TEXT_BYTES = 8 * 1024 * 1024
 _ASPECT_HEADING_ALIASES = {
@@ -487,6 +488,8 @@ def stage_pdf_source(
 ) -> dict[str, Any]:
     """Stage a PDF raw blob and extracted text as an unchecked DB row."""
     validate_operation_context(vault, context)
+    if len(raw_bytes) > MAX_PDF_RAW_BYTES:
+        raise ValueError(f"PDF exceeds raw-byte limit ({MAX_PDF_RAW_BYTES} bytes)")
     return _store_pdf_source(
         vault,
         work_id,
@@ -736,8 +739,8 @@ def _best_provider_coverage(old: str, new: str) -> str:
 def _extract_pdf_pages(raw_bytes: bytes) -> list[dict[str, Any]]:
     try:
         import fitz
-    except ImportError as exc:  # pragma: no cover - CI does not install the optional PDF parser.
-        raise RuntimeError("PDF capture requires PyMuPDF from the vault MCP requirements") from exc
+    except ImportError as exc:
+        raise RuntimeError("PyMuPDF runtime dependency is unavailable; reinstall Memoria") from exc
 
     pages = []
     extracted_text_bytes = 0

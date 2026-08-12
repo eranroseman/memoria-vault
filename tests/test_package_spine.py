@@ -55,6 +55,7 @@ def test_pyproject_declares_installable_memoria_package():
 
 def test_stack_dependencies_stay_small_and_no_orm():
     data = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+    assert "PyMuPDF>=1.24,<2" in data["project"]["dependencies"]
     dependencies = {
         dependency.split("[", 1)[0].split(">=", 1)[0]
         for dependency in data["project"]["dependencies"]
