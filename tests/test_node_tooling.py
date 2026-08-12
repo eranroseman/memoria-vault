@@ -107,6 +107,38 @@ def test_obsidian_adapter_build_dependency_is_pinned_and_provisioned_in_ci():
     assert npm_updates[0]["directory"] == "/packages/memoria-obsidian"
 
 
+def test_oxc_editor_tools_match_the_pinned_hook_versions():
+    """Catch the editor formatting differently from the gate.
+
+    oxlint and oxfmt run twice over the same files: from the pinned pre-commit
+    hook environments in `scripts/verify`, and from `node_modules` for the
+    `oxc.oxc-vscode` extension, which does not bundle either tool. Two pins for
+    one tool is a version skew waiting to happen -- and a skewed oxfmt reformats
+    on save exactly what the commit hook then reformats back. Only oxfmt's
+    freeze is expressed in `.github/dependabot.yml`; nothing but this assertion
+    keeps the npm side equal to the hook side.
+    """
+    package = json.loads(OBSIDIAN_PACKAGE.read_text(encoding="utf-8"))
+    lock = json.loads(OBSIDIAN_LOCK.read_text(encoding="utf-8"))
+    config = yaml.safe_load(PRECOMMIT.read_text(encoding="utf-8"))
+    revs = {repo["repo"]: repo["rev"] for repo in config["repos"] if repo["repo"] != "local"}
+
+    for tool in ("oxlint", "oxfmt"):
+        pinned = package["devDependencies"][tool]
+        assert RELEASE_TAG.fullmatch(pinned), f"{tool} is not pinned to a release: {pinned}"
+        assert lock["packages"][""]["devDependencies"][tool] == pinned
+        hook_rev = revs[f"https://github.com/oxc-project/mirrors-{tool}"]
+        assert hook_rev.removeprefix("v") == pinned, (
+            f"{tool} is {pinned} in packages/memoria-obsidian but {hook_rev} in "
+            "the pre-commit hook; the editor and the gate would disagree"
+        )
+
+    # The extension is what reads those node_modules; recommending it is the
+    # only thing that makes the pin above serve anyone.
+    extensions = json.loads((ROOT / ".vscode" / "extensions.json").read_text(encoding="utf-8"))
+    assert "oxc.oxc-vscode" in extensions["recommendations"]
+
+
 def test_precommit_hooks_use_pinned_tool_environments():
     config = yaml.safe_load(PRECOMMIT.read_text(encoding="utf-8"))
     pinned_repos = {

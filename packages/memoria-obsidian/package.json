@@ -10,7 +10,9 @@
     "test": "node --test"
   },
   "devDependencies": {
-    "esbuild": "0.28.2"
+    "esbuild": "0.28.2",
+    "oxfmt": "0.63.0",
+    "oxlint": "1.78.0"
   },
   "engines": {
     "node": ">=22"

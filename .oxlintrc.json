@@ -1,0 +1,8 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "ignorePatterns": [
+    "src/memoria_vault/product/workspace_seed/.obsidian/plugins/**",
+    "test-vault/**",
+    ".kilo/**"
+  ]
+}
