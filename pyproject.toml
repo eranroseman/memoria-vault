@@ -124,6 +124,13 @@ docstring-code-format = true
 select = [
   "F", "E4", "E7", "E9", "W", "B", "I", "UP", "C4", "PIE", "RUF",
   "A", "PT", "DTZ", "FLY", "BLE", "S", "RET", "N",
+  # Zero findings on this tree when admitted (2026-08), the same test that
+  # earned N its place. Each guards a failure this repo can produce:
+  "T10",   # flake8-debugger -- a stray breakpoint()/pdb.set_trace() from an agent session
+  "PLE",   # pylint's error tier -- bad str.strip args, misplaced bare raise, invalid % format
+  "PGH",   # blanket `# noqa` / `# type: ignore` (RUF100 catches only the *unused* form)
+  "TID",   # relative imports creeping into a flat package
+  "EXE",   # shebang/executable-bit drift on the scripts the gate invokes by path
 ]
 ignore = [
   "E731",    # lambda-to-name -- idiomatic for concise test helpers.
