@@ -112,6 +112,34 @@ def test_plugin_server_down_stage_requires_observation_of_no_silent_retry() -> N
         assert text in server_down_stage
 
 
+def test_plugin_polling_stage_requires_safe_log_and_exact_focus_observation() -> None:
+    source = WIZARD.read_text(encoding="utf-8")
+    plugin_section = source.split("if include_section plugin; then", 1)[1].split(
+        "if include_section canvas; then", 1
+    )[0]
+    polling_stage = plugin_section.split('stage "Observe background polling and refocus"', 1)[
+        1
+    ].split('stage "Confirm removal of the disposable vault"', 1)[0]
+
+    for text in (
+        "sanitized",
+        "credentials",
+        "headers",
+        "bodies",
+        "note content",
+        "serve.log",
+        "timestamp",
+        "route metadata",
+        "two-minute cadence",
+        "two consecutive idle poll records",
+        "four minutes",
+        "exactly one immediate attention refresh",
+        "normal active cadence",
+        "no duplicate",
+    ):
+        assert text in polling_stage
+
+
 def test_plugin_resolve_queue_requires_confirmation_in_its_own_stage() -> None:
     source = WIZARD.read_text(encoding="utf-8")
     plugin_section = source.split("if include_section plugin; then", 1)[1].split(

@@ -5,6 +5,7 @@ from __future__ import annotations
 import hmac
 import http.client
 import json
+import re
 import threading
 import uuid
 from http import HTTPStatus
@@ -920,6 +921,92 @@ def test_http_server_handler_enforces_bearer_auth_and_body_size(workspace: Path)
         HTTPStatus.REQUEST_ENTITY_TOO_LARGE,
         {"ok": False, "error": "request body too large"},
     )
+
+
+def test_http_server_logs_only_sanitized_attention_poll(
+    workspace: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Only admitted summary polls produce a line with no request-supplied data."""
+    bearer_secret = "bearer-secret"
+    query_secret = "query-secret"
+    body_secret = b'{"note":"body-secret"}'
+    header_secret = "header-secret"
+    server = make_http_server(workspace, host="127.0.0.1", port=0, token=bearer_secret)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    host, port = server.server_address[0], server.server_address[1]
+    try:
+        unauthenticated = _http_request(
+            host,
+            port,
+            "GET",
+            f"/v1/views/attention?summary=true&private={query_secret}",
+            {"X-Private": header_secret},
+        )
+        full_view = _http_request(
+            host,
+            port,
+            "GET",
+            f"/v1/views/attention?private={query_secret}",
+            {
+                "Authorization": f"Bearer {bearer_secret}",
+                "X-Private": header_secret,
+            },
+        )
+        non_summary = _http_request(
+            host,
+            port,
+            "GET",
+            f"/v1/views/attention?summary=false&private={query_secret}",
+            {
+                "Authorization": f"Bearer {bearer_secret}",
+                "X-Private": header_secret,
+            },
+        )
+        poll = _http_request(
+            host,
+            port,
+            "GET",
+            f"/v1/views/attention?summary=true&private={query_secret}",
+            {
+                "Authorization": f"Bearer {bearer_secret}",
+                "Content-Length": str(len(body_secret)),
+                "X-Private": header_secret,
+            },
+            body=body_secret,
+        )
+        assert server.reserve_idle_shutdown(idle_exit_seconds=0)
+        stopping = _http_request(
+            host,
+            port,
+            "GET",
+            "/v1/views/attention?summary=true",
+            {"Authorization": f"Bearer {bearer_secret}"},
+        )
+    finally:
+        server.shutdown()
+        thread.join(timeout=5)
+        server.server_close()
+
+    assert unauthenticated[0] == HTTPStatus.UNAUTHORIZED
+    assert full_view[0] == HTTPStatus.OK
+    assert non_summary[0] == HTTPStatus.OK
+    assert poll[0] == HTTPStatus.OK
+    assert stopping[0] == HTTPStatus.SERVICE_UNAVAILABLE
+    logged = capsys.readouterr().err
+    assert len(logged.splitlines()) == 1
+    assert re.fullmatch(
+        r"\d{2}/[A-Za-z]{3}/\d{4} \d{2}:\d{2}:\d{2} memoria poll "
+        r"GET /v1/views/attention 200\n",
+        logged,
+    )
+    for secret in (
+        bearer_secret,
+        query_secret,
+        body_secret.decode("utf-8"),
+        header_secret,
+    ):
+        assert secret not in logged
 
 
 def test_http_server_refuses_unauthenticated_operation_run_before_the_write_seam(

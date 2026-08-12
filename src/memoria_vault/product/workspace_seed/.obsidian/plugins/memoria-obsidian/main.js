@@ -608,7 +608,11 @@ var EVIDENCE_REVIEW_VIEW_PATH = "/v1/views/evidence-review";
 var EVIDENCE_ROUTING_FACETS = ["", "implicit", "multi-hop", "incomplete"];
 module.exports = class MemoriaObsidianPlugin extends Plugin {
   async onload() {
+    this.unloaded = false;
     this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+    if (this.unloaded) {
+      return;
+    }
     this.sessionId = "";
     this.sessionStartedAt = 0;
     this.statusBar = this.addStatusBarItem();
@@ -623,9 +627,10 @@ module.exports = class MemoriaObsidianPlugin extends Plugin {
     this.respawnGate = createRespawnGate();
     this._execFile = execFile;
     this.pollTimer = null;
+    this.pollPromise = null;
     this.register(() => clearTimeout(this.pollTimer));
     if (typeof window !== "undefined" && this.registerDomEvent) {
-      this.registerDomEvent(window, "focus", () => this.schedulePoll());
+      this.registerDomEvent(window, "focus", () => this.poll());
       this.registerDomEvent(window, "blur", () => this.schedulePoll());
       this.registerDomEvent(this.statusBar, "click", () => this.onPillClick());
     }
@@ -719,6 +724,9 @@ module.exports = class MemoriaObsidianPlugin extends Plugin {
     this.renderPill();
   }
   onunload() {
+    this.unloaded = true;
+    clearTimeout(this.pollTimer);
+    this.pollTimer = null;
     this.statusBar = null;
   }
   async saveSettings() {
@@ -750,11 +758,18 @@ module.exports = class MemoriaObsidianPlugin extends Plugin {
   async connect() {
     this.respawnGate = createRespawnGate();
     this.engine = Object.assign({}, EMPTY_ENGINE);
-    if (!await this.runHandshake()) {
+    const connected = await this.runHandshake();
+    if (this.unloaded) {
+      return;
+    }
+    if (!connected) {
       new Notice(`Memoria: ${this.connectionStatus.replace("-", " ")}`);
       return;
     }
     await this.poll();
+    if (this.unloaded) {
+      return;
+    }
     new Notice(`Memoria connected: engine ${this.engine.engineVersion}`);
     if (this.settings.enabled) {
       await this.recordEvent(
@@ -1089,33 +1104,65 @@ module.exports = class MemoriaObsidianPlugin extends Plugin {
       return null;
     }
   }
-  async poll() {
-    try {
-      const summary = await this.authedJson(`${ATTENTION_VIEW_PATH}?summary=true`);
-      this.openCount = Number(summary.open || 0);
-      this.lastPollAt = Date.now();
-      this.missingCredential = String((summary.missing_required_credentials || [])[0] || "");
-      this.linkRelations = Array.isArray(summary.link_relations) ? summary.link_relations : [];
-      this.connectionStatus = "connected";
-      for (const viewType of [VIEW_TYPE_ATTENTION, VIEW_TYPE_EVIDENCE_REVIEW]) {
-        for (const leaf of this.app.workspace.getLeavesOfType ? this.app.workspace.getLeavesOfType(viewType) : []) {
-          if (leaf.view && typeof leaf.view.refresh === "function") {
-            leaf.view.refresh();
+  poll() {
+    if (this.unloaded) {
+      return this.pollPromise || Promise.resolve();
+    }
+    clearTimeout(this.pollTimer);
+    this.pollTimer = null;
+    if (this.pollPromise) {
+      return this.pollPromise;
+    }
+    const requestPromise = (async () => {
+      try {
+        const summary = await this.authedJson(`${ATTENTION_VIEW_PATH}?summary=true`);
+        if (this.unloaded) {
+          return;
+        }
+        this.openCount = Number(summary.open || 0);
+        this.lastPollAt = Date.now();
+        this.missingCredential = String((summary.missing_required_credentials || [])[0] || "");
+        this.linkRelations = Array.isArray(summary.link_relations) ? summary.link_relations : [];
+        this.connectionStatus = "connected";
+        for (const viewType of [VIEW_TYPE_ATTENTION, VIEW_TYPE_EVIDENCE_REVIEW]) {
+          for (const leaf of this.app.workspace.getLeavesOfType ? this.app.workspace.getLeavesOfType(viewType) : []) {
+            if (leaf.view && typeof leaf.view.refresh === "function") {
+              leaf.view.refresh();
+            }
           }
         }
+      } catch {
+        if (!this.unloaded && this.connectionStatus === "connected") {
+          this.connectionStatus = "stale";
+        }
       }
-    } catch {
-      if (this.connectionStatus === "connected") {
-        this.connectionStatus = "stale";
+      if (!this.unloaded) {
+        this.renderPill();
       }
-    }
-    this.renderPill();
-    this.schedulePoll();
+    })();
+    const pollPromise = requestPromise.finally(() => {
+      if (this.pollPromise === pollPromise) {
+        this.pollPromise = null;
+        this.schedulePoll();
+      }
+    });
+    this.pollPromise = pollPromise;
+    return pollPromise;
   }
   schedulePoll() {
     clearTimeout(this.pollTimer);
+    this.pollTimer = null;
+    if (this.unloaded || this.pollPromise) {
+      return;
+    }
     const isActive = typeof document !== "undefined" && typeof document.hasFocus === "function" && document.hasFocus();
-    this.pollTimer = setTimeout(() => this.poll(), computeNextPollDelay(isActive));
+    const pollTimer = setTimeout(() => {
+      if (this.pollTimer === pollTimer) {
+        this.pollTimer = null;
+      }
+      return this.poll();
+    }, computeNextPollDelay(isActive));
+    this.pollTimer = pollTimer;
     if (this.pollTimer && typeof this.pollTimer.unref === "function") {
       this.pollTimer.unref();
     }

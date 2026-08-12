@@ -343,7 +343,7 @@ PY"
   record "Community theme variants"
 
   stage "Observe background polling and refocus"
-  step "With the server up, leave Obsidian unfocused for more than two minutes and inspect serve.log for the two-minute cadence. Refocus and verify an immediate poll."
+  step "With the server up, leave desktop Obsidian unfocused for at least four minutes to obtain two consecutive idle poll records at the two-minute cadence. Inspect only sanitized poll timestamps and route metadata in serve.log; exclude credentials, headers, bodies, and note content. Refocus and verify exactly one immediate attention refresh, then normal active cadence with no duplicate polls."
   record "Polling cadence"
 
   stage "Confirm removal of the disposable vault"
