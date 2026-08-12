@@ -55,7 +55,6 @@ KNOWN_CONTRACT_GAPS: dict[tuple[str, str], str] = {}
 
 def _dispatch_and_check(v, action_id: str, binding, transport: str, manifest) -> None:
     if transport == "mcp":
-        pytest.importorskip("mcp")
         from tests.floor_lib import run_mcp
     with read_only_guard(v):
         if transport == "cli":

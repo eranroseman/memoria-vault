@@ -9,10 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from tests.floor_lib import run_cli, run_http, seed_vault
-
-pytest.importorskip("mcp")
-from tests.floor_lib import run_mcp
+from tests.floor_lib import run_cli, run_http, run_mcp, seed_vault
 
 pytestmark = pytest.mark.floor
 

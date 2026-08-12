@@ -92,8 +92,6 @@ def test_cli_mcp_passes_scope_and_agent_identity(
 
 
 def test_mcp_app_requires_non_root_read_scope(workspace: Path) -> None:
-    pytest.importorskip("mcp")
-
     with pytest.raises(ValueError, match="mcp requires at least one non-root --read-scope"):
         make_mcp_app(workspace, read_scope=[])
     with pytest.raises(ValueError, match="mcp requires at least one non-root --read-scope"):
@@ -103,8 +101,6 @@ def test_mcp_app_requires_non_root_read_scope(workspace: Path) -> None:
 
 
 def test_mcp_tool_roster_is_closed(workspace: Path) -> None:
-    pytest.importorskip("mcp")
-
     app = make_mcp_app(workspace, read_scope=["notes"], agent_identity="agent")
 
     assert sorted(tool.name for tool in _list_tools(app)) == [
@@ -127,8 +123,6 @@ def test_mcp_tool_roster_is_closed(workspace: Path) -> None:
 
 
 def test_mcp_tool_descriptions_match_surface_contract(workspace: Path) -> None:
-    pytest.importorskip("mcp")
-
     app = make_mcp_app(workspace, read_scope=["notes"], agent_identity="agent")
     actions = actions_by_id()
     tools = {tool.name: tool for tool in _list_tools(app)}
@@ -170,8 +164,6 @@ def test_mcp_read_tool_schemas_match_registry_params(workspace: Path) -> None:
     The row `params` field is the single source both projections consume
     (openapi via http_transport.openapi_schema, MCP via generation).
     """
-    pytest.importorskip("mcp")
-
     app = make_mcp_app(workspace, read_scope=["notes"], agent_identity="agent")
     tools = {tool.name: tool for tool in _list_tools(app)}
 
@@ -188,8 +180,6 @@ def test_mcp_read_tool_schemas_match_registry_params(workspace: Path) -> None:
 
 def test_mcp_tools_bind_read_engine_dispatch_class(workspace: Path) -> None:
     """U1 §6(i): every tool except operation_run binds a read engine function."""
-    pytest.importorskip("mcp")
-
     app = make_mcp_app(workspace, read_scope=["notes"], agent_identity="agent")
     rows_by_tool = {
         action["mcp"]["tool"]: action
@@ -207,7 +197,6 @@ def test_mcp_tools_bind_read_engine_dispatch_class(workspace: Path) -> None:
 
 
 def test_mcp_public_call_tool_serializes_structured_result(workspace: Path) -> None:
-    pytest.importorskip("mcp")
     app = make_mcp_app(workspace, read_scope=["notes"], agent_identity="agent")
 
     result = asyncio.run(app.call_tool("status", {}))
@@ -222,7 +211,6 @@ def test_mcp_read_tools_pass_session_scope(
     workspace: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    pytest.importorskip("mcp")
     seen: list[tuple[str, list[str] | None]] = []
 
     def record(name: str):
@@ -282,8 +270,7 @@ def test_mcp_read_tools_pass_session_scope(
 
 
 def test_mcp_reads_are_engine_scoped(workspace: Path) -> None:
-    pytest.importorskip("mcp")
-    tool_error = pytest.importorskip("mcp.server.mcpserver.exceptions").ToolError
+    from mcp.server.mcpserver.exceptions import ToolError
 
     write_checked_note(workspace, "notes/alpha.md", "Alpha")
     write_checked_note(workspace, "notes/beta.md", "Beta")
@@ -292,13 +279,11 @@ def test_mcp_reads_are_engine_scoped(workspace: Path) -> None:
     listed = _call(app, "concepts")
 
     assert [row["path"] for row in listed["concepts"]] == ["notes/alpha.md"]
-    with pytest.raises(tool_error, match="target not found"):
+    with pytest.raises(ToolError, match="target not found"):
         _call(app, "concept", target="notes/beta.md")
 
 
 def test_mcp_operation_run_uses_request_envelope(workspace: Path) -> None:
-    pytest.importorskip("mcp")
-
     app = make_mcp_app(workspace, read_scope=["notes"], agent_identity="review-agent")
 
     response = _call(
@@ -362,7 +347,6 @@ def test_mcp_operation_run_uses_request_envelope(workspace: Path) -> None:
 
 def test_mcp_operation_run_never_carries_pi_authority(workspace: Path) -> None:
     """The loopback HTTP door's PI grant must not reach the stdio agent door."""
-    pytest.importorskip("mcp")
     attention_path = workspace / "inbox/mcp-cannot-resolve.md"
     attention_path.parent.mkdir(parents=True, exist_ok=True)
     attention_path.write_text(
@@ -401,8 +385,8 @@ def test_mcp_operation_run_never_carries_pi_authority(workspace: Path) -> None:
 
 
 def test_mcp_rejects_idempotency_key_bound_to_pending_pi_request(workspace: Path) -> None:
-    pytest.importorskip("mcp")
-    tool_error = pytest.importorskip("mcp.server.mcpserver.exceptions").ToolError
+    from mcp.server.mcpserver.exceptions import ToolError
+
     attention_path = workspace / "inbox/pi-pending.md"
     attention_path.parent.mkdir(parents=True, exist_ok=True)
     attention_path.write_text(
@@ -433,7 +417,7 @@ def test_mcp_rejects_idempotency_key_bound_to_pending_pi_request(workspace: Path
 
     listed = _call(app, "requests", status="pending")
     detail = _call(app, "request", request_id=request["request_id"])
-    with pytest.raises(tool_error, match="idempotency key is already bound"):
+    with pytest.raises(ToolError, match="idempotency key is already bound"):
         _call(
             app,
             "operation_run",
@@ -450,7 +434,6 @@ def test_mcp_rejects_idempotency_key_bound_to_pending_pi_request(workspace: Path
 
 def test_mcp_answer_query_hit_sources_resolve_through_read_tools(workspace: Path) -> None:
     """U4-C.3: every ref an `answer-query` hit returns resolves through a read tool."""
-    pytest.importorskip("mcp")
     write_checked_note(workspace, "notes/groundterm.md", "Groundterm note")
     content = workspace / ".memoria/blobs/source-content/source-alpha/full-text/alpha.txt"
     content.parent.mkdir(parents=True)
@@ -504,7 +487,6 @@ def test_mcp_answer_query_no_hit_payload_rides_dispatch_intact(workspace: Path) 
     must be the same ones `unknowns[0]` was rendered from. A stage row dropped
     or a stratum re-keyed in transport breaks the final equality.
     """
-    pytest.importorskip("mcp")
     write_checked_note(workspace, "notes/present.md", "Present note")
     app = make_mcp_app(workspace, read_scope=["notes"], agent_identity="agent")
 
@@ -579,7 +561,6 @@ def test_mcp_answer_query_records_no_read_observed_row_and_leaves_the_journal_in
     got wrong: it scanned `event_log` for a row that lives in `telemetry_events`,
     where no ask-path emitter could ever have tripped it.
     """
-    pytest.importorskip("mcp")
     write_checked_note(workspace, "notes/groundterm.md", "Groundterm note")
     card = write_finding(
         workspace, "flag", "Drift check", "a note drifted", "sweep", target="notes/groundterm.md"
