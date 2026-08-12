@@ -15,9 +15,20 @@ PowerShell syntax checks, which are not roster entries. CI sets this only for
 PRs whose whole diff is documentation; local runs and the post-merge `main` run
 always execute the full roster.
 
+Sharding (CI only): `--shard NAME` runs one leg of the roster, so CI can spend
+four runners on a gate that is throughput-bound rather than dominated by any one
+check. A bare `python scripts/verify` is unchanged and still runs everything —
+the shards are a way to divide the same roster, not a second roster. What keeps
+"CI verified" and "verified locally" the same claim is
+`tests/test_verify_script.py`, which asserts the union of the shards reproduces
+this roster exactly once and that `.github/workflows/verify.yml` runs every
+declared shard. Before sharding, that equality rested on CI invoking the same
+command string, and nothing checked it.
+
 One run per checkout: the e2e smoke resets `<checkout>/test-vault` outright, so
-a second concurrent gate destroys the first one's fixture mid-run. See
-`_hold_single_run_lock`.
+a second concurrent gate destroys the first one's fixture mid-run. Only a run
+that selects that gate takes the lock (`Gate.mutates_vault`), so shards without
+it run side by side in one checkout. See `_hold_single_run_lock`.
 """
 
 from __future__ import annotations
@@ -39,9 +50,20 @@ LOCK_PATH = ROOT / ".verify.lock"
 # CI sets this to "1" only for provably docs-only PRs (see the module docstring).
 DOCS_ONLY = os.environ.get("VERIFY_DOCS_ONLY") == "1"
 
-# Every registered level marker except `live`. `slow` is orthogonal — it grades
-# speed within a level, so slow tests ride along with their level's disjunct.
-PYTEST_MARKERS = "static or unit or contract or runtime or package or floor"
+# Every registered level marker except `live`, split across the test shards.
+# `slow` is orthogonal — it grades speed within a level, so slow tests ride along
+# with their level's disjunct. The split is by measured cost at four xdist
+# workers (contract 41s, runtime 35s, the rest 42s together), not by meaning.
+CONTRACT_MARKERS = "contract"
+RUNTIME_MARKERS = "runtime"
+SWEEP_MARKERS = "static or unit or package or floor"
+
+# The shards CI runs as a matrix. A bare `python scripts/verify` runs all of them
+# in roster order and is unchanged by their existence; the shards exist so CI can
+# spend four runners on one roster. tests/test_verify_script.py asserts that the
+# union of the shards is exactly this roster, which is what keeps "CI verified"
+# and "verified locally" the same claim.
+SHARDS = ("lint", "contract", "runtime", "sweep")
 
 # 1733: N worktrees each taking `-n auto` = all cores thrash each other (same
 # suite measured 190s at load ~3 vs 3,355s at load 18). Half the cores per run
@@ -58,10 +80,62 @@ class Gate:
     cannot affect the step; False is the explicit opt-out that drops it under
     `VERIFY_DOCS_ONLY=1`, so a new entry that never considered docs scope still
     runs there.
+
+    `shard` names which CI matrix leg runs the step. It defaults to `lint` so a
+    new entry that never considered sharding still runs somewhere rather than
+    falling out of the roster silently.
+
+    `markers` is the pytest marker expression this step passes, when it is a
+    pytest step. Held per gate rather than compared against one module constant,
+    so the docs-only narrowing can rewrite the right gate once several carry
+    markers.
+
+    `mutates_vault` is True for a step that rewrites `<checkout>/test-vault`.
+    Only a run selecting such a step needs the single-run lock, so two shards can
+    run side by side in one checkout.
     """
 
     cmd: list[str]
     docs: bool = True
+    shard: str = "lint"
+    markers: str | None = None
+    mutates_vault: bool = False
+
+
+def _pytest_cmd(markers: str) -> list[str]:
+    """The test gate's command for one marker expression.
+
+    One builder rather than three copies: the flags below are load-bearing and
+    drifting them per shard would make the shards test differently.
+    """
+    return [
+        "env",
+        "PYTEST_DISABLE_PLUGIN_AUTOLOAD=1",
+        "python3",
+        "-m",
+        "pytest",
+        "tests/",
+        "-q",
+        # Parallelize across cores (pytest-xdist); `-p xdist` because plugin
+        # autoload is disabled above. The vault-mutating tests are I/O-bound and
+        # per-test isolated (tmp_path), so this cuts the suite ~3x. `-m` stays
+        # last so the docs-only narrowing can swap the marker for `static`.
+        "-n",
+        "auto",
+        "-p",
+        "xdist",
+        # 1733: the default `--dist load` scatters a module's tests across
+        # workers, so module-scoped fixtures (the ~30s seed_vault builds in
+        # test_floor_sweep_reads / test_read_api_scope_walk) are rebuilt once
+        # per worker. loadgroup pins only the xdist_group-marked modules to a
+        # single worker each (one fixture build per file) while everything
+        # else — notably test_floor_sweep_operations' 60 expensive tests —
+        # keeps free load balancing; a blanket loadfile would serialize them.
+        "--dist",
+        "loadgroup",
+        "-m",
+        markers,
+    ]
 
 
 # Source of truth for what "verified" means; tests/test_verify_script.py mirrors
@@ -80,38 +154,16 @@ GATES: list[Gate] = [
     Gate(["python3", "scripts/checks/doc_cited_paths.py"]),
     Gate(["python3", "scripts/checks/control_plane_actor_gate.py"]),
     # a docs-only diff provably cannot change packaging, so the wheel gate is skipped
-    Gate(["python3", "scripts/checks/wheel_gate.py"], docs=False),
+    Gate(["python3", "scripts/checks/wheel_gate.py"], docs=False, shard="runtime"),
+    Gate(_pytest_cmd(CONTRACT_MARKERS), shard="contract", markers=CONTRACT_MARKERS),
+    Gate(_pytest_cmd(RUNTIME_MARKERS), shard="runtime", markers=RUNTIME_MARKERS),
+    Gate(_pytest_cmd(SWEEP_MARKERS), shard="sweep", markers=SWEEP_MARKERS),
     Gate(
-        [
-            "env",
-            "PYTEST_DISABLE_PLUGIN_AUTOLOAD=1",
-            "python3",
-            "-m",
-            "pytest",
-            "tests/",
-            "-q",
-            # Parallelize across cores (pytest-xdist); `-p xdist` because plugin
-            # autoload is disabled above. The vault-mutating tests are I/O-bound and
-            # per-test isolated (tmp_path), so this cuts the suite ~3x. `-m` stays
-            # last so the docs-only narrowing can swap the marker for `static`.
-            "-n",
-            "auto",
-            "-p",
-            "xdist",
-            # 1733: the default `--dist load` scatters a module's tests across
-            # workers, so module-scoped fixtures (the ~30s seed_vault builds in
-            # test_floor_sweep_reads / test_read_api_scope_walk) are rebuilt once
-            # per worker. loadgroup pins only the xdist_group-marked modules to a
-            # single worker each (one fixture build per file) while everything
-            # else — notably test_floor_sweep_operations' 60 expensive tests —
-            # keeps free load balancing; a blanket loadfile would serialize them.
-            "--dist",
-            "loadgroup",
-            "-m",
-            PYTEST_MARKERS,
-        ]
+        ["python3", "scripts/test_vault/e2e_smoke.py"],
+        docs=False,
+        shard="runtime",
+        mutates_vault=True,
     ),
-    Gate(["python3", "scripts/test_vault/e2e_smoke.py"], docs=False),
     Gate(
         [
             "python3",
@@ -153,17 +205,38 @@ PSSA_COMMAND = (
 )
 
 
-def _gates_for_run(docs_only: bool) -> list[list[str]]:
-    """The full roster, or its docs-relevant subset when docs_only is set."""
+def _selected(shard: str | None) -> list[Gate]:
+    """The gates one run owns. `shard=None` — the local default — owns them all."""
+    return [gate for gate in GATES if shard is None or gate.shard == shard]
+
+
+def _needs_vault_lock(shard: str | None) -> bool:
+    """Whether this selection touches `<checkout>/test-vault`, so must serialize."""
+    return any(gate.mutates_vault for gate in _selected(shard))
+
+
+def _gates_for_run(docs_only: bool, shard: str | None = None) -> list[list[str]]:
+    """The roster, narrowed to one shard and/or to the docs-relevant subset.
+
+    An empty result is a legitimate outcome, not an error: CI invokes every shard
+    on a docs-only PR, and the shards holding no docs-relevant gate simply pass.
+    """
+    selected = _selected(shard)
     if not docs_only:
-        return [gate.cmd for gate in GATES]
+        return [gate.cmd for gate in selected]
     reduced: list[list[str]] = []
-    for gate in GATES:
+    for gate in selected:
         if not gate.docs:
             continue
-        # Exact-argument swap; only the pytest gate carries PYTEST_MARKERS, so
-        # every other command passes through unchanged.
-        reduced.append(["static" if arg == PYTEST_MARKERS else arg for arg in gate.cmd])
+        if gate.markers is None:
+            reduced.append(gate.cmd)
+            continue
+        # Under a docs-only diff only the shard whose markers already contain
+        # `static` runs tests, narrowed to it. Letting every test shard narrow to
+        # `static` would run the same set three times for no added coverage.
+        if "static" not in gate.markers:
+            continue
+        reduced.append(["static" if arg == gate.markers else arg for arg in gate.cmd])
     return reduced
 
 
@@ -253,20 +326,54 @@ def check_powershell() -> int:
     return code
 
 
-def main() -> int:
-    _lock = _hold_single_run_lock()  # held for the whole run; released on exit
+# The native steps, which are Python rather than a subprocess roster. Keyed by
+# shard so the same partition rule that covers GATES covers them too.
+EXTRA_STEPS: dict[str, tuple] = {"lint": (check_json, check_powershell)}
+
+
+def _extra_steps_for_run(docs_only: bool, shard: str | None) -> tuple:
+    """The JSON and PowerShell syntax checks test code/config, not documentation."""
+    if docs_only:
+        return ()
+    if shard is None:
+        return tuple(step for steps in EXTRA_STEPS.values() for step in steps)
+    return EXTRA_STEPS.get(shard, ())
+
+
+def _parse_shard(argv: list[str]) -> str | None:
+    """`--shard NAME`, or None for the full roster.
+
+    An unknown name is an error rather than an empty run: a typo in the CI matrix
+    would otherwise report a green shard that ran nothing.
+    """
+    if "--shard" not in argv:
+        return None
+    index = argv.index("--shard")
+    if index + 1 >= len(argv):
+        raise SystemExit("verify: --shard needs a name")
+    shard = argv[index + 1]
+    if shard not in SHARDS:
+        raise SystemExit(f"verify: unknown shard {shard!r}; expected one of {', '.join(SHARDS)}")
+    return shard
+
+
+def main(argv: list[str] | None = None) -> int:
+    shard = _parse_shard(sys.argv[1:] if argv is None else argv)
+    # Only a selection that rewrites <checkout>/test-vault needs to serialize, so
+    # the other shards can run beside it in one checkout.
+    _lock = _hold_single_run_lock() if _needs_vault_lock(shard) else None
     run_start = time.perf_counter()
+    if shard is not None:
+        print(f"== verify: shard {shard}")
     if DOCS_ONLY:
         print(
             "== verify: docs-only scope — lint, the docs-relevant product gates, and static tests"
         )
-    for command in _gates_for_run(DOCS_ONLY):
+    for command in _gates_for_run(DOCS_ONLY, shard):
         if run(command) != 0:
             print("verify: FAILED", file=sys.stderr)
             return 1
-    # The JSON and PowerShell syntax checks test code/config, not documentation.
-    extra_steps = () if DOCS_ONLY else (check_json, check_powershell)
-    for step in extra_steps:
+    for step in _extra_steps_for_run(DOCS_ONLY, shard):
         step_start = time.perf_counter()
         code = step()
         print(f"   step time: {time.perf_counter() - step_start:.1f}s")

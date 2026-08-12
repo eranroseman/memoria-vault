@@ -7,10 +7,13 @@ import runpy
 from pathlib import Path
 
 import pytest
+import yaml
 
 from tests.paths import ROOT
 
 pytestmark = pytest.mark.static
+
+VERIFY_WORKFLOW = ROOT / ".github/workflows/verify.yml"
 
 
 def _verify_namespace() -> dict:
@@ -36,10 +39,14 @@ def test_roster_covers_lint_tests_and_product_gates() -> None:
         "memoria --version",
     ):
         assert gate in flat
-    assert any(
-        "pytest" in f and "static or unit or contract or runtime or package or floor" in f
-        for f in flat
-    )
+    # The test gate is three entries, one per test shard. Their marker expressions
+    # must together cover every registered level except `live`, or a whole level
+    # stops running while the roster still looks complete.
+    namespace = _verify_namespace()
+    markers = {gate.markers for gate in namespace["GATES"] if gate.markers is not None}
+    assert markers == {"contract", "runtime", "static or unit or package or floor"}
+    covered = {level for expression in markers for level in expression.split(" or ")}
+    assert covered == {"static", "unit", "contract", "runtime", "package", "floor"}
     assert any(f.startswith("python3 -m compileall") for f in flat)
     assert any(f.startswith("bash -n scripts/install.sh") for f in flat)
 
@@ -55,6 +62,96 @@ def test_retired_doctors_are_absent_from_the_roster() -> None:
         "docs_doctor",
     ):
         assert retired not in flat
+
+
+def test_every_gate_belongs_to_exactly_one_declared_shard() -> None:
+    namespace = _verify_namespace()
+    gates, shards = namespace["GATES"], namespace["SHARDS"]
+
+    assigned = {gate.shard for gate in gates}
+    assert assigned <= set(shards), (
+        f"gates name shards SHARDS does not declare: {assigned - set(shards)}"
+    )
+    assert set(shards) <= assigned, (
+        f"SHARDS declares shards no gate belongs to: {set(shards) - assigned}"
+    )
+
+
+def test_the_shards_reproduce_the_full_roster_exactly_once() -> None:
+    """The parity guarantee: sharded CI verifies what a bare local run verifies.
+
+    Before sharding, parity rested on CI invoking the same command string, which
+    nothing asserted. This is what replaces that — a gate dropped from every
+    shard, or landing in two, fails here rather than silently changing what a
+    green required check means.
+    """
+    namespace = _verify_namespace()
+    gates_for_run = namespace["_gates_for_run"]
+
+    full = [" ".join(cmd) for cmd in gates_for_run(False)]
+    union: list[str] = []
+    for shard in namespace["SHARDS"]:
+        union += [" ".join(cmd) for cmd in gates_for_run(False, shard)]
+
+    assert sorted(union) == sorted(full), (
+        "the shards do not partition the roster; CI and `python scripts/verify` "
+        "would verify different things"
+    )
+
+
+def test_ci_runs_every_shard() -> None:
+    """Nothing else stops verify.yml listing three of four shards and staying green."""
+    namespace = _verify_namespace()
+    workflow = yaml.safe_load(VERIFY_WORKFLOW.read_text(encoding="utf-8"))
+
+    matrix = workflow["jobs"]["shards"]["strategy"]["matrix"]["shard"]
+    assert sorted(matrix) == sorted(namespace["SHARDS"]), (
+        "verify.yml's matrix and SHARDS disagree; CI would skip a shard silently"
+    )
+
+    # A matrix job named `verify` would publish `verify (lint)`, `verify (contract)`,
+    # ... and the `verify` check `main` requires would vanish, blocking every PR.
+    aggregate = workflow["jobs"]["verify"]
+    assert aggregate["needs"] == "shards", (
+        "the job named `verify` must be the fan-in over `shards`; it is the required check"
+    )
+
+
+def test_docs_only_runs_the_narrowed_tests_in_exactly_one_shard() -> None:
+    """Otherwise the same `static` set runs once per shard, for no added coverage."""
+    namespace = _verify_namespace()
+    gates_for_run = namespace["_gates_for_run"]
+
+    running = [
+        shard
+        for shard in namespace["SHARDS"]
+        if any("pytest" in " ".join(cmd) for cmd in gates_for_run(True, shard))
+    ]
+    assert len(running) == 1, (
+        f"expected exactly one shard to run pytest under docs-only, got {running}"
+    )
+    assert all(
+        cmd[-1] == "static" for cmd in gates_for_run(True, running[0]) if "pytest" in " ".join(cmd)
+    )
+
+
+def test_only_a_vault_mutating_selection_takes_the_lock() -> None:
+    """`e2e_smoke.py` resets <checkout>/test-vault; nothing else in the roster does.
+
+    Deriving the lock from that property rather than taking it unconditionally is
+    what lets two shards run side by side in one checkout.
+    """
+    namespace = _verify_namespace()
+    gates, needs_lock = namespace["GATES"], namespace["_needs_vault_lock"]
+
+    mutating = [g for g in gates if g.mutates_vault]
+    assert [" ".join(g.cmd) for g in mutating] == ["python3 scripts/test_vault/e2e_smoke.py"]
+
+    assert needs_lock(None) is True, "a full local run includes the vault-mutating gate"
+    assert needs_lock(mutating[0].shard) is True
+    for shard in namespace["SHARDS"]:
+        if shard != mutating[0].shard:
+            assert needs_lock(shard) is False, f"shard {shard} mutates no vault but takes the lock"
 
 
 def test_json_and_powershell_are_gate_steps() -> None:
@@ -89,8 +186,9 @@ def test_docs_only_scope_narrows_the_roster() -> None:
         assert gate in docs
 
     # Docs scope narrows pytest to `static` and drops the code-only gates.
-    assert any("pytest" in d and d.endswith("-m static") for d in docs)
-    assert not any("static or unit or contract or runtime or package or floor" in d for d in docs)
+    pytest_gates = [d for d in docs if "pytest" in d]
+    assert len(pytest_gates) == 1, f"docs scope must run pytest once, got {len(pytest_gates)}"
+    assert pytest_gates[0].endswith("-m static")
     assert not any("e2e_smoke.py" in d for d in docs)
     assert not any("compileall" in d for d in docs)
     assert not any(d.startswith("bash -n") for d in docs)
