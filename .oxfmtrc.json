@@ -1,5 +1,5 @@
 {
-  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "$schema": "./packages/memoria-obsidian/node_modules/oxfmt/configuration_schema.json",
   "ignorePatterns": [
     "src/memoria_vault/product/workspace_seed/**",
     "packages/memoria-obsidian/styles.css",
@@ -11,6 +11,10 @@
     "**/*.yml",
     "**/*.yaml",
     "**/*.toml",
-    "**/*.css"
+    "**/*.css",
+    "**/*.scss",
+    "**/*.less",
+    "**/*.graphql",
+    "**/*.mdx"
   ]
 }

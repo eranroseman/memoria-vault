@@ -20,7 +20,6 @@
     "docs/superpowers/**",
     "design-history/archive/**",
     ".notes/**",
-    "scratch/**",
     "**/tmp/**",
     "**/_site/**",
     "docs/.jekyll-cache/**",

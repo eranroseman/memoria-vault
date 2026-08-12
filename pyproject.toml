@@ -115,7 +115,7 @@ docstring-code-format = true
 #   RET  flake8-return -- unnecessary else-after-return and friends
 #   N    pep8-naming -- casing the formatter cannot see, enabled while already clean
 #
-# Deliberately OFF: E1/E2/E3, W291/293, E501, COM, ISC, Q -- the formatter owns
+# Deliberately OFF: E1/E2/E3, E501, COM, ISC, Q -- the formatter owns
 # layout (COM/ISC actively conflict with it). T20 (print is intentional in CLI),
 # LOG/G (no logging), PTH (pathlib everywhere except the atomic-replace and chmod
 # paths in backup/rendezvous/secrets/vaultio, where the os call is the clearer
