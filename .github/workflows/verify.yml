@@ -87,7 +87,18 @@ jobs:
           docs_only=false
           if [ -n "$files" ]; then
             printf '%s\n' "$files" | grep -qE '\.ps1$' || ps1=false
-            printf '%s\n' "$files" | grep -qvE '(^design-history/|\.md$)' || docs_only=true
+            # A file is documentation when it is under design-history/ or is
+            # Markdown that is NOT shipped as package data. 66 tracked *.md live
+            # under src/ (capabilities/operations/*.md, workspace_seed/) and are
+            # program content: the tests that validate them are `contract`, which
+            # the docs-only narrowing drops, so a PR editing only those files
+            # would skip every check that reads them.
+            remaining="$(
+              { printf '%s\n' "$files" | grep -vE '^design-history/' | grep -vE '\.md$'
+                printf '%s\n' "$files" | grep -E '^src/.*\.md$'
+              } | grep -c . || true
+            )"
+            [ "$remaining" = "0" ] && docs_only=true
           fi
           echo "ps1=$ps1" >> "$GITHUB_OUTPUT"
           echo "docs_only=$docs_only" >> "$GITHUB_OUTPUT"
