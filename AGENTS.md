@@ -82,6 +82,10 @@ should feel like a co-PI, not a knowledge base. Product pitch:
 - The engineering skills read their per-repo configuration from
   `docs/agents/`: `issue-tracker.md`, `triage-labels.md`, `domain.md`,
   `cross-tool-parity.md`, and `consistency-audit-brief.md`.
+- Which gate claims which file is computed, not asserted in prose:
+  `tests/test_lint_coverage.py` fails when a tracked file falls outside every
+  tool scope without an `UNCLAIMED` entry giving the reason. Adding a language
+  or a top-level directory means adding a line there.
 
 ## Issue conventions
 
