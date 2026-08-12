@@ -8,7 +8,7 @@ installer, runtime package, packaged workspace seed, and docs are welcome.
 - Check [open issues](https://github.com/eranroseman/memoria-vault/issues) to avoid duplicate work.
 - Which changes need an issue opened first, and which can go straight to a PR,
   is in [AGENTS.md](AGENTS.md#issue-conventions), Issue conventions.
-- AI agents follow [AGENTS.md](AGENTS.md) for repo facts, the installed superpowers skills for how work happens, and `/triage` for issue work.
+- AI agents follow [AGENTS.md](AGENTS.md) for repo facts; how work happens is owned by your installed skills, not by this repo.
 
 ## Development setup
 
@@ -46,8 +46,8 @@ File work as [GitHub issues](https://github.com/eranroseman/memoria-vault/issues
 rationale behind the current shape.
 
 Everything else about where work is tracked — working specs and plans,
-rejected-enhancement records, release scope, the label vocabulary, the triage
-state machine — is policy. It lives in [AGENTS.md](AGENTS.md), under
+rejected-enhancement records, release scope, the label vocabulary and the rules
+for applying it — is policy. It lives in [AGENTS.md](AGENTS.md), under
 [Where things live](AGENTS.md#where-things-live) and
 [Issue conventions](AGENTS.md#issue-conventions). Read it there rather than
 here; a second copy would be free to drift, and was.
@@ -88,8 +88,7 @@ gate excludes run the same way on demand.
 ## Documentation authoring conventions
 
 For contributors editing the published docs under `docs/`. Generic Diátaxis
-craft is a separate, invoke-only skill; the rules below are the
-Memoria-specific ones.
+craft is out of scope here; the rules below are the Memoria-specific ones.
 
 - **Routing:** tutorials teach, how-to guides direct, reference informs,
   explanation discusses. Mixed-purpose content pages are wrong — split them.

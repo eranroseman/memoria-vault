@@ -12,8 +12,6 @@ The skills speak in terms of five canonical triage roles. This file maps those r
 
 When a skill mentions a role (e.g. "apply the AFK-ready triage label"), use the corresponding label string from this table.
 
-Edit the right-hand column to match whatever vocabulary you actually use.
-
 ## Category roles
 
 `/triage` also requires exactly one **category** role per triaged issue:
@@ -33,4 +31,4 @@ nor applies them:
   Dependabot on its own pull requests.
 
 An issue that has not been triaged carries no role at all. That is a meaningful
-state, and it is the first bucket `/triage` surfaces.
+state, not an oversight.

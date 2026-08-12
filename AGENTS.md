@@ -1,17 +1,15 @@
 # AGENTS.md — Memoria
 
-Facts for AI agents working in `eranroseman/memoria-vault`. *How* work happens
-is owned by the installed superpowers skills (brainstorm → plan → TDD/SDD →
-review → finish) and, for issue work, by `/triage` — not by this file.
+How work happens is owned by your installed skills — configured per user, not by
+this file.
 
-This file holds what you can break before you would think to look something up:
-the gate, merge rules, the shared index, how work is tracked. It lives here and
-only here — when the two files appear to disagree about policy, this one is
+This file holds what you can break before you would think to look something up,
+and it lives here and only here — where it and
+[CONTRIBUTING.md](CONTRIBUTING.md) appear to disagree about policy, this one is
 right and the other has drifted.
 
-Everything else is consulted at the moment of the task.
 [CONTRIBUTING.md](CONTRIBUTING.md) and `docs/agents/` carry the craft this file
-deliberately does not restate — docs conventions when you write docs, coding
+does not restate — docs conventions when you write docs, coding
 conventions when you write code, the PR checklist when you open one, the
 tracker configuration when you touch issues. Nothing there is human-only in a
 way that excludes you; read the part your task needs.
@@ -36,11 +34,12 @@ should feel like a co-PI, not a knowledge base. Product pitch:
   earns back with release tooling).
 - **The git index is shared per checkout** — two sessions or subagents in one
   checkout can sweep each other's staged files into a commit. Stage explicit
-  paths, never `git add -A`; a `PreToolUse` hook rejects the sweep forms. Each
+  paths, never `git add -A`; a checked-in `PreToolUse` hook rejects the sweep
+  forms. Each
   session works in its own worktree, created from the main checkout:
   `git worktree add .claude/worktrees/<name> -b wip/<name> origin/main`, then
-  `EnterWorktree(path: ".claude/worktrees/<name>")`. Codex does this by
-  default. Per-tool differences: `docs/agents/cross-tool-parity.md`.
+  `EnterWorktree(path: ".claude/worktrees/<name>")`. Per-tool differences,
+  including which tools do this by default: `docs/agents/cross-tool-parity.md`.
 - **Test only against disposable vaults under `test-vault/`** (never a personal
   vault). The installed test-vault carries its own nested `.git` (vault
   versioning is product behavior) and must stay reconstructible — `git clean
@@ -65,49 +64,47 @@ should feel like a co-PI, not a knowledge base. Product pitch:
 ## Where things live
 
 - `docs/` describes the current system (published to GitHub Pages, Diátaxis-
-  structured: tutorials / how-to / reference / explanation); its repo-specific
+  structured); its repo-specific
   authoring conventions live in `CONTRIBUTING.md` ("Documentation authoring
   conventions"). `design-history/` is the frozen record of how it got there.
   `docs/superpowers/` holds working specs and plans (tracked, not published).
 - Backlog lives in GitHub issues. A milestone marks intended-release scope
   when one is set — not every release gets one; the frozen `design-history/`
-  chapter is the per-release record. No separate status/readiness fields; the
-  labels in "Issue conventions" below record owner-gated facts and feed the
-  derived pull query — they are not a stored readiness verdict. No release
-  parent-issue ceremony.
+  chapter is the per-release record. No separate status/readiness fields;
+  issue state lives in the labels in "Issue conventions" below, with assignee
+  and blocking read live. No release parent-issue ceremony.
 - Canonical term definitions live in `docs/reference/data-model/glossary.md`
   (one definition per term, usage rulings included) — read it before naming
   things, add new rulings there, and never start a second glossary. Root
-  `CONTEXT.md` is a pointer stub routing to it (and back here) for tools
-  that look for that file by convention. ADRs live in `docs/adr/`, written
+  `CONTEXT.md` is a pointer stub for tools that look for that filename by
+  convention — keep it, and keep it a stub. ADRs live in `docs/adr/`, written
   when a decision resolves rather than scaffolded ahead of one.
 - The engineering skills read their per-repo configuration from
-  `docs/agents/`: `issue-tracker.md`, `triage-labels.md`, `domain.md`
-  (single-context), `cross-tool-parity.md`, and
-  `consistency-audit-brief.md`.
+  `docs/agents/`: `issue-tracker.md`, `triage-labels.md`, `domain.md`,
+  `cross-tool-parity.md`, and `consistency-audit-brief.md`.
 
 ## Issue conventions
 
-The tracker runs the `triage` skill's state machine. Readiness is authored
-rather than derived, but only by a triage session that checks the request
-isn't already built, verifies the claim, and attaches a durable brief — so the
-label indexes real work instead of restating facts GitHub already tracks.
+State roles are authored, not derived — applied only by a triage session that
+checks the request isn't already built, verifies the claim, and attaches a
+durable brief, so `ready-for-agent` indexes real work instead of restating
+facts GitHub already tracks.
 
 - **Labels.** A triaged issue carries exactly one **category** role (`bug`,
   `enhancement`) and exactly one **state** role (`needs-triage`, `needs-info`,
   `ready-for-agent`, `ready-for-human`, `wontfix`) — meanings in
   `docs/agents/triage-labels.md`. Two state roles is a defect: flag it and ask,
   never guess which wins. Category goes in labels, never in a title prefix. An issue
-  that has not been triaged carries no role at all — a meaningful state, and the first
-  bucket `/triage` surfaces. The vocabulary is closed: those roles plus
+  that has not been triaged carries no role at all — a meaningful state, not an
+  oversight. The vocabulary is closed: those roles plus
   `documentation` and the Dependabot labels are the whole set, with no priority
   or severity tier on top.
 - **Filing.** Significant changes — new operation surfaces, installer
   overhauls, schema changes, provider integrations, architecture decisions —
   get an issue before the work starts. Small docs, typo, script, and test fixes
-  can go straight to a PR. File it with no roles at all and let `/triage`
-  assign them; an issue carrying a category but no state role sits outside
-  every triage bucket and is never surfaced. The two issue templates are the
+  can go straight to a PR. File it with no roles at all and let triage assign
+  them; an issue carrying a category but no state role is never surfaced for
+  triage at all. The two issue templates are the
   exception — a human picking one has already chosen the category, so they
   pre-fill it alongside `needs-triage`.
 - **Frontier** — the issues an agent may start right now, and the only ones:
