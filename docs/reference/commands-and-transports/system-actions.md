@@ -32,7 +32,7 @@ Package-owned operation manifests currently ship these operation IDs:
 
 `capture-remote-pdf-source` is an internal PI-only worker route, not a new CLI
 command. It resolves imported remote-PDF descriptors only under its finite
-seven-prefix network policy before using the existing PDF capture seam.
+ten-prefix network policy before using the existing PDF capture seam.
 
 ## Detailed action catalogs
 

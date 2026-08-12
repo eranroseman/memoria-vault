@@ -61,7 +61,7 @@
 - Produces: `capture.MAX_PDF_RAW_BYTES: int`, set to `32 * 1024 * 1024`.
 - Produces: `tests.pdf_fixtures.VALID_TEXT_PDF_BYTES: bytes`, a valid one-page PDF whose extractable text is `Floor PDF evidence.`.
 
-- [ ] **Step 1: Add the shared valid-PDF fixture and failing contracts**
+- [x] **Step 1: Add the shared valid-PDF fixture and failing contracts**
 
 Create `tests/pdf_fixtures.py` with this exact fixture. It is a hand-built, valid
 one-page PDF so the test proves the installed parser, not a mocked parser.
@@ -132,7 +132,7 @@ def test_extract_pdf_pages_explains_a_missing_runtime_dependency(monkeypatch) ->
 Keep the existing mocked page-count and extracted-text tests. They remain the
 small deterministic tests for their respective limits.
 
-- [ ] **Step 2: Run the new contracts to confirm the current behavior fails**
+- [x] **Step 2: Run the new contracts to confirm the current behavior fails**
 
 Run:
 
@@ -149,7 +149,7 @@ Expected: FAIL. The dependency assertion and raw-byte constant are absent; the
 real parser cannot import in the current environment; the existing message has
 the obsolete vault-MCP wording.
 
-- [ ] **Step 3: Add the runtime dependency and pre-parser limit**
+- [x] **Step 3: Add the runtime dependency and pre-parser limit**
 
 In `pyproject.toml`, add the exact dependency:
 
@@ -187,7 +187,7 @@ Remove the obsolete coverage pragma. Do not move the page or extracted-text
 checks, and do not impose the new public-stage limit on the private test-seeding
 helper `_store_pdf_source()`.
 
-- [ ] **Step 4: Install the edited package and prove the parser contracts pass**
+- [x] **Step 4: Install the edited package and prove the parser contracts pass**
 
 Run:
 
@@ -199,7 +199,7 @@ python -m pytest tests/test_package_spine.py tests/test_capture.py -q
 Expected: PASS. The real parser test imports `fitz`, captures the valid PDF,
 and the oversized input never reaches the parser.
 
-- [ ] **Step 5: Make the floor operation exercise a real PDF**
+- [x] **Step 5: Make the floor operation exercise a real PDF**
 
 Import `base64` and `VALID_TEXT_PDF_BYTES` in `tests/floor_lib.py`.
 Replace the `capture-pdf-source` registry entry with:
@@ -231,7 +231,7 @@ python -m pytest \
 Expected: the first command creates one golden; the second run passes without
 the update flag.
 
-- [ ] **Step 6: Update parser documentation**
+- [x] **Step 6: Update parser documentation**
 
 Update the PDF capture descriptions in all three reference files to state:
 
@@ -245,7 +245,7 @@ Apply the wording where each document describes local PDF staging. Preserve the
 separate PI-only and no-caller-supplied-bytes distinctions for remote PDF
 capture.
 
-- [ ] **Step 7: Run the task verification and commit**
+- [x] **Step 7: Run the task verification and commit**
 
 Run:
 
@@ -293,7 +293,7 @@ git commit -m "fix: make PDF capture a standard bounded runtime capability"
   `diagnostics: dict[str, list[Any]]`.
 - Produces on failure: `job["diagnostics"]` with empty `admitted` and `skipped` lists plus an ordered `failed` list of `{id: str, error: str}` items.
 
-- [ ] **Step 1: Write failing all-failed and request-read tests**
+- [x] **Step 1: Write failing all-failed and request-read tests**
 
 Replace the existing one-row all-failed test with a two-row test that asserts
 the exception class, list shape, order, UTF-8 byte cap, and absence of telemetry:
@@ -371,7 +371,7 @@ def test_request_detail_recursively_neutralizes_job_diagnostics() -> None:
 Use the existing test's row-construction shape rather than adding a production
 test helper solely for this case.
 
-- [ ] **Step 2: Run the diagnostic tests and confirm they fail**
+- [x] **Step 2: Run the diagnostic tests and confirm they fail**
 
 Run:
 
@@ -386,7 +386,7 @@ python -m pytest \
 Expected: FAIL. `SeedInstallAllFailed` and `job.diagnostics` do not exist;
 the existing generic `ValueError` drops the per-row reasons.
 
-- [ ] **Step 3: Implement bounded diagnostics at the seed-install seam**
+- [x] **Step 3: Implement bounded diagnostics at the seed-install seam**
 
 Near the seed-install constants, add:
 
@@ -410,7 +410,7 @@ Change the per-row exception branch to store
 branch, raise `SeedInstallAllFailed({"admitted": admitted, "skipped": skipped,
 "failed": failed})`. Do not emit onboarding telemetry on this path.
 
-- [ ] **Step 4: Persist diagnostics only for the seed-specific failure**
+- [x] **Step 4: Persist diagnostics only for the seed-specific failure**
 
 Import `SeedInstallAllFailed` alongside `seed_install` in `worker.py`.
 Add a narrow handler before the generic worker exception handler:
@@ -432,7 +432,7 @@ except SeedInstallAllFailed as exc:
 Leave the generic `except Exception` behavior unchanged. `engine_api.run_operation()`
 already returns a failed job under `result`, so it needs no production change.
 
-- [ ] **Step 5: Neutralize nested diagnostics and render them in text mode**
+- [x] **Step 5: Neutralize nested diagnostics and render them in text mode**
 
 Add a non-mutating recursive helper beside `_neutralized_request_error()`:
 
@@ -465,7 +465,7 @@ for entry in failed:
 This keeps JSON behavior unchanged: `_emit()` already returns the failed job
 under `result`.
 
-- [ ] **Step 6: Run the task verification and commit**
+- [x] **Step 6: Run the task verification and commit**
 
 Run:
 
@@ -515,7 +515,7 @@ git commit -m "fix: retain safe diagnostics for failed seed installs"
 - Produces: a packaged eight-row manifest using only `pdf-url` and `arxiv-pdf` methods.
 - Produces: `tests/test_seed_preflight.py`, marked only `live`.
 
-- [ ] **Step 1: Write failing manifest, policy, and preflight contracts**
+- [x] **Step 1: Write failing manifest, policy, and preflight contracts**
 
 Replace the coarse fetch-method assertion in `tests/test_seed_manifest.py` with
 a full expected contract. Pin these exact changed values:
@@ -674,7 +674,7 @@ Do not place this test in `tests/test_seed_install.py`: that module is
 `contract` marked and normal verification would select a test that reaches
 the network.
 
-- [ ] **Step 2: Run deterministic contracts and confirm they fail**
+- [x] **Step 2: Run deterministic contracts and confirm they fail**
 
 Run:
 
@@ -689,7 +689,7 @@ python -m pytest \
 Expected: FAIL. The manifest still names stale PMC rows and the capability
 manifests still allow the retired broad Frontiers prefix.
 
-- [ ] **Step 3: Replace stale source records and narrow both capability manifests**
+- [x] **Step 3: Replace stale source records and narrow both capability manifests**
 
 Update the four Frontiers records in `manifest.yaml` to `method: pdf-url`
 with the four exact URLs from Step 1. Replace the Morrison item in its existing
@@ -713,7 +713,7 @@ UCL repository-file prefix. Retain all three PMC prefixes and the ACL,
 Sociologica, and arXiv prefixes. Do not change `resolve_fetch()`,
 `_NoRedirect`, `_canonical_https_url()`, or `require_allowed_network()`.
 
-- [ ] **Step 4: Align offline consumers with the new shipped contract**
+- [x] **Step 4: Align offline consumers with the new shipped contract**
 
 Make these deterministic fixture updates:
 
@@ -734,7 +734,7 @@ Update `tests/test_onboarding_steps.py` to expect the new Hu/Luo/Fleming ID.
 Keep low-level synthetic PMC resolver tests in `tests/test_seed_install.py`;
 they protect normal PMC import behavior and are not seed-manifest assertions.
 
-- [ ] **Step 5: Update the reference documentation and the capability-index golden**
+- [x] **Step 5: Update the reference documentation and the capability-index golden**
 
 In the three reference documents:
 
@@ -756,7 +756,7 @@ python -m pytest \
 
 Expected: only the capability policy digest changes in that golden.
 
-- [ ] **Step 6: Run deterministic verification and then the opt-in live preflight**
+- [x] **Step 6: Run deterministic verification and then the opt-in live preflight**
 
 Run deterministic checks first:
 
@@ -782,12 +782,13 @@ python -m pytest tests/test_seed_preflight.py -m live -s -q \
 Expected: deterministic tests PASS; the preflight prints one JSON report row
 per seed and exits zero only if every direct source admits a PDF.
 
-- [ ] **Step 7: Commit the task**
+- [x] **Step 7: Commit the task**
 
 Commit only the task paths:
 
 ```bash
 git add src/memoria_vault/product/seed_corpus/manifest.yaml \
+  src/memoria_vault/runtime/seed_install.py \
   src/memoria_vault/product/capabilities/operations/seed-install.md \
   src/memoria_vault/product/capabilities/operations/capture-remote-pdf-source.md \
   tests/test_seed_manifest.py \
@@ -828,7 +829,7 @@ then admits all eight sources.
 
 ## End-to-end verification and release evidence
 
-- [ ] Run the whole branch gate from the isolated worktree only after confirming
+- [x] Run the whole branch gate from the isolated worktree only after confirming
   it contains no manual acceptance vault under `test-vault/`:
 
 ```bash
@@ -837,7 +838,7 @@ python scripts/verify
 
 Expected: PASS.
 
-- [ ] Re-run the live preflight with the release candidate and retain the report:
+- [x] Re-run the live preflight with the release candidate and retain the report:
 
 ```bash
 set -o pipefail
@@ -854,7 +855,7 @@ Expected: eight `pdf_admitted: true` rows and no error values.
 gh issue comment 1820 --body-file /tmp/memoria-seed-preflight.txt
 ```
 
-- [ ] Inspect the final branch before integration:
+- [x] Inspect the final branch before integration:
 
 ```bash
 git diff --check origin/main HEAD
