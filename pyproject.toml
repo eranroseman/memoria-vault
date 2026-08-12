@@ -115,12 +115,39 @@ docstring-code-format = true
 #   RET  flake8-return -- unnecessary else-after-return and friends
 #   N    pep8-naming -- casing the formatter cannot see, enabled while already clean
 #
-# Deliberately OFF: E1/E2/E3, E501, COM, ISC, Q -- the formatter owns
-# layout (COM/ISC actively conflict with it). T20 (print is intentional in CLI),
-# LOG/G (no logging), PTH (pathlib everywhere except the atomic-replace and chmod
-# paths in backup/rendezvous/secrets/vaultio, where the os call is the clearer
-# primitive), ANN/D (docstring presence is a judgement call, not a lint gate — see AGENTS.md §Python style),
-# SIM/PERF/FURB (opinionated terseness-over-clarity refactors).
+# Deliberately OFF: E1/E2/E3, E501, COM, ISC, Q -- the formatter owns layout
+# (COM/ISC actively conflict with it). T20 (print is intentional in CLI), LOG/G
+# (no logging), PTH (explicit filesystem primitives and two intentional Path('.')
+# defaults in structural-impact logic and a backup test are clearer at their sites),
+# ANN/D (docstring presence is a judgement call, not a lint gate -- see AGENTS.md
+# §Python style), SIM/PERF/FURB
+# (opinionated terseness-over-clarity refactors).
+#
+# Measured and rejected 2026-08, with the finding count that decided it. These
+# are the families a diagnostic `--select ALL` sweep surfaces; command-line
+# `--select ALL` overrides configured ignores, so it is not an enablement list.
+# The counts are here so the next reader does not have to repeat the sweep:
+#   TRY003 880 -- exception-message style.
+#   EM101/EM102 446 + 439 = 885 (combined with TRY003: 1,765) -- exception-message
+#                  style.
+#   PLC0415 417 -- import-outside-top-level. Lazy imports are deliberate (for
+#                  example, import fcntl inside scripts/verify's lock helper).
+#   PLR2004 502 -- magic-value comparison; noise in a test suite this size.
+#   CPY001 290 -- copyright headers. No.
+#   INP001 179 -- implicit namespace package. The `namespaces = false` guard in
+#                 [tool.setuptools.packages.find] covers the real risk.
+#   TC003 145 -- typing-only imports; a micro-optimisation under
+#                `from __future__ import annotations`.
+#   ARG001 108 in src/scripts (190 overall) -- unused arguments, mostly
+#                callback/interface conformance. Needs a read per site, not a
+#                blanket enable.
+#   TRY004 59 in src/scripts (63 overall) -- raising ValueError where TypeError
+#                belongs. A real defect class at real volume; worth its own pass,
+#                not a drive-by enable.
+#   Complexity thresholds -- PLR0913 116, C901 60, PLR0912/PLR0915 31/31,
+#                PLR0911 27, PLR0917 18. Threshold opinions, not defects.
+#   FBT 65 across three rules (32 + 4 + 29) -- boolean-trap is a real design
+#                smell, but that volume for a style position buys a bikeshed.
 select = [
   "F", "E4", "E7", "E9", "W", "B", "I", "UP", "C4", "PIE", "RUF",
   "A", "PT", "DTZ", "FLY", "BLE", "S", "RET", "N",
@@ -153,7 +180,7 @@ ignore = [
   "S603",    # subprocess call -- args are statically constructed, not untrusted.
   "S607",    # partial executable path -- we call git/npx/ollama via PATH on purpose.
   "S310",    # urlopen -- URLs are built from fixed HTTPS API bases, not user input.
-  "S311",    # non-crypto random -- used only for sampling/jitter, never for secrets.
+  "S311",    # non-crypto random -- policy exemption for non-cryptographic randomness.
   "DTZ011",  # date.today() -- local-date semantics are intended for a single-user vault.
 ]
 
