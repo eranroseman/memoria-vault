@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Callable
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -12,6 +14,22 @@ from memoria_vault.runtime.operations import load_operation_policy, require_allo
 pytestmark = pytest.mark.live
 
 
+def _recording_opener(requested: list[str]) -> Callable[[str], Any]:
+    def opener(url: str) -> Any:
+        requested.append(url)
+        return seed_install._default_opener(url)
+
+    return opener
+
+
+def _recording_authorizer(policy: dict[str, Any], authorized: list[str]) -> Callable[[str], None]:
+    def authorize(url: str) -> None:
+        authorized.append(url)
+        require_allowed_network(policy, url)
+
+    return authorize
+
+
 def test_shipped_seed_endpoints_are_live_and_policy_authorized() -> None:
     policy = load_operation_policy(Path(), "seed-install")
     report = []
@@ -19,16 +37,12 @@ def test_shipped_seed_endpoints_are_live_and_policy_authorized() -> None:
         requested: list[str] = []
         authorized: list[str] = []
 
-        def opener(url: str):
-            requested.append(url)
-            return seed_install._default_opener(url)
-
-        def authorize(url: str) -> None:
-            authorized.append(url)
-            require_allowed_network(policy, url)
-
         try:
-            raw = seed_install.resolve_fetch(row, opener=opener, authorize_url=authorize)
+            raw = seed_install.resolve_fetch(
+                row,
+                opener=_recording_opener(requested),
+                authorize_url=_recording_authorizer(policy, authorized),
+            )
             report.append(
                 {
                     "id": row["id"],
@@ -37,7 +51,7 @@ def test_shipped_seed_endpoints_are_live_and_policy_authorized() -> None:
                     "error": "",
                 }
             )
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001 -- report every provider failure before asserting.
             report.append(
                 {
                     "id": row["id"],
