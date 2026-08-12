@@ -25,7 +25,7 @@ from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path
 
 # Same re-export contract as workspace_lock below: readers outside `state`
-# use four of these public names via `state.` attribute access
+# use five of these public names via `state.` attribute access
 # (`markdown_code_literals_masked` has no external caller -- only
 # markdown.py's own `markdown_visible_code_literals_masked` calls it); some
 # private names are what `evidence_marker_rows` and
