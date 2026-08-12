@@ -38,12 +38,15 @@ repos:
       # decides what is Python. Spelling `\.py$` here re-encoded that and got it
       # wrong -- `scripts/verify`, the gate itself, is extensionless and was the
       # one Python file in the repo exempt from both hooks, silently.
+      # `.claude/hooks/` holds the checked-in PreToolUse gate that enforces the
+      # shared-index rule. Tracked, load-bearing, and outside every scope until
+      # tests/test_lint_coverage.py computed the claimed set.
       - id: ruff
-        files: ^(src/memoria_vault|scripts|tests)/
+        files: ^(src/memoria_vault|scripts|tests|\.claude/hooks)/
         stages: [manual]
 
       - id: ruff-format
-        files: ^(src/memoria_vault|scripts|tests)/
+        files: ^(src/memoria_vault|scripts|tests|\.claude/hooks)/
         stages: [pre-commit, manual]
 
   - repo: https://github.com/adrienverge/yamllint
@@ -63,9 +66,11 @@ repos:
       # `scripts/install/`, deleted in #1322 -- a regex matching nothing is a
       # green hook. `scripts/dev/setup.sh`, the first command CONTRIBUTING
       # gives a new contributor, was covered by no gate at all.
+      # The seeded `.githooks/pre-commit` is a bash script installed into every
+      # user's vault. `^scripts/` never reached it.
       - id: shellcheck
         args: [--severity=warning]
-        files: ^scripts/
+        files: ^(scripts|src/memoria_vault/product/workspace_seed/\.githooks)/
         stages: [manual]
 
   # oxlint at its default scope only -- the `correctness` category, the rules

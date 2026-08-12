@@ -196,11 +196,16 @@ GATES: list[Gate] = [
 ]
 
 # Self-skips when the analyzer module is absent (exit 2), so a machine with pwsh
-# but no PSScriptAnalyzer does not hard-fail the gate.
+# but no PSScriptAnalyzer does not hard-fail the gate. Enumerates from git rather
+# than naming a path: the shellcheck hook shipped an exact-path form that lint-ed
+# one of four scripts, and a literal here is the same failure waiting for a
+# second .ps1.
 PSSA_COMMAND = (
     "if (-not (Get-Module -ListAvailable -Name PSScriptAnalyzer)) "
     "{ Write-Host 'PSScriptAnalyzer module not installed'; exit 2 }; "
-    "$r = Invoke-ScriptAnalyzer -Path scripts/install.ps1 -Severity Warning,Error "
+    "$files = git ls-files '*.ps1'; "
+    "if (-not $files) { exit 0 }; "
+    "$r = Invoke-ScriptAnalyzer -Path $files -Severity Warning,Error "
     "-Settings ./scripts/PSScriptAnalyzerSettings.psd1; "
     "if ($r) { $r | Format-Table -AutoSize; exit 1 }"
 )
@@ -312,7 +317,7 @@ def check_json() -> int:
 
 
 def check_powershell() -> int:
-    print("== PSScriptAnalyzer scripts/install.ps1")
+    print("== PSScriptAnalyzer (tracked *.ps1)")
     if shutil.which("pwsh") is None:
         print("  skipped: pwsh not installed")
         return 0

@@ -35,16 +35,14 @@ def is_sweep(arg_string: str) -> bool:
         paths = [a for a in args if not a.startswith("-")]
     if any(p in SWEEP_PATHS for p in paths):
         return True
-    sweep_flag = any(
-        f in SWEEP_FLAGS or re.fullmatch(r"-[a-zA-Z]*[Au][a-zA-Z]*", f) for f in flags
-    )
+    sweep_flag = any(f in SWEEP_FLAGS or re.fullmatch(r"-[a-zA-Z]*[Au][a-zA-Z]*", f) for f in flags)
     return sweep_flag and not paths
 
 
 def main() -> int:
     try:
         payload = json.load(sys.stdin)
-    except Exception:
+    except json.JSONDecodeError:
         return 0
     command = (payload.get("tool_input") or {}).get("command") or ""
     for segment in re.split(r"[|;&()`\n]+", command):

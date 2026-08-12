@@ -234,8 +234,7 @@ def test_every_cspell_ignored_markdown_file_has_an_unclaimed_reason():
     ]
     missing_reason = sorted(path for path in ignored if _unclaimed_reason(path) is None)
     assert missing_reason == [], (
-        "CSpell-ignored Markdown must have a narrow unclaimed reason: "
-        f"{missing_reason}"
+        f"CSpell-ignored Markdown must have a narrow unclaimed reason: {missing_reason}"
     )
 
 
@@ -296,7 +295,7 @@ function Invoke-ScriptAnalyzer {
     $script:capturedPaths = @($Path)
     return $null
 }
-& [scriptblock]::Create($env:PSSA_COMMAND)
+& ([scriptblock]::Create($env:PSSA_COMMAND))
 [pscustomobject]@{
     gitInvocations = @($script:gitInvocations)
     capturedPaths = @($script:capturedPaths)
