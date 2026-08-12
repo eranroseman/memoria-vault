@@ -1146,13 +1146,11 @@ module.exports = class MemoriaObsidianPlugin extends Plugin {
     }
   }
   onPillClick() {
-    const retry = () => {
+    const retry = async () => {
       this.respawnGate = createRespawnGate();
-      this.runHandshake().then((ok) => {
-        if (ok) {
-          this.poll();
-        }
-      });
+      if (await this.runHandshake()) {
+        this.poll();
+      }
     };
     if (this.pillState === "connected") {
       this.activateAttentionView();
