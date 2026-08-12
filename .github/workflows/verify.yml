@@ -7,9 +7,10 @@ name: verify
 #
 # Two fast paths keep the job reporting while doing less when it provably can:
 #   - PSScriptAnalyzer is installed only when a `.ps1` file changed.
-#   - A docs-only PR (whole diff is `*.md` / `design-history/`) sets
-#     VERIFY_DOCS_ONLY=1, narrowing verify to the checks a docs change can
-#     affect. The `push: main` run always runs the full roster.
+#   - A docs-only PR (whole diff is Markdown outside `src/` and/or files under
+#     `design-history/`) sets VERIFY_DOCS_ONLY=1, narrowing verify to the checks
+#     a docs change can affect. Markdown under `src/` is runtime package data,
+#     so it never qualifies. The `push: main` run always runs the full roster.
 
 on:
   push:

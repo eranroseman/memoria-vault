@@ -30,7 +30,7 @@ WORKFLOW = ROOT / ".github/workflows/verify.yml"
 def _scope_script() -> str:
     """The `Detect change scope` step's shell body, lifted from the workflow."""
     workflow = yaml.safe_load(WORKFLOW.read_text(encoding="utf-8"))
-    steps = workflow["jobs"]["verify"]["steps"]
+    steps = workflow["jobs"]["shards"]["steps"]
     step = next(s for s in steps if s.get("id") == "scope")
     return step["run"]
 
@@ -39,13 +39,11 @@ def _classify(paths: list[str]) -> bool:
     """Run the workflow's own classifier over `paths`, return its docs_only verdict."""
     body = _scope_script()
     # Drop the two lines that reach GitHub; feed the file list in directly.
-    body = re.sub(r'^\s*files=.*$', 'files="$FILES"', body, count=1, flags=re.M)
-    body = re.sub(r'^\s*printf .changed files.*$', "", body, count=1, flags=re.M)
+    body = re.sub(r"^\s*files=.*$", 'files="$FILES"', body, count=1, flags=re.M)
+    body = re.sub(r"^\s*printf .changed files.*$", "", body, count=1, flags=re.M)
     body = re.sub(r'^\s*echo "\w+=.*>> "\$GITHUB_OUTPUT"\s*$', "", body, flags=re.M)
-    # The trailing `echo "scope -> ..."` is a human progress line, not output we
-    # parse. Left in, it lands on stdout ahead of the verdict and every True case
-    # silently reads as False.
-    body = re.sub(r'^\s*echo "scope ->.*$', "", body, flags=re.M)
+    # Keep the workflow's progress echo. The appended verdict below is the final
+    # line, so preceding human-readable output does not affect the parsed result.
     result = subprocess.run(
         ["bash", "-c", body + '\nprintf "%s" "$docs_only"'],
         env={"FILES": "\n".join(paths), "PATH": "/usr/bin:/bin"},
@@ -53,7 +51,7 @@ def _classify(paths: list[str]) -> bool:
         capture_output=True,
         check=True,
     )
-    # Last line only, so a stray echo left in the step cannot silently invert a verdict.
+    # Last line only: the appended verdict follows all workflow output.
     lines = result.stdout.strip().splitlines()
     assert lines, f"classifier produced no verdict; stderr: {result.stderr}"
     return lines[-1].strip() == "true"

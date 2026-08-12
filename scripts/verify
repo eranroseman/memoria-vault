@@ -8,12 +8,13 @@ fail) a check whose local tool is absent (e.g. PowerShell), and exits nonzero
 on the first hard failure.
 
 Docs-only narrowing (CI only): when `VERIFY_DOCS_ONLY=1`, the roster drops the
-entries marked `docs=False` below — the gates a docs-only diff (`*.md` /
-`design-history/`) provably cannot affect — narrows pytest to the `static`
-marker (schema, docs-refs, design-history, spell), and skips the JSON and
-PowerShell syntax checks, which are not roster entries. CI sets this only for
-PRs whose whole diff is documentation; local runs and the post-merge `main` run
-always execute the full roster.
+entries marked `docs=False` below — the gates a docs-only diff (Markdown outside
+`src/` and/or files under `design-history/`) provably cannot affect — narrows
+pytest to the `static` marker (schema, docs-refs, design-history, spell), and
+skips the JSON and PowerShell syntax checks, which are not roster entries.
+Markdown under `src/` is runtime package data and never qualifies for this
+narrowing. CI sets it only for PRs whose whole diff is documentation; local runs
+and the post-merge `main` run always execute the full roster.
 
 Sharding (CI only): `--shard NAME` runs one leg of the roster, so CI can spend
 four runners on a gate that is throughput-bound rather than dominated by any one
@@ -76,10 +77,10 @@ os.environ.setdefault("PYTEST_XDIST_AUTO_NUM_WORKERS", str(max(2, (os.cpu_count(
 class Gate:
     """One verify step.
 
-    `docs` is True unless a docs-only diff (`*.md` / `design-history/`) provably
-    cannot affect the step; False is the explicit opt-out that drops it under
-    `VERIFY_DOCS_ONLY=1`, so a new entry that never considered docs scope still
-    runs there.
+    `docs` is True unless a docs-only diff (Markdown outside `src/` and/or files
+    under `design-history/`) provably cannot affect the step; False is the
+    explicit opt-out that drops it under `VERIFY_DOCS_ONLY=1`, so a new entry
+    that never considered docs scope still runs there.
 
     `shard` names which CI matrix leg runs the step. It defaults to `lint` so a
     new entry that never considered sharding still runs somewhere rather than
