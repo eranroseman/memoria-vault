@@ -20,6 +20,9 @@ pytest==9.1.1
 pytest-cov==7.1.0
 pytest-xdist==3.8.0
 PyYAML==6.0.3
+# The editor's fromEnvironment MyPy needs the same exact YAML stubs as the
+# cached gate environment; tests/test_node_tooling.py holds these pins equal.
+types-PyYAML==6.0.12.20260724
 # Build backend for scripts/checks/wheel_gate.py's `pip wheel --no-build-isolation`,
 # not contributor test/lint tooling like the lines above -- do not delete as unused.
 setuptools==84.0.0

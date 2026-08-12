@@ -213,6 +213,10 @@ def test_mypy_gate_is_source_scoped_and_pinned_for_offline_manual_checks():
     mypy = _hook("mypy")
     assert mypy["stages"] == ["manual"]
     assert mypy["pass_filenames"] is False
+    # mirrors-mypy ships global --ignore-missing-imports and
+    # --scripts-are-modules defaults. An explicit empty list clears both, so
+    # only the narrow pyproject overrides may suppress missing imports.
+    assert mypy["args"] == []
     assert mypy["additional_dependencies"] == [
         "types-PyYAML==6.0.12.20260724",
         "pydantic-ai-slim[openai]==2.28.0",
@@ -228,6 +232,17 @@ def test_mypy_gate_is_source_scoped_and_pinned_for_offline_manual_checks():
     assert "check_untyped_defs" not in config
     assert "strict_equality" not in config
     assert config["overrides"] == [{"module": ["fitz", "mcp.*"], "ignore_missing_imports": True}]
+
+
+def test_mypy_editor_environment_uses_the_gate_yaml_stubs():
+    """Keep fromEnvironment editor checks on the gate's exact YAML stubs."""
+    gate_stub_pins = [
+        dependency
+        for dependency in _hook("mypy")["additional_dependencies"]
+        if dependency.startswith("types-PyYAML==")
+    ]
+    assert len(gate_stub_pins) == 1
+    assert _pins("types-PyYAML") == gate_stub_pins
 
 
 def test_python_editor_applies_ruff_import_and_fix_actions_on_save():
