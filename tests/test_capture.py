@@ -38,6 +38,7 @@ from tests.helpers import (
 from tests.helpers import (
     capture_url_source_checked as _capture_url_source,
 )
+from tests.pdf_fixtures import VALID_TEXT_PDF_BYTES
 
 pytestmark = pytest.mark.contract
 
@@ -273,6 +274,56 @@ def test_capture_pdf_source_derives_content(tmp_path: Path, monkeypatch) -> None
     events = list(iter_jsonl(vault / ".memoria/journal/test-machine.jsonl"))
     assert events[0]["workflow"] == "capture_pdf_source"
     assert events[-1]["workflow"] == "capture_pdf_source"
+
+
+def test_capture_pdf_source_uses_the_installed_parser(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    result = capture_pdf_source(
+        vault,
+        "real-parser-pdf",
+        "Real parser PDF",
+        "A valid parser fixture.",
+        VALID_TEXT_PDF_BYTES,
+        raw_filename="real-parser.pdf",
+        machine="test-machine",
+    )
+
+    content = (vault / result["content_path"]).read_text(encoding="utf-8")
+    assert "## Page 1" in content
+    assert "Floor PDF evidence." in content
+
+
+def test_stage_pdf_source_refuses_raw_pdf_before_parser(tmp_path: Path, monkeypatch) -> None:
+    vault = workspace(tmp_path)
+    monkeypatch.setattr(
+        capture,
+        "_extract_pdf_pages",
+        lambda _raw: (_ for _ in ()).throw(AssertionError("parser must not run")),
+    )
+
+    with pytest.raises(ValueError, match="PDF exceeds raw-byte limit"):
+        call_with_context(
+            capture.stage_pdf_source,
+            vault,
+            "oversized-pdf",
+            "Oversized PDF",
+            "Must fail before parsing.",
+            b"x" * (capture.MAX_PDF_RAW_BYTES + 1),
+            raw_filename="oversized.pdf",
+        )
+
+    assert state.catalog_source(vault, "oversized-pdf") is None
+    assert not (vault / ".memoria/journal").exists()
+
+
+def test_extract_pdf_pages_explains_a_missing_runtime_dependency(monkeypatch) -> None:
+    monkeypatch.setitem(sys.modules, "fitz", None)
+
+    with pytest.raises(
+        RuntimeError,
+        match="PyMuPDF runtime dependency is unavailable; reinstall Memoria",
+    ):
+        capture._extract_pdf_pages(VALID_TEXT_PDF_BYTES)
 
 
 def test_extract_pdf_pages_rejects_excessive_page_count(monkeypatch) -> None:

@@ -1569,7 +1569,11 @@ def _cmd_seed_install(args: argparse.Namespace) -> int:
     if not args.json and not args.quiet:
         for notice in result.get("notices") or []:
             print(f"notice: {notice}", file=sys.stderr)
-        for entry in result.get("failed") or []:
+        failed = result.get("failed")
+        if not isinstance(failed, list):
+            diagnostics = result.get("diagnostics")
+            failed = diagnostics.get("failed") if isinstance(diagnostics, dict) else []
+        for entry in failed:
             print(f"failed row {entry.get('id')}: {entry.get('error')}", file=sys.stderr)
     return _emit(output, args)
 

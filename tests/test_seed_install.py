@@ -10,13 +10,16 @@ import io
 import json
 import re
 import tarfile
+from contextlib import redirect_stderr, redirect_stdout
 from http.client import IncompleteRead
 from pathlib import Path
 from urllib.error import HTTPError
+from urllib.request import Request
 
 import pytest
 
 from memoria_vault.runtime import seed_install, state
+from memoria_vault.runtime.content_security import neutralize_untrusted_markdown
 from tests.helpers import (
     call_with_context,
     copy_memoria_dirs,
@@ -28,7 +31,7 @@ from tests.helpers import (
 pytestmark = pytest.mark.contract
 
 PDF_BYTES = b"%PDF-1.4 seed fixture bytes\n"
-PDF_URL = "https://www.frontiersin.org/articles/10.3389/feduc.2019.00005/pdf"
+PDF_URL = "https://www.frontiersin.org/journals/education/articles/10.3389/feduc.2019.00005/pdf"
 PMC_RECORD_URL = "https://www.ncbi.nlm.nih.gov/pmc/utils/oa/oa.fcgi?id=PMC6099118"
 PMC_PDF_URL = "https://ftp.ncbi.nlm.nih.gov/pub/pmc/oa_pdf/aa/bb/PMC6099118.pdf"
 PMC_TGZ_URL = "https://ftp.ncbi.nlm.nih.gov/pub/pmc/oa_package/aa/bb/PMC6099118.tar.gz"
@@ -133,6 +136,30 @@ def test_resolve_fetch_downloads_a_direct_pdf_after_authorization() -> None:
     assert opener.calls == [PDF_URL]
 
 
+def test_default_opener_sends_a_transparent_user_agent_without_redirects(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class FakeOpener:
+        def open(self, request: Request, *, timeout: float) -> _FakeResponse:
+            assert isinstance(request, Request)
+            assert request.full_url == PDF_URL
+            assert request.get_header("User-agent") == (
+                "Memoria/0.1 (+https://github.com/eranroseman/memoria-vault)"
+            )
+            assert timeout == 30.0
+            return _FakeResponse(PDF_BYTES)
+
+    def fake_build_opener(*handlers: object) -> FakeOpener:
+        assert len(handlers) == 1
+        assert isinstance(handlers[0], seed_install._NoRedirect)
+        return FakeOpener()
+
+    monkeypatch.setattr(seed_install, "build_opener", fake_build_opener)
+
+    with seed_install._default_opener(PDF_URL) as response:
+        assert response.read() == PDF_BYTES
+
+
 def test_resolve_fetch_requires_an_explicit_authorizer() -> None:
     with pytest.raises(TypeError):
         seed_install.resolve_fetch(_pdf_row(), opener=_poisoned_opener)  # type: ignore[call-arg]
@@ -158,7 +185,9 @@ def test_resolve_fetch_authorizes_before_opening_a_direct_pdf() -> None:
 
 
 def test_resolve_fetch_canonicalizes_a_default_port_and_host_before_authorizing() -> None:
-    source_url = "https://WWW.FRONTIERSIN.ORG:443/articles/10.3389/feduc.2019.00005/pdf"
+    source_url = (
+        "https://WWW.FRONTIERSIN.ORG:443/journals/education/articles/10.3389/feduc.2019.00005/pdf"
+    )
     canonical_url = PDF_URL
     opener = _opener({canonical_url: PDF_BYTES})
     authorized: list[str] = []
@@ -748,16 +777,24 @@ def test_seed_install_continues_past_a_failed_row(tmp_path, monkeypatch) -> None
     assert state.catalog_source(vault, good["id"]) is not None
 
 
-def test_seed_install_fails_only_when_zero_rows_present(tmp_path, monkeypatch) -> None:
+def test_seed_install_all_failed_raises_bounded_diagnostics(tmp_path, monkeypatch) -> None:
     vault = _workspace(tmp_path)
-    _patch_pdf_pages(monkeypatch)
-    row = _seed_row()
-    opener = _opener({PDF_URL: b"<html>outage page</html>"})
+    first, second = _seed_row(), _seed_row()
+    second["id"] = "second-failure"
+    hostile = "<img src=x onerror=alert(1)> " + "é" * 2_000
 
-    with pytest.raises(ValueError, match="zero rows present") as exc:
-        _run_seed_install(vault, rows=[row], opener=opener)
+    def fail(row, **_kwargs):
+        raise ValueError(f"{row['id']}: {hostile}")
 
-    assert row["id"] in str(exc.value)
+    monkeypatch.setattr(seed_install, "resolve_fetch", fail)
+    with pytest.raises(seed_install.SeedInstallAllFailed) as exc_info:
+        _run_seed_install(vault, rows=[first, second])
+
+    diagnostics = exc_info.value.diagnostics
+    assert diagnostics["admitted"] == []
+    assert diagnostics["skipped"] == []
+    assert [entry["id"] for entry in diagnostics["failed"]] == [first["id"], second["id"]]
+    assert all(len(entry["error"].encode("utf-8")) <= 1_024 for entry in diagnostics["failed"])
     assert _telemetry_steps(vault) == []
 
 
@@ -873,16 +910,7 @@ def test_memoria_seed_install_cli_end_to_end_offline(tmp_path, capsys, monkeypat
 
     workspace = init_cli_workspace(tmp_path, capsys)
     _patch_pdf_pages(monkeypatch)
-    responses: dict[str, bytes] = {}
-    for row in load_seed_manifest():
-        url = row["fetch"]["url"]
-        if row["fetch"]["method"] == "pmc-oa":
-            pmcid = url.rsplit("=", 1)[-1]
-            href = f"ftp://ftp.ncbi.nlm.nih.gov/pub/pmc/oa_pdf/{pmcid}.pdf"
-            responses[url] = _pmc_xml(("pdf", href))
-            responses[f"https://ftp.ncbi.nlm.nih.gov/pub/pmc/oa_pdf/{pmcid}.pdf"] = PDF_BYTES
-        else:
-            responses[url] = PDF_BYTES
+    responses = {row["fetch"]["url"]: PDF_BYTES for row in load_seed_manifest()}
     monkeypatch.setattr("memoria_vault.runtime.seed_install._default_opener", _opener(responses))
 
     rc = main(["seed", "install", "--workspace", str(workspace), "--json"])
@@ -904,6 +932,64 @@ def test_memoria_seed_install_cli_end_to_end_offline(tmp_path, capsys, monkeypat
     assert rc == 0
     assert payload["result"]["admitted"] == []
     assert sorted(payload["result"]["skipped"]) == all_ids
+
+
+def test_seed_install_all_failed_cli_and_request_show_preserve_safe_diagnostics(
+    tmp_path, capsys, monkeypatch
+) -> None:
+    from memoria_vault.cli import main
+
+    workspace = init_cli_workspace(tmp_path, capsys)
+    first, second = _seed_row(), _seed_row()
+    second["id"] = "second-failure"
+    hostile = "<img src=x onerror=alert(1)> " + "é" * 2_000
+
+    monkeypatch.setattr(
+        "memoria_vault.runtime.seed_install.load_seed_manifest",
+        lambda: [first, second],
+    )
+
+    def fail(row, **_kwargs):
+        raise ValueError(f"{row['id']}: {hostile}")
+
+    monkeypatch.setattr("memoria_vault.runtime.seed_install.resolve_fetch", fail)
+
+    rc = main(["seed", "install", "--workspace", str(workspace), "--json"])
+    payload = json.loads(capsys.readouterr().out)
+    assert rc == 1
+    diagnostics = payload["result"]["diagnostics"]
+    assert diagnostics["admitted"] == []
+    assert diagnostics["skipped"] == []
+    assert [entry["id"] for entry in diagnostics["failed"]] == [first["id"], second["id"]]
+
+    rc = main(
+        [
+            "request",
+            "show",
+            payload["job"]["request_id"],
+            "--workspace",
+            str(workspace),
+            "--json",
+        ]
+    )
+    request_payload = json.loads(capsys.readouterr().out)
+    assert rc == 0
+    request_failed = request_payload["request"]["job"]["diagnostics"]["failed"]
+    assert [entry["id"] for entry in request_failed] == [first["id"], second["id"]]
+    assert [entry["error"] for entry in request_failed] == [
+        neutralize_untrusted_markdown(entry["error"]) for entry in diagnostics["failed"]
+    ]
+
+    stream = io.StringIO()
+    with redirect_stdout(stream), redirect_stderr(stream):
+        rc = main(["seed", "install", "--workspace", str(workspace)])
+    text = stream.getvalue()
+    assert rc == 1
+    first_line = f"failed row {first['id']}:"
+    second_line = f"failed row {second['id']}:"
+    assert first_line in text
+    assert second_line in text
+    assert text.index(first_line) < text.index(second_line) < text.index("FAILED:")
 
 
 def test_seed_install_worker_authorizes_every_url_against_the_operation_policy(
