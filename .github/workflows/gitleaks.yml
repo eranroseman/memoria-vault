@@ -37,8 +37,9 @@ jobs:
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
         with:
           path: ~/.cache/pre-commit
-          key: ${{ runner.os }}-pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
+          # Distinct from verify.yml's key on purpose — see the comment there.
+          key: ${{ runner.os }}-pre-commit-gitleaks-${{ hashFiles('.pre-commit-config.yaml') }}
           restore-keys: |
-            ${{ runner.os }}-pre-commit-
+            ${{ runner.os }}-pre-commit-gitleaks-
       - name: gitleaks detect
         run: pre-commit run gitleaks --all-files

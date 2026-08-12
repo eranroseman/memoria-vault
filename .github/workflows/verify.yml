@@ -92,13 +92,20 @@ jobs:
           echo "ps1=$ps1" >> "$GITHUB_OUTPUT"
           echo "docs_only=$docs_only" >> "$GITHUB_OUTPUT"
           echo "scope -> ps1=$ps1 docs_only=$docs_only"
+      # Keyed per workflow. gitleaks.yml caches the same path from the same
+      # config file, but installs exactly one hook environment; this job installs
+      # all of them. On a shared key the 18s gitleaks job always won the race,
+      # so verify got a primary-key hit on a cache holding only the gitleaks env,
+      # reinstalled the other eight (68s, vale alone 45s), and actions/cache then
+      # declined to save because the hit was on the primary key. Keep both halves
+      # of the prefix distinct: a shared `restore-keys` fallback re-couples them.
       - name: Cache pre-commit environments
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
         with:
           path: ~/.cache/pre-commit
-          key: ${{ runner.os }}-pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
+          key: ${{ runner.os }}-pre-commit-verify-${{ hashFiles('.pre-commit-config.yaml') }}
           restore-keys: |
-            ${{ runner.os }}-pre-commit-
+            ${{ runner.os }}-pre-commit-verify-
       # Only bother with PSScriptAnalyzer when a .ps1 changed (empty scope output
       # on the push:main run means "run it" — full validation of the merged state).
       - name: Cache PSScriptAnalyzer module
@@ -114,8 +121,29 @@ jobs:
         if: steps.scope.outputs.ps1 != 'false' && steps.pssa-cache.outputs.cache-hit != 'true'
         shell: pwsh
         run: Install-Module PSScriptAnalyzer -Force -Scope CurrentUser
+      # scripts/verify defaults xdist to half the cores so two local worktrees can
+      # run gates side by side without thrashing (1733). A runner runs exactly one
+      # gate, so it gets one worker per vCPU — this repo is public, so that is 4,
+      # and the default was leaving half the runner idle. Read `nproc` rather than
+      # hardcoding, so a runner resize or a private fork on the 2-vCPU tier cannot
+      # silently turn this into oversubscription.
+      - name: Size the test gate to the runner
+        id: cpu
+        run: |
+          echo "workers=$(nproc)" >> "$GITHUB_OUTPUT"
+          echo "xdist workers -> $(nproc)"
       - name: Run verify
         env:
           VERIFY_DOCS_ONLY: ${{ steps.scope.outputs.docs_only == 'true' && '1' || '0' }}
           MEMORIA_REQUIRE_SANDBOX: "1"
+          PYTEST_XDIST_AUTO_NUM_WORKERS: ${{ steps.cpu.outputs.workers }}
         run: python scripts/verify
+      # actions/cache saves in a post step, after every normal step, so this
+      # prunes environments for hook revisions no longer in the config before the
+      # cache is written. Without it the chain grows unboundedly — vale's
+      # environment alone is 355 MB unpacked, so one rev bump would nearly double
+      # the archive and give back part of the restore-time saving. No
+      # `if: always()`: actions/cache's post step is `post-if: success()`, so a
+      # failed run saves nothing at all and pruning it would buy nothing.
+      - name: Drop hook environments no longer referenced by the config
+        run: pre-commit gc
