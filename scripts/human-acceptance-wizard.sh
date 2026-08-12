@@ -251,7 +251,7 @@ pause "Press Enter after you have read the safety boundary."
 
 if include_section plugin; then
   stage "Open the disposable plugin vault"
-  show_command "memoria init test-vault/u3-plug-manual"
+  show_command "memoria init --workspace test-vault/u3-plug-manual --yes"
   step "In desktop Obsidian, open test-vault/u3-plug-manual; accept the trust and community-plugin prompts."
   step "Wait for the bottom-right pill to change from Memoria · connecting… to green Memoria · N open within about five seconds; do not type a port or token."
   record "Plugin connection"

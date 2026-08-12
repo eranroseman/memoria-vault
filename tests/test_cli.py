@@ -749,14 +749,11 @@ def test_cli_init_seeds_obsidian_defaults_and_memoria_plugin(
     assert types["types"]["target"] == "text"
     assert types["types"]["thesis"] == "text"
     assert types["types"]["question"] == "text"
-    assert (workspace / ".obsidian/plugins/memoria-obsidian/main.js").is_file()
-    assert (workspace / ".obsidian/plugins/memoria-obsidian/schema.js").is_file()
-    assert (workspace / ".obsidian/plugins/memoria-obsidian/styles.css").is_file()
-    # `main.js` requires these by relative path; without them it cannot load.
-    assert (workspace / ".obsidian/plugins/memoria-obsidian/handshake.js").is_file()
-    assert (workspace / ".obsidian/plugins/memoria-obsidian/pill.js").is_file()
-    assert (workspace / ".obsidian/plugins/memoria-obsidian/relate.js").is_file()
-    assert (workspace / ".obsidian/plugins/memoria-obsidian/viewspec.js").is_file()
+    assert {
+        path.name
+        for path in (workspace / ".obsidian/plugins/memoria-obsidian").iterdir()
+        if path.is_file()
+    } == {"main.js", "manifest.json", "styles.css"}
 
 
 def test_cli_init_seeds_exact_boot_c1_agent_bundle(
@@ -1024,14 +1021,9 @@ def test_cli_init_dry_run_reports_runtime_setup_without_mutation(
         ".claude/skills/memoria-copi/SKILL.md",
         ".codex/hooks.json",
         ".mcp.json",
-        ".obsidian/plugins/memoria-obsidian/handshake.js",
         ".obsidian/plugins/memoria-obsidian/main.js",
         ".obsidian/plugins/memoria-obsidian/manifest.json",
-        ".obsidian/plugins/memoria-obsidian/pill.js",
-        ".obsidian/plugins/memoria-obsidian/relate.js",
-        ".obsidian/plugins/memoria-obsidian/schema.js",
         ".obsidian/plugins/memoria-obsidian/styles.css",
-        ".obsidian/plugins/memoria-obsidian/viewspec.js",
         "CLAUDE.md",
     ]
     assert "capabilities" not in output["package"]["seed_trees"]

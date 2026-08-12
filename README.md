@@ -75,7 +75,13 @@ For the full flag list, see [Installer (bootstrap)](docs/reference/system/instal
 - Contributor prose hooks provision `cspell` and `markdownlint` through
   pre-commit; no root `node_modules/` install is required.
 - **Node 22** only when developing the Obsidian adapter (node test suite
-  under `packages/memoria-obsidian`).
+  under `packages/memoria-obsidian`). Adapter development installs only that
+  package; do not run `npm ci` at the repo root:
+
+  ```bash
+  npm ci --prefix packages/memoria-obsidian
+  npm run check --prefix packages/memoria-obsidian
+  ```
 - Provider keys only for the flows you use; replay fixtures and local files cover
   offline development.
 

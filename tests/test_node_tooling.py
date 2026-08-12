@@ -21,6 +21,10 @@ PYPROJECT = ROOT / "pyproject.toml"
 PRECOMMIT = ROOT / ".pre-commit-config.yaml"
 REQUIREMENTS_DEV = ROOT / "requirements-dev.txt"
 DOCS_CONFIG = ROOT / "docs" / "_config.yml"
+OBSIDIAN_PACKAGE = ROOT / "packages" / "memoria-obsidian" / "package.json"
+OBSIDIAN_LOCK = ROOT / "packages" / "memoria-obsidian" / "package-lock.json"
+VERIFY_WORKFLOW = ROOT / ".github" / "workflows" / "verify.yml"
+DEPENDABOT = ROOT / ".github" / "dependabot.yml"
 
 
 def _pins(package: str) -> list[str]:
@@ -68,6 +72,39 @@ def test_required_node_checks_use_pinned_local_tools():
     assert markdownlint["language"] == "node"
     assert markdownlint["entry"] == "markdownlint --config .markdownlint.json"
     _assert_pinned_npm_tool(markdownlint, "markdownlint-cli")
+
+
+def test_obsidian_adapter_build_dependency_is_pinned_and_provisioned_in_ci():
+    """Catch an adapter build that drifts from its lockfile or CI setup."""
+    package = json.loads(OBSIDIAN_PACKAGE.read_text(encoding="utf-8"))
+    lock = json.loads(OBSIDIAN_LOCK.read_text(encoding="utf-8"))
+    workflow = yaml.safe_load(VERIFY_WORKFLOW.read_text(encoding="utf-8"))
+    dependabot = yaml.safe_load(DEPENDABOT.read_text(encoding="utf-8"))
+
+    assert package["scripts"]["build"] == "node scripts/build.mjs"
+    assert package["scripts"]["check"] == "node scripts/build.mjs --check"
+    assert RELEASE_TAG.fullmatch(package["devDependencies"]["esbuild"])
+    assert (
+        lock["packages"][""]["devDependencies"]["esbuild"] == package["devDependencies"]["esbuild"]
+    )
+
+    steps = workflow["jobs"]["verify"]["steps"]
+    install_index = next(
+        index
+        for index, step in enumerate(steps)
+        if step.get("run") == "npm ci --prefix packages/memoria-obsidian"
+    )
+    verify_index = next(
+        index for index, step in enumerate(steps) if step.get("run") == "python scripts/verify"
+    )
+    assert steps[install_index]["name"] == "Install Obsidian adapter build dependency"
+    assert install_index < verify_index
+
+    npm_updates = [
+        update for update in dependabot["updates"] if update["package-ecosystem"] == "npm"
+    ]
+    assert len(npm_updates) == 1
+    assert npm_updates[0]["directory"] == "/packages/memoria-obsidian"
 
 
 def test_precommit_hooks_use_pinned_tool_environments():

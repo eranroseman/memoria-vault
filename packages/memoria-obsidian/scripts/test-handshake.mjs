@@ -10,7 +10,7 @@ const {
   classifySpawnError,
   createRespawnGate,
   parseHandshake,
-} = require("../../../src/memoria_vault/product/workspace_seed/.obsidian/plugins/memoria-obsidian/handshake.js");
+} = require("../src/handshake.js");
 
 const COORDINATES = {
   port: 1,

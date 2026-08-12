@@ -12,12 +12,18 @@ from tests.helpers import ROOT
 
 pytestmark = pytest.mark.contract
 
-# The node test harness (package.json + scripts/*.mjs). The plugin modules
-# themselves live only in the packaged workspace seed below — the packages/
-# copy was deleted when the byte-parity chain that kept two copies honest
-# became more mechanism than a single copy needs.
 PLUGIN = ROOT / "packages" / "memoria-obsidian"
-SEED_PLUGIN = ROOT / "src/memoria_vault/product/workspace_seed/.obsidian/plugins/memoria-obsidian"
+SOURCE = PLUGIN / "src"
+SEED_PLUGIN = ROOT / ("src/memoria_vault/product/workspace_seed/.obsidian/plugins/memoria-obsidian")
+SOURCE_MODULES = (
+    "handshake.js",
+    "main.js",
+    "pill.js",
+    "relate.js",
+    "schema.js",
+    "viewspec.js",
+)
+RELEASE_ARTIFACTS = ("main.js", "manifest.json", "styles.css")
 
 # `node --test` discovers files by name, and it exits 0 when it discovers none.
 # So the exit code alone cannot tell a green suite from a suite that silently
@@ -36,48 +42,47 @@ NODE_SUITE_FILES = (
     "test-viewspec.mjs",
 )
 
-# The complete shipped module set; the color sweep pins its scan against this.
-SHIPPED_ARTIFACTS = (
-    "handshake.js",
-    "main.js",
-    "manifest.json",
-    "pill.js",
-    "relate.js",
-    "schema.js",
-    "styles.css",
-    "viewspec.js",
-)
-
-# Loads every module the vault actually received, with `obsidian` stubbed
-# because only the host provides it. Every *other* require -- `child_process`
-# and the relative sibling modules -- resolves normally, so a module the vault
-# did not receive raises MODULE_NOT_FOUND and this exits nonzero.
-#
-# It loads the whole seeded directory rather than only the entrypoint, because
-# loading only the entrypoint proves whatever `main.js` happens to require this
-# week: a module seeded one task before its consumer requires it (`relate.js`
-# between U3-PLUG.5 and .8) would sit in the vault unproven, and a module
-# dropped from `main.js`'s requires would silently take its proof with it.
 _LOAD_PROBE = """
-const fs = require("node:fs");
-const path = require("node:path");
+import { createRequire } from "node:module";
+import path from "node:path";
+const require = createRequire(import.meta.url);
 const Module = require("node:module");
+class Plugin {
+  constructor() {
+    this.app = {
+      vault: { adapter: { basePath: "/tmp/memoria-plugin-test" } },
+      workspace: { onLayoutReady() {} },
+    };
+  }
+  async loadData() { return null; }
+  addStatusBarItem() {
+    return { empty() {}, createEl() { return {}; }, setText() {} };
+  }
+  addSettingTab() {}
+  addCommand() {}
+  register() {}
+  registerView() {}
+}
 const original = Module._load;
 Module._load = (request, parent, isMain) =>
   request === "obsidian"
-    ? new Proxy({}, { get: () => class HostStub {} })
+    ? {
+        Plugin,
+        AbstractInputSuggest: class {},
+        ItemView: class {},
+        Modal: class {},
+        Notice: class {},
+        PluginSettingTab: class {},
+        Setting: class {},
+        requestUrl: async () => ({}),
+      }
     : original(request, parent, isMain);
 const directory = process.argv[1];
-const modules = fs.readdirSync(directory).filter((name) => name.endsWith(".js")).sort();
-if (!modules.includes("main.js")) {
-  throw new Error(`the seeded plugin has no entrypoint: ${modules.join(", ")}`);
-}
-for (const name of modules) {
-  require(path.join(directory, name));
-}
-if (typeof require(path.join(directory, "main.js")) !== "function") {
+const PluginClass = require(path.join(directory, "main.js"));
+if (typeof PluginClass !== "function") {
   throw new Error("plugin entrypoint did not export a class");
 }
+await new PluginClass().onload();
 """
 
 
@@ -95,7 +100,7 @@ def _run_node_suite() -> subprocess.CompletedProcess[str]:
     Discovery is unaffected: this runs the same files as `npm test`.
     """
     return subprocess.run(
-        ["node", "--test", "--test-reporter=tap"],
+        ["node", "--test", "--experimental-test-isolation=none", "--test-reporter=tap"],
         cwd=PLUGIN,
         text=True,
         capture_output=True,
@@ -104,7 +109,7 @@ def _run_node_suite() -> subprocess.CompletedProcess[str]:
 
 
 def test_memoria_obsidian_package_has_obsidian_release_artifacts() -> None:
-    manifest = json.loads((SEED_PLUGIN / "manifest.json").read_text(encoding="utf-8"))
+    manifest = json.loads((PLUGIN / "manifest.json").read_text(encoding="utf-8"))
     package = json.loads((PLUGIN / "package.json").read_text(encoding="utf-8"))
 
     assert manifest == {
@@ -119,29 +124,39 @@ def test_memoria_obsidian_package_has_obsidian_release_artifacts() -> None:
         "author": "Memoria",
         "isDesktopOnly": True,
     }
-    assert package["scripts"]["test"] == "node --test"
-    assert (SEED_PLUGIN / "main.js").is_file()
-    assert (SEED_PLUGIN / "schema.js").is_file()
-    assert (SEED_PLUGIN / "styles.css").is_file()
+    assert package["scripts"] == {
+        "build": "node scripts/build.mjs",
+        "check": "node scripts/build.mjs --check",
+        "test": "node --test",
+    }
+    assert {path.name for path in SOURCE.glob("*.js")} == set(SOURCE_MODULES)
+    assert {path.name for path in SEED_PLUGIN.iterdir() if path.is_file()} == set(RELEASE_ARTIFACTS)
 
 
-def test_memoria_obsidian_seeded_plugin_loads_every_module_it_requires(tmp_path: Path) -> None:
-    """The vault gets a plugin that *runs*, not a file list that matches.
+def test_memoria_obsidian_committed_release_artifact_is_current() -> None:
+    result = subprocess.run(
+        ["npm", "run", "check"],
+        cwd=PLUGIN,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
 
-    Byte-equality between package and seed says nothing about whether the
-    bundle writer ships the modules `main.js` requires: the seed directory can
-    hold all eight while `bundles.BUNDLE_FILES["obsidian"]` copies four, and
-    the vault then receives an entrypoint that throws MODULE_NOT_FOUND on the
-    host's first load. So this runs the real writer and then really loads what
-    it wrote.
-    """
+    assert result.returncode == 0, result.stdout + result.stderr
+
+
+def test_memoria_obsidian_seeded_release_artifact_loads_without_sibling_modules(
+    tmp_path: Path,
+) -> None:
     workspace = tmp_path / "vault"
     workspace.mkdir()
     seed_bundles(workspace, bundle_names=["obsidian"])
     seeded = workspace / ".obsidian/plugins/memoria-obsidian"
+    assert {path.name for path in seeded.iterdir() if path.is_file()} == set(RELEASE_ARTIFACTS)
+    assert 'require("./' not in (seeded / "main.js").read_text(encoding="utf-8")
 
     result = subprocess.run(
-        ["node", "-e", _LOAD_PROBE, str(seeded)],
+        ["node", "--input-type=module", "-e", _LOAD_PROBE, str(seeded)],
         text=True,
         capture_output=True,
         check=False,
@@ -163,14 +178,14 @@ def test_memoria_obsidian_node_suite_still_discovers_every_file() -> None:
     assert counted is not None, result.stdout + result.stderr
     assert int(counted.group(1)) >= MIN_NODE_TESTS, result.stdout
 
-    present = sorted(path.name for path in (PLUGIN / "scripts").glob("*.mjs"))
+    present = sorted(path.name for path in (PLUGIN / "scripts").glob("test*.mjs"))
     assert set(NODE_SUITE_FILES) <= set(present), present
     # A suite named outside the runner's glob never runs and never complains.
     assert [name for name in present if not _is_discoverable(name)] == []
 
 
 def _plugin_js_source() -> str:
-    return "\n".join(path.read_text(encoding="utf-8") for path in sorted(SEED_PLUGIN.glob("*.js")))
+    return "\n".join((SOURCE / name).read_text(encoding="utf-8") for name in SOURCE_MODULES)
 
 
 def test_memoria_obsidian_uses_memoria_operation_run_only() -> None:
@@ -259,17 +274,12 @@ def test_memoria_obsidian_color_detector_reports_every_forbidden_literal() -> No
 def test_memoria_obsidian_has_no_hardcoded_colors() -> None:
     """U3 acceptance: the plugin contains zero hardcoded colors (theme vars only).
 
-    The sweep reads the one copy that exists — the seeded modules — and the
-    equality pin below doubles as the completeness check: a ninth module
-    added to the seed but not to `SHIPPED_ARTIFACTS` fails here instead of
-    escaping the sweep.
+    The sweep reads every canonical source module plus the package stylesheet.
     """
-    scanned = sorted(SEED_PLUGIN.glob("*.js")) + sorted(SEED_PLUGIN.glob("*.css"))
+    scanned = [(SOURCE / name) for name in SOURCE_MODULES] + [PLUGIN / "styles.css"]
 
     # A sweep that reads no files reports no findings. Pin what it must have read.
-    assert {path.name for path in scanned} == {
-        name for name in SHIPPED_ARTIFACTS if name.endswith((".js", ".css"))
-    }
+    assert {path.name for path in scanned} == set(SOURCE_MODULES) | {"styles.css"}
     findings = [
         finding
         for path in scanned
@@ -279,7 +289,7 @@ def test_memoria_obsidian_has_no_hardcoded_colors() -> None:
 
 
 def test_memoria_obsidian_registers_minimal_proof_commands() -> None:
-    source = (SEED_PLUGIN / "main.js").read_text(encoding="utf-8")
+    source = (SOURCE / "main.js").read_text(encoding="utf-8")
 
     for command_id in (
         "open-attention",
@@ -308,7 +318,7 @@ def test_memoria_obsidian_canvas_surface_is_enqueue_and_read_only() -> None:
     instead of duplicating edges. The no-file-write claims are already swept
     over every plugin module by `..._uses_memoria_operation_run_only`.
     """
-    source = (SEED_PLUGIN / "main.js").read_text(encoding="utf-8")
+    source = (SOURCE / "main.js").read_text(encoding="utf-8")
 
     assert "fork-project-canvas" in source
     assert "/project/canvas/forks" in source
@@ -321,7 +331,7 @@ def test_memoria_obsidian_canvas_surface_is_enqueue_and_read_only() -> None:
 
 
 def test_memoria_obsidian_registers_the_canvas_commands() -> None:
-    source = (SEED_PLUGIN / "main.js").read_text(encoding="utf-8")
+    source = (SOURCE / "main.js").read_text(encoding="utf-8")
 
     for command_id in ("fork-canvas", "graduate-scratch-edges"):
         assert f'id: "{command_id}"' in source
@@ -342,7 +352,7 @@ def test_schema_js_enums_stay_a_subset_of_the_engine_roster() -> None:
     """
     from memoria_vault.engine import empirical_events as engine
 
-    source = (SEED_PLUGIN / "schema.js").read_text(encoding="utf-8")
+    source = (SOURCE / "schema.js").read_text(encoding="utf-8")
 
     for name in ("SURFACES", "WORKFLOWS", "DECISIONS", "OUTCOMES", "REASON_CODES"):
         match = re.search(rf"const {name} = new Set\(\[(.*?)\]\)", source, re.S)

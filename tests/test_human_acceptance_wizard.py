@@ -65,6 +65,18 @@ def test_plugin_and_canvas_sections_keep_their_human_checks_visible() -> None:
         assert text in source
 
 
+def test_plugin_init_command_uses_workspace_flag_and_noninteractive_confirmation() -> None:
+    source = WIZARD.read_text(encoding="utf-8")
+    plugin_section = source.split("if include_section plugin; then", 1)[1].split(
+        "if include_section canvas; then", 1
+    )[0]
+
+    assert (
+        'show_command "memoria init --workspace test-vault/u3-plug-manual --yes"' in plugin_section
+    )
+    assert 'show_command "memoria init test-vault/u3-plug-manual"' not in plugin_section
+
+
 def test_canvas_baseline_states_the_disposable_vault_precondition() -> None:
     source = WIZARD.read_text(encoding="utf-8")
     canvas_section = source.split("if include_section canvas; then", 1)[1].split(

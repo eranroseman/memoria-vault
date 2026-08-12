@@ -53,8 +53,8 @@ def assert_obsidian_seed(vault: Path) -> None:
     assert (vault / ".obsidian/plugins/memoria-obsidian/main.js").is_file(), (
         "missing Memoria Obsidian entrypoint"
     )
-    assert (vault / ".obsidian/plugins/memoria-obsidian/schema.js").is_file(), (
-        "missing Memoria Obsidian event schema"
+    assert (vault / ".obsidian/plugins/memoria-obsidian/styles.css").is_file(), (
+        "missing Memoria Obsidian stylesheet"
     )
     assert not (vault / "system/scripts").exists(), "standalone vault shipped QuickAdd scripts"
     print("   git repo, hooks, and Obsidian seed asserted")

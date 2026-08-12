@@ -16,10 +16,11 @@ The repo holds four kinds of path, each with a different audience. The
 **bootstrap installers** at the repo root (`scripts/install.ps1` /
 `scripts/install.sh`) are run once by end users. The **workspace seed and
 installable package** under `src/memoria_vault/` are read by the CLI
-initializer, operations, and tests. The **Obsidian adapter source** lives in the
-workspace seed itself (`.obsidian/plugins/memoria-obsidian/`), so new
-workspaces install the Memoria plugin by default;
-`packages/memoria-obsidian/` holds only its node test harness. And
+initializer, operations, and tests. The **Obsidian adapter package** under
+`packages/memoria-obsidian/` owns its source, manifest, stylesheet, tests, and
+build. It builds the workspace seed's committed three-file release artifact
+(`.obsidian/plugins/memoria-obsidian/main.js`, `manifest.json`, and
+`styles.css`), so new workspaces install the Memoria plugin by default. And
 `docs/` is for developers and contributors only - never shipped at runtime.
 See [On-disk layout](../../../reference/system/on-disk-layout.md) for the
 full path inventory.
@@ -40,7 +41,7 @@ flowchart TD
     subgraph repo ["The repo holds four kinds of path"]
         installers["Bootstrap installers at the repo root<br/>scripts/install.sh and scripts/install.ps1,<br/>run once by end users"]
         seed["Workspace seed and installable package<br/>src/memoria_vault/, read by the CLI<br/>initializer, operations, and tests"]
-        adapter["Obsidian adapter source<br/>.obsidian/plugins/memoria-obsidian/"]
+        adapter["Obsidian adapter package<br/>packages/memoria-obsidian/<br/>source, manifest, stylesheet, tests, and build"]
         docs["docs/<br/>for developers and contributors only"]
     end
 
@@ -48,7 +49,7 @@ flowchart TD
     workspace["Deployed workspace: self-contained;<br/>new workspaces install the<br/>Memoria plugin by default"]
     pages["GitHub Pages URL,<br/>never a relative path"]
 
-    adapter -- "lives in the workspace seed itself" --> seed
+    adapter -- "builds committed three-file release artifact" --> seed
     installers -- "installing requires the whole repo" --> derive
     seed --> derive
     derive --> workspace

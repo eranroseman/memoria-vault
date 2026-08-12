@@ -37,6 +37,17 @@ updates:
       - dependency-name: mcp
         update-types: ["version-update:semver-major"]
 
+  - package-ecosystem: npm
+    directory: "/packages/memoria-obsidian"
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 3
+    commit-message:
+      prefix: chore
+    groups:
+      adapter-build:
+        patterns: ["*"]
+
   - package-ecosystem: pre-commit
     directory: /
     schedule:

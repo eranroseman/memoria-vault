@@ -3,7 +3,7 @@ import test from "node:test";
 import { createRequire } from "node:module";
 
 const require = createRequire(import.meta.url);
-const { buildRelateOperation } = require("../../../src/memoria_vault/product/workspace_seed/.obsidian/plugins/memoria-obsidian/relate.js");
+const { buildRelateOperation } = require("../src/relate.js");
 
 const roster = ["contradicts", "extends", "qualifier", "rebuttal", "supports", "warrant"];
 

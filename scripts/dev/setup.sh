@@ -43,6 +43,17 @@ else
   note "python not found — install Python 3.12+ first"
 fi
 
+echo "==> Installing Obsidian adapter build dependency"
+if command -v npm >/dev/null 2>&1; then
+  if npm ci --prefix packages/memoria-obsidian; then
+    note "Obsidian adapter build dependency installed from packages/memoria-obsidian"
+  else
+    note "Obsidian adapter build dependency install failed — run manually: npm ci --prefix packages/memoria-obsidian"
+  fi
+else
+  note "Node 22/npm is needed for the Obsidian adapter build — install it, then run: npm ci --prefix packages/memoria-obsidian"
+fi
+
 echo "==> Installing pre-commit hooks (git won't do this on clone — it's local config)"
 if command -v pre-commit >/dev/null 2>&1; then
   HOOKS_PATH=$(git config --get core.hooksPath || true)

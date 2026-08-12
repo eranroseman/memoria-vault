@@ -5,7 +5,12 @@
   "description": "Minimal local Memoria control surface and empirical-use recorder for Obsidian.",
   "type": "commonjs",
   "scripts": {
+    "build": "node scripts/build.mjs",
+    "check": "node scripts/build.mjs --check",
     "test": "node --test"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.9"
   },
   "engines": {
     "node": ">=22"
