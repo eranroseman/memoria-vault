@@ -169,8 +169,24 @@ def test_precommit_hooks_use_pinned_tool_environments():
     # These come from the pinned hook environments above. Matching on the
     # package rather than one version closes the hole the old assertions left:
     # `ruff==0.15.21 not in requirements` said nothing about `ruff==0.16.0`.
-    for tool in ("ruff", "shellcheck-py", "yamllint"):
+    for tool in ("shellcheck-py", "yamllint"):
         assert not _pins(tool), f"{tool} is supplied by pre-commit; drop the pip pin"
+
+    # ruff is the exception, and only because the Ruff VS Code extension needs
+    # it: `ruff.importStrategy` is `fromEnvironment`, so the editor formats with
+    # the pip-installed ruff and silently falls back to its own bundled copy --
+    # pinned by no gate -- when there is none. Two pins for one tool is a skew
+    # waiting to happen, and a skewed ruff format-on-save writes exactly what
+    # the commit-stage hook writes back. This is the only thing holding them
+    # equal; see the same assertion for oxlint/oxfmt above.
+    ruff_pins = _pins("ruff")
+    assert len(ruff_pins) == 1, f"expected exactly one ruff pin, got {ruff_pins}"
+    ruff_version = ruff_pins[0].strip().removeprefix("ruff==")
+    ruff_rev = pinned_repos["https://github.com/astral-sh/ruff-pre-commit"]
+    assert ruff_rev.removeprefix("v") == ruff_version, (
+        f"ruff is {ruff_version} in requirements-dev.txt but {ruff_rev} in the "
+        "pre-commit hook; the editor and the gate would disagree"
+    )
 
 
 def test_coverage_audit_tool_is_pinned_for_contributors():

@@ -21,9 +21,11 @@
   "powershell.scriptAnalysis.enable": true,
   "powershell.scriptAnalysis.settingsPath": "scripts/PSScriptAnalyzerSettings.psd1",
   "ruff.nativeServer": "on",
+  "ruff.importStrategy": "fromEnvironment",
+  "editor.formatOnSaveMode": "file",
   "[javascript]": {
     "editor.defaultFormatter": "oxc.oxc-vscode",
-    "editor.formatOnSave": false
+    "editor.formatOnSave": true
   },
   "linter.linters": {
     "yamllint": {
@@ -54,7 +56,8 @@
     "editor.formatOnSave": false
   },
   "[python]": {
-    "editor.formatOnSave": false
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.formatOnSave": true
   },
   "python.testing.pytestArgs": [
     "tests"
