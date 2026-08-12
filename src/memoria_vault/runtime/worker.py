@@ -342,7 +342,9 @@ def _op_empirical_event_record(
 
     event = validate_empirical_event(payload)
     expected_key = f"empirical-event:{event['event_id']}"
-    envelope = job.get("request_envelope") if isinstance(job.get("request_envelope"), dict) else {}
+    envelope = job.get("request_envelope")
+    if not isinstance(envelope, dict):
+        envelope = {}
     if envelope.get("idempotency_key") != expected_key:
         raise ValueError(f"empirical-event-record requires idempotency_key={expected_key}")
     return record_empirical_event(
@@ -1686,7 +1688,9 @@ def _run_operation_job(
     vault: Path, job: dict[str, Any], context: OperationContext
 ) -> dict[str, Any]:
     operation_id = context.operation_id
-    payload = job.get("payload") if isinstance(job.get("payload"), dict) else {}
+    payload = job.get("payload")
+    if not isinstance(payload, dict):
+        payload = {}
     _require_operation_actor(context)  # stays first: protected actors gate every dispatch
     from memoria_vault.runtime.operations import load_operation_policy
 

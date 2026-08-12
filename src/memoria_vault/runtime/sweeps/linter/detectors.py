@@ -467,8 +467,12 @@ def hub_threshold(vault: Path, threshold: int = 15) -> list[Finding]:
 
 
 def _catalog_source_terms(source: dict[str, object]) -> list[str]:
-    csl = source.get("csl_json") if isinstance(source.get("csl_json"), dict) else {}
-    memoria = csl.get("memoria") if isinstance(csl.get("memoria"), dict) else {}
+    csl = source.get("csl_json")
+    if not isinstance(csl, dict):
+        csl = {}
+    memoria = csl.get("memoria")
+    if not isinstance(memoria, dict):
+        memoria = {}
     out = []
     for field in ("tags", "topics", "research_area"):
         value = memoria.get(field)

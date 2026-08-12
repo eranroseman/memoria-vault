@@ -48,8 +48,12 @@ _ASPECT_HEADING_ALIASES = {
 
 
 def payload_doi(payload: dict[str, Any]) -> str:
-    identifiers = payload.get("identifiers") if isinstance(payload.get("identifiers"), dict) else {}
-    csl_json = payload.get("csl_json") if isinstance(payload.get("csl_json"), dict) else {}
+    identifiers = payload.get("identifiers")
+    if not isinstance(identifiers, dict):
+        identifiers = {}
+    csl_json = payload.get("csl_json")
+    if not isinstance(csl_json, dict):
+        csl_json = {}
     return str(identifiers.get("doi") or csl_json.get("DOI") or "").strip()
 
 
@@ -244,7 +248,9 @@ def derive_work_aspect_rows(
 
 
 def _structured_aspects(csl_json: dict[str, Any]) -> dict[str, str]:
-    memoria = csl_json.get("memoria") if isinstance(csl_json.get("memoria"), dict) else {}
+    memoria = csl_json.get("memoria")
+    if not isinstance(memoria, dict):
+        memoria = {}
     raw = memoria.get("aspects") or {}
     if not isinstance(raw, dict):
         return {}
@@ -590,7 +596,9 @@ def _bibliography_projection_sources(
 
 
 def _bibliography_citekey(source: dict[str, Any]) -> str:
-    csl = source.get("csl_json") if isinstance(source.get("csl_json"), dict) else {}
+    csl = source.get("csl_json")
+    if not isinstance(csl, dict):
+        csl = {}
     explicit = str(source.get("citekey") or "").strip()
     citekey = explicit or str(csl.get("id") or "").strip()
     if not _BIBLIOGRAPHY_CITEKEY_RE.fullmatch(citekey) or contains_external_url(citekey):
@@ -1135,7 +1143,9 @@ class _TextHTMLParser(HTMLParser):
 
 
 def _render_source_bibtex(frontmatter: dict[str, Any], citekey: str) -> str:
-    csl = frontmatter.get("csl_json") if isinstance(frontmatter.get("csl_json"), dict) else {}
+    csl = frontmatter.get("csl_json")
+    if not isinstance(csl, dict):
+        csl = {}
     fields = {
         "title": str(csl.get("title") or frontmatter.get("title") or citekey),
         "author": _render_bibtex_authors(csl.get("author")),

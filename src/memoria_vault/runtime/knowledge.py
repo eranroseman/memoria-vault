@@ -1097,8 +1097,12 @@ def _add_catalog_source_gap_terms(
 
 
 def _catalog_source_terms(source: dict[str, Any]) -> list[str]:
-    csl = source.get("csl_json") if isinstance(source.get("csl_json"), dict) else {}
-    memoria = csl.get("memoria") if isinstance(csl.get("memoria"), dict) else {}
+    csl = source.get("csl_json")
+    if not isinstance(csl, dict):
+        csl = {}
+    memoria = csl.get("memoria")
+    if not isinstance(memoria, dict):
+        memoria = {}
     out = []
     for field in ("tags", "topics", "research_area"):
         value = memoria.get(field)
@@ -1110,8 +1114,12 @@ def _catalog_source_terms(source: dict[str, Any]) -> list[str]:
 
 
 def _catalog_source_standing(source: dict[str, Any]) -> str:
-    csl = source.get("csl_json") if isinstance(source.get("csl_json"), dict) else {}
-    memoria = csl.get("memoria") if isinstance(csl.get("memoria"), dict) else {}
+    csl = source.get("csl_json")
+    if not isinstance(csl, dict):
+        csl = {}
+    memoria = csl.get("memoria")
+    if not isinstance(memoria, dict):
+        memoria = {}
     # Unset standing is current by contract: the PI curates catalog standing.
     return str(memoria.get("standing") or "").strip() or "current"
 
@@ -3214,7 +3222,9 @@ def project_export_readiness(
     vault = Path(vault)
     project_rel = _project_rel(vault, project_path)
     project = _checked_frontmatter(vault, project_rel, "project")
-    plan = project.get("paper_plan") if isinstance(project.get("paper_plan"), dict) else {}
+    plan = project.get("paper_plan")
+    if not isinstance(plan, dict):
+        plan = {}
     missing = [field for field in PAPER_PLAN_REQUIRED_FIELDS if not plan.get(field)]
     argument = analyze_project_argument(vault, project_rel)
     # ponytail: structural gate only; semantic claim-evidence grading needs the aspect model.
@@ -3527,7 +3537,9 @@ def _frontmatter_gap_terms(frontmatter: dict[str, Any]) -> list[str]:
     out = []
     for field in ("scope_topics", "topics", "tags", "keywords", "research_area", "methodology"):
         out.extend(_string_list(frontmatter.get(field)))
-    facets = frontmatter.get("facets") if isinstance(frontmatter.get("facets"), dict) else {}
+    facets = frontmatter.get("facets")
+    if not isinstance(facets, dict):
+        facets = {}
     for field in ("research_area", "methodology", "topics"):
         out.extend(_string_list(facets.get(field)))
     massw = frontmatter.get("massw")

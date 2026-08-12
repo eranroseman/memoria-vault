@@ -2848,8 +2848,12 @@ def compact_citation(vault: Path, source_ref: str) -> dict[str, Any]:
     if row is None:
         return {}
     source = _source_row(row)
-    csl = source.get("csl_json") if isinstance(source.get("csl_json"), dict) else {}
-    identifiers = source.get("identifiers") if isinstance(source.get("identifiers"), dict) else {}
+    csl = source.get("csl_json")
+    if not isinstance(csl, dict):
+        csl = {}
+    identifiers = source.get("identifiers")
+    if not isinstance(identifiers, dict):
+        identifiers = {}
     citation: dict[str, Any] = {
         "work_id": f"catalog/sources/{work_id}",
         "title": source["title"],

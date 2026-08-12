@@ -2056,8 +2056,12 @@ def _source_row_status(vault: Path, row: dict[str, Any]) -> dict[str, str]:
     flags = state.concept_flags(vault, source_ref)
     if "stale" in flags:
         return {"status": "stale", "lifecycle": "stale"}
-    csl_json = row.get("csl_json") if isinstance(row.get("csl_json"), dict) else {}
-    memoria = csl_json.get("memoria") if isinstance(csl_json.get("memoria"), dict) else {}
+    csl_json = row.get("csl_json")
+    if not isinstance(csl_json, dict):
+        csl_json = {}
+    memoria = csl_json.get("memoria")
+    if not isinstance(memoria, dict):
+        memoria = {}
     standing = str(memoria.get("standing") or "")
     if standing in {"retracted", "archived", "superseded"}:
         return {"status": "stale", "lifecycle": standing}
@@ -2096,8 +2100,12 @@ def _source_provider_coverage(vault: Path, rel: str) -> tuple[str, str]:
 
 
 def _source_row_frontmatter(row: dict[str, Any]) -> dict[str, Any]:
-    csl_json = row.get("csl_json") if isinstance(row.get("csl_json"), dict) else {}
-    memoria = csl_json.get("memoria") if isinstance(csl_json.get("memoria"), dict) else {}
+    csl_json = row.get("csl_json")
+    if not isinstance(csl_json, dict):
+        csl_json = {}
+    memoria = csl_json.get("memoria")
+    if not isinstance(memoria, dict):
+        memoria = {}
     return {
         "check_status": row.get("check_status") or "",
         "title": row.get("title") or "",
