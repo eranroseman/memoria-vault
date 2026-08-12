@@ -32,7 +32,7 @@ repos:
         stages: [pre-commit]
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.16.1
+    rev: v0.16.2
     hooks:
       # Directory scope only: the hooks' own `types_or: [python, pyi, jupyter]`
       # decides what is Python. Spelling `\.py$` here re-encoded that and got it
@@ -111,7 +111,7 @@ repos:
         stages: [pre-commit, manual]
 
   - repo: https://github.com/errata-ai/vale
-    rev: v3.13.0
+    rev: v3.17.1
     hooks:
       # Terminology rulings over published docs prose (.vale.ini + the Memoria
       # vocabulary). Spelling stays with cspell; Vale owns term/casing rulings.
