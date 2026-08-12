@@ -1,14 +1,14 @@
 # Consistency-Audit Repairs Implementation Plan
 
-> **Superseded, and one task is refuted. Do not execute without re-verifying.**
+> **Superseded. Do not execute without re-verifying.**
 > The 2026-08-10 re-run of the same audit over the same corpus
 > ([spec](../specs/2026-08-10-full-corpus-consistency-audit.md)) confirmed 42
 > defects, of which only 15 overlap the 41 this plan derives from. It also
-> **refuted Task 25** (`fulltext.yaml`'s `category`): `folders.yaml`'s
-> `categories:` is a fallback alias for `bundle_roots:`, and the shipped
-> invariant is `home.startswith(category)` (`tests/test_schemas.py:229`), which
-> `fulltext`/`fulltexts` satisfies. Every task's premise step exists for exactly
-> this reason — run it.
+> refuted **Task 25** (`fulltext.yaml`'s `category`) — and a third run on
+> 2026-08-11 overturned that refutation, establishing by `git log -S` that
+> `c5af51be` renamed `fulltext` to `fulltexts` throughout `folders.yaml` and
+> left the type schema behind. Task 25 stands. Every task's premise step exists
+> for exactly this reason — run it.
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
