@@ -186,7 +186,9 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 # Tests legitimately use assert, run trusted subprocesses, and reach into internals;
-# bandit and private-member access there are intentional white-box-test noise.
+# bandit is intentional white-box-test noise. At admission, 291 SLF001 test
+# accesses were measured; 259 remain after production seam promotions and are
+# intentional white-box-test access.
 # E402: test helpers do sys.path manipulation before imports.
 "tests/**" = ["S", "E402", "SLF001"]
 # The e2e smoke harness uses assert as its assertion mechanism, like the tests.
