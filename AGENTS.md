@@ -83,9 +83,10 @@ should feel like a co-PI, not a knowledge base. Product pitch:
   `docs/agents/`: `issue-tracker.md`, `triage-labels.md`, `domain.md`,
   `cross-tool-parity.md`, and `consistency-audit-brief.md`.
 - Which gate claims which file is computed, not asserted in prose:
-  `tests/test_lint_coverage.py` fails when a tracked file falls outside every
-  tool scope without an `UNCLAIMED` entry giving the reason. Adding a language
-  or a top-level directory means adding a line there.
+  `tests/test_lint_coverage.py` fails when a tracked file type has no declared
+  policy or a claimed file falls outside its owner's tool scope. Follow the
+  failure to widen that scope or record a reasoned exemption. Adding a language
+  means declaring its owner.
 
 ## Issue conventions
 
