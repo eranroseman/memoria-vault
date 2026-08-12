@@ -39,18 +39,49 @@ Reading the line is not seeing the defect. The skill's Reading criterion used to
 assert that "both halves of every comparison were held together"; no run can
 claim that, and it no longer does.
 
-## The runs disagree, and the newer evidence was better
+## The runs disagree — and the third run overturned the second
 
-Three defects the baseline confirmed, the re-run refuted. The sharpest is
-`fulltext.yaml`'s `category`, which the baseline confirmed as "orphaned by the
-alpha.19 rename" and put in a repair plan as Task 25. The re-run established
-that `folders.yaml`'s `categories:` is a fallback alias for `bundle_roots:`
-(`schema.py:149`), that the shipped invariant is `home.startswith(category)`
-(`tests/test_schemas.py:229`), which `fulltext`/`fulltexts` satisfies, and that
-the prefix tolerance **predates** the value it tolerates.
+Three defects the 2026-08-09 run confirmed, the 2026-08-10 run refuted. On the
+sharpest of them a third pass, on 2026-08-11, reversed the reversal.
 
-A repair would have been made for a defect that does not exist. That plan now
-carries a superseded banner.
+`fulltext.yaml:2` declares `category: fulltext`. 2026-08-09 confirmed it as
+"orphaned by the alpha.19 rename". 2026-08-10 refuted it (R7) on three grounds:
+that `folders.yaml`'s `categories:` is a fallback alias for `bundle_roots:` and
+therefore a different namespace, that the shipped invariant is
+`home.startswith(category)` rather than membership, and that the prefix
+tolerance predates the value.
+
+**All three legs fail, and this file asserted them as fact.**
+
+- Lines 3 and 4 of `folders.yaml` are the *identical list*. `schema.py:149`
+  makes `categories` the legacy name for the same concept, which
+  `tests/test_search_index.py:509` documents. `fulltext` is absent from both,
+  and from `homes:`.
+- The `startswith` was authored at `1d299c37` for *path*-prefix semantics, with
+  an explicit `if category != "inbox"` exemption, before the `fulltext` type
+  existed. `"fulltexts".startswith("fulltext")` passes as a *string* prefix, by
+  accident. What one test tolerates is not what the data means.
+- Neither earlier run engaged the decisive evidence. `git log -S'fulltexts'
+  --follow` over `folders.yaml` returns exactly one commit — `c5af51be`, which
+  renamed `fulltext` to `fulltexts` throughout that file and **did not touch**
+  `types/fulltext.yaml`. At the schema's authoring commit `14484961`,
+  `categories:` still read `fulltext` and `homes:` mapped `fulltext: fulltext`,
+  so the value was correct when written. It is rename residue. The five sibling
+  schemas each equal their home string exactly; `fulltext` alone does not, and
+  names a directory that exists nowhere.
+
+Two of three runs confirm it. The repair was right; the refutation was wrong.
+
+**What that costs this document's earlier claim.** It read: "A repair would have
+been made for a defect that does not exist." The opposite holds — the defect is
+real, and the refutation would have cancelled a correct repair. The lesson
+survives inverted: a later run with better evidence beats an earlier one, and
+*better evidence* here meant reading history rather than state.
+
+**The method gap it exposes.** Nothing in the skill adjudicates two skeptics who
+disagree, and nothing tells a skeptic that a value which looks wrong while a
+test passes may be the residue of an incomplete rename. `git log -S` and
+`git blame` settle that class and no rule names them.
 
 ## Reading cannot see everything
 
