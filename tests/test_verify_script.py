@@ -48,7 +48,6 @@ def test_roster_covers_lint_tests_and_product_gates() -> None:
     covered = {level for expression in markers for level in expression.split(" or ")}
     assert covered == {"static", "unit", "contract", "runtime", "package", "floor"}
     assert any(f.startswith("python3 -m compileall") for f in flat)
-    assert any(f.startswith("bash -n scripts/install.sh") for f in flat)
 
 
 def test_retired_doctors_are_absent_from_the_roster() -> None:

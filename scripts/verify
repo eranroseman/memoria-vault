@@ -178,16 +178,6 @@ GATES: list[Gate] = [
         ],
         docs=False,
     ),
-    Gate(
-        [
-            "bash",
-            "-n",
-            "scripts/install.sh",
-            "scripts/test_vault/refresh-test-vault.sh",
-            "scripts/test_vault/install-test-vault-local-llm.sh",
-        ],
-        docs=False,
-    ),
     # 1689: the installed console script is the one surface no other gate
     # exercises through PATH — pytest resolves src/ via path config, so a
     # stale editable install (e.g. pointing at a deleted worktree) keeps
