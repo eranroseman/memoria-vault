@@ -24,8 +24,10 @@ from __future__ import annotations
 
 import inspect
 import json
+import os
 import re
 import runpy
+import shutil
 import subprocess
 
 import pytest
@@ -266,18 +268,44 @@ def test_json_and_powershell_are_claimed_by_the_verify_roster():
     assert '["git", "ls-files", "*.json"]' in inspect.getsource(check_json), (
         "check_json must enumerate tracked JSON from git, not a hardcoded list"
     )
-    file_bindings = re.findall(r"\$files\s*=\s*([^;]+);", pssa_command)
-    analyzer_inputs = re.findall(r"Invoke-ScriptAnalyzer\s+-Path\s+([^;\s]+)", pssa_command)
-    assert file_bindings == ["git ls-files '*.ps1'"], (
-        "the PowerShell step must bind $files exactly once from tracked .ps1 files"
-    )
-    assert analyzer_inputs == ["$files"], (
-        "the sole PSScriptAnalyzer invocation must analyze the enumerated $files"
-    )
-    assert pssa_command.index("$files = git ls-files '*.ps1';") < pssa_command.index(
-        "Invoke-ScriptAnalyzer -Path"
-    )
-    assert "scripts/install.ps1" not in pssa_command
     assert set(extra_steps) <= set(shards), "EXTRA_STEPS names shards SHARDS does not declare"
     assert check_json in extra_steps["lint"]
     assert check_powershell in extra_steps["lint"]
+
+    if shutil.which("pwsh") is None:
+        pytest.skip("pwsh not installed; check_powershell() would self-skip too")
+
+    harness = r"""
+function Get-Module {
+    param([switch] $ListAvailable, [string] $Name)
+    [pscustomobject]@{ Name = "PSScriptAnalyzer" }
+}
+function git {
+    param([Parameter(ValueFromRemainingArguments = $true)][string[]] $Arguments)
+    if ($Arguments.Count -ne 2 -or $Arguments[0] -ne "ls-files" -or $Arguments[1] -ne "*.ps1") {
+        throw "expected git ls-files '*.ps1'"
+    }
+    "fixtures/first.ps1"
+    "fixtures/second.ps1"
+}
+$script:capturedPaths = @()
+function Invoke-ScriptAnalyzer {
+    param([Parameter(Mandatory = $true)][string[]] $Path, [string[]] $Severity, [string] $Settings)
+    $script:capturedPaths = @($Path)
+    return $null
+}
+& [scriptblock]::Create($env:PSSA_COMMAND)
+$script:capturedPaths
+"""
+    environment = dict(os.environ)
+    environment["PSSA_COMMAND"] = pssa_command
+    result = subprocess.run(
+        ["pwsh", "-NoProfile", "-Command", harness],
+        cwd=ROOT,
+        text=True,
+        capture_output=True,
+        check=False,
+        env=environment,
+    )
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.splitlines() == ["fixtures/first.ps1", "fixtures/second.ps1"]
