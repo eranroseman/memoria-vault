@@ -25,6 +25,7 @@ OBSIDIAN_PACKAGE = ROOT / "packages" / "memoria-obsidian" / "package.json"
 OBSIDIAN_LOCK = ROOT / "packages" / "memoria-obsidian" / "package-lock.json"
 VERIFY_WORKFLOW = ROOT / ".github" / "workflows" / "verify.yml"
 DEPENDABOT = ROOT / ".github" / "dependabot.yml"
+VSCODE_SETTINGS = ROOT / ".vscode" / "settings.json"
 
 
 def _pins(package: str) -> list[str]:
@@ -192,6 +193,19 @@ def test_precommit_hooks_use_pinned_tool_environments():
         f"ruff is {ruff_version} in requirements-dev.txt but {ruff_rev} in the "
         "pre-commit hook; the editor and the gate would disagree"
     )
+
+
+def test_python_editor_applies_ruff_import_and_fix_actions_on_save():
+    """Keep saved Python aligned with the Ruff gate's fixes."""
+    raw_settings = VSCODE_SETTINGS.read_text(encoding="utf-8")
+    settings = json.loads(re.sub(r"^\s*//.*$", "", raw_settings, flags=re.MULTILINE))
+
+    python_settings = settings["[python]"]
+    assert python_settings["editor.defaultFormatter"] == "charliermarsh.ruff"
+    assert python_settings["editor.formatOnSave"] is True
+    code_actions = python_settings["editor.codeActionsOnSave"]
+    assert code_actions["source.organizeImports.ruff"] == "explicit"
+    assert code_actions["source.fixAll.ruff"] == "explicit"
 
 
 def test_coverage_audit_tool_is_pinned_for_contributors():
