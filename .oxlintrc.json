@@ -1,5 +1,10 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["eslint", "react", "unicorn", "typescript", "promise"],
+  "rules": {
+    "promise/catch-or-return": "error",
+    "promise/always-return": "error"
+  },
   "ignorePatterns": [
     "src/memoria_vault/product/workspace_seed/.obsidian/plugins/**",
     "test-vault/**",
