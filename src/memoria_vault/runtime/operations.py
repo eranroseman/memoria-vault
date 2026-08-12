@@ -1298,7 +1298,9 @@ def _pydantic_ai_chat(
     base_url = str(runner["base_url"])
     require_allowed_network(policy, base_url)
     api_key = _resolve_runner_api_key(runner)
-    params = runner.get("params") if isinstance(runner.get("params"), dict) else {}
+    params = runner.get("params")
+    if not isinstance(params, dict):
+        params = {}
     settings = {
         "temperature": params.get("temperature", 0),
         "max_tokens": int(

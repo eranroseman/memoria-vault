@@ -1563,7 +1563,9 @@ def _cmd_work_export(args: argparse.Namespace) -> int:
 
 def _cmd_seed_install(args: argparse.Namespace) -> int:
     output = _enqueue_and_run(args, "seed-install", {"install": True})
-    result = output.get("result") if isinstance(output.get("result"), dict) else {}
+    result = output.get("result")
+    if not isinstance(result, dict):
+        result = {}
     if not args.json and not args.quiet:
         for notice in result.get("notices") or []:
             print(f"notice: {notice}", file=sys.stderr)
@@ -1640,7 +1642,9 @@ def _bulk_work_import(args: argparse.Namespace, entries: list[str]) -> dict[str,
             failed.append({"ref": ref, "error": str(exc)})
             judgments.append(_import_judgment("failed", ref, ref, str(exc)))
             continue
-        result = output.get("result") if isinstance(output.get("result"), dict) else {}
+        result = output.get("result")
+        if not isinstance(result, dict):
+            result = {}
         if output["ok"]:
             catalog_id = str(result.get("work_id") or work_id)
             admitted.append(catalog_id)
@@ -3915,7 +3919,9 @@ def _present_updates(args: argparse.Namespace) -> dict[str, Any]:
 
 def _concept_terms(frontmatter: dict[str, Any]) -> list[str]:
     terms = [*_string_list(frontmatter.get("tags"))]
-    facets = frontmatter.get("facets") if isinstance(frontmatter.get("facets"), dict) else {}
+    facets = frontmatter.get("facets")
+    if not isinstance(facets, dict):
+        facets = {}
     for key in ("research_area", "methodology", "topics"):
         terms.extend(_string_list(frontmatter.get(key)))
         terms.extend(_string_list(facets.get(key)))

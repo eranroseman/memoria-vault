@@ -413,7 +413,9 @@ def _write(workspace: Path, path: str, body: dict[str, Any]) -> dict[str, Any]:
     operation_id = str(body.get("operation_id") or "").strip()
     if not operation_id:
         raise ValueError("operation_id is required")
-    payload = body.get("payload") if isinstance(body.get("payload"), dict) else {}
+    payload = body.get("payload")
+    if not isinstance(payload, dict):
+        payload = {}
     return engine_api.run_operation(
         workspace,
         operation_id,
@@ -573,9 +575,9 @@ def openapi_schema() -> dict[str, Any]:
 def _openapi_parameters(action: dict[str, Any], http: dict[str, Any]) -> list[dict[str, Any]]:
     if str(action.get("kind")) != "read":
         return []
-    param_specs = (
-        http.get("params") if isinstance(http.get("params"), dict) else action.get("params")
-    )
+    param_specs = http.get("params")
+    if not isinstance(param_specs, dict):
+        param_specs = action.get("params")
     params = []
     for name, spec in (param_specs or {}).items():
         if not isinstance(spec, dict):

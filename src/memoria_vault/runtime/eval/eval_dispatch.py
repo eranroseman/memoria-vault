@@ -230,7 +230,9 @@ def main() -> None:
         surface="memoria-eval",
         machine="memoria-eval",
     )
-    result = run.get("result") if isinstance(run.get("result"), dict) else {}
+    result = run.get("result")
+    if not isinstance(result, dict):
+        result = {}
     if not run["ok"]:
         sys.exit(str(result.get("error") or "eval dispatch failed"))
     n = len(result["dispatched"])

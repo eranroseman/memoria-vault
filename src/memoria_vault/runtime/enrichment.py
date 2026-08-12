@@ -51,7 +51,9 @@ def load_provider_config(vault: Path) -> dict[str, Any]:
 def provider_allowlist_issues(config: dict[str, Any], policy: dict[str, Any]) -> list[str]:
     from memoria_vault.runtime.operations import network_allowed
 
-    providers = config.get("providers") if isinstance(config.get("providers"), dict) else {}
+    providers = config.get("providers")
+    if not isinstance(providers, dict):
+        providers = {}
     issues = []
     for name, spec in sorted(providers.items()):
         if not isinstance(spec, dict) or not spec.get("enabled", True):
@@ -376,8 +378,12 @@ def replay_enrichment_run(vault: Path, run_id: str) -> dict[str, Any]:
 
 
 def _required_providers(config: dict[str, Any], branch: str) -> list[str]:
-    branches = config.get("branches") if isinstance(config.get("branches"), dict) else {}
-    spec = branches.get(branch) if isinstance(branches.get(branch), dict) else {}
+    branches = config.get("branches")
+    if not isinstance(branches, dict):
+        branches = {}
+    spec = branches.get(branch)
+    if not isinstance(spec, dict):
+        spec = {}
     providers = spec.get("required")
     if not isinstance(providers, list) or not all(isinstance(item, str) for item in providers):
         raise ValueError(f"{PROVIDER_CONFIG} branches.{branch}.required must be a string list")
@@ -387,8 +393,12 @@ def _required_providers(config: dict[str, Any], branch: str) -> list[str]:
 def _optional_providers(
     config: dict[str, Any], branch: str, fixture_payloads: dict[str, Any] | None = None
 ) -> list[str]:
-    branches = config.get("branches") if isinstance(config.get("branches"), dict) else {}
-    spec = branches.get(branch) if isinstance(branches.get(branch), dict) else {}
+    branches = config.get("branches")
+    if not isinstance(branches, dict):
+        branches = {}
+    spec = branches.get(branch)
+    if not isinstance(spec, dict):
+        spec = {}
     providers = spec.get("optional", [])
     if not isinstance(providers, list) or not all(isinstance(item, str) for item in providers):
         raise ValueError(f"{PROVIDER_CONFIG} branches.{branch}.optional must be a string list")
@@ -427,8 +437,12 @@ def _credential_notices(
                     f"{provider}: keyless mode - {env_name} unset; "
                     f"set it: memoria secrets set {env_name}"
                 )
-    branches = config.get("branches") if isinstance(config.get("branches"), dict) else {}
-    branch_spec = branches.get(branch) if isinstance(branches.get(branch), dict) else {}
+    branches = config.get("branches")
+    if not isinstance(branches, dict):
+        branches = {}
+    branch_spec = branches.get(branch)
+    if not isinstance(branch_spec, dict):
+        branch_spec = {}
     declared = branch_spec.get("optional")
     for provider in declared if isinstance(declared, list) else []:
         if not isinstance(provider, str):
@@ -449,8 +463,12 @@ def _credential_notices(
 
 
 def _spec_env_names(spec: dict[str, Any]) -> list[str]:
-    params = spec.get("query_params") if isinstance(spec.get("query_params"), dict) else {}
-    headers = spec.get("header_env") if isinstance(spec.get("header_env"), dict) else {}
+    params = spec.get("query_params")
+    if not isinstance(params, dict):
+        params = {}
+    headers = spec.get("header_env")
+    if not isinstance(headers, dict):
+        headers = {}
     return sorted(_valid_env_names([*params.values(), *headers.values()]))
 
 
@@ -622,7 +640,9 @@ def _append_env_query_params(endpoint: str, spec: dict[str, Any]) -> str:
 
 
 def _provider_spec(config: dict[str, Any], provider: str) -> dict[str, Any]:
-    providers = config.get("providers") if isinstance(config.get("providers"), dict) else {}
+    providers = config.get("providers")
+    if not isinstance(providers, dict):
+        providers = {}
     spec = providers.get(provider)
     if not isinstance(spec, dict):
         raise ValueError(f"{PROVIDER_CONFIG} missing provider: {provider}")
@@ -1191,8 +1211,12 @@ def _provider_coverage(canonical: dict[str, Any]) -> str:
 
 
 def _doi(source: dict[str, Any]) -> str:
-    identifiers = source.get("identifiers") if isinstance(source.get("identifiers"), dict) else {}
-    csl_json = source.get("csl_json") if isinstance(source.get("csl_json"), dict) else {}
+    identifiers = source.get("identifiers")
+    if not isinstance(identifiers, dict):
+        identifiers = {}
+    csl_json = source.get("csl_json")
+    if not isinstance(csl_json, dict):
+        csl_json = {}
     return str(source.get("doi") or identifiers.get("doi") or csl_json.get("DOI") or "").strip()
 
 

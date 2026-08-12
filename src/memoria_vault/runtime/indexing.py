@@ -118,9 +118,9 @@ def _previously_indexed_documents(vault: Path, seen: set[str]) -> list[dict[str,
 def _passage_row(vault: Path, document: dict[str, Any]) -> dict[str, Any]:
     path = normalize_path(str(document["path"]))
     text = str(document["text"])
-    frontmatter = (
-        document.get("frontmatter") if isinstance(document.get("frontmatter"), dict) else {}
-    )
+    frontmatter = document.get("frontmatter")
+    if not isinstance(frontmatter, dict):
+        frontmatter = {}
     text_sha256 = "sha256:" + hashlib.sha256(text.encode()).hexdigest()
     work_id = _work_id(frontmatter, path)
     raw_id = str(frontmatter.get("id") or "")

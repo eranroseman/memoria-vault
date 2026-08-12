@@ -426,7 +426,9 @@ def _frontmatter_terms(frontmatter: dict[str, Any]) -> list[str]:
     terms = []
     for key in ("scope_topics", "topics", "tags", "keywords", "research_area", "methodology"):
         terms.extend(_string_list(frontmatter.get(key)))
-    facets = frontmatter.get("facets") if isinstance(frontmatter.get("facets"), dict) else {}
+    facets = frontmatter.get("facets")
+    if not isinstance(facets, dict):
+        facets = {}
     for key in ("research_area", "methodology", "topics"):
         terms.extend(_string_list(facets.get(key)))
     return [term for term in terms if term]
@@ -643,7 +645,9 @@ def _graph_edge_details(edge: dict[str, Any]) -> list[str]:
     details = []
     if edge.get("target_doi"):
         details.append(f"doi: {edge['target_doi']}")
-    raw = edge.get("raw") if isinstance(edge.get("raw"), dict) else {}
+    raw = edge.get("raw")
+    if not isinstance(raw, dict):
+        raw = {}
     for field in ("subfield", "field", "domain"):
         value = _raw_display_name(raw.get(field))
         if value:

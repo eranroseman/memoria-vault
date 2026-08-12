@@ -62,7 +62,9 @@ def resolve_fetch(
     authorize_url: Callable[[str], None],
 ) -> bytes:
     """Fetch one declared PDF only after validating and authorizing every URL."""
-    fetch = row.get("fetch") if isinstance(row.get("fetch"), dict) else {}
+    fetch = row.get("fetch")
+    if not isinstance(fetch, dict):
+        fetch = {}
     method = str(fetch.get("method") or "")
     url = str(fetch.get("url") or "")
     active_opener = _default_opener if opener is None else opener

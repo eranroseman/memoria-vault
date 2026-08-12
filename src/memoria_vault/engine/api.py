@@ -1056,8 +1056,12 @@ def write_new_concept(
             raise
         rel, frontmatter, content = candidate(winner)
         job = enqueue_candidate(rel, content)
-    envelope = job.get("request_envelope") if isinstance(job.get("request_envelope"), dict) else {}
-    args = envelope.get("args") if isinstance(envelope.get("args"), dict) else {}
+    envelope = job.get("request_envelope")
+    if not isinstance(envelope, dict):
+        envelope = {}
+    args = envelope.get("args")
+    if not isinstance(args, dict):
+        args = {}
     if isinstance(args.get("target_path"), str) and args["target_path"]:
         rel = args["target_path"]
     if isinstance(args.get("content"), str) and args["content"]:
