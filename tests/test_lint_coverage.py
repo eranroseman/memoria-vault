@@ -54,13 +54,13 @@ KNOWN_EXTENSIONS: dict[str, str] = {
     ".json": "check_json",
     ".md": "cspell",
     # Claimed by no linter, on purpose. The reason is the value.
-    ".toml": "unclaimed: 2 files; pyproject is parsed by every pip and build invocation",
+    ".toml": "unclaimed: pyproject.toml and mise.toml are parsed by their consumers",
     ".css": "unclaimed: 2 files, one a generated bundle; three CSS files is not a mechanism",
     ".scss": "unclaimed: 1 Jekyll theme override",
     ".base": "unclaimed: Obsidian Bases config, shipped as package data",
     ".sql": "unclaimed: runtime package data, exercised by the migration tests",
     ".bib": "unclaimed: generated bibliography artifact",
-    ".txt": "unclaimed: word lists and vocabularies",
+    ".txt": "unclaimed: project word vocabulary and requirements-dev dependency pins",
     ".cff": "unclaimed: citation metadata",
     ".ini": "unclaimed: .vale.ini, read by the vale hook itself",
     ".psd1": "unclaimed: PSScriptAnalyzer settings, read by the analyzer itself",
@@ -189,6 +189,74 @@ HOOK_FOR_OWNER = {
     "yamllint": "yamllint",
     "cspell": "cspell",
 }
+
+NATIVE_OWNERS = {"check_json", "psscriptanalyzer"}
+KNOWN_OWNERS = set(HOOK_FOR_OWNER) | NATIVE_OWNERS
+POLICY_MAPS = {
+    "KNOWN_EXTENSIONS": KNOWN_EXTENSIONS,
+    "EXTENSIONLESS": EXTENSIONLESS,
+}
+
+
+def _policy_error(policy: str) -> str | None:
+    """Return why a policy value is invalid, if it is not an intentional owner."""
+    if policy in KNOWN_OWNERS:
+        return None
+    if policy.startswith("unclaimed:") and policy.removeprefix("unclaimed:").strip():
+        return None
+    return (
+        f"{policy!r} is not a known owner ({', '.join(sorted(KNOWN_OWNERS))}) "
+        "or 'unclaimed: <reason>'"
+    )
+
+
+def _validate_policies() -> list[str]:
+    """Validate policy maps rather than trusting their values as test configuration."""
+    invalid = [
+        f"KNOWN_EXTENSIONS[{extension!r}]: {_policy_error(owner)}"
+        for extension, owner in KNOWN_EXTENSIONS.items()
+        if _policy_error(owner) is not None
+    ]
+    invalid.extend(
+        f"EXTENSIONLESS[{path!r}]: {_policy_error(owner)}"
+        for path, owner in EXTENSIONLESS.items()
+        if _policy_error(owner) is not None
+    )
+    invalid.extend(
+        f"UNCLAIMED[{pattern!r}] needs a nonempty reason"
+        for pattern, reason in UNCLAIMED.items()
+        if not isinstance(reason, str) or not reason.strip()
+    )
+    return invalid
+
+
+def test_policy_values_name_a_known_owner_or_reasoned_exemption() -> None:
+    assert _validate_policies() == []
+
+
+@pytest.mark.parametrize(
+    ("mapping_name", "key", "policy"),
+    [
+        ("KNOWN_EXTENSIONS", ".py", "ruf"),
+        ("KNOWN_EXTENSIONS", ".txt", "unclaimed:"),
+        ("EXTENSIONLESS", "scripts/verify", "verify"),
+        ("EXTENSIONLESS", "LICENSE", "unclaimed:   "),
+    ],
+)
+def test_invalid_policy_values_are_rejected(
+    monkeypatch: pytest.MonkeyPatch, mapping_name: str, key: str, policy: str
+) -> None:
+    mapping = POLICY_MAPS[mapping_name]
+    monkeypatch.setitem(mapping, key, policy)
+    errors = _validate_policies()
+    assert len(errors) == 1
+    assert key in errors[0]
+    assert policy in errors[0]
+
+
+def test_blank_unclaimed_reason_is_rejected(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setitem(UNCLAIMED, "docs/superpowers/**", "   ")
+    assert _validate_policies() == ["UNCLAIMED['docs/superpowers/**'] needs a nonempty reason"]
 
 
 def test_every_tracked_extension_has_a_policy():

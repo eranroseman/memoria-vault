@@ -44,7 +44,14 @@ def main() -> int:
         payload = json.load(sys.stdin)
     except json.JSONDecodeError:
         return 0
-    command = (payload.get("tool_input") or {}).get("command") or ""
+    if not isinstance(payload, dict):
+        return 0
+    tool_input = payload.get("tool_input")
+    if not isinstance(tool_input, dict):
+        return 0
+    command = tool_input.get("command")
+    if not isinstance(command, str):
+        return 0
     for segment in re.split(r"[|;&()`\n]+", command):
         match = re.search(r"(?:^|[\s(])git\s+(?:-C\s+\S+\s+)?add\s+(.*)", segment)
         if match and is_sweep(match.group(1)):
