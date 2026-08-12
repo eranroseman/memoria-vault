@@ -259,15 +259,17 @@ def test_json_and_powershell_are_claimed_by_the_verify_roster():
     namespace = runpy.run_path(str(ROOT / "scripts/verify"), run_name="_verify_probe")
     check_json = namespace["check_json"]
     check_powershell = namespace["check_powershell"]
+    pssa_command = namespace["PSSA_COMMAND"]
     extra_steps = namespace["EXTRA_STEPS"]
     shards = namespace["SHARDS"]
 
     assert '["git", "ls-files", "*.json"]' in inspect.getsource(check_json), (
         "check_json must enumerate tracked JSON from git, not a hardcoded list"
     )
-    assert "ls-files" in inspect.getsource(check_powershell) and "*.ps1" in inspect.getsource(
-        check_powershell
-    ), "the PowerShell step must enumerate tracked .ps1 from git, not a hardcoded path"
+    assert "$files = git ls-files '*.ps1';" in pssa_command, (
+        "the PowerShell step must enumerate tracked .ps1 from git, not a hardcoded path"
+    )
+    assert "Invoke-ScriptAnalyzer -Path $files" in pssa_command
     assert set(extra_steps) <= set(shards), "EXTRA_STEPS names shards SHARDS does not declare"
     assert check_json in extra_steps["lint"]
     assert check_powershell in extra_steps["lint"]
