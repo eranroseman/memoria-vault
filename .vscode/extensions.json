@@ -3,7 +3,6 @@
     "ms-vscode-remote.remote-wsl",
     "github.vscode-pull-request-github",
     "github.vscode-github-actions",
-    "rhysd.actionlint",
     "ms-python.python",
     "charliermarsh.ruff",
     "oxc.oxc-vscode",
