@@ -728,7 +728,7 @@ def _fetch_discovered_full_text(policy: dict[str, Any], payloads: dict[str, dict
 
 
 def _discovered_full_text_urls(payloads: dict[str, dict[str, Any]]) -> list[str]:
-    urls = []
+    urls: list[str] = []
     for location in _open_access_locations(payloads.get("unpaywall", {})):
         for key in ("url_for_pdf", "url_for_fulltext", "url_for_landing_page", "url"):
             _append_url(urls, location.get(key))
@@ -760,14 +760,19 @@ def _collect_locations(
     *,
     require_oa: bool = False,
 ) -> list[dict[str, Any]]:
-    def _ok(location: Any) -> bool:
-        return isinstance(location, dict) and (not require_oa or location.get("is_oa") is not False)
-
-    locations = [payload.get(key) for key in singular_keys if _ok(payload.get(key))]
+    locations: list[dict[str, Any]] = []
+    for key in singular_keys:
+        location = payload.get(key)
+        if isinstance(location, dict) and (not require_oa or location.get("is_oa") is not False):
+            locations.append(location)
     all_locations = payload.get(list_key)
     if isinstance(all_locations, list):
         for location in all_locations:
-            if _ok(location) and location not in locations:
+            if (
+                isinstance(location, dict)
+                and (not require_oa or location.get("is_oa") is not False)
+                and location not in locations
+            ):
                 locations.append(location)
     return locations
 
@@ -1244,7 +1249,7 @@ def _crossref_authors(message: dict[str, Any]) -> list[dict[str, Any]]:
 
 
 def _openalex_external_ids(payload: dict[str, Any]) -> list[dict[str, str]]:
-    rows = []
+    rows: list[dict[str, str]] = []
     authorships = payload.get("authorships")
     if not isinstance(authorships, list):
         return rows

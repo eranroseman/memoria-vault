@@ -156,7 +156,7 @@ def score_task(
     task: dict, result: dict, catalog: set[str], superseded: set[str], k: int = DEFAULT_K
 ) -> dict:
     """Deterministic metrics for one gold task from its result block."""
-    metrics: dict[str, float] = {}
+    metrics: dict[str, float | list[str]] = {}
     gold = [str(c) for c in task.get("references") or []]
     retrieved = _str_list(result, "retrieved")
     if retrieved is not None and gold:

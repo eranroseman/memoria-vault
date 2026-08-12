@@ -1371,7 +1371,7 @@ def _significant_terms(*values: str) -> set[str]:
         "suggestions",
         "synthesis",
     }
-    terms = set()
+    terms: set[str] = set()
     for value in values:
         terms.update(
             term

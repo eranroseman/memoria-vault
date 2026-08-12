@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import os
 import subprocess
+from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
 
@@ -282,7 +283,7 @@ def _is_tracked_projection_path(path: str) -> bool:
     return rel in TRACKED_PROJECTION_PATHS or _is_argument_canvas(rel)
 
 
-def regenerable_tracked_projection_paths(vault: Path, paths: list[str]) -> list[str]:
+def regenerable_tracked_projection_paths(vault: Path, paths: Iterable[str]) -> list[str]:
     """Return changed projections whose current owners can be rendered."""
     return sorted(
         {

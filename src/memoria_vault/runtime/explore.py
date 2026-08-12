@@ -275,7 +275,7 @@ def _tension_pairs(
         )
         if not crosses:
             continue
-        pair = tuple(sorted((source, target)))
+        pair = (source, target) if source <= target else (target, source)
         pairs[pair] = {
             "pair": list(pair),
             "titles": [titles[pair[0]], titles[pair[1]]],

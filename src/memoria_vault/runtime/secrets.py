@@ -49,6 +49,7 @@ def _read_secrets_file_anchored(target: Path) -> tuple[dict[str, str], str]:
         return {}, _read_warning(target, _read_error_reason(exc, "parent"))
     try:
         flags = os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK | getattr(os, "O_CLOEXEC", 0)
+        fd: int | None = None
         try:
             fd = os.open(target.name, flags, dir_fd=parent_fd)
         except FileNotFoundError:
@@ -259,6 +260,8 @@ def _write_secret_anchored(target: Path, name: str, value: str) -> Path:
         values = _read_secret_values(parent_fd, target.name)
         values[name] = value
         body = "".join(f"{key}={values[key]}\n" for key in sorted(values)).encode("utf-8")
+        temp_name: str
+        temp_fd: int | None
         temp_name, temp_fd = _create_private_secret_temp(parent_fd, target.name)
         try:
             _write_all(temp_fd, body)
@@ -306,6 +309,7 @@ def _open_secret_parent(parent: Path) -> Iterator[int]:
 
 def _read_secret_values(parent_fd: int, target_name: str) -> dict[str, str]:
     flags = os.O_RDONLY | os.O_NOFOLLOW | getattr(os, "O_NONBLOCK", 0) | getattr(os, "O_CLOEXEC", 0)
+    fd: int | None = None
     try:
         fd = os.open(target_name, flags, dir_fd=parent_fd)
     except FileNotFoundError:
@@ -394,6 +398,8 @@ def _write_secret_fallback(target: Path, name: str, value: str) -> Path:
     values = _read_secret_values_fallback(target)
     values[name] = value
     body = "".join(f"{key}={values[key]}\n" for key in sorted(values)).encode("utf-8")
+    temp_path: Path
+    temp_fd: int | None
     temp_path, temp_fd = _create_private_secret_temp_fallback(parent, target.name)
     try:
         _write_all(temp_fd, body)

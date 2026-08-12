@@ -130,7 +130,7 @@ def relpath(vault: Path, p: Path) -> str:
 
 
 def orphan_working_files(vault: Path) -> list[Finding]:
-    out = []
+    out: list[Finding] = []
     for p in iter_files(vault):
         rp = relpath(vault, p)
         if rp.startswith(TRANSIENT_PREFIXES):
@@ -152,7 +152,8 @@ def orphan_working_files(vault: Path) -> list[Finding]:
 
 
 def stale_fleeting(vault: Path, days: int = 7) -> list[Finding]:
-    out, cutoff = [], time.time() - days * 86400
+    out: list[Finding] = []
+    cutoff = time.time() - days * 86400
     folder = vault / "notes" / "fleeting"
     if not folder.is_dir():
         return out
@@ -179,7 +180,8 @@ def stale_answer_drafts(vault: Path, days: int = 90) -> list[Finding]:
     weekly review. Never auto-archive -- the most useful drafts are often the
     ones not yet gotten to, so silent archival would hide them exactly when
     they're most likely to be needed."""
-    out, cutoff = [], time.time() - days * 86400
+    out: list[Finding] = []
+    cutoff = time.time() - days * 86400
     folder = vault / "inbox" / "_answers"
     if not folder.is_dir():
         return out
@@ -473,7 +475,7 @@ def _catalog_source_terms(source: dict[str, object]) -> list[str]:
     memoria = csl.get("memoria")
     if not isinstance(memoria, dict):
         memoria = {}
-    out = []
+    out: list[str] = []
     for field in ("tags", "topics", "research_area"):
         value = memoria.get(field)
         if isinstance(value, list):

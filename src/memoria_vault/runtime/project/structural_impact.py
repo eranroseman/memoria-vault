@@ -170,12 +170,12 @@ def gap_taxonomy(
         row = rows_by_key.get(key, {})
         if _is_open_gap(note):
             kind = str(note.frontmatter.get("gap_type") or "additive")
-            target = advisories if kind in ADVISORY_GAP_KINDS else findings
+            target_rows = advisories if kind in ADVISORY_GAP_KINDS else findings
             if kind in CONFIDENT_GAP_KINDS or kind in ADVISORY_GAP_KINDS:
-                target.append(
+                target_rows.append(
                     {
                         "kind": kind,
-                        "visibility": "advisory" if target is advisories else "shown",
+                        "visibility": "advisory" if target_rows is advisories else "shown",
                         "path": note.path,
                         "title": note.title,
                         "impact": row.get("impact", 0),

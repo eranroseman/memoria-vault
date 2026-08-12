@@ -49,6 +49,23 @@ repos:
         files: ^(src/memoria_vault|scripts|tests|\.claude/hooks)/
         stages: [pre-commit, manual]
 
+  # MyPy checks rather than rewrites, so the manual stage owns it. Its scope
+  # comes from pyproject.toml: passing individual changed paths would lose
+  # package-wide cross-module resolution.
+  #
+  # The exact extra pins make a cached hook environment reproducible and
+  # meaningful offline. Without the runtime package and YAML stubs, third-party
+  # imports collapse to Any and a green check would prove too little.
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v2.3.0
+    hooks:
+      - id: mypy
+        pass_filenames: false
+        additional_dependencies:
+          - types-PyYAML==6.0.12.20260724
+          - pydantic-ai-slim[openai]==2.28.0
+        stages: [manual]
+
   - repo: https://github.com/adrienverge/yamllint
     rev: v1.38.0
     hooks:

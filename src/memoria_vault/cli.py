@@ -18,7 +18,7 @@ from collections.abc import Callable
 from contextlib import contextmanager
 from importlib.resources import files
 from pathlib import Path
-from typing import Any
+from typing import Any, TypedDict
 
 import yaml
 
@@ -95,6 +95,13 @@ PROJECT_EXPLORE_HELP = (
     "List exploration-channel candidates. Distinct from memoria explore <topic>, "
     "which surfaces a checked topic neighborhood."
 )
+
+
+class _ParserHelp(TypedDict, total=False):
+    """The parser keyword subset produced from a surface contract row."""
+
+    description: str
+    help: str
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -758,7 +765,7 @@ def _simple_resource(
             raise ValueError(f"unsupported resource action: {name} {action}")
 
 
-def _resource_action_help(name: str, action: str) -> dict[str, str]:
+def _resource_action_help(name: str, action: str) -> _ParserHelp:
     if name == "journal" and action == "tail":
         return _surface_help("journal.list")
     if name == "journal" and action == "show":
@@ -777,7 +784,7 @@ def _common(parser: argparse.ArgumentParser, *, workspace_required: bool = True)
     parser.add_argument("--actor", choices=("pi", "agent"), default="pi")
 
 
-def _surface_help(action_id: str) -> dict[str, str]:
+def _surface_help(action_id: str) -> _ParserHelp:
     summary = _surface_summary(action_id)
     return {"description": summary, "help": summary}
 
@@ -1569,12 +1576,16 @@ def _cmd_seed_install(args: argparse.Namespace) -> int:
     if not args.json and not args.quiet:
         for notice in result.get("notices") or []:
             print(f"notice: {notice}", file=sys.stderr)
-        failed = result.get("failed")
-        if not isinstance(failed, list):
+        failed_value = result.get("failed")
+        if isinstance(failed_value, list):
+            failed = failed_value
+        else:
             diagnostics = result.get("diagnostics")
-            failed = diagnostics.get("failed") if isinstance(diagnostics, dict) else []
+            diagnostics_failed = diagnostics.get("failed") if isinstance(diagnostics, dict) else []
+            failed = diagnostics_failed if isinstance(diagnostics_failed, list) else []
         for entry in failed:
-            print(f"failed row {entry.get('id')}: {entry.get('error')}", file=sys.stderr)
+            if isinstance(entry, dict):
+                print(f"failed row {entry.get('id')}: {entry.get('error')}", file=sys.stderr)
     return _emit(output, args)
 
 
@@ -2704,13 +2715,13 @@ def _cmd_workspace_recover(args: argparse.Namespace) -> int:
         backup_recovery = runtime_backup.recover_interrupted_backup(workspace)
         restored = state.recover_pending_materializations(workspace)
         failed_requests = state.recover_running_requests(workspace)
+    restore_rollbacks = [restore_recovery["rollback"]] if restore_recovery["recovered"] else []
+    backup_targets = [backup_recovery["target"]] if backup_recovery["recovered"] else []
     payload = {
         "ok": True,
         "restored": restored,
-        "restore_rollbacks": (
-            [restore_recovery["rollback"]] if restore_recovery["recovered"] else []
-        ),
-        "backup_targets": [backup_recovery["target"]] if backup_recovery["recovered"] else [],
+        "restore_rollbacks": restore_rollbacks,
+        "backup_targets": backup_targets,
         "failed_requests": failed_requests,
     }
     if fixture is not None:
@@ -2718,8 +2729,8 @@ def _cmd_workspace_recover(args: argparse.Namespace) -> int:
     if not args.json and not args.quiet:
         print(
             "workspace recovery: "
-            f"{len(payload['restore_rollbacks'])} restore rollbacks, "
-            f"{len(payload['backup_targets'])} backup targets, "
+            f"{len(restore_rollbacks)} restore rollbacks, "
+            f"{len(backup_targets)} backup targets, "
             f"{len(restored)} materializations, "
             f"{len(failed_requests)} interrupted requests"
         )
@@ -3036,7 +3047,8 @@ def _cmd_steering_show(args: argparse.Namespace) -> int:
         return _fail("steering.md not found", json_output=args.json)
     tokens = effective_steering_provenance(workspace)
     _watch, mute = steering_overrides(workspace)
-    payload = {"ok": True, "path": "steering.md", "tokens": tokens, "muted": sorted(mute)}
+    muted = sorted(mute)
+    payload = {"ok": True, "path": "steering.md", "tokens": tokens, "muted": muted}
     if not args.json and not args.quiet:
         if tokens:
             width = max(len(str(row["token"])) for row in tokens)
@@ -3044,8 +3056,8 @@ def _cmd_steering_show(args: argparse.Namespace) -> int:
                 print(f"{row['token']!s:<{width}}  {', '.join(row['sources'])}")
         else:
             print("no effective steering tokens - frame a project or add Watch for bullets")
-        if payload["muted"]:
-            print(f"muted: {', '.join(payload['muted'])}")
+        if muted:
+            print(f"muted: {', '.join(muted)}")
         return 0
     return _emit(payload, args)
 

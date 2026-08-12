@@ -219,7 +219,9 @@ def _pdf_from_tarball(package: bytes, package_url: str) -> bytes:
     try:
         stream_limit = MAX_TAR_TOTAL_BYTES + (2 * MAX_TAR_MEMBERS + 2) * tarfile.BLOCKSIZE
         with gzip.GzipFile(fileobj=io.BytesIO(package), mode="rb") as compressed:
-            with tarfile.open(
+            # The bounded reader implements the runtime stream protocol, while
+            # tarfile's private stub protocol cannot describe it.
+            with tarfile.open(  # type: ignore[call-overload]
                 fileobj=_CappedTarStream(compressed, stream_limit, package_url), mode="r|"
             ) as archive:
                 member_count = 0

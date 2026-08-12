@@ -194,3 +194,24 @@ ignore = [
 # The e2e smoke harness uses assert as its assertion mechanism, like the tests.
 "scripts/test_vault/e2e_smoke.py" = ["S101"]
 "scripts/**" = ["E402"]
+
+[tool.mypy]
+# Scope is source only. Tests deliberately reach into internals and scripts are
+# glue; widening either deserves its own measurement rather than an incidental
+# annotation burden.
+files = ["src/memoria_vault"]
+python_version = "3.12"
+
+# The tree was 99% fully annotated at admission. The measured 133-error middle
+# branch supports these checks now, while check_untyped_defs and strict_equality
+# remain deferred until their own follow-up landing.
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_unused_configs = true
+no_implicit_optional = true
+
+[[tool.mypy.overrides]]
+# PyMuPDF exposes `fitz` without usable typing; `mcp` is an optional untyped
+# integration. Both are honest dependency boundaries, not global escapes.
+module = ["fitz", "mcp.*"]
+ignore_missing_imports = true

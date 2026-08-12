@@ -458,7 +458,7 @@ def run_seeded_error_verdict(
     expected = {str(case["target_id"]): case for case in bundle["cases"]}
 
     start = time.perf_counter()
-    check_runs = []
+    check_runs: list[dict[str, Any]] = []
     for check_name, check_fn in (
         ("integrity-evidence-check", check_evidence_integrity),
         ("integrity-quote-anchor-check", check_quote_anchor_support),

@@ -531,7 +531,7 @@ def observe_pi_edit(
         output_sha256=output_sha256,
     )
 
-    event = {
+    event: dict[str, Any] = {
         "event": EVENT_OBSERVED_EXTERNAL_EDIT,
         "timestamp": now_iso(),
         "output_id": target,
@@ -901,7 +901,7 @@ def stage_concept(
 
     staged_path = _staged_path(vault, target)
     write_frontmatter_doc(staged_path, frontmatter, body, create_parent=True)
-    event = {
+    event: dict[str, Any] = {
         "event": EVENT_DERIVED,
         "timestamp": now_iso(),
         "output_id": target,

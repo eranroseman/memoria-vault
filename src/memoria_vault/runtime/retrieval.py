@@ -184,8 +184,12 @@ def _evaluate(
             }
         )
     total = len(results)
-    hits = sum(1 for result in results if result["hit"])
-    return {"queries": total, "hits": hits, "recall_at_k": hits / total if total else 0.0}
+    hit_count = sum(1 for result in results if result["hit"])
+    return {
+        "queries": total,
+        "hits": hit_count,
+        "recall_at_k": hit_count / total if total else 0.0,
+    }
 
 
 def _fts_query(query: str) -> str:

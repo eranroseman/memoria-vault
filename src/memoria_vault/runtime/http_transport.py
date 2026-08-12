@@ -13,7 +13,7 @@ from contextlib import contextmanager
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 from urllib.parse import parse_qs, urlparse
 
 from memoria_vault import __version__
@@ -132,7 +132,11 @@ def make_http_server(
             return
 
         def _handle(self, method: str) -> None:
-            port = int(self.server.server_address[1])
+            server = cast(MemoriaHTTPServer, self.server)
+            address = server.server_address
+            if not isinstance(address, tuple):
+                raise RuntimeError("HTTP server has an invalid socket address")
+            port = int(address[1])
             hosts = self.headers.get_all("Host") or []
             if len(hosts) != 1 or not host_allowed(hosts[0], port):
                 self._write({"ok": False, "error": "forbidden host"}, HTTPStatus.FORBIDDEN)
@@ -149,9 +153,7 @@ def make_http_server(
                         HTTPStatus.METHOD_NOT_ALLOWED,
                     )
                     return
-                self._write(
-                    {"ok": True, "boot_id": self.server.boot_id, "engine_version": __version__}
-                )
+                self._write({"ok": True, "boot_id": server.boot_id, "engine_version": __version__})
                 return
             if not is_authorized(self.headers.get("Authorization"), token):
                 self._write(
@@ -159,7 +161,7 @@ def make_http_server(
                     HTTPStatus.UNAUTHORIZED,
                 )
                 return
-            with self.server.authenticated_request() as admitted:
+            with server.authenticated_request() as admitted:
                 if not admitted:
                     self._write(
                         {"ok": False, "error": "server stopping"},
@@ -174,11 +176,11 @@ def make_http_server(
                         )
                         return
                     boot_ids = self.headers.get_all("X-Memoria-Boot-Id") or []
-                    if len(boot_ids) != 1 or boot_ids[0] != self.server.boot_id:
+                    if len(boot_ids) != 1 or boot_ids[0] != server.boot_id:
                         self._write({"ok": False, "error": "stale server"}, HTTPStatus.CONFLICT)
                         return
                     self._write({"ok": True, "stopping": True})
-                    threading.Thread(target=self.server.shutdown, daemon=True).start()
+                    threading.Thread(target=server.shutdown, daemon=True).start()
                     return
                 try:
                     payload, status = _dispatch(

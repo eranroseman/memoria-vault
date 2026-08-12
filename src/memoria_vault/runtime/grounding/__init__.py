@@ -404,14 +404,19 @@ def _duplicate_source_external_id_findings(
 ) -> list[dict[str, Any]]:
     findings: list[dict[str, Any]] = []
     for namespace, value, work_ids in _duplicate_source_external_id_groups(vault):
+
+        def duplicate_reason(
+            others: list[str], namespace: str = namespace, value: str = value
+        ) -> str:
+            return (
+                f"duplicate source external id {namespace}={value} also used by {', '.join(others)}"
+            )
+
         findings.extend(
             _duplicate_group_findings(
                 vault,
                 [work_ids],
-                lambda others, namespace=namespace, value=value: (
-                    f"duplicate source external id {namespace}={value} also used by "
-                    f"{', '.join(others)}"
-                ),
+                duplicate_reason,
                 context=context,
                 shadow=shadow,
             )
@@ -714,7 +719,9 @@ def tier1_tension_candidates(
         seen: set[tuple[str, str]] = set()
         for left_index, left in enumerate(rows):
             for right in rows[left_index + 1 :]:
-                pair_key = tuple(sorted((left["canonical_id"], right["canonical_id"])))
+                left_id = str(left["canonical_id"])
+                right_id = str(right["canonical_id"])
+                pair_key = (left_id, right_id) if left_id <= right_id else (right_id, left_id)
                 if pair_key in seen or pair_key[0] == pair_key[1]:
                     continue
                 seen.add(pair_key)
@@ -1026,6 +1033,10 @@ def _propagate_scan_demotion(
             skipped.append(output_id)
             continue
         if depth == 1:
+
+            def set_unchecked(output_id: str = output_id) -> None:
+                state.set_concept_verdict(vault, output_id, "unchecked")
+
             _flag_descendant(
                 vault,
                 output_id,
@@ -1034,12 +1045,14 @@ def _propagate_scan_demotion(
                 append_event,
                 check="scan-demotion-propagation",
                 route="act",
-                state_update=lambda output_id=output_id: state.set_concept_verdict(
-                    vault, output_id, "unchecked"
-                ),
+                state_update=set_unchecked,
             )
             demoted.append(output_id)
         else:
+
+            def set_stale(output_id: str = output_id) -> None:
+                state.set_concept_flag(vault, output_id, "stale", reason=reason, trigger_id=target)
+
             _flag_descendant(
                 vault,
                 output_id,
@@ -1048,9 +1061,7 @@ def _propagate_scan_demotion(
                 append_event,
                 check="scan-demotion-stale",
                 route="log",
-                state_update=lambda output_id=output_id: state.set_concept_flag(
-                    vault, output_id, "stale", reason=reason, trigger_id=target
-                ),
+                state_update=set_stale,
             )
             stale.append(output_id)
     return {
@@ -1367,7 +1378,8 @@ def resolve_attention(
         )
     touched: list[str] = []
     if resolution == "resolved" and outcome == "decided-wrong":
-        touched.append(_write_blast_radius_report(vault, target))
+        if report_path := _write_blast_radius_report(vault, target):
+            touched.append(report_path)
     target_path = vault / target
     if resolution == "resolved" and target_path.is_file():
         frontmatter, body = split_frontmatter(target_path.read_text(encoding="utf-8"))
@@ -1396,7 +1408,7 @@ def resolve_attention(
     return result
 
 
-def _write_blast_radius_report(vault: Path, target: str) -> str:
+def _write_blast_radius_report(vault: Path, target: str) -> str | None:
     """Report, not act: count the typed closure and raise one flag card over it.
 
     `compute_consequences` is a pure read — no label, no verdict, no flag and no
@@ -1405,9 +1417,11 @@ def _write_blast_radius_report(vault: Path, target: str) -> str:
     is a judgment about the claim; demoting what stood on it is a separate,
     explicitly invoked destruction, and the card says so.
 
-    No `dedupe_slug` and no `fingerprint`, so `write_finding` always returns a
-    path: a second `decided-wrong` on the same claim is a second decision, taken
-    over a blast radius that may have moved since the first.
+    No `dedupe_slug` and no `fingerprint`, so each admitted report is a fresh
+    path: a second `decided-wrong` on the same claim is a second decision,
+    taken over a blast radius that may have moved since the first. A paused
+    producer returns ``None`` instead, which withholds the optional report
+    without invalidating the resolution itself.
     """
     from memoria_vault.runtime.attention import inbox
 
@@ -1433,7 +1447,7 @@ def _write_blast_radius_report(vault: Path, target: str) -> str:
             f"- [[{rel}]] — {mark['consequence']}" for rel, mark in sorted(marks.items())
         ),
     )
-    return Path(card).relative_to(vault).as_posix()
+    return Path(card).relative_to(vault).as_posix() if card else None
 
 
 def _confirm_tension_edge(vault: Path, target: str, *, context: OperationContext) -> dict[str, Any]:

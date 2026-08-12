@@ -159,6 +159,7 @@ def test_precommit_hooks_use_pinned_tool_environments():
         "https://github.com/pre-commit/pre-commit-hooks",
         "https://github.com/gitleaks/gitleaks",
         "https://github.com/astral-sh/ruff-pre-commit",
+        "https://github.com/pre-commit/mirrors-mypy",
         "https://github.com/adrienverge/yamllint",
         "https://github.com/shellcheck-py/shellcheck-py",
         "https://github.com/oxc-project/mirrors-oxlint",
@@ -193,6 +194,28 @@ def test_precommit_hooks_use_pinned_tool_environments():
         f"ruff is {ruff_version} in requirements-dev.txt but {ruff_rev} in the "
         "pre-commit hook; the editor and the gate would disagree"
     )
+
+
+def test_mypy_gate_is_source_scoped_and_pinned_for_offline_manual_checks():
+    """The manual gate owns one fully pinned, package-wide MyPy invocation."""
+    mypy = _hook("mypy")
+    assert mypy["stages"] == ["manual"]
+    assert mypy["pass_filenames"] is False
+    assert mypy["additional_dependencies"] == [
+        "types-PyYAML==6.0.12.20260724",
+        "pydantic-ai-slim[openai]==2.28.0",
+    ]
+
+    config = tomllib.loads(PYPROJECT.read_text(encoding="utf-8"))["tool"]["mypy"]
+    assert config["files"] == ["src/memoria_vault"]
+    assert config["python_version"] == "3.12"
+    assert config["warn_redundant_casts"] is True
+    assert config["warn_unused_ignores"] is True
+    assert config["warn_unused_configs"] is True
+    assert config["no_implicit_optional"] is True
+    assert "check_untyped_defs" not in config
+    assert "strict_equality" not in config
+    assert config["overrides"] == [{"module": ["fitz", "mcp.*"], "ignore_missing_imports": True}]
 
 
 def test_python_editor_applies_ruff_import_and_fix_actions_on_save():

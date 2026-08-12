@@ -110,9 +110,15 @@ def _windows_registry_has_obsidian() -> bool:
     except ImportError:
         return False
     key_path = r"Software\Microsoft\Windows\CurrentVersion\Uninstall\Obsidian"
-    for root in (winreg.HKEY_CURRENT_USER, winreg.HKEY_LOCAL_MACHINE):
+    open_key = winreg.OpenKey  # type: ignore[attr-defined]  # Windows-only module API.
+    close_key = winreg.CloseKey  # type: ignore[attr-defined]  # Windows-only module API.
+    roots = (
+        winreg.HKEY_CURRENT_USER,  # type: ignore[attr-defined]  # Windows-only module API.
+        winreg.HKEY_LOCAL_MACHINE,  # type: ignore[attr-defined]  # Windows-only module API.
+    )
+    for root in roots:
         try:
-            winreg.CloseKey(winreg.OpenKey(root, key_path))
+            close_key(open_key(root, key_path))
         except OSError:
             continue
         return True

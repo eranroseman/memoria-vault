@@ -11,7 +11,8 @@ from collections import Counter
 from collections.abc import Container, Iterable, Mapping, Sequence
 from importlib.resources import files
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from types import TracebackType
+from typing import TYPE_CHECKING, Any, Literal
 
 from memoria_vault.runtime.content_security import neutralize_untrusted_markdown
 from memoria_vault.runtime.evidence import (
@@ -81,9 +82,15 @@ def db_path(vault: Path) -> Path:
 
 
 class _ClosingConnection(sqlite3.Connection):
-    def __exit__(self, *exc_info: object) -> bool:
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        traceback: TracebackType | None,
+        /,
+    ) -> Literal[False]:
         try:
-            return super().__exit__(*exc_info)
+            return super().__exit__(exc_type, exc_value, traceback)
         finally:
             self.close()
 

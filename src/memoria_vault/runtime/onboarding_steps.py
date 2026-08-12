@@ -87,11 +87,14 @@ def seed_manifest_work_ids(
     """Manifest work ids; empty when no seed manifest exists (then nothing is seed-grounded)."""
     if manifest_loader is None:
         try:
-            from memoria_vault.product.seed_corpus import load_seed_manifest as manifest_loader
+            from memoria_vault.product.seed_corpus import load_seed_manifest
         except ImportError:
             return frozenset()
+        loader = load_seed_manifest
+    else:
+        loader = manifest_loader
     try:
-        rows = manifest_loader()
+        rows = loader()
     except Exception:  # noqa: BLE001 -- an unreadable manifest must not gate the answer.
         return frozenset()
     return frozenset(
