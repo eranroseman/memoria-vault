@@ -83,6 +83,6 @@ for t in python3 pre-commit; do
     note "– $t (missing; rerun this script after fixing the install error above)"
   fi
 done
-note "ruff, yamllint, shellcheck, gitleaks, cspell, and markdownlint are supplied by pinned pre-commit hook environments"
+note "ruff, yamllint, shellcheck, vale, oxlint, oxfmt, gitleaks, cspell, and markdownlint are supplied by pinned pre-commit hook environments"
 
 echo "==> Done. The pre-commit hook is active. Bypass a single block with: git commit --no-verify"
