@@ -563,6 +563,7 @@ Module._load = function load(request, parent, isMain) {
 };
 
 const realSetTimeout = globalThis.setTimeout;
+const realClearTimeout = globalThis.clearTimeout;
 const scheduledDelays = [];
 
 try {
@@ -845,24 +846,216 @@ try {
   pathed.app.vault.adapter = null;
   assert.equal(pathed.vaultPath(), "");
 
-  // 11) Poll cadence is wired to window focus, not hardcoded.
+  // 11) A focus refresh is immediate, cancels the old timer, and then leaves
+  // exactly one active-timer cadence behind. Blur remains the idle schedule.
+  const activeTimers = new Set();
   globalThis.setTimeout = (handler, delay) => {
-    scheduledDelays.push(delay);
-    return realSetTimeout(handler, delay);
+    const timer = { handler, delay, unref() {} };
+    scheduledDelays.push(timer);
+    activeTimers.add(timer);
+    return timer;
   };
+  globalThis.clearTimeout = (timer) => activeTimers.delete(timer);
+  globalThis.window = {};
+  globalThis.document = { hasFocus: () => true };
   const cadence = new PluginClass();
   await cadence.onload();
+  const staleTimer = cadence.pollTimer;
+  let immediatePolls = 0;
+  cadence.authedJson = async () => {
+    immediatePolls += 1;
+    return SUMMARY_JSON;
+  };
+  const focusHandler = cadence.domEvents.find((entry) => entry.event === "focus").handler;
+  const focusFrom = scheduledDelays.length;
+  focusHandler();
+  await settle();
+  assert.equal(immediatePolls, 1);
+  assert.ok(!activeTimers.has(staleTimer), "focus cancels the pre-existing timer");
+  assert.deepEqual(
+    scheduledDelays.slice(focusFrom).map((timer) => timer.delay),
+    [30000],
+  );
+  assert.deepEqual(
+    [...activeTimers].map((timer) => timer.delay),
+    [30000],
+  );
+
+  // Fire the sole replacement timer as the runtime would. Its poll is a fresh
+  // request (not another focus refresh) and restores exactly one active cadence.
+  const focusReplacementTimer = cadence.pollTimer;
+  activeTimers.delete(focusReplacementTimer);
+  await focusReplacementTimer.handler();
+  await settle();
+  assert.equal(immediatePolls, 2, "the replacement timer performs one additional poll");
+  assert.deepEqual(
+    scheduledDelays.slice(focusFrom).map((timer) => timer.delay),
+    [30000, 30000],
+  );
+  assert.deepEqual(
+    [...activeTimers].map((timer) => timer.delay),
+    [30000],
+    "the timer poll restores one normal active cadence",
+  );
+
   const idleFrom = scheduledDelays.length;
-  cadence.schedulePoll();
-  globalThis.document = { hasFocus: () => true };
-  cadence.schedulePoll();
-  // Obsidian always has a `document`; only the focus answer changes. Without
-  // this third case a cadence that ignored `hasFocus()` would still pass.
+  // Obsidian always has a `document`; only the focus answer changes. Invoke
+  // the registered blur listener so this proves its wiring, not just the
+  // scheduler's isolated choice of delay.
   globalThis.document = { hasFocus: () => false };
-  cadence.schedulePoll();
+  const blurHandler = cadence.domEvents.find((entry) => entry.event === "blur").handler;
+  blurHandler();
+  assert.deepEqual(
+    scheduledDelays.slice(idleFrom).map((timer) => timer.delay),
+    [120000],
+  );
+  assert.deepEqual(
+    [...activeTimers].map((timer) => timer.delay),
+    [120000],
+    "blur replaces the active timer with the idle cadence",
+  );
+
+  const idleReplacementTimer = cadence.pollTimer;
+  activeTimers.delete(idleReplacementTimer);
+  await idleReplacementTimer.handler();
+  await settle();
+  assert.equal(immediatePolls, 3, "the idle timer performs one additional poll");
+  assert.deepEqual(
+    scheduledDelays.slice(idleFrom).map((timer) => timer.delay),
+    [120000, 120000],
+    "an idle timer schedules another idle poll",
+  );
+  assert.deepEqual(
+    [...activeTimers].map((timer) => timer.delay),
+    [120000],
+    "a timer poll while blurred restores the idle cadence",
+  );
   delete globalThis.document;
-  assert.deepEqual(scheduledDelays.slice(idleFrom), [120000, 30000, 120000]);
+
+  // 11a) An in-flight timer poll is shared by focus refreshes. In particular,
+  // a blur/focus turn before it resolves must not leave either a second request
+  // or a stale idle timer behind. This catches a focus handler that directly
+  // calls `poll()` while the timer's request is still pending.
+  activeTimers.delete(cadence.pollTimer);
+  globalThis.document = { hasFocus: () => true };
+  const racing = new PluginClass();
+  await racing.onload();
+  let resolvePoll;
+  let raceRequests = 0;
+  racing.authedJson = () => {
+    raceRequests += 1;
+    return new Promise((resolve) => {
+      resolvePoll = resolve;
+    });
+  };
+  const raceFocus = racing.domEvents.find((entry) => entry.event === "focus").handler;
+  const raceBlur = racing.domEvents.find((entry) => entry.event === "blur").handler;
+  const raceTimer = racing.pollTimer;
+  activeTimers.delete(raceTimer);
+  const inFlightTimerPoll = raceTimer.handler();
+  await settle();
+  assert.equal(raceRequests, 1, "the timer starts one request");
+
+  raceFocus();
+  raceFocus();
+  globalThis.document = { hasFocus: () => false };
+  raceBlur();
+  assert.deepEqual([...activeTimers], [], "one in-flight request OR one pending timer, never both");
+  globalThis.document = { hasFocus: () => true };
+  raceFocus();
+  await settle();
+  assert.equal(raceRequests, 1, "focus joins the pending timer poll");
+
+  resolvePoll(SUMMARY_JSON);
+  await inFlightTimerPoll;
+  await settle();
+  assert.deepEqual(
+    [...activeTimers].map((timer) => timer.delay),
+    [30000],
+    "the completed poll leaves one normal active timer after blur then focus",
+  );
+
+  racing.authedJson = async () => {
+    raceRequests += 1;
+    return SUMMARY_JSON;
+  };
+  const raceReplacementTimer = racing.pollTimer;
+  activeTimers.delete(raceReplacementTimer);
+  await raceReplacementTimer.handler();
+  await settle();
+  assert.equal(raceRequests, 2, "the replacement timer starts exactly one later request");
+  assert.deepEqual(
+    [...activeTimers].map((timer) => timer.delay),
+    [30000],
+    "the replacement poll returns to one active timer",
+  );
+
+  // 11b) Unloading while a timer poll is awaiting its response ends the loop.
+  // The deferred transport keeps the real poll completion path pending until
+  // after unload, when it must not install another timer.
+  activeTimers.delete(racing.pollTimer);
+  const unloading = new PluginClass();
+  await unloading.onload();
+  let resolveUnloadingPoll;
+  let unloadingRequests = 0;
+  let unloadingRefreshes = 0;
+  unloading.openCount = 17;
+  unloading.connectionStatus = "stale";
+  unloading.app.workspace.getLeavesOfType = () => [
+    {
+      view: {
+        refresh() {
+          unloadingRefreshes += 1;
+        },
+      },
+    },
+  ];
+  unloading.authedJson = () => {
+    unloadingRequests += 1;
+    return new Promise((resolve) => {
+      resolveUnloadingPoll = resolve;
+    });
+  };
+  const unloadingTimer = unloading.pollTimer;
+  activeTimers.delete(unloadingTimer);
+  const inFlightUnloadingPoll = unloadingTimer.handler();
+  await settle();
+  assert.equal(unloadingRequests, 1, "the timer starts one deferred request before unload");
+
+  unloading.onunload();
+  resolveUnloadingPoll(SUMMARY_JSON);
+  await inFlightUnloadingPoll;
+  await settle();
+  assert.deepEqual(
+    [...activeTimers],
+    [],
+    "a poll that resolves after unload must not restart the polling timer loop",
+  );
+  assert.equal(unloading.openCount, 17, "a post-unload summary cannot replace the count");
+  assert.equal(unloading.connectionStatus, "stale", "a post-unload summary cannot reconnect");
+  assert.equal(unloadingRefreshes, 0, "a post-unload summary cannot refresh open panes");
+
+  // 11c) A slow settings read must not finish constructing the plugin after
+  // Obsidian has unloaded it.
+  const loading = new PluginClass();
+  let resolveLoading;
+  loading.loadData = () =>
+    new Promise((resolve) => {
+      resolveLoading = resolve;
+    });
+  const pendingLoad = loading.onload();
+  await settle();
+  loading.onunload();
+  resolveLoading({});
+  await pendingLoad;
+  assert.equal(loading.statusBar, null, "an unloaded plugin does not install a status bar");
+  assert.deepEqual(loading.domEvents, [], "an unloaded plugin does not install listeners");
+  assert.equal(loading.pollTimer, null, "an unloaded plugin does not install a timer");
+
   globalThis.setTimeout = realSetTimeout;
+  globalThis.clearTimeout = realClearTimeout;
+  delete globalThis.document;
+  delete globalThis.window;
 
   // 12) Status bars without `empty()` still get the pill text.
   const legacy = new PluginClass();
@@ -993,7 +1186,85 @@ try {
   await connectBad.connect();
   assert.deepEqual(notices.slice(mark), ["Memoria: engine missing"]);
 
-  // 15) Desktop wiring: the pill is clickable and focus changes reschedule.
+  // 14a) A connect operation that crosses unload must neither notify nor
+  // record telemetry, whether its deferred handshake succeeds or fails.
+  const unloadingConnect = new PluginClass();
+  await unloadingConnect.onload();
+  unloadingConnect.settings.enabled = true;
+  let finishConnectedHandshake;
+  unloadingConnect._execFile = (command, args, options, callback) => {
+    finishConnectedHandshake = () => {
+      callback(
+        null,
+        JSON.stringify({
+          port: 43210,
+          token: "sandbox-token",
+          boot_id: "boot-1",
+          engine_version: "0.1.0-alpha.20",
+          pid: 4242,
+        }),
+        "",
+      );
+    };
+  };
+  let connectedTelemetry = 0;
+  unloadingConnect.recordEvent = async () => {
+    connectedTelemetry += 1;
+  };
+  const connectedNoticeFrom = notices.length;
+  const pendingConnected = unloadingConnect.connect();
+  await settle();
+  assert.equal(typeof finishConnectedHandshake, "function", "connect starts the handshake");
+  unloadingConnect.onunload();
+  finishConnectedHandshake();
+  await pendingConnected;
+  const connectedNotices = notices.slice(connectedNoticeFrom);
+  const connectedTelemetryAfterUnload = connectedTelemetry;
+
+  const unloadingFailedConnect = new PluginClass();
+  await unloadingFailedConnect.onload();
+  unloadingFailedConnect.settings.enabled = true;
+  let finishFailedHandshake;
+  unloadingFailedConnect._execFile = (command, args, options, callback) => {
+    finishFailedHandshake = () => {
+      callback(Object.assign(new Error("spawn memoria ENOENT"), { code: "ENOENT" }), "", "");
+    };
+  };
+  let failedTelemetry = 0;
+  unloadingFailedConnect.recordEvent = async () => {
+    failedTelemetry += 1;
+  };
+  const failedNoticeFrom = notices.length;
+  const pendingFailed = unloadingFailedConnect.connect();
+  await settle();
+  assert.equal(typeof finishFailedHandshake, "function", "connect starts the failing handshake");
+  unloadingFailedConnect.onunload();
+  finishFailedHandshake();
+  await pendingFailed;
+  const failedNotices = notices.slice(failedNoticeFrom);
+  const failedTelemetryAfterUnload = failedTelemetry;
+  assert.deepEqual(
+    connectedNotices,
+    [],
+    "a completed handshake after unload must not show a connected notice",
+  );
+  assert.equal(
+    connectedTelemetryAfterUnload,
+    0,
+    "a completed handshake after unload must not record telemetry",
+  );
+  assert.deepEqual(
+    failedNotices,
+    [],
+    "a failed handshake after unload must not show a failure notice",
+  );
+  assert.equal(
+    failedTelemetryAfterUnload,
+    0,
+    "a failed handshake after unload must not record telemetry",
+  );
+
+  // 15) Desktop wiring: the pill is clickable and focus/blur are registered.
   globalThis.window = {};
   const wired = new PluginClass();
   await wired.onload();
@@ -2098,6 +2369,7 @@ try {
   respond = null;
 } finally {
   globalThis.setTimeout = realSetTimeout;
+  globalThis.clearTimeout = realClearTimeout;
   delete globalThis.document;
   delete globalThis.window;
   Module._load = originalLoad;

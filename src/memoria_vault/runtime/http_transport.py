@@ -5,6 +5,7 @@ from __future__ import annotations
 import hmac
 import json
 import math
+import sys
 import threading
 import time
 from collections.abc import Iterator
@@ -190,6 +191,11 @@ def make_http_server(
                 except Exception as exc:  # noqa: BLE001 -- HTTP boundary returns JSON errors.
                     payload, status = {"ok": False, "error": str(exc)}, HTTPStatus.BAD_REQUEST
                 self._write(payload, status)
+                if _is_attention_summary_poll(method, self.path):
+                    sys.stderr.write(
+                        f"{self.log_date_time_string()} memoria poll "
+                        f"GET /v1/views/attention {int(status)}\n"
+                    )
 
         def _json_body(self) -> dict[str, Any]:
             length = int(self.headers.get("Content-Length") or "0")
@@ -283,6 +289,18 @@ def bind_http_server(
 def is_authorized(authorization: str | None, token: str) -> bool:
     # This token gates PI authority (see _write), so it is never compared with ==.
     return hmac.compare_digest((authorization or "").encode("utf-8"), f"Bearer {token}".encode())
+
+
+def _is_attention_summary_poll(method: str, raw_path: str) -> bool:
+    """Recognize the cheap attention poll with the dispatcher's query semantics."""
+    parsed = urlparse(raw_path)
+    query = parse_qs(parsed.query)
+    path = parsed.path.rstrip("/") or "/"
+    return (
+        method == "GET"
+        and path == "/v1/views/attention"
+        and _one(query, "summary").lower() == "true"
+    )
 
 
 def _dispatch(
