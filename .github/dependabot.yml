@@ -37,6 +37,16 @@ updates:
       - dependency-name: mcp
         update-types: ["version-update:semver-major"]
 
+  # An esbuild bump here always lands red and always needs two hand commits on
+  # top: the seeded plugin bundle is a committed artifact that
+  # `scripts/build.mjs --check` compares byte-for-byte, and a new bundler emits
+  # a different prologue. 0.25.9 -> 0.28.2 rewrote `__commonJS` alone and that
+  # was enough. Dependabot moves the pin; it cannot regenerate what the pin
+  # builds. So on every bump PR here, run
+  #   npm ci --prefix packages/memoria-obsidian
+  #   npm run build --prefix packages/memoria-obsidian
+  #   MEMORIA_FLOOR_UPDATE_GOLDENS=1 python -m pytest tests/test_floor_sweep_operations.py -q
+  # and commit the rebuilt `main.js` with the 38 goldens that carry its digest.
   - package-ecosystem: npm
     directory: "/packages/memoria-obsidian"
     schedule:
