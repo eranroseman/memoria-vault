@@ -58,3 +58,13 @@ updates:
     groups:
       hook-tools:
         patterns: ["*"]
+    # oxfmt is pre-1.0 and still changes its own output between releases, so a
+    # routine monthly bump reformats the tree for no benefit. Blocking minor and
+    # patch pins it below 1.0 -- on a 0.x line those are every release there is
+    # -- and lets the 1.0 bump through as the PR that says the format has
+    # settled. Dependencies here are named by repo URL, the form Dependabot's
+    # own bump PRs use (#1355).
+    ignore:
+      - dependency-name: https://github.com/oxc-project/mirrors-oxfmt
+        update-types:
+          ["version-update:semver-minor", "version-update:semver-patch"]

@@ -68,6 +68,48 @@ repos:
         files: ^scripts/
         stages: [manual]
 
+  # oxlint at its default scope only -- the `correctness` category, the rules
+  # that flag code that is wrong rather than unfashionable. The wider categories
+  # were measured against this tree when the hook was added: correctness 0,
+  # style 1329. Raising the scope buys a bikeshed, not a bug.
+  #
+  # `--deny-warnings` is what makes this a gate. oxlint reports correctness
+  # findings at warning severity and exits 0 -- a planted `debugger`, and a
+  # duplicate object key, both print and pass. Without the flag the hook is
+  # green on every input it will ever see.
+  - repo: https://github.com/oxc-project/mirrors-oxlint
+    rev: v1.78.0
+    hooks:
+      - id: oxlint
+        args: [--deny-warnings]
+        files: ^(packages/memoria-obsidian|scripts/checks)/
+        stages: [manual]
+
+  # oxfmt rewrites files, so it carries the commit stage for the same reason
+  # ruff-format does -- see the note at the top of this file. It is pre-1.0 and
+  # its output still moves between releases, so .github/dependabot.yml holds
+  # this rev until 1.0 rather than reformatting the tree every month.
+  #
+  # Both hooks stop at the authored JS. The seeded plugin under
+  # src/memoria_vault/product/workspace_seed/.obsidian/ is a generated esbuild
+  # bundle that `npm run check --prefix packages/memoria-obsidian` compares
+  # byte-for-byte against a fresh build: reformatting it fails that check, and
+  # linting a bundler's output reports on code nobody wrote.
+  #
+  # Scope is directories only, as with ruff and shellcheck above -- what counts
+  # as JS is the hooks' own `types_or: [javascript, jsx, ts, tsx]`, which is
+  # also what keeps oxfmt away from Markdown, YAML, JSON and CSS. Its CLI
+  # formats all of those, and over docs/ it rewrites the contents of fenced code
+  # blocks, so a ```json sample of real CLI output silently stops matching what
+  # the program prints. Never give these hooks `pass_filenames: false` or a bare
+  # path argument.
+  - repo: https://github.com/oxc-project/mirrors-oxfmt
+    rev: v0.63.0
+    hooks:
+      - id: oxfmt
+        files: ^(packages/memoria-obsidian|scripts/checks)/
+        stages: [pre-commit, manual]
+
   - repo: https://github.com/errata-ai/vale
     rev: v3.13.0
     hooks:

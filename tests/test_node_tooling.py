@@ -123,6 +123,8 @@ def test_precommit_hooks_use_pinned_tool_environments():
         "https://github.com/astral-sh/ruff-pre-commit",
         "https://github.com/adrienverge/yamllint",
         "https://github.com/shellcheck-py/shellcheck-py",
+        "https://github.com/oxc-project/mirrors-oxlint",
+        "https://github.com/oxc-project/mirrors-oxfmt",
         "https://github.com/errata-ai/vale",
     }
     # What does matter: every hook environment is pinned to a release tag, so a
