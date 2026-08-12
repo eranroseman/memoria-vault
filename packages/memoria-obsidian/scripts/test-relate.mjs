@@ -88,7 +88,7 @@ test("a warrant relation and Warrant text are carried independently", () => {
 // string* "undefined", so dropping a `|| ""` does not fail these open: it
 // submits the literal word as a vault path or hangs it on the edge as the PI's
 // warrant.
-test("absent fields are refused or omitted, never the string \"undefined\"", () => {
+test('absent fields are refused or omitted, never the string "undefined"', () => {
   assert.throws(
     () => buildRelateOperation({ relation: "supports", toPath: "notes/b.md", roster }),
     /relate: From note is required/,

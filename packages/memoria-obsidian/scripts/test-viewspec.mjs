@@ -565,10 +565,26 @@ test("collapseAnalysis preserves ordered semantic children before disclosure", (
         kind: "action-row",
         id: "ev-0011aabb-actions",
         actions: [
-          { label: "Accept", operation_id: "resolve-evidence", payload: { evidence_id: "ev-0011aabb", decision: "accept" } },
-          { label: "Reject", operation_id: "resolve-evidence", payload: { evidence_id: "ev-0011aabb", decision: "reject" } },
-          { label: "Edit", operation_id: "resolve-evidence", payload: { evidence_id: "ev-0011aabb", decision: "edit" } },
-          { label: "Defer", operation_id: "resolve-evidence", payload: { evidence_id: "ev-0011aabb", decision: "defer" } },
+          {
+            label: "Accept",
+            operation_id: "resolve-evidence",
+            payload: { evidence_id: "ev-0011aabb", decision: "accept" },
+          },
+          {
+            label: "Reject",
+            operation_id: "resolve-evidence",
+            payload: { evidence_id: "ev-0011aabb", decision: "reject" },
+          },
+          {
+            label: "Edit",
+            operation_id: "resolve-evidence",
+            payload: { evidence_id: "ev-0011aabb", decision: "edit" },
+          },
+          {
+            label: "Defer",
+            operation_id: "resolve-evidence",
+            payload: { evidence_id: "ev-0011aabb", decision: "defer" },
+          },
         ],
       },
     ],

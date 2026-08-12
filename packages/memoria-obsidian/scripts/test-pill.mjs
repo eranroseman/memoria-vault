@@ -36,7 +36,12 @@ test("all six pill states are reachable and worded per the U3 table", () => {
     { state: "server-down", text: "Memoria · server down", tone: "red" },
   );
   assert.deepEqual(
-    computePill({ connection: "token-invalid", openCount: 0, lastPollAt: 0, missingCredential: "" }),
+    computePill({
+      connection: "token-invalid",
+      openCount: 0,
+      lastPollAt: 0,
+      missingCredential: "",
+    }),
     { state: "token-invalid", text: "Memoria · token invalid", tone: "red" },
   );
   assert.deepEqual(
