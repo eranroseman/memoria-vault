@@ -6,6 +6,7 @@
     "rhysd.actionlint",
     "ms-python.python",
     "charliermarsh.ruff",
+    "oxc.oxc-vscode",
     "ms-vscode.powershell",
     "davidanson.vscode-markdownlint",
     "redhat.vscode-yaml",

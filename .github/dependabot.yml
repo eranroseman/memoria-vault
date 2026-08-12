@@ -57,6 +57,14 @@ updates:
     groups:
       adapter-build:
         patterns: ["*"]
+    # oxlint and oxfmt live here so the editor extension can find them; the
+    # pre-commit hooks below run the same two versions. tests/test_node_tooling.py
+    # fails when the two pins disagree, so this freeze must mirror the one in the
+    # pre-commit ecosystem exactly or the monthly npm bump takes that test red.
+    ignore:
+      - dependency-name: oxfmt
+        update-types:
+          ["version-update:semver-minor", "version-update:semver-patch"]
 
   - package-ecosystem: pre-commit
     directory: /
