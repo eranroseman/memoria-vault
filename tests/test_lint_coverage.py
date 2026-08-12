@@ -266,10 +266,18 @@ def test_json_and_powershell_are_claimed_by_the_verify_roster():
     assert '["git", "ls-files", "*.json"]' in inspect.getsource(check_json), (
         "check_json must enumerate tracked JSON from git, not a hardcoded list"
     )
-    assert "$files = git ls-files '*.ps1';" in pssa_command, (
-        "the PowerShell step must enumerate tracked .ps1 from git, not a hardcoded path"
+    file_bindings = re.findall(r"\$files\s*=\s*([^;]+);", pssa_command)
+    analyzer_inputs = re.findall(r"Invoke-ScriptAnalyzer\s+-Path\s+([^;\s]+)", pssa_command)
+    assert file_bindings == ["git ls-files '*.ps1'"], (
+        "the PowerShell step must bind $files exactly once from tracked .ps1 files"
     )
-    assert "Invoke-ScriptAnalyzer -Path $files" in pssa_command
+    assert analyzer_inputs == ["$files"], (
+        "the sole PSScriptAnalyzer invocation must analyze the enumerated $files"
+    )
+    assert pssa_command.index("$files = git ls-files '*.ps1';") < pssa_command.index(
+        "Invoke-ScriptAnalyzer -Path"
+    )
+    assert "scripts/install.ps1" not in pssa_command
     assert set(extra_steps) <= set(shards), "EXTRA_STEPS names shards SHARDS does not declare"
     assert check_json in extra_steps["lint"]
     assert check_powershell in extra_steps["lint"]
