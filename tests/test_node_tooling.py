@@ -195,6 +195,18 @@ def test_precommit_hooks_use_pinned_tool_environments():
         "pre-commit hook; the editor and the gate would disagree"
     )
 
+    # mypy is the second tool pinned twice, and for the same reason as ruff:
+    # `mypy-type-checker.importStrategy` is `fromEnvironment`, so a skewed
+    # editor copy reports type errors the gate does not, and misses ones it does.
+    mypy_pins = _pins("mypy")
+    assert len(mypy_pins) == 1, f"expected exactly one mypy pin, got {mypy_pins}"
+    mypy_version = mypy_pins[0].strip().removeprefix("mypy==")
+    mypy_rev = pinned_repos["https://github.com/pre-commit/mirrors-mypy"]
+    assert mypy_rev.removeprefix("v") == mypy_version, (
+        f"mypy is {mypy_version} in requirements-dev.txt but {mypy_rev} in the "
+        "pre-commit hook; the editor and the gate would disagree"
+    )
+
 
 def test_mypy_gate_is_source_scoped_and_pinned_for_offline_manual_checks():
     """The manual gate owns one fully pinned, package-wide MyPy invocation."""

@@ -9,6 +9,13 @@ pre-commit-hooks==6.0.0
 # absent -- a copy no gate pins. It must equal the ruff-pre-commit rev in
 # .pre-commit-config.yaml, and tests/test_node_tooling.py fails when it does not.
 ruff==0.16.2
+# The second tool pinned twice, for the same reason as ruff above: the mypy VS
+# Code extension's `mypy-type-checker.importStrategy` is `fromEnvironment`, so
+# the editor type-checks with this mypy and falls back to its own bundled copy
+# — pinned by no gate — when the line is absent. It must equal the
+# mirrors-mypy rev in .pre-commit-config.yaml; the assertion in
+# tests/test_node_tooling.py fails when it does not.
+mypy==2.3.0
 pytest==9.1.1
 pytest-cov==7.1.0
 pytest-xdist==3.8.0
