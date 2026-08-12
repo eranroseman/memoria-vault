@@ -3,6 +3,12 @@
 
 pre-commit==4.6.1
 pre-commit-hooks==6.0.0
+# The one lint tool pinned twice, and only because the Ruff VS Code extension
+# needs it: `ruff.importStrategy` defaults to `fromEnvironment`, so the editor
+# formats with this ruff and falls back to its own bundled copy when the line is
+# absent -- a copy no gate pins. It must equal the ruff-pre-commit rev in
+# .pre-commit-config.yaml, and tests/test_node_tooling.py fails when it does not.
+ruff==0.16.2
 pytest==9.1.1
 pytest-cov==7.1.0
 pytest-xdist==3.8.0
