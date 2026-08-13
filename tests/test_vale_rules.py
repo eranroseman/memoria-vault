@@ -37,6 +37,7 @@ REQUIRED_RULES = {
 }
 
 VENDORED_PACKAGES = ("Microsoft", "alex", "write-good")
+GLOBAL_SETTINGS = {"StylesPath", "Packages", "MinAlertLevel", "Vocab"}
 
 
 def _parsed() -> configparser.ConfigParser:
@@ -74,6 +75,16 @@ def test_markdown_uses_only_the_curated_vale_style_block():
     assert _setting_value(_markdown_section().get("BasedOnStyles", "")) == "Vale", (
         "the Markdown block must inherit only Vale; vendored packages are rule sources, "
         "not style guides this project adopts"
+    )
+
+
+def test_global_settings_are_only_the_curated_gate_contract():
+    """Reject global style inheritance as well as unreviewed Vale behavior."""
+    global_settings = _parsed()["global"]
+    assert set(global_settings) == GLOBAL_SETTINGS, (
+        "the Vale preamble may only set the reviewed gate contract; this forbids "
+        "global BasedOnStyles or other unreviewed style inheritance. "
+        f"got {sorted(global_settings)}"
     )
 
 
