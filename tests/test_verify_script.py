@@ -84,6 +84,42 @@ def test_parallel_cli_preserves_the_unknown_shard_diagnostic() -> None:
         _verify_namespace()["_parse_args"](["--shard", "unknown"])
 
 
+def test_parallel_coordinator_never_takes_the_vault_lock(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    namespace = _verify_namespace()
+    globals_ = namespace["main"].__globals__
+    monkeypatch.setitem(
+        globals_, "_hold_single_run_lock", lambda: pytest.fail("coordinator locked")
+    )
+    monkeypatch.setitem(globals_, "_run_parallel", lambda: 0)
+
+    assert namespace["main"](["--parallel"]) == 0
+
+
+def test_bare_and_runtime_shard_main_retain_normal_selection_path(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    namespace = _verify_namespace()
+    globals_ = namespace["main"].__globals__
+    locked: list[bool] = []
+    selections: list[str | None] = []
+
+    monkeypatch.setitem(globals_, "_run_parallel", lambda: pytest.fail("parallel selected"))
+    monkeypatch.setitem(globals_, "_hold_single_run_lock", lambda: locked.append(True))
+    monkeypatch.setitem(
+        globals_,
+        "_gates_for_run",
+        lambda docs_only, shard: selections.append(shard) or [],
+    )
+    monkeypatch.setitem(globals_, "_extra_steps_for_run", lambda docs_only, shard: ())
+
+    assert namespace["main"]([]) == 0
+    assert namespace["main"](["--shard", "runtime"]) == 0
+    assert locked == [True, True]
+    assert selections == [None, "runtime"]
+
+
 @pytest.mark.parametrize(
     ("cpus", "expected"),
     [(1, (1, 1)), (2, (2, 1)), (3, (3, 1)), (5, (3, 1)), (6, (3, 2)), (8, (3, 2))],
@@ -116,13 +152,19 @@ def test_parallel_shard_command_reinvokes_verify_with_current_python() -> None:
     assert Path(command[1]) == ROOT / "scripts" / "verify"
 
 
-def test_parallel_stops_before_children_when_lint_fails(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_parallel_stops_before_children_when_lint_fails(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
     namespace = _verify_namespace()
     globals_ = namespace["_run_parallel"].__globals__
     monkeypatch.setitem(globals_, "run", lambda command: 1)
     monkeypatch.setitem(globals_, "_spawn_shard", lambda *args: pytest.fail("child launched"))
 
     assert namespace["_run_parallel"]() == 1
+    captured = capsys.readouterr()
+    assert captured.out.startswith("verify: total ")
+    assert captured.out.endswith("s\n")
+    assert captured.err == "verify: FAILED\n"
 
 
 def test_parallel_waits_replays_and_reports_every_child_failure(
@@ -150,18 +192,22 @@ def test_parallel_waits_replays_and_reports_every_child_failure(
         "wait:runtime",
         "wait:sweep",
     ]
-    assert capsys.readouterr().out == (
+    captured = capsys.readouterr()
+    assert captured.out.startswith(
         "== verify: parallel contract\n"
         "contract log\n"
         "== verify: parallel runtime\n"
         "runtime log\n"
         "== verify: parallel sweep\n"
         "sweep log\n"
+        "verify: total "
     )
+    assert captured.out.endswith("s\n")
+    assert captured.err == "verify: FAILED\n"
 
 
 def test_parallel_batches_at_two_cpus_and_overrides_child_workers(
-    monkeypatch: pytest.MonkeyPatch,
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
     namespace = _verify_namespace()
     globals_, events = namespace["_run_parallel"].__globals__, []
@@ -184,6 +230,10 @@ def test_parallel_batches_at_two_cpus_and_overrides_child_workers(
         "spawn:sweep:1",
         "wait:sweep",
     ]
+    captured = capsys.readouterr()
+    assert "verify: total " in captured.out
+    assert captured.out.endswith("verify: OK\n")
+    assert captured.err == ""
 
 
 def test_parallel_reports_a_missing_child_and_runs_the_remaining_shards(
@@ -205,14 +255,18 @@ def test_parallel_reports_a_missing_child_and_runs_the_remaining_shards(
 
     assert namespace["_run_parallel"]() == 1
     assert events == ["spawn:runtime:1", "spawn:sweep:1", "wait:runtime", "wait:sweep"]
-    assert capsys.readouterr().out == (
+    captured = capsys.readouterr()
+    assert captured.out.startswith(
         "== verify: parallel contract\n"
         f"command not found: {sys.executable}\n"
         "== verify: parallel runtime\n"
         "ok\n"
         "== verify: parallel sweep\n"
         "ok\n"
+        "verify: total "
     )
+    assert captured.out.endswith("s\n")
+    assert captured.err == "verify: FAILED\n"
 
 
 def test_parallel_terminates_and_reaps_a_child_when_a_sibling_launch_raises(

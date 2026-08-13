@@ -422,7 +422,10 @@ def _terminate_shard(process: subprocess.Popen[str]) -> None:
 
 
 def _run_parallel() -> int:
+    run_start = time.perf_counter()
     if run(_shard_command("lint")) != 0:
+        print(f"verify: total {time.perf_counter() - run_start:.1f}s")
+        print("verify: FAILED", file=sys.stderr)
         return 1
 
     failed = False
@@ -476,11 +479,16 @@ def _run_parallel() -> int:
                         process.wait()
                     if not stream.closed:
                         stream.close()
+    print(f"verify: total {time.perf_counter() - run_start:.1f}s")
+    print("verify: FAILED" if failed else "verify: OK", file=sys.stderr if failed else sys.stdout)
     return int(failed)
 
 
 def main(argv: list[str] | None = None) -> int:
-    shard, _parallel = _parse_args(sys.argv[1:] if argv is None else argv)
+    arguments = sys.argv[1:] if argv is None else argv
+    shard, parallel = _parse_args(arguments)
+    if parallel:
+        return _run_parallel()
     # Only a selection that rewrites <checkout>/test-vault needs to serialize, so
     # the other shards can run beside it in one checkout.
     _lock = _hold_single_run_lock() if _needs_vault_lock(shard) else None
