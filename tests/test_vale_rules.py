@@ -64,6 +64,19 @@ def _enabled_rule_names() -> set[str]:
     }
 
 
+def test_markdown_uses_only_the_curated_vale_style_block():
+    """Keep packages as rule sources, rather than silently adopting their defaults."""
+    parser = _parsed()
+    assert set(parser.sections()) == {"global", "*.md"}, (
+        "Vale config may only have global settings and the curated Markdown block; "
+        f"got {sorted(parser.sections())}"
+    )
+    assert _setting_value(_markdown_section().get("BasedOnStyles", "")) == "Vale", (
+        "the Markdown block must inherit only Vale; vendored packages are rule sources, "
+        "not style guides this project adopts"
+    )
+
+
 def test_exactly_the_curated_rules_are_enabled_at_error():
     """Catch a rejected candidate entering, or an admitted rule leaving, the gate."""
     assert _enabled_rule_names() == REQUIRED_RULES, (
@@ -95,7 +108,8 @@ def test_styles_are_vendored_so_the_gate_runs_offline():
             f"{directory} is missing; run `vale sync` and commit it. The gate has no network."
         )
         assert (directory / "meta.json").is_file(), (
-            f"{directory}/meta.json is missing, so the vendored version cannot be audited"
+            f"{directory}/meta.json is missing, so its source feed and Vale compatibility "
+            "cannot be audited"
         )
 
 
