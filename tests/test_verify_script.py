@@ -89,12 +89,24 @@ def test_parallel_coordinator_never_takes_the_vault_lock(
 ) -> None:
     namespace = _verify_namespace()
     globals_ = namespace["main"].__globals__
+    events: list[str] = []
+    spawned: list[tuple[str, int]] = []
+
+    def spawn(shard: str, workers: int, path: Path):
+        spawned.append((shard, workers))
+        path.write_text("ok\n", encoding="utf-8")
+        return _FakeProcess(0, events, shard), path.open("a", encoding="utf-8")
+
+    monkeypatch.setattr(namespace["os"], "cpu_count", lambda: 8)
     monkeypatch.setitem(
         globals_, "_hold_single_run_lock", lambda: pytest.fail("coordinator locked")
     )
-    monkeypatch.setitem(globals_, "_run_parallel", lambda: 0)
+    monkeypatch.setitem(globals_, "run", lambda command: 0)
+    monkeypatch.setitem(globals_, "_spawn_shard", spawn)
 
     assert namespace["main"](["--parallel"]) == 0
+    assert spawned == [("contract", 2), ("runtime", 2), ("sweep", 2)]
+    assert events == ["wait:contract", "wait:runtime", "wait:sweep"]
 
 
 def test_bare_and_runtime_shard_main_retain_normal_selection_path(
