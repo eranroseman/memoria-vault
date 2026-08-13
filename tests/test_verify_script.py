@@ -44,9 +44,7 @@ def test_slow_test_telemetry_is_a_ci_only_opt_in() -> None:
     telemetry = _verify_namespace_with_env(MEMORIA_PYTEST_DURATIONS="1")
 
     local_pytest_commands = [gate.cmd for gate in local["GATES"] if "pytest" in gate.cmd]
-    telemetry_pytest_commands = [
-        gate.cmd for gate in telemetry["GATES"] if "pytest" in gate.cmd
-    ]
+    telemetry_pytest_commands = [gate.cmd for gate in telemetry["GATES"] if "pytest" in gate.cmd]
     assert all(flag not in command for command in local_pytest_commands for flag in duration_flags)
     assert all(
         command[
@@ -60,9 +58,7 @@ def test_slow_test_telemetry_is_a_ci_only_opt_in() -> None:
 
     workflow = yaml.safe_load(VERIFY_WORKFLOW.read_text(encoding="utf-8"))
     run_verify = next(
-        step
-        for step in workflow["jobs"]["shards"]["steps"]
-        if step.get("name") == "Run verify"
+        step for step in workflow["jobs"]["shards"]["steps"] if step.get("name") == "Run verify"
     )
     assert run_verify["env"]["MEMORIA_PYTEST_DURATIONS"] == "1"
 
@@ -146,7 +142,6 @@ def test_the_shards_reproduce_the_full_roster_exactly_once() -> None:
 
 def test_ci_runs_every_shard() -> None:
     """Nothing else stops verify.yml listing three of four shards and staying green."""
-    namespace = _verify_namespace()
     workflow = yaml.safe_load(VERIFY_WORKFLOW.read_text(encoding="utf-8"))
 
     scope = workflow["jobs"]["scope"]
@@ -157,7 +152,7 @@ def test_ci_runs_every_shard() -> None:
     }
     scope_script = next(step for step in scope["steps"] if step.get("id") == "scope")["run"]
     for default in (
-        "matrix='{\"shard\":[\"lint\",\"contract\",\"runtime\",\"sweep\"]}'",
+        'matrix=\'{"shard":["lint","contract","runtime","sweep"]}\'',
         "ps1=true",
         "docs_only=false",
     ):
@@ -181,7 +176,9 @@ def test_ci_provisions_verification_dependencies_in_their_owner_shards() -> None
     workflow = yaml.safe_load(VERIFY_WORKFLOW.read_text(encoding="utf-8"))
     steps = workflow["jobs"]["shards"]["steps"]
 
-    precommit_cache = next(step for step in steps if step.get("name") == "Cache pre-commit environments")
+    precommit_cache = next(
+        step for step in steps if step.get("name") == "Cache pre-commit environments"
+    )
     gc = next(
         step
         for step in steps
@@ -189,9 +186,13 @@ def test_ci_provisions_verification_dependencies_in_their_owner_shards() -> None
     )
     pssa_cache = next(step for step in steps if step.get("name") == "Cache PSScriptAnalyzer module")
     bubblewrap = next(
-        step for step in steps if step.get("name") == "Enable the code-execution sandbox (bubblewrap)"
+        step
+        for step in steps
+        if step.get("name") == "Enable the code-execution sandbox (bubblewrap)"
     )
-    python = next(step for step in steps if step.get("uses", "").startswith("actions/setup-python@"))
+    python = next(
+        step for step in steps if step.get("uses", "").startswith("actions/setup-python@")
+    )
 
     assert precommit_cache["if"] == "matrix.shard == 'lint'"
     assert gc["if"] == "matrix.shard == 'lint'"
@@ -286,7 +287,10 @@ def test_docs_only_lint_runs_exactly_the_prose_hook_roster() -> None:
     namespace = _verify_namespace()
 
     assert namespace["DOCS_LINT_HOOKS"] == (
-        "vale", "markdownlint-structural", "mermaid-parse", "cspell",
+        "vale",
+        "markdownlint-structural",
+        "mermaid-parse",
+        "cspell",
     )
     commands = namespace["_gates_for_run"](True, "lint")
     assert commands[:4] == [
@@ -294,7 +298,9 @@ def test_docs_only_lint_runs_exactly_the_prose_hook_roster() -> None:
         for hook in namespace["DOCS_LINT_HOOKS"]
     ]
     text = "\n".join(" ".join(command) for command in commands)
-    assert not any(tool in text for tool in ("ruff", "mypy", "yamllint", "shellcheck", "oxlint", "oxfmt"))
+    assert not any(
+        tool in text for tool in ("ruff", "mypy", "yamllint", "shellcheck", "oxlint", "oxfmt")
+    )
 
 
 def test_gate_entries_run_under_docs_scope_unless_opted_out() -> None:

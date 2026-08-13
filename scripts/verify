@@ -105,9 +105,11 @@ class Gate:
 
 
 def _duration_args() -> list[str]:
-    return ["--durations=25", "--durations-min=0.25"] if os.environ.get(
-        "MEMORIA_PYTEST_DURATIONS"
-    ) == "1" else []
+    return (
+        ["--durations=25", "--durations-min=0.25"]
+        if os.environ.get("MEMORIA_PYTEST_DURATIONS") == "1"
+        else []
+    )
 
 
 def _pytest_cmd(markers: str) -> list[str]:
@@ -150,8 +152,7 @@ def _pytest_cmd(markers: str) -> list[str]:
 FULL_LINT_COMMAND = ["pre-commit", "run", "--hook-stage", "manual", "--all-files"]
 DOCS_LINT_HOOKS = ("vale", "markdownlint-structural", "mermaid-parse", "cspell")
 DOCS_LINT_COMMANDS = tuple(
-    ["pre-commit", "run", hook, "--hook-stage", "manual", "--all-files"]
-    for hook in DOCS_LINT_HOOKS
+    ["pre-commit", "run", hook, "--hook-stage", "manual", "--all-files"] for hook in DOCS_LINT_HOOKS
 )
 
 
