@@ -6,6 +6,7 @@ import os
 import runpy
 import signal
 import sys
+import threading
 import time
 from pathlib import Path
 
@@ -327,6 +328,34 @@ def _wait_for_path(path: Path, timeout: float) -> bool:
     return path.exists()
 
 
+def _wait_for_text(path: Path, expected: str, timeout: float) -> bool:
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        try:
+            if path.read_text(encoding="utf-8") == expected:
+                return True
+        except FileNotFoundError:
+            pass
+        time.sleep(0.01)
+    return False
+
+
+def test_wait_for_text_waits_for_content_after_an_empty_marker_exists(tmp_path: Path) -> None:
+    marker = tmp_path / "terminated"
+    marker.touch()
+
+    def write_marker() -> None:
+        time.sleep(0.01)
+        marker.write_text("terminated", encoding="utf-8")
+
+    writer = threading.Thread(target=write_marker)
+    writer.start()
+    try:
+        assert _wait_for_text(marker, "terminated", 1)
+    finally:
+        writer.join()
+
+
 @pytest.mark.skipif(os.name != "posix", reason="POSIX process-group behavior")
 def test_parallel_exception_terminates_a_shard_grandchild(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
@@ -354,8 +383,7 @@ def test_parallel_exception_terminates_a_shard_grandchild(
         with pytest.raises(RuntimeError, match="launch failed"):
             namespace["_run_parallel"]()
 
-        _wait_for_path(terminated, 2)
-        assert terminated.read_text(encoding="utf-8") == "terminated"
+        assert _wait_for_text(terminated, "terminated", 2)
     finally:
         if ready.exists() and not terminated.exists():
             try:
@@ -396,8 +424,7 @@ def test_parallel_exception_terminates_a_grandchild_after_its_wrapper_exits(
         with pytest.raises(RuntimeError, match="launch failed"):
             namespace["_run_parallel"]()
 
-        _wait_for_path(terminated, 2)
-        assert terminated.read_text(encoding="utf-8") == "terminated"
+        assert _wait_for_text(terminated, "terminated", 2)
     finally:
         if ready.exists() and not terminated.exists():
             try:
