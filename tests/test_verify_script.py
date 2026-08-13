@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import os
 import runpy
+import signal
 import sys
+import time
 from pathlib import Path
 
 import pytest
@@ -138,7 +140,14 @@ def test_parallel_waits_replays_and_reports_every_child_failure(
         "wait:runtime",
         "wait:sweep",
     ]
-    assert capsys.readouterr().out.count("== verify: parallel") == 3
+    assert capsys.readouterr().out == (
+        "== verify: parallel contract\n"
+        "contract log\n"
+        "== verify: parallel runtime\n"
+        "runtime log\n"
+        "== verify: parallel sweep\n"
+        "sweep log\n"
+    )
 
 
 def test_parallel_batches_at_two_cpus_and_overrides_child_workers(
@@ -186,7 +195,14 @@ def test_parallel_reports_a_missing_child_and_runs_the_remaining_shards(
 
     assert namespace["_run_parallel"]() == 1
     assert events == ["spawn:runtime:1", "spawn:sweep:1", "wait:runtime", "wait:sweep"]
-    assert "command not found" in capsys.readouterr().out
+    assert capsys.readouterr().out == (
+        "== verify: parallel contract\n"
+        f"command not found: {sys.executable}\n"
+        "== verify: parallel runtime\n"
+        "ok\n"
+        "== verify: parallel sweep\n"
+        "ok\n"
+    )
 
 
 def test_parallel_terminates_and_reaps_a_child_when_a_sibling_launch_raises(
@@ -194,22 +210,27 @@ def test_parallel_terminates_and_reaps_a_child_when_a_sibling_launch_raises(
 ) -> None:
     namespace = _verify_namespace()
     globals_, events = namespace["_run_parallel"].__globals__, []
+    streams = []
 
     def spawn(shard: str, workers: int, path: Path):
         if shard == "runtime":
             raise RuntimeError("launch failed")
         events.append(f"spawn:{shard}:{workers}")
         path.write_text("ok\n", encoding="utf-8")
-        return _FakeProcess(0, events, shard), path.open("a", encoding="utf-8")
+        stream = path.open("a", encoding="utf-8")
+        streams.append(stream)
+        return _FakeProcess(0, events, shard), stream
 
     monkeypatch.setitem(globals_, "run", lambda command: 0)
     monkeypatch.setitem(globals_, "_parallel_limits", lambda: (3, 1))
     monkeypatch.setitem(globals_, "_spawn_shard", spawn)
+    monkeypatch.setitem(globals_, "_terminate_shard", lambda process: process.terminate())
 
     with pytest.raises(RuntimeError, match="launch failed"):
         namespace["_run_parallel"]()
 
     assert events == ["spawn:contract:1", "terminate:contract", "wait:contract"]
+    assert streams and all(stream.closed for stream in streams)
 
 
 def test_parallel_terminates_and_reaps_active_children_when_interrupted(
@@ -217,6 +238,7 @@ def test_parallel_terminates_and_reaps_active_children_when_interrupted(
 ) -> None:
     namespace = _verify_namespace()
     globals_, events = namespace["_run_parallel"].__globals__, []
+    streams = []
 
     class InterruptingProcess(_FakeProcess):
         def wait(self) -> int:
@@ -230,11 +252,14 @@ def test_parallel_terminates_and_reaps_active_children_when_interrupted(
         events.append(f"spawn:{shard}:{workers}")
         path.write_text("ok\n", encoding="utf-8")
         process = InterruptingProcess if shard == "contract" else _FakeProcess
-        return process(0, events, shard), path.open("a", encoding="utf-8")
+        stream = path.open("a", encoding="utf-8")
+        streams.append(stream)
+        return process(0, events, shard), stream
 
     monkeypatch.setitem(globals_, "run", lambda command: 0)
     monkeypatch.setitem(globals_, "_parallel_limits", lambda: (3, 1))
     monkeypatch.setitem(globals_, "_spawn_shard", spawn)
+    monkeypatch.setitem(globals_, "_terminate_shard", lambda process: process.terminate())
 
     with pytest.raises(KeyboardInterrupt):
         namespace["_run_parallel"]()
@@ -251,6 +276,84 @@ def test_parallel_terminates_and_reaps_active_children_when_interrupted(
         "wait:runtime",
         "wait:sweep",
     ]
+    assert streams and all(stream.closed for stream in streams)
+
+
+@pytest.mark.skipif(os.name != "posix", reason="POSIX process-group behavior")
+def test_parallel_exception_terminates_a_shard_grandchild(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    namespace = _verify_namespace()
+    globals_ = namespace["_run_parallel"].__globals__
+    real_spawn = namespace["_spawn_shard"]
+    ready = tmp_path / "grandchild-ready"
+    terminated = tmp_path / "grandchild-terminated"
+    grandchild_code = """
+import os
+import signal
+import sys
+import time
+from pathlib import Path
+
+def terminate(signum, frame):
+    Path(sys.argv[2]).write_text("terminated", encoding="utf-8")
+    raise SystemExit(0)
+
+signal.signal(signal.SIGTERM, terminate)
+Path(sys.argv[1]).write_text(str(os.getpid()), encoding="utf-8")
+while True:
+    time.sleep(1)
+"""
+    shard_code = """
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+subprocess.Popen([sys.executable, "-c", sys.argv[3], sys.argv[1], sys.argv[2]])
+while not Path(sys.argv[1]).exists():
+    time.sleep(0.01)
+while True:
+    time.sleep(1)
+"""
+    command = [
+        sys.executable,
+        "-c",
+        shard_code,
+        str(ready),
+        str(terminated),
+        grandchild_code,
+    ]
+
+    def spawn(shard: str, workers: int, path: Path):
+        if shard == "runtime":
+            deadline = time.monotonic() + 5
+            while not ready.exists() and time.monotonic() < deadline:
+                time.sleep(0.01)
+            if not ready.exists():
+                pytest.fail("grandchild did not start")
+            raise RuntimeError("launch failed")
+        return real_spawn(shard, workers, path)
+
+    monkeypatch.setitem(globals_, "run", lambda command: 0)
+    monkeypatch.setitem(globals_, "_parallel_limits", lambda: (3, 1))
+    monkeypatch.setitem(globals_, "_shard_command", lambda shard: command)
+    monkeypatch.setitem(globals_, "_spawn_shard", spawn)
+
+    try:
+        with pytest.raises(RuntimeError, match="launch failed"):
+            namespace["_run_parallel"]()
+
+        deadline = time.monotonic() + 2
+        while not terminated.exists() and time.monotonic() < deadline:
+            time.sleep(0.01)
+        assert terminated.read_text(encoding="utf-8") == "terminated"
+    finally:
+        if ready.exists() and not terminated.exists():
+            try:
+                os.kill(int(ready.read_text(encoding="utf-8")), signal.SIGKILL)
+            except ProcessLookupError:
+                pass
 
 
 def test_slow_test_telemetry_is_a_ci_only_opt_in() -> None:
