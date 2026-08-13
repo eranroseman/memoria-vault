@@ -378,6 +378,8 @@ def _parse_args(argv: list[str]) -> tuple[str | None, bool]:
 
 
 def _parallel_limits(cpu_count: int | None = None) -> tuple[int, int]:
+    if cpu_count is None:
+        cpu_count = os.cpu_count()
     budget = max(1, cpu_count or 1)
     concurrency = min(len(PARALLEL_SHARDS), budget)
     return concurrency, max(1, budget // concurrency)

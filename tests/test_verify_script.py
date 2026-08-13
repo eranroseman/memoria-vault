@@ -97,6 +97,15 @@ def test_parallel_limits_never_oversubscribe(cpus: int, expected: tuple[int, int
     assert concurrency * workers <= cpus
 
 
+def test_parallel_limits_use_host_cpu_count_when_unspecified(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    namespace = _verify_namespace()
+    monkeypatch.setattr(namespace["os"], "cpu_count", lambda: 8)
+
+    assert namespace["_parallel_limits"]() == (3, 2)
+
+
 def test_parallel_shard_command_reinvokes_verify_with_current_python() -> None:
     namespace = _verify_namespace()
 
