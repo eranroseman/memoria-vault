@@ -38,6 +38,45 @@ def _verify_namespace_with_env(**updates: str | None) -> dict:
                 os.environ[key] = value
 
 
+def test_parallel_cli_is_opt_in_and_conflicts_with_a_shard() -> None:
+    parse = _verify_namespace()["_parse_args"]
+
+    assert parse([]) == (None, False)
+    assert parse(["--shard", "runtime"]) == ("runtime", False)
+    assert parse(["--parallel"]) == (None, True)
+    with pytest.raises(SystemExit, match="--parallel cannot be combined with --shard"):
+        parse(["--parallel", "--shard", "runtime"])
+
+
+@pytest.mark.parametrize(
+    "argv",
+    [["--parallel", "--parallel"], ["--shard"], ["--shard", "runtime", "extra"], ["runtime"]],
+)
+def test_parallel_cli_rejects_malformed_arguments(argv: list[str]) -> None:
+    with pytest.raises(SystemExit):
+        _verify_namespace()["_parse_args"](argv)
+
+
+def test_parallel_cli_preserves_the_unknown_shard_diagnostic() -> None:
+    with pytest.raises(
+        SystemExit, match="unknown shard 'unknown'; expected one of lint, contract, runtime, sweep"
+    ):
+        _verify_namespace()["_parse_args"](["--shard", "unknown"])
+
+
+@pytest.mark.parametrize(
+    ("cpus", "expected"),
+    [(1, (1, 1)), (2, (2, 1)), (3, (3, 1)), (5, (3, 1)), (6, (3, 2)), (8, (3, 2))],
+)
+def test_parallel_limits_never_oversubscribe(cpus: int, expected: tuple[int, int]) -> None:
+    namespace = _verify_namespace()
+    concurrency, workers = namespace["_parallel_limits"](cpus)
+
+    assert namespace["PARALLEL_SHARDS"] == ("contract", "runtime", "sweep")
+    assert (concurrency, workers) == expected
+    assert concurrency * workers <= cpus
+
+
 def test_slow_test_telemetry_is_a_ci_only_opt_in() -> None:
     duration_flags = ["--durations=25", "--durations-min=0.25"]
     local = _verify_namespace_with_env(MEMORIA_PYTEST_DURATIONS=None)

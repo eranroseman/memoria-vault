@@ -65,6 +65,7 @@ SWEEP_MARKERS = "static or unit or package or floor"
 # union of the shards is exactly this roster, which is what keeps "CI verified"
 # and "verified locally" the same claim.
 SHARDS = ("lint", "contract", "runtime", "sweep")
+PARALLEL_SHARDS = ("contract", "runtime", "sweep")
 
 # 1733: N worktrees each taking `-n auto` = all cores thrash each other (same
 # suite measured 190s at load ~3 vs 3,355s at load 18). Half the cores per run
@@ -356,25 +357,31 @@ def _extra_steps_for_run(docs_only: bool, shard: str | None) -> tuple:
     return EXTRA_STEPS.get(shard, ())
 
 
-def _parse_shard(argv: list[str]) -> str | None:
-    """`--shard NAME`, or None for the full roster.
-
-    An unknown name is an error rather than an empty run: a typo in the CI matrix
-    would otherwise report a green shard that ran nothing.
-    """
-    if "--shard" not in argv:
-        return None
-    index = argv.index("--shard")
-    if index + 1 >= len(argv):
-        raise SystemExit("verify: --shard needs a name")
-    shard = argv[index + 1]
+def _parse_args(argv: list[str]) -> tuple[str | None, bool]:
+    if argv == []:
+        return None, False
+    if argv == ["--parallel"]:
+        return None, True
+    if "--parallel" in argv and "--shard" in argv:
+        raise SystemExit("verify: --parallel cannot be combined with --shard")
+    if "--parallel" in argv:
+        raise SystemExit("verify: --parallel accepts no other arguments")
+    if len(argv) != 2 or argv[0] != "--shard":
+        raise SystemExit("verify: expected --parallel or --shard NAME")
+    shard = argv[1]
     if shard not in SHARDS:
         raise SystemExit(f"verify: unknown shard {shard!r}; expected one of {', '.join(SHARDS)}")
-    return shard
+    return shard, False
+
+
+def _parallel_limits(cpu_count: int | None = None) -> tuple[int, int]:
+    budget = max(1, cpu_count or 1)
+    concurrency = min(len(PARALLEL_SHARDS), budget)
+    return concurrency, max(1, budget // concurrency)
 
 
 def main(argv: list[str] | None = None) -> int:
-    shard = _parse_shard(sys.argv[1:] if argv is None else argv)
+    shard, _parallel = _parse_args(sys.argv[1:] if argv is None else argv)
     # Only a selection that rewrites <checkout>/test-vault needs to serialize, so
     # the other shards can run beside it in one checkout.
     _lock = _hold_single_run_lock() if _needs_vault_lock(shard) else None
