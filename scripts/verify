@@ -39,9 +39,11 @@ import os
 import shutil
 import subprocess
 import sys
+import tempfile
 import time
 from dataclasses import dataclass
 from pathlib import Path
+from typing import TextIO
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -378,6 +380,83 @@ def _parallel_limits(cpu_count: int | None = None) -> tuple[int, int]:
     budget = max(1, cpu_count or 1)
     concurrency = min(len(PARALLEL_SHARDS), budget)
     return concurrency, max(1, budget // concurrency)
+
+
+def _shard_command(shard: str) -> list[str]:
+    return [sys.executable, str(ROOT / "scripts" / "verify"), "--shard", shard]
+
+
+def _spawn_shard(shard: str, workers: int, log_path: Path) -> tuple[subprocess.Popen[str], TextIO]:
+    stream = log_path.open("w", encoding="utf-8")
+    environment = os.environ | {"PYTEST_XDIST_AUTO_NUM_WORKERS": str(workers)}
+    try:
+        process = subprocess.Popen(
+            _shard_command(shard),
+            cwd=ROOT,
+            env=environment,
+            stdout=stream,
+            stderr=subprocess.STDOUT,
+            text=True,
+        )
+    except BaseException:
+        stream.close()
+        raise
+    return process, stream
+
+
+def _run_parallel() -> int:
+    if run(_shard_command("lint")) != 0:
+        return 1
+
+    failed = False
+    with tempfile.TemporaryDirectory(prefix="memoria-verify-") as temporary:
+        log_directory = Path(temporary)
+        concurrency, workers = _parallel_limits()
+        for start in range(0, len(PARALLEL_SHARDS), concurrency):
+            batch = PARALLEL_SHARDS[start : start + concurrency]
+            active: list[tuple[subprocess.Popen[str], TextIO]] = []
+            outcomes: list[
+                tuple[
+                    str,
+                    Path,
+                    subprocess.Popen[str] | None,
+                    TextIO | None,
+                    int | None,
+                ]
+            ] = []
+            try:
+                for shard in batch:
+                    log_path = log_directory / f"{shard}.log"
+                    try:
+                        process, stream = _spawn_shard(shard, workers, log_path)
+                    except FileNotFoundError:
+                        command = _shard_command(shard)
+                        log_path.write_text(f"command not found: {command[0]}\n", encoding="utf-8")
+                        outcomes.append((shard, log_path, None, None, 127))
+                        continue
+                    active.append((process, stream))
+                    outcomes.append((shard, log_path, process, stream, None))
+
+                for shard, log_path, process, stream, synthetic_code in outcomes:
+                    code = synthetic_code
+                    if process is not None:
+                        code = process.wait()
+                        if stream is not None:
+                            stream.close()
+                    print(f"== verify: parallel {shard}")
+                    log = log_path.read_text(encoding="utf-8")
+                    print(log, end="" if log.endswith("\n") else "\n")
+                    failed = failed or code != 0
+            finally:
+                for process, _stream in active:
+                    if process.poll() is None:
+                        process.terminate()
+                for process, stream in active:
+                    if process.poll() is None:
+                        process.wait()
+                    if not stream.closed:
+                        stream.close()
+    return int(failed)
 
 
 def main(argv: list[str] | None = None) -> int:

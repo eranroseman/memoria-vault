@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import runpy
+import sys
 from pathlib import Path
 
 import pytest
@@ -36,6 +37,22 @@ def _verify_namespace_with_env(**updates: str | None) -> dict:
                 os.environ.pop(key, None)
             else:
                 os.environ[key] = value
+
+
+class _FakeProcess:
+    def __init__(self, code: int, events: list[str], shard: str) -> None:
+        self.code, self.events, self.shard, self.returncode = code, events, shard, None
+
+    def wait(self) -> int:
+        self.events.append(f"wait:{self.shard}")
+        self.returncode = self.code
+        return self.code
+
+    def poll(self) -> int | None:
+        return self.returncode
+
+    def terminate(self) -> None:
+        self.events.append(f"terminate:{self.shard}")
 
 
 def test_parallel_cli_is_opt_in_and_conflicts_with_a_shard() -> None:
@@ -75,6 +92,165 @@ def test_parallel_limits_never_oversubscribe(cpus: int, expected: tuple[int, int
     assert namespace["PARALLEL_SHARDS"] == ("contract", "runtime", "sweep")
     assert (concurrency, workers) == expected
     assert concurrency * workers <= cpus
+
+
+def test_parallel_shard_command_reinvokes_verify_with_current_python() -> None:
+    namespace = _verify_namespace()
+
+    command = namespace["_shard_command"]("runtime")
+
+    assert command[-2:] == ["--shard", "runtime"]
+    assert command[0] == sys.executable
+    assert Path(command[1]) == ROOT / "scripts" / "verify"
+
+
+def test_parallel_stops_before_children_when_lint_fails(monkeypatch: pytest.MonkeyPatch) -> None:
+    namespace = _verify_namespace()
+    globals_ = namespace["_run_parallel"].__globals__
+    monkeypatch.setitem(globals_, "run", lambda command: 1)
+    monkeypatch.setitem(globals_, "_spawn_shard", lambda *args: pytest.fail("child launched"))
+
+    assert namespace["_run_parallel"]() == 1
+
+
+def test_parallel_waits_replays_and_reports_every_child_failure(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    namespace = _verify_namespace()
+    globals_, events = namespace["_run_parallel"].__globals__, []
+    codes = {"contract": 0, "runtime": 1, "sweep": 0}
+
+    def spawn(shard: str, workers: int, path: Path):
+        events.append(f"spawn:{shard}:{workers}")
+        path.write_text(f"{shard} log\n", encoding="utf-8")
+        return _FakeProcess(codes[shard], events, shard), path.open("a", encoding="utf-8")
+
+    monkeypatch.setitem(globals_, "run", lambda command: 0)
+    monkeypatch.setitem(globals_, "_parallel_limits", lambda: (3, 1))
+    monkeypatch.setitem(globals_, "_spawn_shard", spawn)
+
+    assert namespace["_run_parallel"]() == 1
+    assert events == [
+        "spawn:contract:1",
+        "spawn:runtime:1",
+        "spawn:sweep:1",
+        "wait:contract",
+        "wait:runtime",
+        "wait:sweep",
+    ]
+    assert capsys.readouterr().out.count("== verify: parallel") == 3
+
+
+def test_parallel_batches_at_two_cpus_and_overrides_child_workers(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    namespace = _verify_namespace()
+    globals_, events = namespace["_run_parallel"].__globals__, []
+
+    def spawn(shard: str, workers: int, path: Path):
+        events.append(f"spawn:{shard}:{workers}")
+        path.write_text("ok\n", encoding="utf-8")
+        return _FakeProcess(0, events, shard), path.open("a", encoding="utf-8")
+
+    monkeypatch.setitem(globals_, "run", lambda command: 0)
+    monkeypatch.setitem(globals_, "_parallel_limits", lambda: (2, 1))
+    monkeypatch.setitem(globals_, "_spawn_shard", spawn)
+
+    assert namespace["_run_parallel"]() == 0
+    assert events == [
+        "spawn:contract:1",
+        "spawn:runtime:1",
+        "wait:contract",
+        "wait:runtime",
+        "spawn:sweep:1",
+        "wait:sweep",
+    ]
+
+
+def test_parallel_reports_a_missing_child_and_runs_the_remaining_shards(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    namespace = _verify_namespace()
+    globals_, events = namespace["_run_parallel"].__globals__, []
+
+    def spawn(shard: str, workers: int, path: Path):
+        if shard == "contract":
+            raise FileNotFoundError("missing")
+        events.append(f"spawn:{shard}:{workers}")
+        path.write_text("ok\n", encoding="utf-8")
+        return _FakeProcess(0, events, shard), path.open("a", encoding="utf-8")
+
+    monkeypatch.setitem(globals_, "run", lambda command: 0)
+    monkeypatch.setitem(globals_, "_parallel_limits", lambda: (3, 1))
+    monkeypatch.setitem(globals_, "_spawn_shard", spawn)
+
+    assert namespace["_run_parallel"]() == 1
+    assert events == ["spawn:runtime:1", "spawn:sweep:1", "wait:runtime", "wait:sweep"]
+    assert "command not found" in capsys.readouterr().out
+
+
+def test_parallel_terminates_and_reaps_a_child_when_a_sibling_launch_raises(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    namespace = _verify_namespace()
+    globals_, events = namespace["_run_parallel"].__globals__, []
+
+    def spawn(shard: str, workers: int, path: Path):
+        if shard == "runtime":
+            raise RuntimeError("launch failed")
+        events.append(f"spawn:{shard}:{workers}")
+        path.write_text("ok\n", encoding="utf-8")
+        return _FakeProcess(0, events, shard), path.open("a", encoding="utf-8")
+
+    monkeypatch.setitem(globals_, "run", lambda command: 0)
+    monkeypatch.setitem(globals_, "_parallel_limits", lambda: (3, 1))
+    monkeypatch.setitem(globals_, "_spawn_shard", spawn)
+
+    with pytest.raises(RuntimeError, match="launch failed"):
+        namespace["_run_parallel"]()
+
+    assert events == ["spawn:contract:1", "terminate:contract", "wait:contract"]
+
+
+def test_parallel_terminates_and_reaps_active_children_when_interrupted(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    namespace = _verify_namespace()
+    globals_, events = namespace["_run_parallel"].__globals__, []
+
+    class InterruptingProcess(_FakeProcess):
+        def wait(self) -> int:
+            self.events.append(f"wait:{self.shard}")
+            if self.events.count(f"wait:{self.shard}") == 1:
+                raise KeyboardInterrupt
+            self.returncode = self.code
+            return self.code
+
+    def spawn(shard: str, workers: int, path: Path):
+        events.append(f"spawn:{shard}:{workers}")
+        path.write_text("ok\n", encoding="utf-8")
+        process = InterruptingProcess if shard == "contract" else _FakeProcess
+        return process(0, events, shard), path.open("a", encoding="utf-8")
+
+    monkeypatch.setitem(globals_, "run", lambda command: 0)
+    monkeypatch.setitem(globals_, "_parallel_limits", lambda: (3, 1))
+    monkeypatch.setitem(globals_, "_spawn_shard", spawn)
+
+    with pytest.raises(KeyboardInterrupt):
+        namespace["_run_parallel"]()
+
+    assert events == [
+        "spawn:contract:1",
+        "spawn:runtime:1",
+        "spawn:sweep:1",
+        "wait:contract",
+        "terminate:contract",
+        "terminate:runtime",
+        "terminate:sweep",
+        "wait:contract",
+        "wait:runtime",
+        "wait:sweep",
+    ]
 
 
 def test_slow_test_telemetry_is_a_ci_only_opt_in() -> None:
