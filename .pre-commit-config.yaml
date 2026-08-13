@@ -181,4 +181,5 @@ repos:
         entry: cspell lint --no-progress --no-must-find-files
         additional_dependencies: [cspell@10.0.1]
         files: \.md$
+        require_serial: true
         stages: [manual]
