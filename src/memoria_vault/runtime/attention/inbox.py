@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Write Inbox attention projections.
 
 Attention is generated visibility, not a durable Concept type. These helpers keep

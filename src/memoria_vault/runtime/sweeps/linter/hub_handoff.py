@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Turn hub-threshold findings into map-proposal requests.
 
 Tier 1 stays report-only in detectors.py. This Tier 2 operation reads those

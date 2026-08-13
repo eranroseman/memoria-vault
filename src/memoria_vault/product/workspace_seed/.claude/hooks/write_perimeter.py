@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Memoria write-perimeter PreToolUse hook.
 
 Stdlib-only and unconditional: it never needs the engine to say no. The host's

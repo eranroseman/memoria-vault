@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Project-gate structural impact cache."""
 
 from __future__ import annotations

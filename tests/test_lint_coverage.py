@@ -106,6 +106,23 @@ def _tracked() -> list[str]:
     return result.stdout.splitlines()
 
 
+def _tracked_modes() -> dict[str, int]:
+    """Return each tracked path's Git mode, not the checkout's umask-derived mode."""
+    result = subprocess.run(
+        ["git", "ls-files", "--stage"],
+        cwd=ROOT,
+        text=True,
+        capture_output=True,
+        check=True,
+    )
+    return {
+        path: int(metadata.split(maxsplit=1)[0], 8)
+        for line in result.stdout.splitlines()
+        for metadata, separator, path in [line.partition("\t")]
+        if separator
+    }
+
+
 def _hook(hook_id: str) -> dict:
     config = yaml.safe_load(PRECOMMIT.read_text(encoding="utf-8"))
     hooks = [h for repo in config["repos"] for h in repo["hooks"] if h["id"] == hook_id]
@@ -320,6 +337,46 @@ def test_claimed_files_fall_inside_their_owner_scope(owner: str):
         f"tracked files the {owner} hook's `files` scope does not reach: {escaped}. "
         "Either widen the hook scope in .pre-commit-config.yaml or add the file to "
         "UNCLAIMED with the reason it is exempt."
+    )
+
+
+def _ruff_claimed_python_paths() -> list[str]:
+    """Return the Python paths that the configured Ruff hook actually reaches."""
+    return [
+        path
+        for path in _tracked()
+        if (
+            (path.endswith(".py") and KNOWN_EXTENSIONS[".py"] == "ruff")
+            or EXTENSIONLESS.get(path) == "ruff"
+        )
+        and _unclaimed_reason(path) is None
+        and _claims("ruff", path)
+    ]
+
+
+def test_ruff_claimed_python_shebangs_match_their_git_executable_mode():
+    """CI runs EXE001/EXE002 on Linux; WSL suppresses them, so retain the policy here."""
+    ruff_paths = _ruff_claimed_python_paths()
+    modes = _tracked_modes()
+    shebang_without_executable_bit = sorted(
+        path
+        for path in ruff_paths
+        if (ROOT / path).read_text(encoding="utf-8").startswith("#!/") and not modes[path] & 0o111
+    )
+    executable_python_without_shebang = sorted(
+        path
+        for path in ruff_paths
+        if path.endswith(".py")
+        and modes[path] & 0o111
+        and not (ROOT / path).read_text(encoding="utf-8").startswith("#!/")
+    )
+    assert not shebang_without_executable_bit and not executable_python_without_shebang, (
+        "Ruff EXE001/EXE002 are disabled on Windows/WSL but enforced by Linux CI. "
+        "EXE001 shebang without Git executable bit: remove a stale shebang from "
+        f"interpreter-invoked/imported code, or make a direct entry point executable: "
+        f"{shebang_without_executable_bit}. EXE002 executable .py without shebang: "
+        f"add the interpreter shebang or remove the Git executable bit: "
+        f"{executable_python_without_shebang}"
     )
 
 

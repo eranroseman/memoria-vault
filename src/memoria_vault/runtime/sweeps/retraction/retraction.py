@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Retraction sweep operation.
 
 This thin, pure-stdlib checker covers retraction-by-DOI with three sources,

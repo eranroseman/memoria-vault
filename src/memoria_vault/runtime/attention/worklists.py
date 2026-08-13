@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Emit batch screening projection surfaces.
 
 A high-cardinality report becomes many worklist projection notes under

@@ -9,7 +9,7 @@
   },
   "files": {
     ".claude/hooks/session_status.py": "3c41cb6afadc",
-    ".claude/hooks/write_perimeter.py": "c61509f89946",
+    ".claude/hooks/write_perimeter.py": "170bd378fffa",
     ".claude/settings.json": "a5730de394f6",
     ".claude/skills/memoria-copi/SKILL.md": "1caa67b306fc",
     ".codex/hooks.json": "85c2c09640da",

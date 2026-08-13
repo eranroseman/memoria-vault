@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Fail when a published doc cites a repo path that no longer exists.
 
 Docs name repo files as inline code -- `src/memoria_vault/cli.py`,

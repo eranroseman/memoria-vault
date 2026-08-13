@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Fail when retired package/runtime surfaces reappear."""
 
 from __future__ import annotations

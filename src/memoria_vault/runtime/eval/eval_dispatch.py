@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Vault-eval dispatcher: diagnostic, never gating.
 
 Fans the workspace-authored gold set in ``.memoria/eval/`` into one local eval

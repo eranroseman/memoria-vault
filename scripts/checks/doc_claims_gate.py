@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Fail when docs cite a memoria CLI path or operation id that doesn't exist.
 
 Checks two claim surfaces docs frequently reference verbatim:

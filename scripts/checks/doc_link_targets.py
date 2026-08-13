@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Fail when a published docs page links somewhere that isn't real or isn't published.
 
 `jekyll-relative-links` rewrites `foo.md` links into site routes but never

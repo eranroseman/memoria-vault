@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Deterministic vault-eval scorer: diagnostic, never gating.
 
 Closes the loop ``eval_dispatch.py`` opens: where the dispatcher fans

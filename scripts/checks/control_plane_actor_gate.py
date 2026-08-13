@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Fail when the published Actor Authority Guard table drifts from the shipped roster.
 
 `docs/reference/control-and-policy/control-plane.md` is the published statement

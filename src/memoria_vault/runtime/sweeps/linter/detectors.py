@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Deterministic vault detectors (zero-LLM) for the Memoria Linter.
 
 Reference implementation of the *self-contained* checks from structural-detectors.md and

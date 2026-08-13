@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Replay the package-gate model-free test-env cassette.
 
 The cassette records tool-call shape plus deterministic fixture arguments. Replay

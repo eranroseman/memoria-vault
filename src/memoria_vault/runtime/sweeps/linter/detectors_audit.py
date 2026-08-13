@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Audit-log detector family for the Memoria Linter."""
 
 from __future__ import annotations
