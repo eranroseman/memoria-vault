@@ -27,12 +27,14 @@ from tests.paths import ROOT
 pytestmark = pytest.mark.static
 
 WORKFLOW = ROOT / ".github/workflows/verify.yml"
+FULL_MATRIX = {"shard": ["lint", "contract", "runtime", "sweep"]}
+DOCS_MATRIX = {"shard": ["lint", "sweep"]}
 
 
 def _scope_script() -> str:
     """The `Detect change scope` step's shell body, lifted from the workflow."""
     workflow = yaml.safe_load(WORKFLOW.read_text(encoding="utf-8"))
-    steps = workflow["jobs"]["shards"]["steps"]
+    steps = workflow["jobs"]["scope"]["steps"]
     step = next(s for s in steps if s.get("id") == "scope")
     return step["run"]
 
@@ -44,7 +46,7 @@ def _classify(
     api_pages: list[list[dict[str, str]]] | None = None,
     expected_count: int | str | None = None,
     fail_after_output: bool = False,
-) -> dict[str, str]:
+) -> dict[str, object]:
     """Run the unmodified workflow body with a local fake GitHub CLI."""
     fake_gh = tmp_path / "gh"
     args = tmp_path / "gh-args"
@@ -80,6 +82,7 @@ fi
         "FAKE_GH_FAIL_AFTER_OUTPUT": str(fail_after_output).lower(),
         "GH_TOKEN": "test-token",
         "GITHUB_OUTPUT": str(output),
+        "GITHUB_EVENT_NAME": "pull_request",
         "GITHUB_REPOSITORY": "owner/repository",
         "PATH": f"{tmp_path}:{os.environ['PATH']}",
         "PR_CHANGED_FILES": str(expected_count),
@@ -94,37 +97,63 @@ fi
     )
     assert args.exists(), f"workflow did not invoke gh; stderr: {result.stderr}"
     assert output.exists(), f"workflow did not write scope outputs; stdout: {result.stdout}"
-    return dict(
+    scope = dict(
         line.split("=", maxsplit=1) for line in output.read_text(encoding="utf-8").splitlines()
     )
+    scope["matrix"] = json.loads(scope["matrix"])
+    return scope
 
 
 @pytest.mark.parametrize(
     ("paths", "expected", "why"),
     [
-        (["docs/how-to-guides/setup/quickstart.md"], True, "published docs are documentation"),
-        (["design-history/2026-08/chapter.md"], True, "the frozen record is documentation"),
-        (["README.md"], True, "root Markdown is documentation"),
+        (
+            ["docs/how-to-guides/setup/quickstart.md"],
+            {"ps1": "false", "docs_only": "true", "matrix": DOCS_MATRIX},
+            "published docs are documentation",
+        ),
+        (
+            ["design-history/2026-08/chapter.md"],
+            {"ps1": "false", "docs_only": "true", "matrix": DOCS_MATRIX},
+            "the frozen record is documentation",
+        ),
+        (
+            ["README.md"],
+            {"ps1": "false", "docs_only": "true", "matrix": DOCS_MATRIX},
+            "root Markdown is documentation",
+        ),
         (
             ["src/memoria_vault/product/capabilities/operations/capture-source.md"],
-            False,
+            {"ps1": "false", "docs_only": "false", "matrix": FULL_MATRIX},
             "package data read by contract tests, not documentation",
         ),
         (
             ["src/memoria_vault/product/workspace_seed/CLAUDE.md"],
-            False,
+            {"ps1": "false", "docs_only": "false", "matrix": FULL_MATRIX},
             "seeded into every vault; package data",
         ),
-        (["docs/a.md", "src/memoria_vault/cli.py"], False, "a code change is in the diff"),
-        (["scripts/verify"], False, "the gate itself is not documentation"),
-        ([], False, "cannot read changed-file list"),
+        (
+            ["docs/a.md", "src/memoria_vault/cli.py"],
+            {"ps1": "false", "docs_only": "false", "matrix": FULL_MATRIX},
+            "a code change is in the diff",
+        ),
+        (
+            ["scripts/verify"],
+            {"ps1": "false", "docs_only": "false", "matrix": FULL_MATRIX},
+            "the gate itself is not documentation",
+        ),
+        (
+            [],
+            {"ps1": "true", "docs_only": "false", "matrix": FULL_MATRIX},
+            "cannot read changed-file list",
+        ),
     ],
 )
-def test_classifier_verdicts(paths: list[str], expected: bool, why: str, tmp_path: Path) -> None:
+def test_classifier_verdicts(
+    paths: list[str], expected: dict[str, object], why: str, tmp_path: Path
+) -> None:
     result = _classify(paths, tmp_path)
-    assert (result["docs_only"] == "true") is expected, (
-        f"{paths}: expected docs_only={expected} because {why}"
-    )
+    assert result == expected, f"{paths}: unexpected scope because {why}"
 
 
 def test_scope_reads_every_paginated_pr_file(tmp_path: Path) -> None:
@@ -138,7 +167,7 @@ def test_scope_reads_every_paginated_pr_file(tmp_path: Path) -> None:
 
     result = _classify(all_paths, tmp_path, api_pages=pages)
 
-    assert result == {"ps1": "true", "docs_only": "false"}
+    assert result == {"ps1": "true", "docs_only": "false", "matrix": FULL_MATRIX}
     assert (tmp_path / "gh-args").read_text(encoding="utf-8").splitlines() == [
         "api",
         "--paginate",
@@ -151,7 +180,7 @@ def test_scope_uses_safe_defaults_when_paginated_retrieval_fails(tmp_path: Path)
     """Partial API output must never narrow CI validation."""
     result = _classify(["docs/page.md"], tmp_path, fail_after_output=True)
 
-    assert result == {"ps1": "true", "docs_only": "false"}
+    assert result == {"ps1": "true", "docs_only": "false", "matrix": FULL_MATRIX}
 
 
 @pytest.mark.parametrize(
@@ -159,16 +188,16 @@ def test_scope_uses_safe_defaults_when_paginated_retrieval_fails(tmp_path: Path)
     [
         (
             "src/memoria_vault/cli.py",
-            {"ps1": "false", "docs_only": "false"},
+            {"ps1": "false", "docs_only": "false", "matrix": FULL_MATRIX},
         ),
         (
             "scripts/setup.ps1",
-            {"ps1": "true", "docs_only": "false"},
+            {"ps1": "true", "docs_only": "false", "matrix": FULL_MATRIX},
         ),
     ],
 )
 def test_scope_classifies_both_paths_of_a_rename(
-    previous_filename: str, expected: dict[str, str], tmp_path: Path
+    previous_filename: str, expected: dict[str, object], tmp_path: Path
 ) -> None:
     page = [[{"filename": "docs/renamed.md", "previous_filename": previous_filename}]]
 
@@ -178,7 +207,11 @@ def test_scope_classifies_both_paths_of_a_rename(
 def test_complete_markdown_documentation_response_still_narrows_scope(tmp_path: Path) -> None:
     paths = ["docs/guide.md", "design-history/2026-08/chapter.md", "README.md"]
 
-    assert _classify(paths, tmp_path) == {"ps1": "false", "docs_only": "true"}
+    assert _classify(paths, tmp_path) == {
+        "ps1": "false",
+        "docs_only": "true",
+        "matrix": DOCS_MATRIX,
+    }
 
 
 @pytest.mark.parametrize("expected_count", [2, "not-a-number"])
@@ -187,13 +220,17 @@ def test_scope_uses_safe_defaults_when_expected_count_is_not_confirmed(
 ) -> None:
     result = _classify(["docs/page.md"], tmp_path, expected_count=expected_count)
 
-    assert result == {"ps1": "true", "docs_only": "false"}
+    assert result == {"ps1": "true", "docs_only": "false", "matrix": FULL_MATRIX}
 
 
 def test_scope_uses_safe_defaults_at_the_api_record_cap(tmp_path: Path) -> None:
     paths = [f"docs/page-{index}.md" for index in range(3_000)]
 
-    assert _classify(paths, tmp_path) == {"ps1": "true", "docs_only": "false"}
+    assert _classify(paths, tmp_path) == {
+        "ps1": "true",
+        "docs_only": "false",
+        "matrix": FULL_MATRIX,
+    }
 
 
 def test_scope_treats_command_like_newline_filename_as_literal_input(tmp_path: Path) -> None:
@@ -202,7 +239,7 @@ def test_scope_treats_command_like_newline_filename_as_literal_input(tmp_path: P
 
     result = _classify([path], tmp_path)
 
-    assert result == {"ps1": "false", "docs_only": "true"}
+    assert result == {"ps1": "true", "docs_only": "false", "matrix": FULL_MATRIX}
     assert not marker.exists()
 
 

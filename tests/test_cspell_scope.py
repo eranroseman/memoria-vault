@@ -43,3 +43,6 @@ def test_precommit_hook_triggers_on_any_markdown():
     assert hook["language"] == "node"
     assert hook["entry"] == "cspell lint --no-progress --no-must-find-files"
     assert "npx" not in hook["entry"]
+    assert hook["require_serial"] is True
+    assert "pass_filenames" not in hook
+    assert "cache" not in hook["entry"]

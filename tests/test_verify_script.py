@@ -4,6 +4,10 @@ from __future__ import annotations
 
 import os
 import runpy
+import signal
+import sys
+import threading
+import time
 from pathlib import Path
 
 import pytest
@@ -19,6 +23,514 @@ VERIFY_WORKFLOW = ROOT / ".github/workflows/verify.yml"
 def _verify_namespace() -> dict:
     # run_name != "__main__" so the module defines the roster without executing main().
     return runpy.run_path(str(ROOT / "scripts/verify"), run_name="_verify_probe")
+
+
+def _verify_namespace_with_env(**updates: str | None) -> dict:
+    previous = {key: os.environ.get(key) for key in updates}
+    try:
+        for key, value in updates.items():
+            if value is None:
+                os.environ.pop(key, None)
+            else:
+                os.environ[key] = value
+        return _verify_namespace()
+    finally:
+        for key, value in previous.items():
+            if value is None:
+                os.environ.pop(key, None)
+            else:
+                os.environ[key] = value
+
+
+class _FakeProcess:
+    def __init__(self, code: int, events: list[str], shard: str) -> None:
+        self.code, self.events, self.shard, self.returncode = code, events, shard, None
+
+    def wait(self) -> int:
+        self.events.append(f"wait:{self.shard}")
+        self.returncode = self.code
+        return self.code
+
+    def poll(self) -> int | None:
+        return self.returncode
+
+    def terminate(self) -> None:
+        self.events.append(f"terminate:{self.shard}")
+
+
+def test_parallel_cli_is_opt_in_and_conflicts_with_a_shard() -> None:
+    parse = _verify_namespace()["_parse_args"]
+
+    assert parse([]) == (None, False)
+    assert parse(["--shard", "runtime"]) == ("runtime", False)
+    assert parse(["--parallel"]) == (None, True)
+    with pytest.raises(SystemExit, match="--parallel cannot be combined with --shard"):
+        parse(["--parallel", "--shard", "runtime"])
+
+
+@pytest.mark.parametrize(
+    "argv",
+    [["--parallel", "--parallel"], ["--shard"], ["--shard", "runtime", "extra"], ["runtime"]],
+)
+def test_parallel_cli_rejects_malformed_arguments(argv: list[str]) -> None:
+    with pytest.raises(SystemExit):
+        _verify_namespace()["_parse_args"](argv)
+
+
+def test_parallel_cli_preserves_the_unknown_shard_diagnostic() -> None:
+    with pytest.raises(
+        SystemExit, match="unknown shard 'unknown'; expected one of lint, contract, runtime, sweep"
+    ):
+        _verify_namespace()["_parse_args"](["--shard", "unknown"])
+
+
+def test_parallel_coordinator_never_takes_the_vault_lock(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    namespace = _verify_namespace()
+    globals_ = namespace["main"].__globals__
+    events: list[str] = []
+    spawned: list[tuple[str, int]] = []
+
+    def spawn(shard: str, workers: int, path: Path):
+        spawned.append((shard, workers))
+        path.write_text("ok\n", encoding="utf-8")
+        return _FakeProcess(0, events, shard), path.open("a", encoding="utf-8")
+
+    monkeypatch.setattr(namespace["os"], "cpu_count", lambda: 8)
+    monkeypatch.setitem(
+        globals_, "_hold_single_run_lock", lambda: pytest.fail("coordinator locked")
+    )
+    monkeypatch.setitem(globals_, "run", lambda command: 0)
+    monkeypatch.setitem(globals_, "_spawn_shard", spawn)
+
+    assert namespace["main"](["--parallel"]) == 0
+    assert spawned == [("contract", 2), ("runtime", 2), ("sweep", 2)]
+    assert events == ["wait:contract", "wait:runtime", "wait:sweep"]
+
+
+def test_bare_and_runtime_shard_main_retain_normal_selection_path(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    namespace = _verify_namespace()
+    globals_ = namespace["main"].__globals__
+    locked: list[bool] = []
+    selections: list[str | None] = []
+
+    monkeypatch.setitem(globals_, "_run_parallel", lambda: pytest.fail("parallel selected"))
+    monkeypatch.setitem(globals_, "_hold_single_run_lock", lambda: locked.append(True))
+    monkeypatch.setitem(
+        globals_,
+        "_gates_for_run",
+        lambda docs_only, shard: selections.append(shard) or [],
+    )
+    monkeypatch.setitem(globals_, "_extra_steps_for_run", lambda docs_only, shard: ())
+
+    assert namespace["main"]([]) == 0
+    assert namespace["main"](["--shard", "runtime"]) == 0
+    assert locked == [True, True]
+    assert selections == [None, "runtime"]
+
+
+@pytest.mark.parametrize(
+    ("cpus", "expected"),
+    [(1, (1, 1)), (2, (2, 1)), (3, (3, 1)), (5, (3, 1)), (6, (3, 2)), (8, (3, 2))],
+)
+def test_parallel_limits_never_oversubscribe(cpus: int, expected: tuple[int, int]) -> None:
+    namespace = _verify_namespace()
+    concurrency, workers = namespace["_parallel_limits"](cpus)
+
+    assert namespace["PARALLEL_SHARDS"] == ("contract", "runtime", "sweep")
+    assert (concurrency, workers) == expected
+    assert concurrency * workers <= cpus
+
+
+def test_parallel_limits_use_host_cpu_count_when_unspecified(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    namespace = _verify_namespace()
+    monkeypatch.setattr(namespace["os"], "cpu_count", lambda: 8)
+
+    assert namespace["_parallel_limits"]() == (3, 2)
+
+
+def test_parallel_shard_command_reinvokes_verify_with_current_python() -> None:
+    namespace = _verify_namespace()
+
+    command = namespace["_shard_command"]("runtime")
+
+    assert command[-2:] == ["--shard", "runtime"]
+    assert command[0] == sys.executable
+    assert Path(command[1]) == ROOT / "scripts" / "verify"
+
+
+def test_parallel_stops_before_children_when_lint_fails(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    namespace = _verify_namespace()
+    globals_ = namespace["_run_parallel"].__globals__
+    monkeypatch.setitem(globals_, "run", lambda command: 1)
+    monkeypatch.setitem(globals_, "_spawn_shard", lambda *args: pytest.fail("child launched"))
+
+    assert namespace["_run_parallel"]() == 1
+    captured = capsys.readouterr()
+    assert captured.out.startswith("verify: total ")
+    assert captured.out.endswith("s\n")
+    assert captured.err == "verify: FAILED\n"
+
+
+def test_parallel_waits_replays_and_reports_every_child_failure(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    namespace = _verify_namespace()
+    globals_, events = namespace["_run_parallel"].__globals__, []
+    codes = {"contract": 0, "runtime": 1, "sweep": 0}
+
+    def spawn(shard: str, workers: int, path: Path):
+        events.append(f"spawn:{shard}:{workers}")
+        path.write_text(f"{shard} log\n", encoding="utf-8")
+        return _FakeProcess(codes[shard], events, shard), path.open("a", encoding="utf-8")
+
+    monkeypatch.setitem(globals_, "run", lambda command: 0)
+    monkeypatch.setitem(globals_, "_parallel_limits", lambda: (3, 1))
+    monkeypatch.setitem(globals_, "_spawn_shard", spawn)
+
+    assert namespace["_run_parallel"]() == 1
+    assert events == [
+        "spawn:contract:1",
+        "spawn:runtime:1",
+        "spawn:sweep:1",
+        "wait:contract",
+        "wait:runtime",
+        "wait:sweep",
+    ]
+    captured = capsys.readouterr()
+    assert captured.out.startswith(
+        "== verify: parallel contract\n"
+        "contract log\n"
+        "== verify: parallel runtime\n"
+        "runtime log\n"
+        "== verify: parallel sweep\n"
+        "sweep log\n"
+        "verify: total "
+    )
+    assert captured.out.endswith("s\n")
+    assert captured.err == "verify: FAILED\n"
+
+
+def test_parallel_batches_at_two_cpus_and_overrides_child_workers(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    namespace = _verify_namespace()
+    globals_, events = namespace["_run_parallel"].__globals__, []
+
+    def spawn(shard: str, workers: int, path: Path):
+        events.append(f"spawn:{shard}:{workers}")
+        path.write_text("ok\n", encoding="utf-8")
+        return _FakeProcess(0, events, shard), path.open("a", encoding="utf-8")
+
+    monkeypatch.setitem(globals_, "run", lambda command: 0)
+    monkeypatch.setitem(globals_, "_parallel_limits", lambda: (2, 1))
+    monkeypatch.setitem(globals_, "_spawn_shard", spawn)
+
+    assert namespace["_run_parallel"]() == 0
+    assert events == [
+        "spawn:contract:1",
+        "spawn:runtime:1",
+        "wait:contract",
+        "wait:runtime",
+        "spawn:sweep:1",
+        "wait:sweep",
+    ]
+    captured = capsys.readouterr()
+    assert "verify: total " in captured.out
+    assert captured.out.endswith("verify: OK\n")
+    assert captured.err == ""
+
+
+def test_parallel_reports_a_missing_child_and_runs_the_remaining_shards(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    namespace = _verify_namespace()
+    globals_, events = namespace["_run_parallel"].__globals__, []
+
+    def spawn(shard: str, workers: int, path: Path):
+        if shard == "contract":
+            raise FileNotFoundError("missing")
+        events.append(f"spawn:{shard}:{workers}")
+        path.write_text("ok\n", encoding="utf-8")
+        return _FakeProcess(0, events, shard), path.open("a", encoding="utf-8")
+
+    monkeypatch.setitem(globals_, "run", lambda command: 0)
+    monkeypatch.setitem(globals_, "_parallel_limits", lambda: (3, 1))
+    monkeypatch.setitem(globals_, "_spawn_shard", spawn)
+
+    assert namespace["_run_parallel"]() == 1
+    assert events == ["spawn:runtime:1", "spawn:sweep:1", "wait:runtime", "wait:sweep"]
+    captured = capsys.readouterr()
+    assert captured.out.startswith(
+        "== verify: parallel contract\n"
+        f"command not found: {sys.executable}\n"
+        "== verify: parallel runtime\n"
+        "ok\n"
+        "== verify: parallel sweep\n"
+        "ok\n"
+        "verify: total "
+    )
+    assert captured.out.endswith("s\n")
+    assert captured.err == "verify: FAILED\n"
+
+
+def test_parallel_terminates_and_reaps_a_child_when_a_sibling_launch_raises(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    namespace = _verify_namespace()
+    globals_, events = namespace["_run_parallel"].__globals__, []
+    streams = []
+
+    def spawn(shard: str, workers: int, path: Path):
+        if shard == "runtime":
+            raise RuntimeError("launch failed")
+        events.append(f"spawn:{shard}:{workers}")
+        path.write_text("ok\n", encoding="utf-8")
+        stream = path.open("a", encoding="utf-8")
+        streams.append(stream)
+        return _FakeProcess(0, events, shard), stream
+
+    monkeypatch.setitem(globals_, "run", lambda command: 0)
+    monkeypatch.setitem(globals_, "_parallel_limits", lambda: (3, 1))
+    monkeypatch.setitem(globals_, "_spawn_shard", spawn)
+    monkeypatch.setitem(globals_, "_terminate_shard", lambda process: process.terminate())
+
+    with pytest.raises(RuntimeError, match="launch failed"):
+        namespace["_run_parallel"]()
+
+    assert events == ["spawn:contract:1", "terminate:contract", "wait:contract"]
+    assert streams and all(stream.closed for stream in streams)
+
+
+def test_parallel_terminates_and_reaps_active_children_when_interrupted(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    namespace = _verify_namespace()
+    globals_, events = namespace["_run_parallel"].__globals__, []
+    streams = []
+
+    class InterruptingProcess(_FakeProcess):
+        def wait(self) -> int:
+            self.events.append(f"wait:{self.shard}")
+            if self.events.count(f"wait:{self.shard}") == 1:
+                raise KeyboardInterrupt
+            self.returncode = self.code
+            return self.code
+
+    def spawn(shard: str, workers: int, path: Path):
+        events.append(f"spawn:{shard}:{workers}")
+        path.write_text("ok\n", encoding="utf-8")
+        process = InterruptingProcess if shard == "contract" else _FakeProcess
+        stream = path.open("a", encoding="utf-8")
+        streams.append(stream)
+        return process(0, events, shard), stream
+
+    monkeypatch.setitem(globals_, "run", lambda command: 0)
+    monkeypatch.setitem(globals_, "_parallel_limits", lambda: (3, 1))
+    monkeypatch.setitem(globals_, "_spawn_shard", spawn)
+    monkeypatch.setitem(globals_, "_terminate_shard", lambda process: process.terminate())
+
+    with pytest.raises(KeyboardInterrupt):
+        namespace["_run_parallel"]()
+
+    assert events == [
+        "spawn:contract:1",
+        "spawn:runtime:1",
+        "spawn:sweep:1",
+        "wait:contract",
+        "terminate:contract",
+        "terminate:runtime",
+        "terminate:sweep",
+        "wait:contract",
+        "wait:runtime",
+        "wait:sweep",
+    ]
+    assert streams and all(stream.closed for stream in streams)
+
+
+def _process_tree_command(ready: Path, terminated: Path, *, wrapper_exits: bool) -> list[str]:
+    grandchild_code = """
+import os
+import signal
+import sys
+import time
+from pathlib import Path
+
+def terminate(signum, frame):
+    Path(sys.argv[2]).write_text("terminated", encoding="utf-8")
+    raise SystemExit(0)
+
+signal.signal(signal.SIGTERM, terminate)
+Path(sys.argv[1]).write_text(str(os.getpid()), encoding="utf-8")
+while True:
+    time.sleep(1)
+"""
+    shard_code = """
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+subprocess.Popen([sys.executable, "-c", sys.argv[3], sys.argv[1], sys.argv[2]])
+while not Path(sys.argv[1]).exists():
+    time.sleep(0.01)
+if sys.argv[4] == "stay":
+    while True:
+        time.sleep(1)
+"""
+    return [
+        sys.executable,
+        "-c",
+        shard_code,
+        str(ready),
+        str(terminated),
+        grandchild_code,
+        "exit" if wrapper_exits else "stay",
+    ]
+
+
+def _wait_for_path(path: Path, timeout: float) -> bool:
+    deadline = time.monotonic() + timeout
+    while not path.exists() and time.monotonic() < deadline:
+        time.sleep(0.01)
+    return path.exists()
+
+
+def _wait_for_text(path: Path, expected: str, timeout: float) -> bool:
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        try:
+            if path.read_text(encoding="utf-8") == expected:
+                return True
+        except FileNotFoundError:
+            pass
+        time.sleep(0.01)
+    return False
+
+
+def test_wait_for_text_waits_for_content_after_an_empty_marker_exists(tmp_path: Path) -> None:
+    marker = tmp_path / "terminated"
+    marker.touch()
+
+    def write_marker() -> None:
+        time.sleep(0.01)
+        marker.write_text("terminated", encoding="utf-8")
+
+    writer = threading.Thread(target=write_marker)
+    writer.start()
+    try:
+        assert _wait_for_text(marker, "terminated", 1)
+    finally:
+        writer.join()
+
+
+@pytest.mark.skipif(os.name != "posix", reason="POSIX process-group behavior")
+def test_parallel_exception_terminates_a_shard_grandchild(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    namespace = _verify_namespace()
+    globals_ = namespace["_run_parallel"].__globals__
+    real_spawn = namespace["_spawn_shard"]
+    ready = tmp_path / "grandchild-ready"
+    terminated = tmp_path / "grandchild-terminated"
+    command = _process_tree_command(ready, terminated, wrapper_exits=False)
+
+    def spawn(shard: str, workers: int, path: Path):
+        if shard == "runtime":
+            if not _wait_for_path(ready, 5):
+                pytest.fail("grandchild did not start")
+            raise RuntimeError("launch failed")
+        return real_spawn(shard, workers, path)
+
+    monkeypatch.setitem(globals_, "run", lambda command: 0)
+    monkeypatch.setitem(globals_, "_parallel_limits", lambda: (3, 1))
+    monkeypatch.setitem(globals_, "_shard_command", lambda shard: command)
+    monkeypatch.setitem(globals_, "_spawn_shard", spawn)
+
+    try:
+        with pytest.raises(RuntimeError, match="launch failed"):
+            namespace["_run_parallel"]()
+
+        assert _wait_for_text(terminated, "terminated", 2)
+    finally:
+        if ready.exists() and not terminated.exists():
+            try:
+                os.kill(int(ready.read_text(encoding="utf-8")), signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+
+
+@pytest.mark.skipif(os.name != "posix", reason="POSIX process-group behavior")
+def test_parallel_exception_terminates_a_grandchild_after_its_wrapper_exits(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    namespace = _verify_namespace()
+    globals_ = namespace["_run_parallel"].__globals__
+    real_spawn = namespace["_spawn_shard"]
+    ready = tmp_path / "grandchild-ready"
+    terminated = tmp_path / "grandchild-terminated"
+    command = _process_tree_command(ready, terminated, wrapper_exits=True)
+    wrapper = None
+
+    def spawn(shard: str, workers: int, path: Path):
+        nonlocal wrapper
+        if shard == "runtime":
+            if not _wait_for_path(ready, 5):
+                pytest.fail("grandchild did not start")
+            assert wrapper is not None
+            assert wrapper[0].wait(timeout=5) == 0
+            raise RuntimeError("launch failed")
+        wrapper = real_spawn(shard, workers, path)
+        return wrapper
+
+    monkeypatch.setitem(globals_, "run", lambda command: 0)
+    monkeypatch.setitem(globals_, "_parallel_limits", lambda: (3, 1))
+    monkeypatch.setitem(globals_, "_shard_command", lambda shard: command)
+    monkeypatch.setitem(globals_, "_spawn_shard", spawn)
+
+    try:
+        with pytest.raises(RuntimeError, match="launch failed"):
+            namespace["_run_parallel"]()
+
+        assert _wait_for_text(terminated, "terminated", 2)
+    finally:
+        if ready.exists() and not terminated.exists():
+            try:
+                os.kill(int(ready.read_text(encoding="utf-8")), signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+
+
+def test_slow_test_telemetry_is_a_ci_only_opt_in() -> None:
+    duration_flags = ["--durations=25", "--durations-min=0.25"]
+    local = _verify_namespace_with_env(MEMORIA_PYTEST_DURATIONS=None)
+    telemetry = _verify_namespace_with_env(MEMORIA_PYTEST_DURATIONS="1")
+
+    local_pytest_commands = [gate.cmd for gate in local["GATES"] if "pytest" in gate.cmd]
+    telemetry_pytest_commands = [gate.cmd for gate in telemetry["GATES"] if "pytest" in gate.cmd]
+    assert all(flag not in command for command in local_pytest_commands for flag in duration_flags)
+    assert all(
+        command[
+            command.index("-m", command.index("pytest") + 1) - len(duration_flags) : command.index(
+                "-m", command.index("pytest") + 1
+            )
+        ]
+        == duration_flags
+        for command in telemetry_pytest_commands
+    )
+
+    workflow = yaml.safe_load(VERIFY_WORKFLOW.read_text(encoding="utf-8"))
+    run_verify = next(
+        step for step in workflow["jobs"]["shards"]["steps"] if step.get("name") == "Run verify"
+    )
+    assert run_verify["env"]["MEMORIA_PYTEST_DURATIONS"] == "1"
 
 
 def test_roster_covers_lint_tests_and_product_gates() -> None:
@@ -100,20 +612,63 @@ def test_the_shards_reproduce_the_full_roster_exactly_once() -> None:
 
 def test_ci_runs_every_shard() -> None:
     """Nothing else stops verify.yml listing three of four shards and staying green."""
-    namespace = _verify_namespace()
     workflow = yaml.safe_load(VERIFY_WORKFLOW.read_text(encoding="utf-8"))
 
-    matrix = workflow["jobs"]["shards"]["strategy"]["matrix"]["shard"]
-    assert sorted(matrix) == sorted(namespace["SHARDS"]), (
-        "verify.yml's matrix and SHARDS disagree; CI would skip a shard silently"
-    )
+    scope = workflow["jobs"]["scope"]
+    assert scope["outputs"] == {
+        "matrix": "${{ steps.scope.outputs.matrix }}",
+        "ps1": "${{ steps.scope.outputs.ps1 }}",
+        "docs_only": "${{ steps.scope.outputs.docs_only }}",
+    }
+    scope_script = next(step for step in scope["steps"] if step.get("id") == "scope")["run"]
+    for default in (
+        'matrix=\'{"shard":["lint","contract","runtime","sweep"]}\'',
+        "ps1=true",
+        "docs_only=false",
+    ):
+        assert scope_script.index(default) < scope_script.index("gh api")
+
+    shards = workflow["jobs"]["shards"]
+    assert shards["needs"] == "scope"
+    assert shards["strategy"]["matrix"] == "${{ fromJSON(needs.scope.outputs.matrix) }}"
 
     # A matrix job named `verify` would publish `verify (lint)`, `verify (contract)`,
     # ... and the `verify` check `main` requires would vanish, blocking every PR.
     aggregate = workflow["jobs"]["verify"]
-    assert aggregate["needs"] == "shards", (
-        "the job named `verify` must be the fan-in over `shards`; it is the required check"
+    assert aggregate["needs"] == ["scope", "shards"]
+    assert aggregate["if"] == "always()"
+    assert "needs.scope.result" in aggregate["steps"][0]["run"]
+    assert "needs.shards.result" in aggregate["steps"][0]["run"]
+
+
+def test_ci_provisions_verification_dependencies_in_their_owner_shards() -> None:
+    """CI must not install a shard's isolated tooling in its siblings."""
+    workflow = yaml.safe_load(VERIFY_WORKFLOW.read_text(encoding="utf-8"))
+    steps = workflow["jobs"]["shards"]["steps"]
+
+    precommit_cache = next(
+        step for step in steps if step.get("name") == "Cache pre-commit environments"
     )
+    gc = next(
+        step
+        for step in steps
+        if step.get("name") == "Drop hook environments no longer referenced by the config"
+    )
+    pssa_cache = next(step for step in steps if step.get("name") == "Cache PSScriptAnalyzer module")
+    bubblewrap = next(
+        step
+        for step in steps
+        if step.get("name") == "Enable the code-execution sandbox (bubblewrap)"
+    )
+    python = next(
+        step for step in steps if step.get("uses", "").startswith("actions/setup-python@")
+    )
+
+    assert precommit_cache["if"] == "matrix.shard == 'lint'"
+    assert gc["if"] == "matrix.shard == 'lint'"
+    assert pssa_cache["if"] == "matrix.shard == 'lint' && needs.scope.outputs.ps1 != 'false'"
+    assert bubblewrap["if"] == "matrix.shard == 'runtime'"
+    assert python["with"]["cache-dependency-path"] == "requirements-dev.txt\npyproject.toml"
 
 
 def test_docs_only_runs_the_narrowed_tests_in_exactly_one_shard() -> None:
@@ -170,8 +725,9 @@ def test_docs_only_scope_narrows_the_roster() -> None:
     # Full scope is the unchanged roster.
     assert full == [" ".join(gate.cmd) for gate in namespace["GATES"]]
 
-    # Docs scope keeps lint + every product gate.
-    assert docs[0] == "pre-commit run --hook-stage manual --all-files"
+    # Docs scope replaces full lint with its first prose hook + every product gate.
+    assert docs[0] == "pre-commit run vale --hook-stage manual --all-files"
+    assert full[0] == "pre-commit run --hook-stage manual --all-files"
     for gate in (
         "python3 scripts/checks/schema_doc_drift.py",
         "python3 scripts/checks/removed_surface_gate.py",
@@ -195,6 +751,26 @@ def test_docs_only_scope_narrows_the_roster() -> None:
 
     # a docs-only diff provably cannot change packaging, so the wheel gate is skipped
     assert not any("wheel_gate" in d for d in docs)
+
+
+def test_docs_only_lint_runs_exactly_the_prose_hook_roster() -> None:
+    namespace = _verify_namespace()
+
+    assert namespace["DOCS_LINT_HOOKS"] == (
+        "vale",
+        "markdownlint-structural",
+        "mermaid-parse",
+        "cspell",
+    )
+    commands = namespace["_gates_for_run"](True, "lint")
+    assert commands[:4] == [
+        ["pre-commit", "run", hook, "--hook-stage", "manual", "--all-files"]
+        for hook in namespace["DOCS_LINT_HOOKS"]
+    ]
+    text = "\n".join(" ".join(command) for command in commands)
+    assert not any(
+        tool in text for tool in ("ruff", "mypy", "yamllint", "shellcheck", "oxlint", "oxfmt")
+    )
 
 
 def test_gate_entries_run_under_docs_scope_unless_opted_out() -> None:

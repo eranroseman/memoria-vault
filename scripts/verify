@@ -37,11 +37,14 @@ from __future__ import annotations
 import json
 import os
 import shutil
+import signal
 import subprocess
 import sys
+import tempfile
 import time
 from dataclasses import dataclass
 from pathlib import Path
+from typing import TextIO
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -65,6 +68,7 @@ SWEEP_MARKERS = "static or unit or package or floor"
 # union of the shards is exactly this roster, which is what keeps "CI verified"
 # and "verified locally" the same claim.
 SHARDS = ("lint", "contract", "runtime", "sweep")
+PARALLEL_SHARDS = ("contract", "runtime", "sweep")
 
 # 1733: N worktrees each taking `-n auto` = all cores thrash each other (same
 # suite measured 190s at load ~3 vs 3,355s at load 18). Half the cores per run
@@ -101,6 +105,15 @@ class Gate:
     shard: str = "lint"
     markers: str | None = None
     mutates_vault: bool = False
+    manual_lint: bool = False
+
+
+def _duration_args() -> list[str]:
+    return (
+        ["--durations=25", "--durations-min=0.25"]
+        if os.environ.get("MEMORIA_PYTEST_DURATIONS") == "1"
+        else []
+    )
 
 
 def _pytest_cmd(markers: str) -> list[str]:
@@ -134,9 +147,17 @@ def _pytest_cmd(markers: str) -> list[str]:
         # keeps free load balancing; a blanket loadfile would serialize them.
         "--dist",
         "loadgroup",
+        *_duration_args(),
         "-m",
         markers,
     ]
+
+
+FULL_LINT_COMMAND = ["pre-commit", "run", "--hook-stage", "manual", "--all-files"]
+DOCS_LINT_HOOKS = ("vale", "markdownlint-structural", "mermaid-parse", "cspell")
+DOCS_LINT_COMMANDS = tuple(
+    ["pre-commit", "run", hook, "--hook-stage", "manual", "--all-files"] for hook in DOCS_LINT_HOOKS
+)
 
 
 # Source of truth for what "verified" means; tests/test_verify_script.py mirrors
@@ -145,7 +166,7 @@ def _pytest_cmd(markers: str) -> list[str]:
 # (gitleaks, no-commit-to-branch) are pinned out of the manual stage so this
 # never trips no-commit-to-branch on the post-merge main run.
 GATES: list[Gate] = [
-    Gate(["pre-commit", "run", "--hook-stage", "manual", "--all-files"]),
+    Gate(FULL_LINT_COMMAND, manual_lint=True),
     Gate(["python3", "scripts/checks/schema_doc_drift.py"]),
     Gate(["python3", "scripts/checks/removed_surface_gate.py"]),
     Gate(["python3", "scripts/checks/checked_terminology_gate.py"]),
@@ -222,6 +243,9 @@ def _gates_for_run(docs_only: bool, shard: str | None = None) -> list[list[str]]
         return [gate.cmd for gate in selected]
     reduced: list[list[str]] = []
     for gate in selected:
+        if gate.manual_lint:
+            reduced.extend(list(command) for command in DOCS_LINT_COMMANDS)
+            continue
         if not gate.docs:
             continue
         if gate.markers is None:
@@ -336,25 +360,135 @@ def _extra_steps_for_run(docs_only: bool, shard: str | None) -> tuple:
     return EXTRA_STEPS.get(shard, ())
 
 
-def _parse_shard(argv: list[str]) -> str | None:
-    """`--shard NAME`, or None for the full roster.
-
-    An unknown name is an error rather than an empty run: a typo in the CI matrix
-    would otherwise report a green shard that ran nothing.
-    """
-    if "--shard" not in argv:
-        return None
-    index = argv.index("--shard")
-    if index + 1 >= len(argv):
-        raise SystemExit("verify: --shard needs a name")
-    shard = argv[index + 1]
+def _parse_args(argv: list[str]) -> tuple[str | None, bool]:
+    if argv == []:
+        return None, False
+    if argv == ["--parallel"]:
+        return None, True
+    if "--parallel" in argv and "--shard" in argv:
+        raise SystemExit("verify: --parallel cannot be combined with --shard")
+    if "--parallel" in argv:
+        raise SystemExit("verify: --parallel accepts no other arguments")
+    if len(argv) != 2 or argv[0] != "--shard":
+        raise SystemExit("verify: expected --parallel or --shard NAME")
+    shard = argv[1]
     if shard not in SHARDS:
         raise SystemExit(f"verify: unknown shard {shard!r}; expected one of {', '.join(SHARDS)}")
-    return shard
+    return shard, False
+
+
+def _parallel_limits(cpu_count: int | None = None) -> tuple[int, int]:
+    if cpu_count is None:
+        cpu_count = os.cpu_count()
+    budget = max(1, cpu_count or 1)
+    concurrency = min(len(PARALLEL_SHARDS), budget)
+    return concurrency, max(1, budget // concurrency)
+
+
+def _shard_command(shard: str) -> list[str]:
+    return [sys.executable, str(ROOT / "scripts" / "verify"), "--shard", shard]
+
+
+def _spawn_shard(shard: str, workers: int, log_path: Path) -> tuple[subprocess.Popen[str], TextIO]:
+    stream = log_path.open("w", encoding="utf-8")
+    environment = os.environ | {"PYTEST_XDIST_AUTO_NUM_WORKERS": str(workers)}
+    try:
+        process = subprocess.Popen(
+            _shard_command(shard),
+            cwd=ROOT,
+            env=environment,
+            stdout=stream,
+            stderr=subprocess.STDOUT,
+            start_new_session=os.name == "posix",
+            text=True,
+        )
+    except BaseException:
+        stream.close()
+        raise
+    return process, stream
+
+
+def _terminate_shard(process: subprocess.Popen[str]) -> None:
+    if os.name == "posix":
+        try:
+            os.killpg(process.pid, signal.SIGTERM)
+        except ProcessLookupError:
+            try:
+                process.terminate()
+            except ProcessLookupError:
+                pass
+        return
+    process.terminate()
+
+
+def _run_parallel() -> int:
+    run_start = time.perf_counter()
+    if run(_shard_command("lint")) != 0:
+        print(f"verify: total {time.perf_counter() - run_start:.1f}s")
+        print("verify: FAILED", file=sys.stderr)
+        return 1
+
+    failed = False
+    with tempfile.TemporaryDirectory(prefix="memoria-verify-") as temporary:
+        log_directory = Path(temporary)
+        concurrency, workers = _parallel_limits()
+        for start in range(0, len(PARALLEL_SHARDS), concurrency):
+            batch = PARALLEL_SHARDS[start : start + concurrency]
+            active: list[tuple[subprocess.Popen[str], TextIO]] = []
+            outcomes: list[
+                tuple[
+                    str,
+                    Path,
+                    subprocess.Popen[str] | None,
+                    TextIO | None,
+                    int | None,
+                ]
+            ] = []
+            batch_completed = False
+            try:
+                for shard in batch:
+                    log_path = log_directory / f"{shard}.log"
+                    try:
+                        process, stream = _spawn_shard(shard, workers, log_path)
+                    except FileNotFoundError:
+                        command = _shard_command(shard)
+                        log_path.write_text(f"command not found: {command[0]}\n", encoding="utf-8")
+                        outcomes.append((shard, log_path, None, None, 127))
+                        continue
+                    active.append((process, stream))
+                    outcomes.append((shard, log_path, process, stream, None))
+
+                for shard, log_path, process, stream, synthetic_code in outcomes:
+                    code = synthetic_code
+                    if process is not None:
+                        code = process.wait()
+                        if stream is not None:
+                            stream.close()
+                    print(f"== verify: parallel {shard}")
+                    log = log_path.read_text(encoding="utf-8")
+                    print(log, end="" if log.endswith("\n") else "\n")
+                    failed = failed or code != 0
+                batch_completed = True
+            finally:
+                if not batch_completed:
+                    for process, _stream in active:
+                        if os.name == "posix" or process.poll() is None:
+                            _terminate_shard(process)
+                for process, stream in active:
+                    if process.poll() is None:
+                        process.wait()
+                    if not stream.closed:
+                        stream.close()
+    print(f"verify: total {time.perf_counter() - run_start:.1f}s")
+    print("verify: FAILED" if failed else "verify: OK", file=sys.stderr if failed else sys.stdout)
+    return int(failed)
 
 
 def main(argv: list[str] | None = None) -> int:
-    shard = _parse_shard(sys.argv[1:] if argv is None else argv)
+    arguments = sys.argv[1:] if argv is None else argv
+    shard, parallel = _parse_args(arguments)
+    if parallel:
+        return _run_parallel()
     # Only a selection that rewrites <checkout>/test-vault needs to serialize, so
     # the other shards can run beside it in one checkout.
     _lock = _hold_single_run_lock() if _needs_vault_lock(shard) else None
