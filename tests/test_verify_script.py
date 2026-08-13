@@ -21,6 +21,52 @@ def _verify_namespace() -> dict:
     return runpy.run_path(str(ROOT / "scripts/verify"), run_name="_verify_probe")
 
 
+def _verify_namespace_with_env(**updates: str | None) -> dict:
+    previous = {key: os.environ.get(key) for key in updates}
+    try:
+        for key, value in updates.items():
+            if value is None:
+                os.environ.pop(key, None)
+            else:
+                os.environ[key] = value
+        return _verify_namespace()
+    finally:
+        for key, value in previous.items():
+            if value is None:
+                os.environ.pop(key, None)
+            else:
+                os.environ[key] = value
+
+
+def test_slow_test_telemetry_is_a_ci_only_opt_in() -> None:
+    duration_flags = ["--durations=25", "--durations-min=0.25"]
+    local = _verify_namespace_with_env(MEMORIA_PYTEST_DURATIONS=None)
+    telemetry = _verify_namespace_with_env(MEMORIA_PYTEST_DURATIONS="1")
+
+    local_pytest_commands = [gate.cmd for gate in local["GATES"] if "pytest" in gate.cmd]
+    telemetry_pytest_commands = [
+        gate.cmd for gate in telemetry["GATES"] if "pytest" in gate.cmd
+    ]
+    assert all(flag not in command for command in local_pytest_commands for flag in duration_flags)
+    assert all(
+        command[
+            command.index("-m", command.index("pytest") + 1) - len(duration_flags) : command.index(
+                "-m", command.index("pytest") + 1
+            )
+        ]
+        == duration_flags
+        for command in telemetry_pytest_commands
+    )
+
+    workflow = yaml.safe_load(VERIFY_WORKFLOW.read_text(encoding="utf-8"))
+    run_verify = next(
+        step
+        for step in workflow["jobs"]["shards"]["steps"]
+        if step.get("name") == "Run verify"
+    )
+    assert run_verify["env"]["MEMORIA_PYTEST_DURATIONS"] == "1"
+
+
 def test_roster_covers_lint_tests_and_product_gates() -> None:
     flat = [" ".join(gate.cmd) for gate in _verify_namespace()["GATES"]]
 

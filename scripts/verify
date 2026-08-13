@@ -104,6 +104,12 @@ class Gate:
     manual_lint: bool = False
 
 
+def _duration_args() -> list[str]:
+    return ["--durations=25", "--durations-min=0.25"] if os.environ.get(
+        "MEMORIA_PYTEST_DURATIONS"
+    ) == "1" else []
+
+
 def _pytest_cmd(markers: str) -> list[str]:
     """The test gate's command for one marker expression.
 
@@ -135,6 +141,7 @@ def _pytest_cmd(markers: str) -> list[str]:
         # keeps free load balancing; a blanket loadfile would serialize them.
         "--dist",
         "loadgroup",
+        *_duration_args(),
         "-m",
         markers,
     ]

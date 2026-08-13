@@ -205,6 +205,7 @@ jobs:
           echo "xdist workers -> $(nproc)"
       - name: Run verify
         env:
+          MEMORIA_PYTEST_DURATIONS: "1"
           VERIFY_DOCS_ONLY: ${{ needs.scope.outputs.docs_only == 'true' && '1' || '0' }}
           MEMORIA_REQUIRE_SANDBOX: "1"
           PYTEST_XDIST_AUTO_NUM_WORKERS: ${{ steps.cpu.outputs.workers }}
