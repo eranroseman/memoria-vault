@@ -75,7 +75,7 @@ Automated repairs that pass through the Policy gate are class-gated.
 
 | Class | Disposition | Examples |
 | --- | --- | --- |
-| `safe-and-unambiguous` | `allow_with_log` within the actor's write scope | Trailing whitespace, missing `created` with one obvious value |
+| `safe-and-unambiguous` | `allow_with_log` within the actor's write scope | Trailing whitespace, missing `created` with one unambiguous value |
 | `authorized-targeted` | `allow_with_log`, `request_id`-bound | Findings-file truncation |
 | `schema-content` | `dry_run` always | Field rename, enum change; needs manual schema/content repair |
 | `review-gated-edit` | `deny` always | Any write to a gated zone |

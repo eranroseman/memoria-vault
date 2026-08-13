@@ -46,7 +46,7 @@ memoria project export \
 
 For `.docx`, `.pdf`, or `.odt`, keep the same command and change `--format` and
 `--output`; these Pandoc formats are best-effort (Markdown plus
-`bibliography.bib` is the acceptance-tested target); Memoria fails clearly if
+`bibliography.bib` is the acceptance-tested target); Memoria reports an error if
 Pandoc is not installed. The export refuses
 by default until the paper plan and checked support are complete; pass
 `--allow-not-ready` for a review packet before then. Add

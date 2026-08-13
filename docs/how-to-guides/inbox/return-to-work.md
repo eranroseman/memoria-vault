@@ -34,8 +34,8 @@ memoria request list --workspace <workspace>
 ```
 
 Provider settings live under `<workspace>/.memoria/config/providers.yaml` and
-environment variables consumed by the standalone CLI/engine. There is no
-profile `.env` propagation step in the standalone baseline.
+environment variables consumed by the standalone CLI/engine. The standalone
+baseline does not propagate profile `.env` files.
 
 **3. Confirm the local workspace is clean.**
 

@@ -12,7 +12,7 @@ nav_order: 3
 
 **Maintaining a knowledge base is a bookkeeping problem, not an intelligence problem.**
 
-Humans are excellent at recognizing what matters and forming original arguments. They are poor at consistently updating summaries, patching broken links, filing useful answers, and running structural health checks. Those tasks are mechanical, repetitive, and easy to defer — and because they're deferred, knowledge bases stagnate. Notes pile up without synthesis; citations go unverified; gaps go unnoticed.
+Humans are excellent at recognizing what matters and forming original arguments. They are poor at consistently updating summaries, patching broken links, filing useful answers, and running structural health checks. Those tasks are mechanical, repetitive, and often deferred; knowledge bases then stagnate. Notes pile up without synthesis; citations go unverified; gaps go unnoticed.
 
 The AI agent is suited for exactly those bookkeeping tasks. Memoria's design follows from this: make the agent narrower and more reliable, and let the human do the irreducibly judgment-laden work. This is not a claim about agent capability — it's a claim about which tasks should be delegated. **Memoria gives the bookkeeping to the agent and keeps judgment human.**
 

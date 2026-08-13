@@ -103,8 +103,8 @@ The absence is test-pinned by `tests/test_profiles.py` and
 
 ## Running more than one vault
 
-Nothing in the distribution model is single-vault by design. The rule is simple:
-give each workspace its own directory, `.memoria/memoria.sqlite`, search index
+The distribution model supports multiple vaults. Give each workspace its own
+directory, `.memoria/memoria.sqlite`, search index
 state, Git history, and provider config. Optional app adapters must attach to
 one workspace at a time and preserve the CLI/runtime as the write path.
 

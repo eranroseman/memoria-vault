@@ -84,7 +84,7 @@ Concept changes, its `rebuttal` relation marks the target claim; adding a
 transitive hop.
 The traversal deliberately does not continue through `rebuttal`,
 `contradicts`, or `tension`; those relations do not route a generic consequence.
-There is no `grounds` relation — grounds loss follows the shipped
+No `grounds` relation exists — grounds loss follows the shipped
 `supports`, `extends`, evidence, and derivation routes shown above.
 
 ## Consequences are marked at write time

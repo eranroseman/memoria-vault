@@ -45,7 +45,7 @@ stance collapse into one operation family.
 - Composing project prose from checked claims is a *generative, draft-scoped*
   stance, so it is the **Writer** posture — bounded to traceable files,
   verification, and refusal gates rather than open-ended authorship.
-- Deterministic, zero-LLM work has no judgment posture at all. It is simply an
+- Deterministic, zero-LLM work has no judgment posture at all. It is an
   **operation**: the Linter, sweeps, projections, and rebuilds.
 
 One posture per operation family. Going finer adds routing, permission matrices,

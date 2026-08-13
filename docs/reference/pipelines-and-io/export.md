@@ -90,7 +90,7 @@ flowchart LR
 
 Drafts live under the project folder in `projects/<project>/`, and
 every export lands beside them under `exports/` — the project is
-self-contained. There is no separate top-level deliverables tree.
+self-contained. Exports have no separate top-level deliverables tree.
 
 | Artifact | Folder |
 | --- | --- |

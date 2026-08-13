@@ -51,7 +51,7 @@ catalog Work keeps the same `work_id`.
 **Links survive every transition.** A claim cited by twelve other notes can be retracted, superseded, and archived without a single inbound link breaking. Provenance — the property the whole system is built to protect — does not depend on link-rewriting tooling getting every move right.
 
 **Archive is state, not a folder.** An archived item stays exactly where it always
-lived and simply drops out of active views through the type-specific field that owns
+lived and drops out of active views through the type-specific field that owns
 that workflow. It remains readable, linkable, and traceable from every note that ever
 cited it — *archive, never delete* with zero file churn.
 

@@ -79,7 +79,7 @@ For Work metadata, use `memoria work update --workspace <workspace> <work-id>
 Refresh the third-party view after editing. Work has no `topics` field; note
 `topics` draw from the `research_area` list instead.
 
-**2. Or add the term to the vocabulary** — if the value is a legitimate concept the vocabulary simply lacks. Don't scatter one-off variants; promote it once, properly: [Manage vocabulary](../knowledge/manage-vocabulary.md). Then bring any existing variants into line with the new canonical term.
+**2. Or add the term to the vocabulary** — if the value is a legitimate concept the vocabulary lacks. Don't scatter one-off variants; promote it once, properly: [Manage vocabulary](../knowledge/manage-vocabulary.md). Then bring any existing variants into line with the new canonical term.
 
 ## Verify
 

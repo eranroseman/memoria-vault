@@ -9,8 +9,8 @@ nav_order: 3
 
 Session logging is a system mechanism, not a workflow. Policy-gated adapter
 writes produce audit-log evidence; worker requests and trusted-writer commits
-also leave SQLite and journal evidence. There is no card, nothing to claim, and
-no state transition. Logging runs underneath request-driven workflows rather
+also leave SQLite and journal evidence. No card exists, and there is nothing to
+claim or transition. Logging runs underneath request-driven workflows rather
 than being one of them.
 
 A second, per-request audit digest — a deterministic derivative the Linter

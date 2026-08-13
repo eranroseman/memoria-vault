@@ -9,7 +9,7 @@ nav_order: 1
 
 Twelve principles that settle ambiguous decisions. When a tool choice, workflow step, or architectural question is unclear, these are the tiebreakers.
 
-Underneath them runs one master pattern: **the fluent, judging half of any capability stays with the human; the structural, inspectable half goes into the engine.** Truth/grounding, judgment/method, agent-loop/fenced-operation, and knowledge/trust-state are all this one cut — a design fork that resists resolution usually has not been cut along this line yet.
+Underneath them runs one governing pattern: **the fluent, judging half of any capability stays with the human; the structural, inspectable half goes into the engine.** Truth/grounding, judgment/method, agent-loop/fenced-operation, and knowledge/trust-state are all this one cut — a design fork that resists resolution usually has not been cut along this line yet.
 
 ---
 
