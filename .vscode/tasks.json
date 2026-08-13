@@ -14,8 +14,9 @@
     },
     {
       "label": "vale: lint the current file",
-      "type": "shell",
-      "command": "pre-commit run vale --hook-stage manual --files ${file}",
+      "type": "process",
+      "command": "pre-commit",
+      "args": ["run", "vale", "--hook-stage", "manual", "--files", "${file}"],
       "problemMatcher": [],
       "presentation": {
         "reveal": "always",

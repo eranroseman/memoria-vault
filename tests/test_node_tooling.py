@@ -26,6 +26,7 @@ OBSIDIAN_LOCK = ROOT / "packages" / "memoria-obsidian" / "package-lock.json"
 VERIFY_WORKFLOW = ROOT / ".github" / "workflows" / "verify.yml"
 DEPENDABOT = ROOT / ".github" / "dependabot.yml"
 VSCODE_SETTINGS = ROOT / ".vscode" / "settings.json"
+VSCODE_TASKS = ROOT / ".vscode" / "tasks.json"
 
 OXFMT_EDITOR_LANGUAGE_IDS = (
     "javascript",
@@ -167,6 +168,7 @@ def test_oxc_editor_tools_match_the_pinned_hook_versions():
         )
 
     assert oxfmt["types_or"] == ["file"]
+    assert "pass_filenames" not in oxfmt
     assert oxfmt["files"] == (
         r"\.(?:js|mjs|cjs|jsx|ts|mts|cts|tsx|json|jsonc|json5|yaml|yml|toml|"
         r"css|scss|less|pcss|postcss|wxss|graphql|gql|graphqls|html|htm|hta|xhtml|"
@@ -206,6 +208,16 @@ def test_oxc_editor_tools_match_the_pinned_hook_versions():
     # only thing that makes the pin above serve anyone.
     extensions = json.loads((ROOT / ".vscode" / "extensions.json").read_text(encoding="utf-8"))
     assert "oxc.oxc-vscode" in extensions["recommendations"]
+
+
+def test_vale_current_file_task_passes_filename_as_one_process_argument():
+    """A tracked filename must never become shell source in the editor task."""
+    tasks = json.loads(VSCODE_TASKS.read_text(encoding="utf-8"))["tasks"]
+    task = next(task for task in tasks if task["label"] == "vale: lint the current file")
+
+    assert task["type"] == "process"
+    assert task["command"] == "pre-commit"
+    assert task["args"] == ["run", "vale", "--hook-stage", "manual", "--files", "${file}"]
 
 
 def test_precommit_hooks_use_pinned_tool_environments():

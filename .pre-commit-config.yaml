@@ -1,18 +1,18 @@
 # Memoria pre-commit configuration.
 #
-# Three hooks fire on `git commit` (gitleaks, no-commit-to-branch, ruff-format);
-# every other hook is manual-stage and fires only through `scripts/verify`
+# Four hooks fire on `git commit` (gitleaks, no-commit-to-branch, ruff-format,
+# Oxfmt); every other hook is manual-stage and fires only through `scripts/verify`
 # (`pre-commit run --hook-stage manual`). This keeps the pinned/cached hook
 # environments as the single source of the lint tools while `verify` owns the
 # gate order. Install once per clone:  pre-commit install --install-hooks
 # (or run scripts/dev/setup.sh). Bypass everything once:  git commit --no-verify
 #
-# ruff-format is the one hook that rewrites files, and `verify` runs the manual
-# stage over the WORKTREE while a commit is built from the INDEX. So a run that
-# reformats fails, the re-run passes against the now-clean worktree, `verify:
-# OK` prints -- and the commit still carries the unformatted source, which CI
-# then rejects. Re-running the gate can never detect that. Only a commit-stage
-# hook can, because only it sees what is actually being committed.
+# ruff-format and Oxfmt rewrite files, and `verify` runs the manual stage over
+# the WORKTREE while a commit is built from the INDEX. So a run that reformats
+# fails, the re-run passes against the now-clean worktree, `verify: OK` prints --
+# and the commit still carries the unformatted source, which CI then rejects.
+# Re-running the gate can never detect that. Only a commit-stage hook can,
+# because only it sees what is actually being committed.
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0

@@ -14,6 +14,7 @@ wrong.
 
 from __future__ import annotations
 
+import json
 import os
 import subprocess
 from pathlib import Path
@@ -40,20 +41,31 @@ def _classify(
     paths: list[str],
     tmp_path: Path,
     *,
+    api_pages: list[list[dict[str, str]]] | None = None,
+    expected_count: int | str | None = None,
     fail_after_output: bool = False,
-    pr_view_paths: list[str] | None = None,
 ) -> dict[str, str]:
     """Run the unmodified workflow body with a local fake GitHub CLI."""
     fake_gh = tmp_path / "gh"
     args = tmp_path / "gh-args"
+    api_response = tmp_path / "gh-api-response.json"
     output = tmp_path / "github-output"
+    if api_pages is None:
+        api_pages = [[{"filename": path} for path in paths]]
+    if expected_count is None:
+        expected_count = sum(len(page) for page in api_pages)
+    api_response.write_text(json.dumps(api_pages), encoding="utf-8")
     fake_gh.write_text(
         """#!/bin/sh
 printf '%s\\n' \"$@\" > \"$FAKE_GH_ARGS\"
-if [ \"$1\" = api ]; then
-  printf '%s\\n' \"$FAKE_GH_API_FILES\"
+project_filenames=false
+for argument in \"$@\"; do
+  [ \"$argument\" = --jq ] && project_filenames=true
+done
+if [ \"$project_filenames\" = true ]; then
+  jq -r '.[][] | .filename' \"$FAKE_GH_API_RESPONSE\"
 else
-  printf '%s\\n' \"$FAKE_GH_PR_FILES\"
+  cat \"$FAKE_GH_API_RESPONSE\"
 fi
 if [ \"$1\" = api ] && [ \"$FAKE_GH_FAIL_AFTER_OUTPUT\" = true ]; then
   exit 1
@@ -63,14 +75,14 @@ fi
     )
     fake_gh.chmod(0o755)
     env = os.environ | {
-        "FAKE_GH_API_FILES": "\n".join(paths),
+        "FAKE_GH_API_RESPONSE": str(api_response),
         "FAKE_GH_ARGS": str(args),
         "FAKE_GH_FAIL_AFTER_OUTPUT": str(fail_after_output).lower(),
-        "FAKE_GH_PR_FILES": "\n".join(pr_view_paths if pr_view_paths is not None else paths),
         "GH_TOKEN": "test-token",
         "GITHUB_OUTPUT": str(output),
         "GITHUB_REPOSITORY": "owner/repository",
         "PATH": f"{tmp_path}:{os.environ['PATH']}",
+        "PR_CHANGED_FILES": str(expected_count),
         "PR_NUMBER": "123",
     }
     result = subprocess.run(
@@ -119,16 +131,19 @@ def test_scope_reads_every_paginated_pr_file(tmp_path: Path) -> None:
     """A source or PowerShell file after the first 100 must widen the scope."""
     documentation = [f"docs/page-{index}.md" for index in range(100)]
     all_paths = [*documentation, "src/memoria_vault/cli.py", "scripts/setup.ps1"]
+    pages = [
+        [{"filename": path} for path in documentation],
+        [{"filename": path} for path in all_paths[100:]],
+    ]
 
-    result = _classify(all_paths, tmp_path, pr_view_paths=documentation)
+    result = _classify(all_paths, tmp_path, api_pages=pages)
 
     assert result == {"ps1": "true", "docs_only": "false"}
     assert (tmp_path / "gh-args").read_text(encoding="utf-8").splitlines() == [
         "api",
         "--paginate",
+        "--slurp",
         "repos/owner/repository/pulls/123/files?per_page=100",
-        "--jq",
-        ".[].filename",
     ]
 
 
@@ -137,6 +152,58 @@ def test_scope_uses_safe_defaults_when_paginated_retrieval_fails(tmp_path: Path)
     result = _classify(["docs/page.md"], tmp_path, fail_after_output=True)
 
     assert result == {"ps1": "true", "docs_only": "false"}
+
+
+@pytest.mark.parametrize(
+    ("previous_filename", "expected"),
+    [
+        (
+            "src/memoria_vault/cli.py",
+            {"ps1": "false", "docs_only": "false"},
+        ),
+        (
+            "scripts/setup.ps1",
+            {"ps1": "true", "docs_only": "false"},
+        ),
+    ],
+)
+def test_scope_classifies_both_paths_of_a_rename(
+    previous_filename: str, expected: dict[str, str], tmp_path: Path
+) -> None:
+    page = [[{"filename": "docs/renamed.md", "previous_filename": previous_filename}]]
+
+    assert _classify([], tmp_path, api_pages=page) == expected
+
+
+def test_complete_markdown_documentation_response_still_narrows_scope(tmp_path: Path) -> None:
+    paths = ["docs/guide.md", "design-history/2026-08/chapter.md", "README.md"]
+
+    assert _classify(paths, tmp_path) == {"ps1": "false", "docs_only": "true"}
+
+
+@pytest.mark.parametrize("expected_count", [2, "not-a-number"])
+def test_scope_uses_safe_defaults_when_expected_count_is_not_confirmed(
+    expected_count: int | str, tmp_path: Path
+) -> None:
+    result = _classify(["docs/page.md"], tmp_path, expected_count=expected_count)
+
+    assert result == {"ps1": "true", "docs_only": "false"}
+
+
+def test_scope_uses_safe_defaults_at_the_api_record_cap(tmp_path: Path) -> None:
+    paths = [f"docs/page-{index}.md" for index in range(3_000)]
+
+    assert _classify(paths, tmp_path) == {"ps1": "true", "docs_only": "false"}
+
+
+def test_scope_treats_command_like_newline_filename_as_literal_input(tmp_path: Path) -> None:
+    marker = tmp_path / "shell-side-effect"
+    path = f'$(touch "{marker}")\ndocs/page.md'
+
+    result = _classify([path], tmp_path)
+
+    assert result == {"ps1": "false", "docs_only": "true"}
+    assert not marker.exists()
 
 
 def test_runtime_markdown_actually_exists_under_src():

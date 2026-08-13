@@ -94,33 +94,60 @@ jobs:
         if: github.event_name == 'pull_request'
         env:
           GH_TOKEN: ${{ github.token }}
+          PR_CHANGED_FILES: ${{ github.event.pull_request.changed_files }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
-          if ! files="$(gh api --paginate "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}/files?per_page=100" --jq '.[].filename')"; then
-            files=""
-          fi
-          printf 'changed files:\n%s\n' "$files"
           # Safe defaults: if the diff can't be read, run everything (full verify).
           ps1=true
           docs_only=false
-          if [ -n "$files" ]; then
-            printf '%s\n' "$files" | grep -qE '\.ps1$' || ps1=false
+          paths='[]'
+          if response="$(gh api --paginate --slurp "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}/files?per_page=100")" \
+            && records="$(jq -ce 'if type == "array" and all(.[]; type == "array") then [.[][]] else error("invalid response") end' <<< "$response")" \
+            && paths="$(jq -ce '
+              if all(.[];
+                type == "object"
+                and (.filename | type == "string" and length > 0)
+                and ((.previous_filename? // "") | type == "string")
+              ) then
+                [.[] | (.filename, (.previous_filename? // empty)) | select(length > 0)]
+              else
+                error("invalid file record")
+              end
+            ' <<< "$records")"; then
+            record_count="$(jq -r 'length' <<< "$records")"
+            path_count="$(jq -r 'length' <<< "$paths")"
+          else
+            record_count=0
+            path_count=0
+            paths='[]'
+          fi
+          if [[ "$PR_CHANGED_FILES" =~ ^[0-9]+$ ]] \
+            && [ "$record_count" = "$PR_CHANGED_FILES" ] \
+            && [ "$record_count" -gt 0 ] \
+            && [ "$record_count" -lt 3000 ] \
+            && [ "$path_count" -gt 0 ]; then
+            jq -e 'any(.[]; endswith(".ps1"))' <<< "$paths" >/dev/null || ps1=false
             # A file is documentation when it is under design-history/ or is
-            # Markdown that is NOT shipped as package data. 66 tracked *.md live
-            # under src/ (capabilities/operations/*.md, workspace_seed/) and are
-            # program content: the tests that validate them are `contract`, which
-            # the docs-only narrowing drops, so a PR editing only those files
-            # would skip every check that reads them.
-            remaining="$(
-              { printf '%s\n' "$files" | grep -vE '^design-history/' | grep -vE '\.md$'
-                printf '%s\n' "$files" | grep -E '^src/.*\.md$'
-              } | grep -c . || true
-            )"
-            [ "$remaining" = "0" ] && docs_only=true
+            # Markdown that is NOT shipped as package data. Tracked *.md files
+            # under src/ (capabilities/operations/*.md, workspace_seed/) are
+            # program content: the tests that validate them are `contract`,
+            # which the docs-only narrowing drops, so a PR editing only those
+            # files would skip every check that reads them. Rename origins count
+            # too, because they are part of the change being validated.
+            jq -e '
+              all(.[];
+                startswith("design-history/")
+                or (endswith(".md") and (startswith("src/") | not))
+              )
+            ' <<< "$paths" >/dev/null && docs_only=true
           fi
           echo "ps1=$ps1" >> "$GITHUB_OUTPUT"
           echo "docs_only=$docs_only" >> "$GITHUB_OUTPUT"
-          echo "scope -> ps1=$ps1 docs_only=$docs_only"
+          scope="$(jq -c \
+            --argjson ps1 "$ps1" \
+            --argjson docs_only "$docs_only" \
+            '{paths: ., ps1: $ps1, docs_only: $docs_only}' <<< "$paths")"
+          printf 'scope -> %s\n' "$scope"
       # Keyed per workflow. gitleaks.yml caches the same path from the same
       # config file, but installs exactly one hook environment; this job installs
       # all of them. On a shared key the 18s gitleaks job always won the race,
