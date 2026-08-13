@@ -386,9 +386,7 @@ def test_oxfmt_covers_every_tracked_supported_non_markdown_file():
     paths = [path for path in _tracked() if _is_oxfmt_supported(path)]
     escaped = sorted(path for path in paths if not _claims("oxfmt", path))
     assert escaped == [], escaped
-    markdown = [
-        path for path in _tracked() if path.endswith((".md", ".markdown", ".mdx"))
-    ]
+    markdown = [path for path in _tracked() if path.endswith((".md", ".markdown", ".mdx"))]
     assert [path for path in markdown if _claims("oxfmt", path)] == []
 
 
