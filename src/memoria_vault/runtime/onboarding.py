@@ -110,9 +110,15 @@ def _windows_registry_has_obsidian() -> bool:
     except ImportError:
         return False
     key_path = r"Software\Microsoft\Windows\CurrentVersion\Uninstall\Obsidian"
-    for root in (winreg.HKEY_CURRENT_USER, winreg.HKEY_LOCAL_MACHINE):
+    open_key = winreg.OpenKey  # type: ignore[attr-defined]  # Windows-only module API.
+    close_key = winreg.CloseKey  # type: ignore[attr-defined]  # Windows-only module API.
+    roots = (
+        winreg.HKEY_CURRENT_USER,  # type: ignore[attr-defined]  # Windows-only module API.
+        winreg.HKEY_LOCAL_MACHINE,  # type: ignore[attr-defined]  # Windows-only module API.
+    )
+    for root in roots:
         try:
-            winreg.CloseKey(winreg.OpenKey(root, key_path))
+            close_key(open_key(root, key_path))
         except OSError:
             continue
         return True
@@ -253,7 +259,7 @@ def open_vault_in_obsidian(
 ZOTERO_CONNECTOR_URL = "http://127.0.0.1:23119/connector/ping"
 
 
-def _open_zotero_probe(url: str, *, timeout: float) -> Any:
+def open_zotero_probe(url: str, *, timeout: float) -> Any:
     """Open the Zotero probe without ambient proxy or redirect policy.
 
     Same shape as ``rendezvous._open_lifecycle_request``: a bare ``urlopen``
@@ -273,7 +279,7 @@ def _open_zotero_probe(url: str, *, timeout: float) -> Any:
 
 def zotero_running(
     *,
-    url_open: Callable[..., Any] = _open_zotero_probe,
+    url_open: Callable[..., Any] = open_zotero_probe,
     timeout: float = 0.5,
 ) -> bool:
     """Probe the local Zotero Connector on 127.0.0.1:23119 (bootstrap spec §7.4).
@@ -281,7 +287,7 @@ def zotero_running(
     ``127.0.0.1`` is used verbatim rather than ``localhost``, which can
     resolve to IPv6 ``::1`` or hit a hosts-file override and silently miss
     the connector; the default ``url_open`` additionally opens through a
-    proxy-free, redirect-free opener (see ``_open_zotero_probe``) so an
+    proxy-free, redirect-free opener (see ``open_zotero_probe``) so an
     ambient proxy cannot intercept or redirect the loopback request. Must
     never raise: a probe that crashes onboarding is the failure mode this
     section keeps hitting. ``urlopen`` collapses to ``OSError`` subclasses
@@ -319,7 +325,7 @@ def run_onboarding(
     ask: AskFn,
     say: SayFn,
     run: RunFn = subprocess.run,
-    url_open: Callable[..., Any] = _open_zotero_probe,
+    url_open: Callable[..., Any] = open_zotero_probe,
 ) -> dict[str, Any]:
     """Run the full onboarding runway once (bootstrap spec section 7).
 
@@ -327,7 +333,7 @@ def run_onboarding(
     offer to install Obsidian, open the vault when Obsidian is present, probe
     for a running Zotero connector, and always surface the credentials
     notice. ``url_open`` defaults to the hardened, proxy-free/redirect-free
-    ``_open_zotero_probe`` (not a bare ``urllib.request.urlopen``) and is
+    ``open_zotero_probe`` (not a bare ``urllib.request.urlopen``) and is
     forwarded verbatim to ``zotero_running`` so a caller that does not
     override it still gets BOOT-D.4's hardening rather than silently losing
     it.

@@ -426,7 +426,7 @@ def _queue_entry(
         "project_path": str(draft["project_path"]),
         "draft_path": str(draft["draft_path"]),
         "block_ref": str(row["block_ref"]),
-        "claim_text": state._block_canonical_text_from_text(content, str(row["block_ref"])) or "",
+        "claim_text": state.block_canonical_text_from_text(content, str(row["block_ref"])) or "",
         "items": items,
         "item_count": len(items),
         "evidence_type": str(row["type"]),
@@ -464,7 +464,7 @@ def _permanent_findings(row: Mapping[str, Any], content: str) -> list[dict[str, 
                 "reason": "stored block-text binding is missing",
             }
         ]
-    current = state._block_text_sha256_from_text(content, str(row["block_ref"]))
+    current = state.block_text_sha256_from_text(content, str(row["block_ref"]))
     if current is None:
         return [
             {

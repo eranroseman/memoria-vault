@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Check reference docs against the live frontmatter schemas."""
 
 from __future__ import annotations

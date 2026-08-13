@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """session_summary — per-request deterministic digests of the audit log.
 
 The Linter is zero-LLM, so the per-request

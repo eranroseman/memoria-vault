@@ -57,8 +57,8 @@ not a durable Concept lifecycle. Concept read state is the DB/read API
 prompt the PI records an explicit outcome: apply, reject, or defer.
 
 An action prompt awaiting you appears in the Inbox projection. You act on it, then it
-leaves the active queue when no action remains. There is no separate `review-request`
-card type and no second durable Concept family to learn: "what needs me?" is an
+leaves the active queue when no action remains. No separate `review-request`
+card type or second durable Concept family exists: "what needs me?" is an
 attention query, not a checked-knowledge query.
 
 ---

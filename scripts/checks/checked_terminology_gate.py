@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Fail if checked/read-barrier wording claims approval or trust."""
 
 from __future__ import annotations

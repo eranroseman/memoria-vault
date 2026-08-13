@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Single owner of the concept-relation rosters and links parsing.
 
 EDGE_RELATIONS governs concept_edges.relation_type: the DB CHECK mirrors it

@@ -1157,7 +1157,7 @@ def test_cli_onboard_runs_runway_and_is_non_interactive_under_json(
         seen["workspace"] = ws
         # Pin the production call site: BOOT-D.4 replaced a bare
         # urllib.request.urlopen default with the proxy-free, redirect-free
-        # `_open_zotero_probe` specifically so a `127.0.0.1` probe cannot
+        # `open_zotero_probe` specifically so a `127.0.0.1` probe cannot
         # leave the machine under an ambient proxy. `memoria onboard` is the
         # real caller that exercises that default in production, so it must
         # thread the hardened opener explicitly rather than merely rely on
@@ -1176,7 +1176,7 @@ def test_cli_onboard_runs_runway_and_is_non_interactive_under_json(
     assert output["completed"] is True
     assert seen["workspace"] == workspace.resolve()
     assert seen["ask_result"] == ""  # --json never prompts: consent defaults to no
-    assert seen["url_open"] is onboarding._open_zotero_probe
+    assert seen["url_open"] is onboarding.open_zotero_probe
 
 
 def test_cli_init_onboard_flag_runs_onboarding_tail(

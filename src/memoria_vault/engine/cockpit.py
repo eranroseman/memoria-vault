@@ -286,7 +286,7 @@ def _journal_depth(vault: Path) -> int:
     filter *after* the limit, so any fixed window — its own default is 50 —
     would quietly turn the panel's `total` into a count of the window instead of
     a count of the slice. Journal ids are assigned `last + 1` from 1
-    (`state._insert_journal_row_conn`), so the newest id is an upper bound on
+    (`state.insert_journal_row_conn`), so the newest id is an upper bound on
     the number of rows and a limit that large reads all of them.
 
     The sizing read keeps the id and never the row. `read_journal`'s own SQL is

@@ -250,7 +250,7 @@ def project_slice(vault: Path, project: str) -> dict[str, Any]:
     is right for a cascade's reach and noise in an answer.
     """
     vault = Path(vault)
-    project_rel = _project_rel(vault, project)
+    project_rel = project_rel_path(vault, project)
     members = propagation.active_project_slices(vault).get(project_rel, set())
     ids = sorted(members - {project_rel})
     return {
@@ -260,7 +260,7 @@ def project_slice(vault: Path, project: str) -> dict[str, Any]:
     }
 
 
-def _project_rel(vault: Path, project: str) -> str:
+def project_rel_path(vault: Path, project: str) -> str:
     rel = normalize_path(str(project))
     if "/" not in rel:
         nested = f"projects/{rel}/project.md"

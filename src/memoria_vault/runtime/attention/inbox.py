@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Write Inbox attention projections.
 
 Attention is generated visibility, not a durable Concept type. These helpers keep
@@ -71,7 +70,7 @@ def write_proposal(
         return None
     loudness = band
     today = datetime.date.today().isoformat()
-    frontmatter = {
+    frontmatter: dict[str, Any] = {
         "title": title,
         # OKF core wants every non-reserved document typed; attention cards are
         # one kind, and no per-type schema claims them (they are not Concepts).
@@ -141,7 +140,7 @@ def write_finding(
     # Canonical from here on, so producers that disagree about padding still match.
     fingerprint = fingerprint.strip()
     today = datetime.date.today().isoformat()
-    frontmatter = {
+    frontmatter: dict[str, Any] = {
         "title": title,
         # OKF core wants every non-reserved document typed; attention cards are
         # one kind, and no per-type schema claims them (they are not Concepts).
@@ -231,7 +230,7 @@ def write_work_prompt(
         return None
     loudness = band
     today = datetime.date.today().isoformat()
-    frontmatter = {
+    frontmatter: dict[str, Any] = {
         "title": title,
         # OKF core wants every non-reserved document typed; attention cards are
         # one kind, and no per-type schema claims them (they are not Concepts).

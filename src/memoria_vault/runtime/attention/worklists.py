@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Emit batch screening projection surfaces.
 
 A high-cardinality report becomes many worklist projection notes under
@@ -107,7 +106,7 @@ def emit_worklist(
         item_source = str(row.get("source_report") or source_report).strip()
         item_slug = _slug(f"{rank:03d}-{item_title}")
         path = worklist_dir / f"{item_slug}.md"
-        frontmatter = {
+        frontmatter: dict[str, Any] = {
             "title": safe_item_title,
             "projection": "worklist-item",
             "attention_status": "open",

@@ -7,9 +7,10 @@ name: verify
 #
 # Two fast paths keep the job reporting while doing less when it provably can:
 #   - PSScriptAnalyzer is installed only when a `.ps1` file changed.
-#   - A docs-only PR (whole diff is `*.md` / `design-history/`) sets
-#     VERIFY_DOCS_ONLY=1, narrowing verify to the checks a docs change can
-#     affect. The `push: main` run always runs the full roster.
+#   - A docs-only PR (whole diff is Markdown outside `src/` and/or files under
+#     `design-history/`) sets VERIFY_DOCS_ONLY=1, narrowing verify to the checks
+#     a docs change can affect. Markdown under `src/` is runtime package data,
+#     so it never qualifies. The `push: main` run always runs the full roster.
 
 on:
   push:
@@ -22,7 +23,7 @@ concurrency:
 
 permissions:
   contents: read
-  pull-requests: read  # the change-scope step reads a PR's changed files
+  pull-requests: read # the change-scope step reads a PR's changed files
 
 jobs:
   # One leg per `SHARDS` entry in scripts/verify. The union of the shards is the
@@ -44,13 +45,13 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.12"
           cache: pip
           cache-dependency-path: requirements-dev.txt
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v7.0.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: "22"
       - name: Install Obsidian adapter build dependency
@@ -93,20 +94,60 @@ jobs:
         if: github.event_name == 'pull_request'
         env:
           GH_TOKEN: ${{ github.token }}
+          PR_CHANGED_FILES: ${{ github.event.pull_request.changed_files }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
-          files="$(gh pr view "$PR_NUMBER" --json files --jq '.files[].path' || true)"
-          printf 'changed files:\n%s\n' "$files"
           # Safe defaults: if the diff can't be read, run everything (full verify).
           ps1=true
           docs_only=false
-          if [ -n "$files" ]; then
-            printf '%s\n' "$files" | grep -qE '\.ps1$' || ps1=false
-            printf '%s\n' "$files" | grep -qvE '(^design-history/|\.md$)' || docs_only=true
+          paths='[]'
+          if response="$(gh api --paginate --slurp "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}/files?per_page=100")" \
+            && records="$(jq -ce 'if type == "array" and all(.[]; type == "array") then [.[][]] else error("invalid response") end' <<< "$response")" \
+            && paths="$(jq -ce '
+              if all(.[];
+                type == "object"
+                and (.filename | type == "string" and length > 0)
+                and ((.previous_filename? // "") | type == "string")
+              ) then
+                [.[] | (.filename, (.previous_filename? // empty)) | select(length > 0)]
+              else
+                error("invalid file record")
+              end
+            ' <<< "$records")"; then
+            record_count="$(jq -r 'length' <<< "$records")"
+            path_count="$(jq -r 'length' <<< "$paths")"
+          else
+            record_count=0
+            path_count=0
+            paths='[]'
+          fi
+          if [[ "$PR_CHANGED_FILES" =~ ^[0-9]+$ ]] \
+            && [ "$record_count" = "$PR_CHANGED_FILES" ] \
+            && [ "$record_count" -gt 0 ] \
+            && [ "$record_count" -lt 3000 ] \
+            && [ "$path_count" -gt 0 ]; then
+            jq -e 'any(.[]; endswith(".ps1"))' <<< "$paths" >/dev/null || ps1=false
+            # A file is documentation when it is under design-history/ or is
+            # Markdown that is NOT shipped as package data. Tracked *.md files
+            # under src/ (capabilities/operations/*.md, workspace_seed/) are
+            # program content: the tests that validate them are `contract`,
+            # which the docs-only narrowing drops, so a PR editing only those
+            # files would skip every check that reads them. Rename origins count
+            # too, because they are part of the change being validated.
+            jq -e '
+              all(.[];
+                startswith("design-history/")
+                or (endswith(".md") and (startswith("src/") | not))
+              )
+            ' <<< "$paths" >/dev/null && docs_only=true
           fi
           echo "ps1=$ps1" >> "$GITHUB_OUTPUT"
           echo "docs_only=$docs_only" >> "$GITHUB_OUTPUT"
-          echo "scope -> ps1=$ps1 docs_only=$docs_only"
+          scope="$(jq -c \
+            --argjson ps1 "$ps1" \
+            --argjson docs_only "$docs_only" \
+            '{paths: ., ps1: $ps1, docs_only: $docs_only}' <<< "$paths")"
+          printf 'scope -> %s\n' "$scope"
       # Keyed per workflow. gitleaks.yml caches the same path from the same
       # config file, but installs exactly one hook environment; this job installs
       # all of them. On a shared key the 18s gitleaks job always won the race,
@@ -115,7 +156,7 @@ jobs:
       # declined to save because the hit was on the primary key. Keep both halves
       # of the prefix distinct: a shared `restore-keys` fallback re-couples them.
       - name: Cache pre-commit environments
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.cache/pre-commit
           key: ${{ runner.os }}-pre-commit-verify-${{ hashFiles('.pre-commit-config.yaml') }}
@@ -126,7 +167,7 @@ jobs:
       - name: Cache PSScriptAnalyzer module
         id: pssa-cache
         if: steps.scope.outputs.ps1 != 'false'
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.local/share/powershell/Modules/PSScriptAnalyzer
           key: ${{ runner.os }}-psscriptanalyzer-v1-${{ hashFiles('scripts/PSScriptAnalyzerSettings.psd1') }}

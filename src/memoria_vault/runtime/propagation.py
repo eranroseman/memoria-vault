@@ -180,10 +180,14 @@ def consequence_closure(
         for hop, dependent in sorted(hops, key=lambda pair: (pair[1], pair[0])):
             if dependent in marked or dependent in starts:
                 continue
-            consequence = typer(trigger, hop, seed=seed)
-            if consequence is None:
+            typed_consequence = typer(trigger, hop, seed=seed)
+            if typed_consequence is None:
                 continue
-            marked[dependent] = {"consequence": consequence, "via": hop, "depth": depth + 1}
+            marked[dependent] = {
+                "consequence": typed_consequence,
+                "via": hop,
+                "depth": depth + 1,
+            }
             queue.append((dependent, depth + 1))
     return marked
 

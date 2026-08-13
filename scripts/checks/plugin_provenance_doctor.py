@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Validate the package seed ships only bundled Memoria Obsidian adapter files."""
 
 from __future__ import annotations

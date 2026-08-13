@@ -1,11 +1,14 @@
 var __getOwnPropNames = Object.getOwnPropertyNames;
-var __commonJS = (cb, mod) => function __require() {
-  try {
-    return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
-  } catch (e) {
-    throw mod = 0, e;
-  }
-};
+var __commonJS = (cb, mod) =>
+  function __require() {
+    try {
+      return (
+        mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports
+      );
+    } catch (e) {
+      throw ((mod = 0), e);
+    }
+  };
 
 // src/schema.js
 var require_schema = __commonJS({
@@ -22,9 +25,16 @@ var require_schema = __commonJS({
       "export",
       "session",
       "connection",
-      "operation"
+      "operation",
     ]);
-    var DECISIONS = /* @__PURE__ */ new Set(["accept", "reject", "edit", "defer", "override", "abandon"]);
+    var DECISIONS = /* @__PURE__ */ new Set([
+      "accept",
+      "reject",
+      "edit",
+      "defer",
+      "override",
+      "abandon",
+    ]);
     var OUTCOMES = /* @__PURE__ */ new Set([
       "connected",
       "queued",
@@ -34,7 +44,7 @@ var require_schema = __commonJS({
       "exported",
       "blocked",
       "failed",
-      "stopped"
+      "stopped",
     ]);
     var REASON_CODES = /* @__PURE__ */ new Set([
       "useful",
@@ -47,14 +57,14 @@ var require_schema = __commonJS({
       "privacy",
       "offline",
       "external-tool",
-      "other"
+      "other",
     ]);
     var BASE_REQUIRED_FIELDS = /* @__PURE__ */ new Set([
       "event_id",
       "event_type",
       "timestamp",
       "session_id",
-      "surface"
+      "surface",
     ]);
     var EVENT_REQUIRED_FIELDS = {
       "session.started": /* @__PURE__ */ new Set(["workflow"]),
@@ -64,7 +74,12 @@ var require_schema = __commonJS({
       "operation.queued": /* @__PURE__ */ new Set(["workflow", "outcome"]),
       "disposition.recorded": /* @__PURE__ */ new Set(["workflow", "decision", "reason_code"]),
       "fallback.recorded": /* @__PURE__ */ new Set(["workflow", "outcome", "reason_code"]),
-      "export.attempted": /* @__PURE__ */ new Set(["workflow", "variant", "outcome", "reason_code"])
+      "export.attempted": /* @__PURE__ */ new Set([
+        "workflow",
+        "variant",
+        "outcome",
+        "reason_code",
+      ]),
     };
     var ALLOWED_FIELDS = /* @__PURE__ */ new Set([
       ...BASE_REQUIRED_FIELDS,
@@ -76,21 +91,23 @@ var require_schema = __commonJS({
       "project_id",
       "item_type",
       "item_id",
-      "variant"
+      "variant",
     ]);
     var ENUMS = {
       surface: SURFACES,
       workflow: WORKFLOWS,
       decision: DECISIONS,
       outcome: OUTCOMES,
-      reason_code: REASON_CODES
+      reason_code: REASON_CODES,
     };
     var OPAQUE_ID_FIELDS = /* @__PURE__ */ new Set(["session_id", "project_id", "item_id"]);
     function validateEvent2(payload) {
       if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
         throw new Error("empirical event payload must be an object");
       }
-      const unknown = Object.keys(payload).filter((key) => !ALLOWED_FIELDS.has(key)).sort();
+      const unknown = Object.keys(payload)
+        .filter((key) => !ALLOWED_FIELDS.has(key))
+        .sort();
       if (unknown.length) {
         throw new Error(`empirical event contains unsupported fields: ${unknown.join(", ")}`);
       }
@@ -98,7 +115,7 @@ var require_schema = __commonJS({
       const requiredForType = EVENT_REQUIRED_FIELDS[eventType];
       if (!requiredForType) {
         throw new Error(
-          `event_type must be one of: ${Object.keys(EVENT_REQUIRED_FIELDS).sort().join(", ")}`
+          `event_type must be one of: ${Object.keys(EVENT_REQUIRED_FIELDS).sort().join(", ")}`,
         );
       }
       for (const field of [...BASE_REQUIRED_FIELDS, ...requiredForType]) {
@@ -115,12 +132,17 @@ var require_schema = __commonJS({
           event[field] = stringField(payload, field);
         }
       }
-      if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-        event.event_id
-      )) {
+      if (
+        !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+          event.event_id,
+        )
+      ) {
         throw new Error("event_id must be a UUID");
       }
-      if (Number.isNaN(Date.parse(event.timestamp)) || !/(Z|[+-]\d\d:\d\d)$/.test(event.timestamp)) {
+      if (
+        Number.isNaN(Date.parse(event.timestamp)) ||
+        !/(Z|[+-]\d\d:\d\d)$/.test(event.timestamp)
+      ) {
         throw new Error("timestamp must be ISO-8601 with timezone");
       }
       for (const [field, allowed] of Object.entries(ENUMS)) {
@@ -146,7 +168,7 @@ var require_schema = __commonJS({
       return `vault-item-${hash64(raw)}`;
     }
     function missing(value) {
-      return value === void 0 || value === null || typeof value === "string" && !value.trim();
+      return value === void 0 || value === null || (typeof value === "string" && !value.trim());
     }
     function stringField(payload, field) {
       const value = payload[field];
@@ -167,7 +189,15 @@ var require_schema = __commonJS({
       }
     }
     function isPathlike(value) {
-      return value.includes("/") || value.includes("\\") || value.includes("..") || value.includes("://") || value.startsWith("~") || value.startsWith(".") || value.startsWith("file:");
+      return (
+        value.includes("/") ||
+        value.includes("\\") ||
+        value.includes("..") ||
+        value.includes("://") ||
+        value.startsWith("~") ||
+        value.startsWith(".") ||
+        value.startsWith("file:")
+      );
     }
     function hash64(value) {
       let hash = 0xcbf29ce484222325n;
@@ -178,7 +208,7 @@ var require_schema = __commonJS({
       return hash.toString(16).padStart(16, "0");
     }
     module2.exports = { sanitizeItemId: sanitizeItemId2, validateEvent: validateEvent2 };
-  }
+  },
 });
 
 // src/relate.js
@@ -208,7 +238,7 @@ var require_relate = __commonJS({
       return { operationId: "curate-note-link", payload };
     }
     module2.exports = { buildRelateOperation: buildRelateOperation2 };
-  }
+  },
 });
 
 // src/handshake.js
@@ -218,13 +248,16 @@ var require_handshake = __commonJS({
     var RESPAWN_LIMIT = 3;
     var RESPAWN_WINDOW_MS = 3 * 60 * 1e3;
     function buildHandshakeArgv2(engineCommand, vaultPath) {
-      const parts = String(engineCommand || "").trim().split(/\s+/).filter(Boolean);
+      const parts = String(engineCommand || "")
+        .trim()
+        .split(/\s+/)
+        .filter(Boolean);
       if (parts.length === 0) {
         parts.push("memoria");
       }
       return {
         command: parts[0],
-        args: [...parts.slice(1), "handshake", "--vault", String(vaultPath), "--spawn", "--json"]
+        args: [...parts.slice(1), "handshake", "--vault", String(vaultPath), "--spawn", "--json"],
       };
     }
     function parseHandshake2(stdoutText) {
@@ -239,7 +272,7 @@ var require_handshake = __commonJS({
         token: String(payload.token || ""),
         bootId: String(payload.boot_id || ""),
         engineVersion: String(payload.engine_version || ""),
-        pid: Number(payload.pid || 0)
+        pid: Number(payload.pid || 0),
       };
       if (!Number.isInteger(coordinates.port) || coordinates.port <= 0) {
         throw new Error("handshake: missing port");
@@ -281,7 +314,7 @@ var require_handshake = __commonJS({
         exhausted() {
           prune();
           return attempts.length >= RESPAWN_LIMIT;
-        }
+        },
       };
     }
     module2.exports = {
@@ -291,9 +324,9 @@ var require_handshake = __commonJS({
       buildHandshakeArgv: buildHandshakeArgv2,
       classifySpawnError: classifySpawnError2,
       createRespawnGate: createRespawnGate2,
-      parseHandshake: parseHandshake2
+      parseHandshake: parseHandshake2,
     };
-  }
+  },
 });
 
 // src/pill.js
@@ -305,7 +338,7 @@ var require_pill = __commonJS({
       "server-down",
       "token-invalid",
       "engine-missing",
-      "key-needed"
+      "key-needed",
     ];
     var POLL_ACTIVE_MS = 30 * 1e3;
     var POLL_IDLE_MS = 2 * 60 * 1e3;
@@ -332,14 +365,14 @@ var require_pill = __commonJS({
         return {
           state: "stale",
           text: `Memoria \xB7 ${openCount} open \xB7 as of ${formatAsOf2(lastPollAt)}`,
-          tone: "amber"
+          tone: "amber",
         };
       }
       if (missingCredential) {
         return {
           state: "key-needed",
           text: `Memoria \xB7 ${openCount} open \xB7 key needed`,
-          tone: "accent"
+          tone: "accent",
         };
       }
       return { state: "connected", text: `Memoria \xB7 ${openCount} open`, tone: "green" };
@@ -353,9 +386,9 @@ var require_pill = __commonJS({
       POLL_IDLE_MS,
       computeNextPollDelay: computeNextPollDelay2,
       computePill: computePill2,
-      formatAsOf: formatAsOf2
+      formatAsOf: formatAsOf2,
     };
-  }
+  },
 });
 
 // src/viewspec.js
@@ -365,7 +398,13 @@ var require_viewspec = __commonJS({
     var KNOWN_BLOCK_KINDS = ["card", "text", "badge", "action-row", "evidence-list"];
     var LOUDNESS_RANK = { block: 0, alert: 1, notice: 2, quiet: 3 };
     function node(tag, cls, text, children, attrs) {
-      return { tag, cls: cls || "", text: text || "", children: children || [], attrs: attrs || {} };
+      return {
+        tag,
+        cls: cls || "",
+        text: text || "",
+        children: children || [],
+        attrs: attrs || {},
+      };
     }
     function loudnessClass(block) {
       const value = String(block.loudness || "");
@@ -376,7 +415,7 @@ var require_viewspec = __commonJS({
         "div",
         "memoria-block-unknown",
         `Unknown block type: ${String(block && block.kind)}`,
-        [node("pre", "memoria-block-unknown-raw", JSON.stringify(block))]
+        [node("pre", "memoria-block-unknown-raw", JSON.stringify(block))],
       );
     }
     function renderBlock2(block) {
@@ -393,29 +432,29 @@ var require_viewspec = __commonJS({
             "div",
             "memoria-evidence",
             "",
-            (block.items || []).map(
-              (item) => node("a", "memoria-evidence-link", String(item.label || item.ref || ""), [], {
-                "data-ref": String(item.ref || "")
-              })
-            )
+            (block.items || []).map((item) =>
+              node("a", "memoria-evidence-link", String(item.label || item.ref || ""), [], {
+                "data-ref": String(item.ref || ""),
+              }),
+            ),
           );
         case "action-row":
           return node(
             "div",
             "memoria-action-row",
             "",
-            (block.actions || []).map(
-              (action) => node(
+            (block.actions || []).map((action) =>
+              node(
                 "button",
                 action.primary ? "memoria-action memoria-action-primary" : "memoria-action",
                 String(action.label || ""),
                 [],
                 {
                   "data-operation-id": String(action.operation_id || ""),
-                  "data-payload": JSON.stringify(action.payload || {})
-                }
-              )
-            )
+                  "data-payload": JSON.stringify(action.payload || {}),
+                },
+              ),
+            ),
           );
         case "card":
           return renderCard(block);
@@ -439,7 +478,7 @@ var require_viewspec = __commonJS({
       const tipping = [];
       if (block.tipped_by) {
         tipping.push(
-          node("span", "memoria-card-tipped-label", "tipped by: " + String(block.tipped_by))
+          node("span", "memoria-card-tipped-label", "tipped by: " + String(block.tipped_by)),
         );
       }
       if (block.certainty) {
@@ -450,7 +489,9 @@ var require_viewspec = __commonJS({
       }
       const raisedBy = String(block.raised_by || "");
       const raisedAt = String(block.raised_at || "");
-      const meta = [raisedBy ? "raised by " + raisedBy : "", raisedAt].filter(Boolean).join(" \xB7 ");
+      const meta = [raisedBy ? "raised by " + raisedBy : "", raisedAt]
+        .filter(Boolean)
+        .join(" \xB7 ");
       return node(
         "div",
         "memoria-card" + loudnessClass(block),
@@ -460,9 +501,9 @@ var require_viewspec = __commonJS({
           node("div", "memoria-card-title", String(block.title || "")),
           ...semanticChildren,
           ...analysis,
-          ...meta ? [node("div", "memoria-card-meta", meta)] : []
+          ...(meta ? [node("div", "memoria-card-meta", meta)] : []),
         ],
-        { "data-ref": String(block.ref || "") }
+        { "data-ref": String(block.ref || "") },
       );
     }
     function renderView2(view) {
@@ -471,8 +512,8 @@ var require_viewspec = __commonJS({
           node(
             "div",
             "memoria-block-unknown",
-            `Unknown view-spec version: ${String(view && view.version)}`
-          )
+            `Unknown view-spec version: ${String(view && view.version)}`,
+          ),
         ];
       }
       return (view.blocks || []).map(renderBlock2);
@@ -514,9 +555,9 @@ var require_viewspec = __commonJS({
             "memoria-analysis-toggle",
             open ? "Hide analysis" : "Show analysis (machine)",
             [],
-            { "data-toggle-analysis": "1" }
+            { "data-toggle-analysis": "1" },
           ),
-          node("div", open ? "memoria-analysis" : "memoria-analysis is-collapsed", "", moved)
+          node("div", open ? "memoria-analysis" : "memoria-analysis is-collapsed", "", moved),
         );
       }
       return { ...tree, children };
@@ -536,7 +577,7 @@ var require_viewspec = __commonJS({
     function materialize2(tree, parentEl) {
       const el = parentEl.createEl(tree.tag, {
         cls: tree.cls || void 0,
-        text: tree.text || void 0
+        text: tree.text || void 0,
       });
       for (const [key, value] of Object.entries(tree.attrs || {})) {
         el.setAttribute(key, value);
@@ -555,9 +596,9 @@ var require_viewspec = __commonJS({
       moveSelection: moveSelection2,
       renderBlock: renderBlock2,
       renderView: renderView2,
-      sortCards: sortCards2
+      sortCards: sortCards2,
     };
-  }
+  },
 });
 
 // src/main.js
@@ -569,7 +610,7 @@ var {
   Plugin,
   PluginSettingTab,
   Setting,
-  requestUrl
+  requestUrl,
 } = require("obsidian");
 var { execFile } = require("child_process");
 var { sanitizeItemId, validateEvent } = require_schema();
@@ -579,24 +620,18 @@ var {
   buildHandshakeArgv,
   classifySpawnError,
   createRespawnGate,
-  parseHandshake
+  parseHandshake,
 } = require_handshake();
 var { computeNextPollDelay, computePill, formatAsOf } = require_pill();
-var {
-  collapseAnalysis,
-  materialize,
-  moveSelection,
-  renderBlock,
-  renderView,
-  sortCards
-} = require_viewspec();
+var { collapseAnalysis, materialize, moveSelection, renderBlock, renderView, sortCards } =
+  require_viewspec();
 var DEFAULT_SETTINGS = {
   enabled: false,
   engineCommand: "memoria",
   defaultProjectId: "",
   retentionDays: 30,
   showPrivacyPreview: true,
-  queuedEvents: []
+  queuedEvents: [],
 };
 var EMPTY_ENGINE = { port: 0, token: "", bootId: "", engineVersion: "", pid: 0 };
 var STATUS_PATH = "/v1/status";
@@ -644,79 +679,79 @@ module.exports = class MemoriaObsidianPlugin extends Plugin {
     this.addCommand({
       id: "open-attention",
       name: "Memoria: Open attention pane",
-      callback: () => this.activateAttentionView()
+      callback: () => this.activateAttentionView(),
     });
     this.registerView(VIEW_TYPE_EVIDENCE_REVIEW, (leaf) => new EvidenceReviewView(leaf, this));
     this.addCommand({
       id: "open-evidence-review",
       name: "Memoria: Open evidence review",
-      callback: () => this.activateEvidenceReviewView()
+      callback: () => this.activateEvidenceReviewView(),
     });
     this.addCommand({
       id: "relate",
       name: "Memoria: Relate\u2026",
-      callback: () => new RelateModal(this.app, this).open()
+      callback: () => new RelateModal(this.app, this).open(),
     });
     this.addCommand({
       id: "connect",
       name: "Memoria: Connect to local server",
-      callback: () => this.connect()
+      callback: () => this.connect(),
     });
     this.addCommand({
       id: "show-attention",
       name: "Memoria: Show attention count",
-      callback: () => this.showAttention()
+      callback: () => this.showAttention(),
     });
     this.addCommand({
       id: "show-active-concept",
       name: "Memoria: Show active Concept",
-      callback: () => this.showActiveConcept()
+      callback: () => this.showActiveConcept(),
     });
     this.addCommand({
       id: "queue-operation",
       name: "Memoria: Queue operation",
-      callback: () => new OperationModal(this.app, this).open()
+      callback: () => new OperationModal(this.app, this).open(),
     });
     this.addCommand({
       id: "start-session",
       name: "Memoria: Start data collection session",
-      callback: () => this.startSession()
+      callback: () => this.startSession(),
     });
     this.addCommand({
       id: "stop-session",
       name: "Memoria: Stop data collection session",
-      callback: () => this.stopSession()
+      callback: () => this.stopSession(),
     });
     this.addCommand({
       id: "record-disposition",
       name: "Memoria: Record disposition",
-      callback: () => new EventModal(this.app, this, "disposition.recorded").open()
+      callback: () => new EventModal(this.app, this, "disposition.recorded").open(),
     });
     this.addCommand({
       id: "record-fallback",
       name: "Memoria: Record fallback",
-      callback: () => new EventModal(this.app, this, "fallback.recorded").open()
+      callback: () => new EventModal(this.app, this, "fallback.recorded").open(),
     });
     this.addCommand({
       id: "flush-events",
       name: "Memoria: Flush queued events",
-      callback: () => this.flushQueuedEvents()
+      callback: () => this.flushQueuedEvents(),
     });
     this.addCommand({
       id: "delete-events",
       name: "Memoria: Delete queued events",
-      callback: () => this.deleteQueuedEvents()
+      callback: () => this.deleteQueuedEvents(),
     });
     this.forkBadge = "";
     this.addCommand({
       id: "fork-canvas",
       name: "Memoria: Fork canvas to scratch",
-      callback: () => this.forkActiveCanvas()
+      callback: () => this.forkActiveCanvas(),
     });
     this.addCommand({
       id: "graduate-scratch-edges",
       name: "Memoria: Graduate scratch canvas edges",
-      callback: () => this.graduateScratchEdges()
+      callback: () => this.graduateScratchEdges(),
     });
     if (this.app.workspace.on && this.registerEvent) {
       this.registerEvent(this.app.workspace.on("active-leaf-change", () => this.updateForkBadge()));
@@ -744,11 +779,11 @@ module.exports = class MemoriaObsidianPlugin extends Plugin {
       {
         event_id: randomId(),
         event_type: eventType,
-        timestamp: (/* @__PURE__ */ new Date()).toISOString(),
+        timestamp: /* @__PURE__ */ new Date().toISOString(),
         session_id: this.ensureSession(),
-        surface: "obsidian"
+        surface: "obsidian",
       },
-      fields || {}
+      fields || {},
     );
     if (this.settings.defaultProjectId && !event.project_id) {
       event.project_id = this.settings.defaultProjectId;
@@ -773,7 +808,7 @@ module.exports = class MemoriaObsidianPlugin extends Plugin {
     new Notice(`Memoria connected: engine ${this.engine.engineVersion}`);
     if (this.settings.enabled) {
       await this.recordEvent(
-        this.baseEvent("http.connected", { workflow: "connection", outcome: "connected" })
+        this.baseEvent("http.connected", { workflow: "connection", outcome: "connected" }),
       );
     }
   }
@@ -796,8 +831,8 @@ module.exports = class MemoriaObsidianPlugin extends Plugin {
       this.baseEvent("view.opened", {
         workflow: "evidence-review",
         item_type: String(concept.type || "concept"),
-        item_id: sanitizeItemId(String(concept.id || target))
-      })
+        item_id: sanitizeItemId(String(concept.id || target)),
+      }),
     );
     new Notice(`Memoria Concept: ${concept.title || target}`);
   }
@@ -813,13 +848,15 @@ module.exports = class MemoriaObsidianPlugin extends Plugin {
     new Notice("Memoria data collection started.");
   }
   async stopSession() {
-    const duration = this.sessionStartedAt ? Math.max(1, (Date.now() - this.sessionStartedAt) / 1e3) : 1;
+    const duration = this.sessionStartedAt
+      ? Math.max(1, (Date.now() - this.sessionStartedAt) / 1e3)
+      : 1;
     await this.recordEvent(
       this.baseEvent("session.stopped", {
         workflow: "session",
         outcome: "stopped",
-        duration_s: duration
-      })
+        duration_s: duration,
+      }),
     );
     this.sessionStartedAt = 0;
     this.renderPill();
@@ -842,7 +879,7 @@ module.exports = class MemoriaObsidianPlugin extends Plugin {
     new ForkNameModal(this.app, async (name) => {
       await this.enqueueNamedOperation("fork-project-canvas", {
         project_path: `projects/${active.match[1]}/project.md`,
-        name: name || "scratch"
+        name: name || "scratch",
       });
     }).open();
   }
@@ -853,9 +890,9 @@ module.exports = class MemoriaObsidianPlugin extends Plugin {
     }
     const projectPath = `projects/${active.match[1]}/project.md`;
     const payload = await this.authedJson(
-      `/project/canvas/forks?project_path=${encodeURIComponent(projectPath)}`
+      `/project/canvas/forks?project_path=${encodeURIComponent(projectPath)}`,
     );
-    const forks = payload.canvas_forks && payload.canvas_forks.forks || [];
+    const forks = (payload.canvas_forks && payload.canvas_forks.forks) || [];
     return forks.find((fork) => fork.path === active.file.path) || null;
   }
   async updateForkBadge() {
@@ -866,7 +903,9 @@ module.exports = class MemoriaObsidianPlugin extends Plugin {
       } else if (fork.error) {
         this.forkBadge = "Memoria fork: unreadable";
       } else {
-        this.forkBadge = fork.diff_count ? `Memoria fork: ${fork.diff_count} edge(s) diverged` : "Memoria fork: in sync";
+        this.forkBadge = fork.diff_count
+          ? `Memoria fork: ${fork.diff_count} edge(s) diverged`
+          : "Memoria fork: in sync";
       }
     } catch {
       this.forkBadge = "";
@@ -893,9 +932,9 @@ module.exports = class MemoriaObsidianPlugin extends Plugin {
           target_path: edge.target_path,
           // The *request's* reason, which the journal records — never the edge
           // warrant, which is the PI's own license text for the inference.
-          reason: `graduated from ${fork.path}`
+          reason: `graduated from ${fork.path}`,
         },
-        `graduate:${fork.path}:${edge.source_note_path}:${edge.link_type}:${edge.target_path}`
+        `graduate:${fork.path}:${edge.source_note_path}:${edge.link_type}:${edge.target_path}`,
       );
     }
     const skipped = (fork.unresolved || []).length;
@@ -905,8 +944,8 @@ module.exports = class MemoriaObsidianPlugin extends Plugin {
     await this.recordEvent(
       this.baseEvent(
         "disposition.recorded",
-        Object.assign({ workflow: "gap", decision: "defer", reason_code: "other" }, fields || {})
-      )
+        Object.assign({ workflow: "gap", decision: "defer", reason_code: "other" }, fields || {}),
+      ),
     );
     new Notice("Memoria disposition recorded.");
   }
@@ -914,8 +953,8 @@ module.exports = class MemoriaObsidianPlugin extends Plugin {
     await this.recordEvent(
       this.baseEvent(
         "fallback.recorded",
-        Object.assign({ workflow: "ask", outcome: "fallback", reason_code: "other" }, fields || {})
-      )
+        Object.assign({ workflow: "ask", outcome: "fallback", reason_code: "other" }, fields || {}),
+      ),
     );
     new Notice("Memoria fallback recorded.");
   }
@@ -931,7 +970,7 @@ module.exports = class MemoriaObsidianPlugin extends Plugin {
       await this.postOperation(
         "empirical-event-record",
         event,
-        `empirical-event:${event.event_id}`
+        `empirical-event:${event.event_id}`,
       );
       this.renderPill();
     } catch (error) {
@@ -942,19 +981,19 @@ module.exports = class MemoriaObsidianPlugin extends Plugin {
   }
   async queueEvent(event) {
     this.settings.queuedEvents = this.settings.queuedEvents || [];
-    this.settings.queuedEvents.push({ event, queued_at: (/* @__PURE__ */ new Date()).toISOString() });
+    this.settings.queuedEvents.push({ event, queued_at: /* @__PURE__ */ new Date().toISOString() });
     await this.pruneQueuedEvents();
     await this.saveSettings();
   }
   async flushQueuedEvents() {
-    const queued = [...this.settings.queuedEvents || []];
+    const queued = [...(this.settings.queuedEvents || [])];
     const remaining = [];
     for (const item of queued) {
       try {
         await this.postOperation(
           "empirical-event-record",
           item.event,
-          `empirical-event:${item.event.event_id}`
+          `empirical-event:${item.event.event_id}`,
         );
       } catch {
         remaining.push(item);
@@ -1011,7 +1050,7 @@ module.exports = class MemoriaObsidianPlugin extends Plugin {
       this.renderPill();
       return true;
     } catch (error) {
-      this.lastHandshakeError = String(error && error.stderr || error.message || error);
+      this.lastHandshakeError = String((error && error.stderr) || error.message || error);
       if (classifySpawnError(error) === "engine-missing") {
         this.connectionStatus = "engine-missing";
       } else {
@@ -1032,7 +1071,7 @@ module.exports = class MemoriaObsidianPlugin extends Plugin {
       url: `http://127.0.0.1:${this.engine.port}${path}`,
       method,
       headers: { Authorization: `Bearer ${this.engine.token}` },
-      throw: false
+      throw: false,
     };
     if (body !== void 0) {
       options.contentType = "application/json";
@@ -1045,7 +1084,7 @@ module.exports = class MemoriaObsidianPlugin extends Plugin {
       const response = await requestUrl({
         url: `http://127.0.0.1:${this.engine.port}${STATUS_PATH}`,
         method: "GET",
-        throw: false
+        throw: false,
       });
       return response.status === 200;
     } catch {
@@ -1053,18 +1092,18 @@ module.exports = class MemoriaObsidianPlugin extends Plugin {
     }
   }
   async authedRequest(method, path, body) {
-    if (!await this.ensureHandshake()) {
+    if (!(await this.ensureHandshake())) {
       throw new Error(`memoria: ${this.connectionStatus}`);
     }
     let response = await this.rawRequest(method, path, body);
     if (response.status === 401) {
       this.engine = Object.assign({}, EMPTY_ENGINE);
-      if (!await this.runHandshake()) {
+      if (!(await this.runHandshake())) {
         throw new Error(`memoria: ${this.connectionStatus}`);
       }
       response = await this.rawRequest(method, path, body);
       if (response.status === 401) {
-        this.connectionStatus = await this.probeStatus() ? "token-invalid" : "server-down";
+        this.connectionStatus = (await this.probeStatus()) ? "token-invalid" : "server-down";
         this.renderPill();
         throw new Error("memoria: token invalid");
       }
@@ -1082,21 +1121,21 @@ module.exports = class MemoriaObsidianPlugin extends Plugin {
     return this.authedRequest("POST", OPERATION_PATH, {
       operation_id: operationId,
       payload,
-      idempotency_key: idempotencyKey
+      idempotency_key: idempotencyKey,
     });
   }
   async enqueueNamedOperation(operationId, payload) {
     try {
       const result = await this.postOperation(operationId, payload, "");
-      const requestId = String(result.job && result.job.request_id || "");
+      const requestId = String((result.job && result.job.request_id) || "");
       new Notice(`Memoria queued ${operationId}: ${requestId}`);
       await this.recordEvent(
         this.baseEvent("operation.queued", {
           workflow: "operation",
           item_type: "operation",
           item_id: sanitizeItemId(operationId),
-          outcome: "queued"
-        })
+          outcome: "queued",
+        }),
       );
       return result;
     } catch (error) {
@@ -1125,7 +1164,9 @@ module.exports = class MemoriaObsidianPlugin extends Plugin {
         this.linkRelations = Array.isArray(summary.link_relations) ? summary.link_relations : [];
         this.connectionStatus = "connected";
         for (const viewType of [VIEW_TYPE_ATTENTION, VIEW_TYPE_EVIDENCE_REVIEW]) {
-          for (const leaf of this.app.workspace.getLeavesOfType ? this.app.workspace.getLeavesOfType(viewType) : []) {
+          for (const leaf of this.app.workspace.getLeavesOfType
+            ? this.app.workspace.getLeavesOfType(viewType)
+            : []) {
             if (leaf.view && typeof leaf.view.refresh === "function") {
               leaf.view.refresh();
             }
@@ -1155,7 +1196,10 @@ module.exports = class MemoriaObsidianPlugin extends Plugin {
     if (this.unloaded || this.pollPromise) {
       return;
     }
-    const isActive = typeof document !== "undefined" && typeof document.hasFocus === "function" && document.hasFocus();
+    const isActive =
+      typeof document !== "undefined" &&
+      typeof document.hasFocus === "function" &&
+      document.hasFocus();
     const pollTimer = setTimeout(() => {
       if (this.pollTimer === pollTimer) {
         this.pollTimer = null;
@@ -1175,7 +1219,7 @@ module.exports = class MemoriaObsidianPlugin extends Plugin {
       connection: this.connectionStatus,
       openCount: this.openCount,
       lastPollAt: this.lastPollAt,
-      missingCredential: this.missingCredential
+      missingCredential: this.missingCredential,
     });
     this.pillState = pill.state;
     if (typeof this.statusBar.empty === "function") {
@@ -1185,7 +1229,7 @@ module.exports = class MemoriaObsidianPlugin extends Plugin {
       if (this.forkBadge) {
         this.statusBar.createEl("span", {
           cls: "memoria-pill-text",
-          text: ` \xB7 ${this.forkBadge}`
+          text: ` \xB7 ${this.forkBadge}`,
         });
       }
     } else {
@@ -1206,7 +1250,7 @@ module.exports = class MemoriaObsidianPlugin extends Plugin {
     if (this.pillState === "key-needed") {
       new Notice(
         `Memoria: credential needed \u2014 run: memoria secrets set ${this.missingCredential}`,
-        1e4
+        1e4,
       );
       this.activateAttentionView();
       return;
@@ -1218,7 +1262,7 @@ module.exports = class MemoriaObsidianPlugin extends Plugin {
     if (this.pillState === "engine-missing") {
       new Notice(
         `Engine missing \u2014 the Memoria CLI was not found (tried: \`${this.settings.engineCommand}\`). Install it: pipx install memoria, then click to retry. This vault remains fully readable and editable without it.`,
-        1e4
+        1e4,
       );
       retry();
       return;
@@ -1226,7 +1270,7 @@ module.exports = class MemoriaObsidianPlugin extends Plugin {
     if (this.pillState === "server-down") {
       new Notice(
         `Memoria server down after 3 spawn attempts. ${this.lastHandshakeError} \u2014 Start it manually: memoria serve --workspace ${this.vaultPath()} \u2014 then click to retry.`,
-        1e4
+        1e4,
       );
       retry();
       return;
@@ -1234,7 +1278,7 @@ module.exports = class MemoriaObsidianPlugin extends Plugin {
     if (this.pillState === "token-invalid") {
       new Notice(
         `Memoria token invalid \u2014 restart the server: memoria serve --stop --workspace ${this.vaultPath()}, then click to reconnect.`,
-        1e4
+        1e4,
       );
       this.engine = Object.assign({}, EMPTY_ENGINE);
       this.respawnGate = createRespawnGate();
@@ -1243,8 +1287,11 @@ module.exports = class MemoriaObsidianPlugin extends Plugin {
     }
   }
   async activateView(viewType) {
-    const existing = this.app.workspace.getLeavesOfType ? this.app.workspace.getLeavesOfType(viewType) : [];
-    const leaf = existing[0] || this.app.workspace.getRightLeaf && this.app.workspace.getRightLeaf(false);
+    const existing = this.app.workspace.getLeavesOfType
+      ? this.app.workspace.getLeavesOfType(viewType)
+      : [];
+    const leaf =
+      existing[0] || (this.app.workspace.getRightLeaf && this.app.workspace.getRightLeaf(false));
     if (!leaf) {
       return;
     }
@@ -1294,7 +1341,7 @@ var AttentionView = class extends ItemView {
       this.contentEl.empty();
       this.contentEl.createDiv({
         cls: "memoria-block-unknown",
-        text: `Memoria attention unavailable: ${String(error.message || error)}`
+        text: `Memoria attention unavailable: ${String(error.message || error)}`,
       });
       return;
     }
@@ -1311,12 +1358,11 @@ var AttentionView = class extends ItemView {
     header.createSpan({ text: "ATTENTION" });
     header.createSpan({
       cls: "memoria-attention-age",
-      text: `${this.plugin.openCount} open \xB7 as of ${formatAsOf(this.plugin.lastPollAt)}`
+      text: `${this.plugin.openCount} open \xB7 as of ${formatAsOf(this.plugin.lastPollAt)}`,
     });
     const relateButton = header.createEl("button", { cls: "memoria-action", text: "Relate\u2026" });
-    relateButton.addEventListener(
-      "click",
-      () => new RelateModal(this.plugin.app, this.plugin).open()
+    relateButton.addEventListener("click", () =>
+      new RelateModal(this.plugin.app, this.plugin).open(),
     );
     if (!this.view || this.view.version !== "view-spec.v1") {
       for (const tree of renderView(this.view)) {
@@ -1329,11 +1375,13 @@ var AttentionView = class extends ItemView {
     }
     this.cards.forEach((card, index) => {
       const row = root.createDiv({
-        cls: index === this.selected ? "memoria-row is-selected" : "memoria-row"
+        cls: index === this.selected ? "memoria-row is-selected" : "memoria-row",
       });
       const loudness = String(card.loudness || "");
       row.createSpan({
-        cls: loudness ? `memoria-loudness-dot memoria-loudness-${loudness}` : "memoria-loudness-dot"
+        cls: loudness
+          ? `memoria-loudness-dot memoria-loudness-${loudness}`
+          : "memoria-loudness-dot",
       });
       row.createSpan({ cls: "memoria-row-title", text: String(card.title || "") });
       row.createSpan({ cls: "memoria-row-age", text: String(card.age_label || "") });
@@ -1382,7 +1430,8 @@ var AttentionView = class extends ItemView {
     }
   }
 };
-var isEvidenceCard = (block) => Boolean(block) && block.kind === "card" && block.review_kind === "evidence-set";
+var isEvidenceCard = (block) =>
+  Boolean(block) && block.kind === "card" && block.review_kind === "evidence-set";
 var EvidenceReviewView = class extends ItemView {
   constructor(leaf, plugin) {
     super(leaf);
@@ -1412,7 +1461,9 @@ var EvidenceReviewView = class extends ItemView {
     await this.refresh();
   }
   viewPath() {
-    return this.facetRouting ? `${EVIDENCE_REVIEW_VIEW_PATH}?routing_type=${encodeURIComponent(this.facetRouting)}` : EVIDENCE_REVIEW_VIEW_PATH;
+    return this.facetRouting
+      ? `${EVIDENCE_REVIEW_VIEW_PATH}?routing_type=${encodeURIComponent(this.facetRouting)}`
+      : EVIDENCE_REVIEW_VIEW_PATH;
   }
   async refresh() {
     try {
@@ -1422,7 +1473,7 @@ var EvidenceReviewView = class extends ItemView {
       this.contentEl.empty();
       this.contentEl.createDiv({
         cls: "memoria-block-unknown",
-        text: `Memoria evidence review unavailable: ${String(error.message || error)}`
+        text: `Memoria evidence review unavailable: ${String(error.message || error)}`,
       });
       return;
     }
@@ -1439,12 +1490,12 @@ var EvidenceReviewView = class extends ItemView {
     header.createSpan({ text: "EVIDENCE REVIEW" });
     const facet = header.createEl("button", {
       cls: "memoria-action",
-      text: this.facetRouting ? `routing: ${this.facetRouting}` : "routing: all"
+      text: this.facetRouting ? `routing: ${this.facetRouting}` : "routing: all",
     });
     facet.setAttribute("data-cycle-routing", "1");
     header.createSpan({
       cls: "memoria-attention-age",
-      text: `as of ${formatAsOf(this.plugin.lastPollAt)}`
+      text: `as of ${formatAsOf(this.plugin.lastPollAt)}`,
     });
     if (!this.view || this.view.version !== "view-spec.v1") {
       for (const tree of renderView(this.view)) {
@@ -1454,7 +1505,7 @@ var EvidenceReviewView = class extends ItemView {
     }
     this.cards.forEach((card, index) => {
       const row = root.createDiv({
-        cls: index === this.selected ? "memoria-row is-selected" : "memoria-row"
+        cls: index === this.selected ? "memoria-row is-selected" : "memoria-row",
       });
       row.createSpan({ cls: "memoria-row-title", text: String(card.title || "") });
       row.createSpan({ cls: "memoria-row-age", text: String(card.age_label || "") });
@@ -1541,11 +1592,11 @@ var RelateModal = class extends Modal {
     if (!roster.length) {
       contentEl.createDiv({
         cls: "memoria-setting-warning",
-        text: "Relation roster not loaded yet \u2014 it comes from the server payload. Retry after the next poll (click the status pill)."
+        text: "Relation roster not loaded yet \u2014 it comes from the server payload. Retry after the next poll (click the status pill).",
       });
     }
     new Setting(contentEl).setName("From").addText((text) => {
-      text.setValue(this.fromPath).onChange((value) => this.fromPath = value);
+      text.setValue(this.fromPath).onChange((value) => (this.fromPath = value));
       new NotePathSuggest(this.app, text.inputEl, (path) => {
         this.fromPath = path;
         text.setValue(path);
@@ -1555,7 +1606,7 @@ var RelateModal = class extends Modal {
     for (const relation of roster) {
       const button = segment.createEl("button", {
         cls: "memoria-relation-option",
-        text: relation
+        text: relation,
       });
       button.addEventListener("click", () => {
         this.relation = relation;
@@ -1566,34 +1617,40 @@ var RelateModal = class extends Modal {
       });
     }
     new Setting(contentEl).setName("To").addText((text) => {
-      text.onChange((value) => this.toPath = value);
+      text.onChange((value) => (this.toPath = value));
       new NotePathSuggest(this.app, text.inputEl, (path) => {
         this.toPath = path;
         text.setValue(path);
       });
     });
-    new Setting(contentEl).setName("Warrant (optional)").setDesc(
-      "A `warrant` relation links a license note; Warrant text annotates the selected edge."
-    ).addTextArea((text) => text.onChange((value) => this.warrant = value));
-    new Setting(contentEl).addButton(
-      (button) => button.setButtonText("Queue edge").setCta().onClick(async () => {
-        let operation;
-        try {
-          operation = buildRelateOperation({
-            fromPath: this.fromPath,
-            relation: this.relation,
-            toPath: this.toPath,
-            warrant: this.warrant,
-            roster
-          });
-        } catch (error) {
-          new Notice(error.message);
-          return;
-        }
-        if (await this.plugin.enqueueNamedOperation(operation.operationId, operation.payload)) {
-          this.close();
-        }
-      })
+    new Setting(contentEl)
+      .setName("Warrant (optional)")
+      .setDesc(
+        "A `warrant` relation links a license note; Warrant text annotates the selected edge.",
+      )
+      .addTextArea((text) => text.onChange((value) => (this.warrant = value)));
+    new Setting(contentEl).addButton((button) =>
+      button
+        .setButtonText("Queue edge")
+        .setCta()
+        .onClick(async () => {
+          let operation;
+          try {
+            operation = buildRelateOperation({
+              fromPath: this.fromPath,
+              relation: this.relation,
+              toPath: this.toPath,
+              warrant: this.warrant,
+              roster,
+            });
+          } catch (error) {
+            new Notice(error.message);
+            return;
+          }
+          if (await this.plugin.enqueueNamedOperation(operation.operationId, operation.payload)) {
+            this.close();
+          }
+        }),
     );
   }
 };
@@ -1604,7 +1661,11 @@ var NotePathSuggest = class extends AbstractInputSuggest {
   }
   getSuggestions(query) {
     const needle = String(query || "").toLowerCase();
-    return this.app.vault.getMarkdownFiles().map((file) => file.path).filter((path) => path.toLowerCase().includes(needle)).slice(0, 20);
+    return this.app.vault
+      .getMarkdownFiles()
+      .map((file) => file.path)
+      .filter((path) => path.toLowerCase().includes(needle))
+      .slice(0, 20);
   }
   renderSuggestion(path, el) {
     el.setText(path);
@@ -1622,30 +1683,33 @@ var MemoriaSettingTab = class extends PluginSettingTab {
   display() {
     const { containerEl } = this;
     containerEl.empty();
-    new Setting(containerEl).setName("Enable collection").addToggle(
-      (toggle) => toggle.setValue(this.plugin.settings.enabled).onChange(async (value) => {
+    new Setting(containerEl).setName("Enable collection").addToggle((toggle) =>
+      toggle.setValue(this.plugin.settings.enabled).onChange(async (value) => {
         this.plugin.settings.enabled = value;
         await this.plugin.saveSettings();
         this.plugin.renderPill();
-      })
+      }),
     );
-    new Setting(containerEl).setName("Engine command").setDesc("Command used to reach the Memoria CLI (e.g. `wsl memoria` on WSL2 hosts).").addText(
-      (text) => text.setValue(this.plugin.settings.engineCommand).onChange(async (value) => {
-        this.plugin.settings.engineCommand = value.trim() || DEFAULT_SETTINGS.engineCommand;
-        await this.plugin.saveSettings();
-      })
-    );
-    new Setting(containerEl).setName("Default project ID").addText(
-      (text) => text.setValue(this.plugin.settings.defaultProjectId).onChange(async (value) => {
+    new Setting(containerEl)
+      .setName("Engine command")
+      .setDesc("Command used to reach the Memoria CLI (e.g. `wsl memoria` on WSL2 hosts).")
+      .addText((text) =>
+        text.setValue(this.plugin.settings.engineCommand).onChange(async (value) => {
+          this.plugin.settings.engineCommand = value.trim() || DEFAULT_SETTINGS.engineCommand;
+          await this.plugin.saveSettings();
+        }),
+      );
+    new Setting(containerEl).setName("Default project ID").addText((text) =>
+      text.setValue(this.plugin.settings.defaultProjectId).onChange(async (value) => {
         this.plugin.settings.defaultProjectId = value.trim();
         await this.plugin.saveSettings();
-      })
+      }),
     );
-    new Setting(containerEl).setName("Retention days").addText(
-      (text) => text.setValue(String(this.plugin.settings.retentionDays)).onChange(async (value) => {
+    new Setting(containerEl).setName("Retention days").addText((text) =>
+      text.setValue(String(this.plugin.settings.retentionDays)).onChange(async (value) => {
         this.plugin.settings.retentionDays = Number(value) || DEFAULT_SETTINGS.retentionDays;
         await this.plugin.saveSettings();
-      })
+      }),
     );
   }
 };
@@ -1664,33 +1728,44 @@ var EventModal = class extends Modal {
       workflow: "gap",
       decision: "defer",
       outcome: "fallback",
-      reason_code: "other"
+      reason_code: "other",
     };
-    new Setting(contentEl).setName("Workflow").addText(
-      (text) => text.setValue(fields.workflow).onChange((value) => fields.workflow = value)
-    );
-    if (this.eventType === "disposition.recorded") {
-      new Setting(contentEl).setName("Decision").addText(
-        (text) => text.setValue(fields.decision).onChange((value) => fields.decision = value)
+    new Setting(contentEl)
+      .setName("Workflow")
+      .addText((text) =>
+        text.setValue(fields.workflow).onChange((value) => (fields.workflow = value)),
       );
+    if (this.eventType === "disposition.recorded") {
+      new Setting(contentEl)
+        .setName("Decision")
+        .addText((text) =>
+          text.setValue(fields.decision).onChange((value) => (fields.decision = value)),
+        );
     }
     if (this.eventType === "fallback.recorded") {
-      new Setting(contentEl).setName("Outcome").addText(
-        (text) => text.setValue(fields.outcome).onChange((value) => fields.outcome = value)
-      );
+      new Setting(contentEl)
+        .setName("Outcome")
+        .addText((text) =>
+          text.setValue(fields.outcome).onChange((value) => (fields.outcome = value)),
+        );
     }
-    new Setting(contentEl).setName("Reason code").addText(
-      (text) => text.setValue(fields.reason_code).onChange((value) => fields.reason_code = value)
-    );
-    new Setting(contentEl).addButton(
-      (button) => button.setButtonText("Record").setCta().onClick(async () => {
-        if (this.eventType === "disposition.recorded") {
-          await this.plugin.recordDisposition(fields);
-        } else {
-          await this.plugin.recordFallback(fields);
-        }
-        this.close();
-      })
+    new Setting(contentEl)
+      .setName("Reason code")
+      .addText((text) =>
+        text.setValue(fields.reason_code).onChange((value) => (fields.reason_code = value)),
+      );
+    new Setting(contentEl).addButton((button) =>
+      button
+        .setButtonText("Record")
+        .setCta()
+        .onClick(async () => {
+          if (this.eventType === "disposition.recorded") {
+            await this.plugin.recordDisposition(fields);
+          } else {
+            await this.plugin.recordFallback(fields);
+          }
+          this.close();
+        }),
     );
   }
 };
@@ -1705,17 +1780,24 @@ var OperationModal = class extends Modal {
     let operationId = "analyze-gaps";
     let payloadText = "{}";
     contentEl.createEl("h2", { text: "Queue Memoria operation" });
-    new Setting(contentEl).setName("Operation ID").addText(
-      (text) => text.setValue(operationId).onChange((value) => operationId = value.trim())
-    );
-    new Setting(contentEl).setName("Payload JSON").addTextArea((text) => text.setValue(payloadText).onChange((value) => payloadText = value));
-    new Setting(contentEl).addButton(
-      (button) => button.setButtonText("Queue").setCta().onClick(async () => {
-        const payload = JSON.parse(payloadText || "{}");
-        if (await this.plugin.enqueueNamedOperation(operationId, payload)) {
-          this.close();
-        }
-      })
+    new Setting(contentEl)
+      .setName("Operation ID")
+      .addText((text) =>
+        text.setValue(operationId).onChange((value) => (operationId = value.trim())),
+      );
+    new Setting(contentEl)
+      .setName("Payload JSON")
+      .addTextArea((text) => text.setValue(payloadText).onChange((value) => (payloadText = value)));
+    new Setting(contentEl).addButton((button) =>
+      button
+        .setButtonText("Queue")
+        .setCta()
+        .onClick(async () => {
+          const payload = JSON.parse(payloadText || "{}");
+          if (await this.plugin.enqueueNamedOperation(operationId, payload)) {
+            this.close();
+          }
+        }),
     );
   }
 };
@@ -1729,12 +1811,17 @@ var ForkNameModal = class extends Modal {
     contentEl.empty();
     contentEl.createEl("h2", { text: "Fork canvas to scratch" });
     let name = "scratch";
-    new Setting(contentEl).setName("Scratch name").addText((text) => text.setValue(name).onChange((value) => name = value.trim()));
-    new Setting(contentEl).addButton(
-      (button) => button.setButtonText("Queue fork").setCta().onClick(async () => {
-        await this.onSubmit(name);
-        this.close();
-      })
+    new Setting(contentEl)
+      .setName("Scratch name")
+      .addText((text) => text.setValue(name).onChange((value) => (name = value.trim())));
+    new Setting(contentEl).addButton((button) =>
+      button
+        .setButtonText("Queue fork")
+        .setCta()
+        .onClick(async () => {
+          await this.onSubmit(name);
+          this.close();
+        }),
     );
   }
 };
@@ -1744,6 +1831,6 @@ function randomId() {
   }
   return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (char) => {
     const value = Math.floor(Math.random() * 16);
-    return (char === "x" ? value : value & 3 | 8).toString(16);
+    return (char === "x" ? value : (value & 3) | 8).toString(16);
   });
 }

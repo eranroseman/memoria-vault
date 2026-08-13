@@ -181,7 +181,7 @@ review / flow). It prints a static text photograph, or the same payload via
 ### Maintenance
 
 A planned optional-adapter weekly structural-debt surface:
-Drift watch, loose ends, queue state, and "new this week". Today, its source
+Drift watch, loose ends, queue state, and "new this week." Today, its source
 state is available separately through request/attention commands, linter
 output, logs, and corpus reads; no combined Maintenance view ships.
 
@@ -238,8 +238,8 @@ PI-curated. See
 
 ### Runner
 
-The model-provider execution backend resolved for one prompt
-operation invocation (test vs. live mode, provider, model, base URL); see
+The resolved model-provider execution path for one prompt operation invocation
+(test vs. live mode, provider, model, base URL); see
 `resolve_operation_runner` in [Operations](../commands-and-transports/operations.md).
 Distinct from the **worker** (the request-dispatch loop that runs both
 prompt and deterministic operations) and the **engine** (the whole
@@ -375,7 +375,7 @@ git staging, and distinct from the unchecked catalog staging
 
 Not a field name on its own; use the specific field. A Concept's
 read verdict is **`check_status`** in runtime state; request state lives in
-SQLite. Prefer the precise field name over a bare "state".
+SQLite. Prefer the precise field name over a bare "state."
 
 ### steering.md {#steering-md}
 
@@ -400,7 +400,7 @@ surfaces the queue. See
 The PI-editable controlled-vocabulary artifact governing catalog Work
 `research_area`/`methodology` metadata and claim-bearing note `topics`,
 which draw from the same `research_area` list. Distinct from the
-everyday word: when docs say "the vocabulary", they mean this artifact.
+everyday word: when docs say "the vocabulary," they mean this artifact.
 See [Vocabulary](vocabulary.md).
 
 ### Work

@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Attention-card lifecycle: journal the closed cards the review gate honors, compact them.
 
 `inbox/` is the hot attention surface and it sits outside every bundle root, so no

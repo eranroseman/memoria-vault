@@ -31,8 +31,8 @@ propose the gate, do not propose a recurring manual sweep.
 **Third-party claims.** Verify every claim about Obsidian, Zotero, MCP hosts,
 and the packaged Obsidian adapter against the integration's own reference page,
 and against the adapter source where one is cited. These drift without any
-commit here, because upstream moves on its own. (There is no "Hermes" component
-in this repository; do not go looking for one.)
+commit here, because upstream moves on its own. (This repository has no
+"Hermes" component; do not go looking for one.)
 
 **Vault design conformance.** Read the packaged workspace seed —
 `src/memoria_vault/product/workspace_seed/` — against

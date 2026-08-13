@@ -850,7 +850,7 @@ def test_mint_journal_failure_rolls_back_binding_and_active_sets(
     def fail_journal_insert(*_args, **_kwargs) -> None:
         raise RuntimeError("mint journal insert failed")
 
-    monkeypatch.setattr(state, "_insert_journal_row_conn", fail_journal_insert, raising=False)
+    monkeypatch.setattr(state, "insert_journal_row_conn", fail_journal_insert, raising=False)
 
     with pytest.raises(RuntimeError, match="mint journal insert failed"):
         compose_project_draft(vault, "project-alpha")

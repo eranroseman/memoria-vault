@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Schema-validate staged documents for the pre-commit hook.
 
 Called by the pre-commit hook with the staged .md paths. Each typed document must

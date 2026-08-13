@@ -108,7 +108,7 @@ Keep only the named folders or files required for this connection. Each
 than one. Memoria rejects root scopes (`/` or `.`) and paths that escape the
 workspace. An internal path such as `notes/../projects` can normalize to a
 valid non-root scope, but configure the normalized name directly (`projects`)
-so the boundary is easy to inspect.
+so the boundary remains explicit.
 
 The scope set belongs to one server instance and is fixed when that process
 starts. A tool call cannot widen it. Create a separate server entry when

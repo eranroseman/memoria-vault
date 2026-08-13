@@ -16,8 +16,8 @@ The authoritative document-type contract is the schema directory, not this page:
 Each type schema declares its `category`, `concept_type` registry membership,
 `required` fields, `optional` fields, and `enums`-backed fields, plus optional
 `required_when` and `forbidden` blocks. Folder home is not a type-schema key —
-it lives in `folders.yaml`'s `homes:` map. There is no "initial read state" in
-frontmatter either: `check_status` lives in SQLite only, never in a Concept
+it lives in `folders.yaml`'s `homes:` map. Frontmatter has no "initial read
+state" either: `check_status` lives in SQLite only, never in a Concept
 file (see [Verdict state is not
 frontmatter](frontmatter.md#verdict-state-is-not-frontmatter)). The linter, the
 vault's pre-commit hook, the trusted writer, and the tests all read those YAML

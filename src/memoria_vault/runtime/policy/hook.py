@@ -390,6 +390,8 @@ def evaluate_post(payload: dict, actor: str, workspace: Path) -> dict:
         stashed = load_json(pend)
     except (json.JSONDecodeError, OSError):
         return {}
+    if not isinstance(stashed, dict):
+        return {}
 
     action = classify(payload.get("tool_name", "")) or "write"
     path = to_workspace_relative(

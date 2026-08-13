@@ -466,13 +466,13 @@ def evaluate_bm25(
             }
         )
     total = len(results)
-    hits = sum(1 for result in results if result["hit"])
+    hit_count = sum(1 for result in results if result["hit"])
     return {
         "backend": "bm25",
         "documents": len(docs),
         "queries": total,
-        "hits": hits,
-        "recall_at_k": hits / total if total else 0.0,
+        "hits": hit_count,
+        "recall_at_k": hit_count / total if total else 0.0,
         "results": results,
     }
 

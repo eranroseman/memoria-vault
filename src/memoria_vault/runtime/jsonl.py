@@ -16,8 +16,8 @@ def iter_jsonl(path: Path) -> Iterator[dict[str, Any]]:
         lines = path.read_text(encoding="utf-8").splitlines()
     except OSError:
         return
-    for line in lines:
-        line = line.strip()
+    for raw_line in lines:
+        line = raw_line.strip()
         if not line:
             continue
         try:

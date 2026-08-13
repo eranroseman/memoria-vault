@@ -140,7 +140,7 @@ class PolicyEngine:
                 }
 
         if dec.log_required or dec.decision in ("allow_with_log", "deny", "dry_run"):
-            entry = {
+            entry: dict[str, Any] = {
                 "timestamp": now_iso(),
                 "actor": actor,
                 "action": action,
@@ -179,7 +179,7 @@ class PolicyEngine:
             after_hash = sha256_file(self.workspace / npath)
         except OSError as exc:
             return {"ok": False, "message": f"cannot hash '{npath}': {exc}"}
-        entry = {
+        entry: dict[str, Any] = {
             "timestamp": now_iso(),
             "actor": actor,
             "action": action,

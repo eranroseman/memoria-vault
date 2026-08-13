@@ -14,10 +14,12 @@ from memoria_vault.runtime.feedback import feedback_production_enabled
 from memoria_vault.runtime.operations import record_empirical_event
 from memoria_vault.runtime.vaultio import read_frontmatter
 from tests.helpers import (
+    attention_flow_rows,
     call_with_context,
     git,
     init_cli_workspace,
     operation_context,
+    set_attention_config,
     write_note,
 )
 
@@ -159,6 +161,35 @@ def test_decided_wrong_claim_emits_override_and_a_blast_radius_report(
         assert read_frontmatter(workspace / rel).get("stale") is None
     # The card is the one file this disposition wrote, and it is committed.
     assert git(workspace, "ls-files", card.relative_to(workspace).as_posix())
+
+
+def test_decided_wrong_resolution_completes_when_its_report_producer_is_paused(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """A withheld report card is not a path to append to the resolution commit.
+
+    This fails if `_write_blast_radius_report` treats `write_finding`'s paused
+    `None` result as a filesystem path: the worker then reports the real
+    resolution as failed even though the PI only paused its optional report.
+    """
+    workspace = init_cli_workspace(tmp_path, capsys)
+    _seed_decided_wrong_graph(workspace)
+    set_attention_config(workspace, "producers:\n  resolve-attention: paused\n")
+
+    result = _resolve_attention_job(
+        workspace,
+        "pi-decided-wrong-paused-report",
+        target_id="notes/claim.md",
+        item_type="claim",
+        outcome="decided-wrong",
+        reason="PI decided the claim is wrong",
+    )
+
+    assert result["status"] == "done", result
+    assert not list((workspace / "inbox").glob("flag-blast-radius-*.md"))
+    assert attention_flow_rows(workspace, "producer-run-skipped") == [
+        {"producer": "resolve-attention", "reason": "paused"}
+    ]
 
 
 def test_a_claim_resolved_any_other_way_writes_no_blast_radius_report(

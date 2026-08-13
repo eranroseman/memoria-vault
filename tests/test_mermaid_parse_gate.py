@@ -65,6 +65,7 @@ def _run(*paths: Path) -> subprocess.CompletedProcess[str]:
         capture_output=True,
         text=True,
         cwd=ROOT,
+        check=False,
     )
 
 
@@ -75,6 +76,7 @@ def _deps_installed() -> bool:
         ["node", "--input-type=module", "-e", "import('mermaid');import('jsdom')"],
         capture_output=True,
         cwd=ROOT,
+        check=False,
     )
     return probe.returncode == 0
 

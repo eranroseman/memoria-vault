@@ -10,13 +10,16 @@ import stat
 import threading
 import time
 from pathlib import Path
-from typing import Any
+from types import ModuleType
+from typing import Any, Literal
 
+fcntl: ModuleType | None
 try:
     import fcntl
 except ImportError:  # pragma: no cover - Windows fallback is exercised only on Windows.
     fcntl = None
 
+msvcrt: ModuleType | None
 try:
     import msvcrt
 except ImportError:  # pragma: no cover - POSIX path is exercised in CI.
@@ -44,7 +47,7 @@ class _WindowsLockFile:
     def __enter__(self) -> _WindowsLockFile:
         return self
 
-    def __exit__(self, *_exc_info: object) -> bool:
+    def __exit__(self, *_exc_info: object) -> Literal[False]:
         self.close()
         return False
 
@@ -79,8 +82,10 @@ def _open_workspace_lock_file_windows(
 
     from ctypes import wintypes
 
-    kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
-    ntdll = ctypes.WinDLL("ntdll")
+    win_dll = ctypes.WinDLL  # type: ignore[attr-defined]  # Windows-only ctypes API.
+    get_last_error = ctypes.get_last_error  # type: ignore[attr-defined]  # Windows-only ctypes API.
+    kernel32 = win_dll("kernel32", use_last_error=True)
+    ntdll = win_dll("ntdll")
     create_file = kernel32.CreateFileW
     create_file.argtypes = [
         wintypes.LPCWSTR,
@@ -181,7 +186,7 @@ def _open_workspace_lock_file_windows(
     def attributes(handle: int, path: Path) -> int:
         info = FileAttributeTagInfo()
         if not get_info(handle, file_attribute_tag_info, ctypes.byref(info), ctypes.sizeof(info)):
-            raise failed(path, ctypes.get_last_error())
+            raise failed(path, get_last_error())
         return int(info.attributes)
 
     def open_root_directory(path: Path) -> int:
@@ -196,7 +201,7 @@ def _open_workspace_lock_file_windows(
             None,
         )
         if handle == invalid_handle:
-            raise failed(path, ctypes.get_last_error())
+            raise failed(path, get_last_error())
         try:
             value = attributes(handle, path)
             if value & file_attribute_reparse_point:
@@ -247,6 +252,8 @@ def _open_workspace_lock_file_windows(
         if status < 0:
             error = int(rtl_nt_status_to_dos_error(status))
             raise failed(path, error)
+        if handle.value is None:
+            raise OSError("NtCreateFile returned no handle")
         opened = int(handle.value)
         try:
             value = attributes(opened, path)
@@ -284,7 +291,8 @@ def _open_workspace_lock_file_windows(
             open_relative(directory_handles[-1], locks.name, locks, directory=True)
         )
         lock_handle = open_lock_file(directory_handles[-1], lock_path)
-        lock_fd = msvcrt.open_osfhandle(
+        open_osfhandle = msvcrt.open_osfhandle
+        lock_fd = open_osfhandle(
             lock_handle,
             os.O_RDWR | getattr(os, "O_BINARY", 0) | getattr(os, "O_NOINHERIT", 0),
         )

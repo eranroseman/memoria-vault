@@ -126,7 +126,7 @@ For the compact system model, its core terms, and the working loop, see the
 
 ---
 
-## Where do you want to go?
+## Where to go
 
 | I want to…                                  | Go here                                                                                           |
 | ------------------------------------------- | ------------------------------------------------------------------------------------------------- |

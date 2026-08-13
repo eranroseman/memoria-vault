@@ -17,15 +17,18 @@ import urllib.request
 from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
+from types import ModuleType
 from typing import Any
 
 from memoria_vault.runtime.paths import path_redirects
 
+fcntl: ModuleType | None
 try:
     import fcntl
 except ImportError:  # pragma: no cover - non-POSIX fallback.
     fcntl = None
 
+msvcrt: ModuleType | None
 try:
     import msvcrt
 except ImportError:  # pragma: no cover - POSIX test environment.
@@ -177,7 +180,8 @@ def _windows_pid_alive(pid: int) -> bool:
     process_query_limited_information = 0x1000
     error_access_denied = 5
     still_active = 259
-    kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+    win_dll = ctypes.WinDLL  # type: ignore[attr-defined]  # Windows-only ctypes API.
+    kernel32 = win_dll("kernel32", use_last_error=True)
     open_process = kernel32.OpenProcess
     open_process.argtypes = [wintypes.DWORD, wintypes.BOOL, wintypes.DWORD]
     open_process.restype = wintypes.HANDLE
@@ -190,7 +194,8 @@ def _windows_pid_alive(pid: int) -> bool:
 
     handle = open_process(process_query_limited_information, False, pid)
     if not handle:
-        return ctypes.get_last_error() == error_access_denied
+        get_last_error = ctypes.get_last_error  # type: ignore[attr-defined]  # Windows-only ctypes API.
+        return get_last_error() == error_access_denied
     try:
         exit_code = wintypes.DWORD()
         if not get_exit_code(handle, ctypes.byref(exit_code)):
@@ -285,14 +290,14 @@ class _NoRedirect(urllib.request.HTTPRedirectHandler):
 
     def http_error_302(
         self,
-        request: urllib.request.Request,
-        response: Any,
-        status: int,
-        message: str,
+        req: urllib.request.Request,
+        fp: Any,
+        code: int,
+        msg: str,
         headers: Any,
     ) -> None:
-        response.close()
-        raise urllib.error.HTTPError(request.full_url, status, message, headers, response)
+        fp.close()
+        raise urllib.error.HTTPError(req.full_url, code, msg, headers, fp)
 
     http_error_301 = http_error_303 = http_error_307 = http_error_308 = http_error_302
 
@@ -442,7 +447,7 @@ def _spawn_server(vault: Path, state_dir: Path, spawn_command: list[str] | None)
     if os.name == "posix":
         popen_kwargs["start_new_session"] = True
     elif os.name == "nt":
-        popen_kwargs["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP
+        popen_kwargs["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP  # type: ignore[attr-defined]  # Windows-only API.
     try:
         if path_redirects(state_dir) or path_redirects(log_path):
             raise ValueError(_REDIRECT_ERROR)

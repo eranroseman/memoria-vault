@@ -49,7 +49,8 @@ must include:
 Authorization: Bearer <token>
 ```
 
-There is no TLS, cookie auth, browser session, OAuth flow, or remote bind mode.
+The transport provides no TLS, cookie auth, browser session, OAuth flow, or
+remote bind mode.
 The intended caller is a local trusted adapter attached to one workspace.
 
 ## Lifecycle and rendezvous

@@ -154,9 +154,9 @@ def validate_empirical_event(payload: dict[str, Any]) -> dict[str, Any]:
         else:
             event[field] = _string_field(field, value)
 
-    for field, allowed in ENUM_FIELDS.items():
-        if field in event and event[field] not in allowed:
-            allowed_text = ", ".join(sorted(allowed))
+    for field, allowed_values in ENUM_FIELDS.items():
+        if field in event and event[field] not in allowed_values:
+            allowed_text = ", ".join(sorted(allowed_values))
             raise ValueError(f"{field} must be one of: {allowed_text}")
     for field in OPAQUE_ID_FIELDS:
         if field in event:

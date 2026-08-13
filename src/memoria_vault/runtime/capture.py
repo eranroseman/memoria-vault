@@ -6,7 +6,7 @@ import json
 import re
 from html.parser import HTMLParser
 from pathlib import Path
-from typing import Any
+from typing import Any, TypedDict
 from urllib.parse import urlparse
 from urllib.request import urlopen
 
@@ -46,6 +46,13 @@ _ASPECT_HEADING_ALIASES = {
     "result": "outcome",
     "results": "outcome",
 }
+
+
+class PdfPage(TypedDict):
+    """One normalized text page returned by the PDF capture boundary."""
+
+    page: int
+    text: str
 
 
 def payload_doi(payload: dict[str, Any]) -> str:
@@ -255,7 +262,7 @@ def _structured_aspects(csl_json: dict[str, Any]) -> dict[str, str]:
     raw = memoria.get("aspects") or {}
     if not isinstance(raw, dict):
         return {}
-    out = {}
+    out: dict[str, str] = {}
     for key, value in raw.items():
         aspect_type = _aspect_type(str(key))
         text = str(value or "").strip()
@@ -265,7 +272,7 @@ def _structured_aspects(csl_json: dict[str, Any]) -> dict[str, str]:
 
 
 def _markdown_aspects(content_text: str) -> dict[str, str]:
-    out = {}
+    out: dict[str, str] = {}
     current = ""
     lines: list[str] = []
 
@@ -736,13 +743,13 @@ def _best_provider_coverage(old: str, new: str) -> str:
     return new if rank.get(new, 0) >= rank.get(old, 0) else old
 
 
-def _extract_pdf_pages(raw_bytes: bytes) -> list[dict[str, Any]]:
+def _extract_pdf_pages(raw_bytes: bytes) -> list[PdfPage]:
     try:
         import fitz
     except ImportError as exc:
         raise RuntimeError("PyMuPDF runtime dependency is unavailable; reinstall Memoria") from exc
 
-    pages = []
+    pages: list[PdfPage] = []
     extracted_text_bytes = 0
     with fitz.open(stream=raw_bytes, filetype="pdf") as doc:
         for page_number, page in enumerate(doc, start=1):
@@ -768,8 +775,8 @@ def _extract_pdf_pages(raw_bytes: bytes) -> list[dict[str, Any]]:
     return pages
 
 
-def _pdf_content_text(pages: list[dict[str, Any]]) -> str:
-    rows = []
+def _pdf_content_text(pages: list[PdfPage]) -> str:
+    rows: list[str] = []
     for page in pages:
         text = str(page.get("text") or "").strip()
         if text:
@@ -779,7 +786,7 @@ def _pdf_content_text(pages: list[dict[str, Any]]) -> str:
     return "\n\n".join(rows)
 
 
-def _validate_pdf_text_coherence(pages: list[dict[str, Any]]) -> None:
+def _validate_pdf_text_coherence(pages: list[PdfPage]) -> None:
     visible_count = 0
     replacement_count = 0
     alnum_count = 0
@@ -1162,6 +1169,7 @@ def _render_source_bibtex(frontmatter: dict[str, Any], citekey: str) -> str:
     for key, value in fields.items():
         if not value:
             continue
+        escaped: str | None
         if key == "author":
             escaped = value
         elif key in {"doi", "url"}:

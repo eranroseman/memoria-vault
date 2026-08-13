@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Graded loudness helpers.
 
 `loudness` is pull-only Inbox card metadata. Open block cards pause delegation

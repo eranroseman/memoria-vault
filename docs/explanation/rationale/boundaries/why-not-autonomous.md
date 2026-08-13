@@ -68,7 +68,8 @@ Code is the one domain where the three preconditions could hold:
 | Reversible change | Git can restore the previous state. |
 | Independent experiment | One code experiment need not depend on another's conclusion. |
 
-So a bounded code-experiment loop could be admissible in principle.
+These preconditions could make a bounded code-experiment loop admissible in
+principle.
 
 **The current exception is narrow, not autonomous.** The isolated,
 PI-approved, fail-closed code-artifact runner can execute its approved artifact

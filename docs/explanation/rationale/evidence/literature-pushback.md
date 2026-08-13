@@ -25,7 +25,7 @@ The claims to scope back:
 | --- | --- | --- |
 | Least-privilege allowlists are sufficient security | Poisoned input can attack through a legitimate read-and-reason path. | Keep allowlists, but also mask untrusted Markdown before it can pose as trusted content, and rely on gate, provenance, and channel separation (keeping untrusted provider/agent text out of the channel treated as trusted instruction or content) for the rest of the integrity argument. |
 | Human approval guarantees accuracy | Human-plus-machine can underperform human-alone when the machine is confidently wrong. | Treat approval as control and auditability; measure whether it improves correctness. |
-| More approval is always safer | Dense item-by-item approval erases automation and trains rubber-stamping. | Route only high-uncertainty or high-leverage items. |
+| More approval is always safer | Dense item-by-item approval erases automation and trains rubber-stamping. | Route only high-uncertainty or high-consequence items. |
 | Superseded claims can disappear | Historical queries need the old baseline. | Mark them non-current, but keep them retrievable. |
 | Atomic claims are self-sufficient | Stripped claims lose temporal scope, tense, and hedging. | Carry context fields and source-span provenance. |
 | Similar wording means same meaning | Entailment models can still confuse high-overlap opposites. | Require adversarial overlap fixtures before dedup or supersession gates. |

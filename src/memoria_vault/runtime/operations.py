@@ -1304,9 +1304,9 @@ def _pydantic_ai_chat(
     settings = {
         "temperature": params.get("temperature", 0),
         "max_tokens": int(
-            params.get("max_tokens", os.environ.get("MEMORIA_MODEL_MAX_TOKENS", 2048))
+            params.get("max_tokens", os.environ.get("MEMORIA_MODEL_MAX_TOKENS", "2048"))
         ),
-        "timeout": float(params.get("timeout", os.environ.get("MEMORIA_MODEL_TIMEOUT", 90))),
+        "timeout": float(params.get("timeout", os.environ.get("MEMORIA_MODEL_TIMEOUT", "90"))),
     }
     try:
         # The loader returns classes, so PascalCase is correct; N806 sees only
@@ -1371,7 +1371,7 @@ def _significant_terms(*values: str) -> set[str]:
         "suggestions",
         "synthesis",
     }
-    terms = set()
+    terms: set[str] = set()
     for value in values:
         terms.update(
             term

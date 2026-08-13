@@ -11,7 +11,8 @@ from collections import Counter
 from collections.abc import Container, Iterable, Mapping, Sequence
 from importlib.resources import files
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from types import TracebackType
+from typing import TYPE_CHECKING, Any, Literal
 
 from memoria_vault.runtime.content_security import neutralize_untrusted_markdown
 from memoria_vault.runtime.evidence import (
@@ -25,19 +26,19 @@ from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path
 
 # Same re-export contract as workspace_lock below: readers outside `state`
-# use four of these public names via `state.` attribute access
+# use five of these public names via `state.` attribute access
 # (`markdown_code_literals_masked` has no external caller -- only
 # markdown.py's own `markdown_visible_code_literals_masked` calls it); some
-# private names are what `_evidence_marker_rows` and
-# `_block_canonical_text_from_text` (below) still call after the
+# private names are what `evidence_marker_rows` and
+# `block_canonical_text_from_text` (below) still call after the
 # markdown/evidence-marker extraction, and others (e.g. `_has_raw_tex_syntax`)
 # are what tests still reach via `state.<name>`.
 from memoria_vault.runtime.state.markdown import (  # noqa: F401
     _direct_evidence_marker_matches,
-    _evidence_marker_occurrences_from_markdown,
     _has_raw_tex_syntax,
     _markdown_control_text,
     direct_evidence_marker_spans_from_markdown,
+    evidence_marker_occurrences_from_markdown,
     evidence_markers_from_markdown,
     markdown_citation_visibility_is_ambiguous,
     markdown_code_literals_masked,
@@ -81,9 +82,15 @@ def db_path(vault: Path) -> Path:
 
 
 class _ClosingConnection(sqlite3.Connection):
-    def __exit__(self, *exc_info: object) -> bool:
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        traceback: TracebackType | None,
+        /,
+    ) -> Literal[False]:
         try:
-            return super().__exit__(*exc_info)
+            return super().__exit__(exc_type, exc_value, traceback)
         finally:
             self.close()
 
@@ -456,7 +463,7 @@ def recover_running_requests(vault: Path) -> list[str]:
     return recovered
 
 
-def _append_journal_row(vault: Path, event: dict[str, Any], *, machine: str) -> None:
+def append_journal_row(vault: Path, event: dict[str, Any], *, machine: str) -> None:
     """Store an already decorated journal event without provenance fallback."""
     row = dict(event)
     if row.get("machine") != machine:
@@ -467,12 +474,10 @@ def _append_journal_row(vault: Path, event: dict[str, Any], *, machine: str) -> 
 def _insert_journal_row(vault: Path, row: dict[str, Any], *, machine: str) -> None:
     with connect(vault) as conn:
         conn.execute("BEGIN IMMEDIATE")
-        _insert_journal_row_conn(conn, row, machine=machine)
+        insert_journal_row_conn(conn, row, machine=machine)
 
 
-def _insert_journal_row_conn(
-    conn: sqlite3.Connection, row: dict[str, Any], *, machine: str
-) -> None:
+def insert_journal_row_conn(conn: sqlite3.Connection, row: dict[str, Any], *, machine: str) -> None:
     """Insert one authoritative journal row using the caller's transaction."""
     timestamp = str(row.get("timestamp") or now_iso())
     event_type = str(row.get("event") or row.get("type") or "event")
@@ -2658,10 +2663,10 @@ def code_run(vault: Path, run_id: str) -> dict[str, Any] | None:
 def replace_evidence_sets(vault: Path, rows: Iterable[dict[str, Any]]) -> dict[str, Any]:
     rows = list(rows)
     with connect(vault) as conn:
-        return _replace_evidence_sets_conn(conn, rows)
+        return replace_evidence_sets_conn(conn, rows)
 
 
-def _replace_evidence_sets_conn(
+def replace_evidence_sets_conn(
     conn: sqlite3.Connection, rows: Iterable[dict[str, Any]]
 ) -> dict[str, Any]:
     """Replace active evidence sets using an existing transaction."""
@@ -2750,7 +2755,7 @@ def evidence_sets(vault: Path) -> list[dict[str, Any]]:
 
 def rebuild_evidence_sets_from_markers(vault: Path, *, run_id: str = "") -> dict[str, Any]:
     vault = Path(vault)
-    marker_rows, duplicate_ids = _evidence_marker_rows(vault, run_id=run_id)
+    marker_rows, duplicate_ids = evidence_marker_rows(vault, run_id=run_id)
     result = replace_evidence_sets(vault, marker_rows)
     if duplicate_ids:
         result["duplicate_ids"] = duplicate_ids
@@ -3011,7 +3016,7 @@ def _code_run_row(row: sqlite3.Row) -> dict[str, Any]:
     }
 
 
-def _evidence_marker_rows(
+def evidence_marker_rows(
     vault: Path,
     *,
     run_id: str,
@@ -3023,7 +3028,7 @@ def _evidence_marker_rows(
             continue
         rel = normalize_path(path.relative_to(vault).as_posix())
         text = path.read_text(encoding="utf-8")
-        for marker, is_direct in _evidence_marker_occurrences_from_markdown(text):
+        for marker, is_direct in evidence_marker_occurrences_from_markdown(text):
             occurrences_by_id.setdefault(marker.evidence_id, []).append((rel, marker, is_direct))
 
     prior_block_refs = _evidence_set_block_refs(vault)
@@ -3225,10 +3230,10 @@ def _block_text_sha256(vault: Path, block_ref: str) -> str | None:
         text = path.read_text(encoding="utf-8")
     except (OSError, UnicodeError, ValueError):
         return None
-    return _block_text_sha256_from_text(text, block_ref)
+    return block_text_sha256_from_text(text, block_ref)
 
 
-def _block_canonical_text_from_text(text: str, block_ref: str) -> str | None:
+def block_canonical_text_from_text(text: str, block_ref: str) -> str | None:
     _rel, separator, anchor = str(block_ref).partition("#^")
     if not separator or not anchor:
         return None
@@ -3279,8 +3284,8 @@ def _block_canonical_text_from_text(text: str, block_ref: str) -> str | None:
     return canonical.strip()
 
 
-def _block_text_sha256_from_text(text: str, block_ref: str) -> str | None:
-    canonical = _block_canonical_text_from_text(text, block_ref)
+def block_text_sha256_from_text(text: str, block_ref: str) -> str | None:
+    canonical = block_canonical_text_from_text(text, block_ref)
     if canonical is None:
         return None
     return "sha256:" + hashlib.sha256(canonical.encode("utf-8")).hexdigest()

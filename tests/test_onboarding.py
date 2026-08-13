@@ -573,7 +573,7 @@ def test_zotero_probe_default_opener_is_the_hardened_opener() -> None:
     # urllib.request.urlopen would not fail any of the tests above, since
     # they all inject their own fake. Pin the default explicitly.
     default = inspect.signature(onboarding.zotero_running).parameters["url_open"].default
-    assert default is onboarding._open_zotero_probe
+    assert default is onboarding.open_zotero_probe
 
 
 def test_zotero_probe_default_opener_ignores_ambient_proxy(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -624,7 +624,7 @@ def test_zotero_probe_default_opener_ignores_ambient_proxy(monkeypatch: pytest.M
     # environments the ProxyHandler({}) fix exists for.
     monkeypatch.delenv("NO_PROXY", raising=False)
     try:
-        with onboarding._open_zotero_probe(
+        with onboarding.open_zotero_probe(
             f"http://127.0.0.1:{target_port}/connector/ping", timeout=2.0
         ) as response:
             assert response.status == 200
@@ -930,12 +930,12 @@ def test_run_onboarding_default_zotero_opener_is_the_hardened_opener() -> None:
     # zotero_running -- would silently undo BOOT-D.4's proxy-free,
     # redirect-free hardening whenever a caller does not pass its own
     # `url_open`. BOOT-D.7's `memoria onboard`/`init --onboard` CLI threads
-    # `_open_zotero_probe` explicitly anyway (belt-and-suspenders, pinned in
+    # `open_zotero_probe` explicitly anyway (belt-and-suspenders, pinned in
     # tests/test_cli.py), but any other caller -- present or future -- still
     # falls back to this default. Pin it explicitly, mirroring
     # zotero_running's own regression guard.
     default = inspect.signature(onboarding.run_onboarding).parameters["url_open"].default
-    assert default is onboarding._open_zotero_probe
+    assert default is onboarding.open_zotero_probe
 
 
 def test_zotero_probe_default_opener_does_not_follow_redirects() -> None:
@@ -976,7 +976,7 @@ def test_zotero_probe_default_opener_does_not_follow_redirects() -> None:
     redirect_thread.start()
     try:
         with pytest.raises(urllib.error.HTTPError):
-            onboarding._open_zotero_probe(
+            onboarding.open_zotero_probe(
                 f"http://127.0.0.1:{redirect_port}/connector/ping", timeout=2.0
             )
         assert not target_seen.is_set()

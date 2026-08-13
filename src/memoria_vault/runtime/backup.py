@@ -85,6 +85,7 @@ def create_backup(
 
         target.parent.mkdir(parents=True, exist_ok=True)
         stage = Path(tempfile.mkdtemp(prefix=f".{target.name}.stage-", dir=target.parent))
+        cleanup_stage: Path | None = stage
         _fsync_directory(target.parent)
         try:
             database = stage / "memoria.sqlite"
@@ -133,10 +134,12 @@ def create_backup(
             )
             _fsync_tree(stage)
             _publish_backup_directory(stage, target, vault)
-            stage = None
+            cleanup_stage = None
         except BaseException:
-            if stage is not None and not _backup_transaction_binds_stage(vault, stage):
-                shutil.rmtree(stage, ignore_errors=True)
+            if cleanup_stage is not None and not _backup_transaction_binds_stage(
+                vault, cleanup_stage
+            ):
+                shutil.rmtree(cleanup_stage, ignore_errors=True)
             raise
 
     return {
@@ -199,6 +202,7 @@ def restore_backup(
         return _failure("live database is present; pass --force to replace it")
 
     stage = Path(tempfile.mkdtemp(prefix=f".{vault.name}.restore-stage-", dir=vault.parent))
+    cleanup_stage: Path | None = stage
     _fsync_directory(vault.parent)
     try:
         try:
@@ -225,10 +229,10 @@ def restore_backup(
                         "Git revision before restoring this backup"
                     )
             journal = _install_restore_stage(vault, stage, source, manifest, actor, machine)
-            stage = None
+            cleanup_stage = None
     finally:
-        if stage is not None and not _restore_transaction_binds_stage(vault, stage):
-            shutil.rmtree(stage, ignore_errors=True)
+        if cleanup_stage is not None and not _restore_transaction_binds_stage(vault, cleanup_stage):
+            shutil.rmtree(cleanup_stage, ignore_errors=True)
 
     return {
         "ok": True,

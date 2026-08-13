@@ -118,6 +118,29 @@ def test_unparseable_input_fails_open() -> None:
     assert result.returncode == 0
 
 
+@pytest.mark.parametrize(
+    "payload",
+    [
+        None,
+        [],
+        {},
+        {"tool_input": "x"},
+        {"tool_input": {"command": 42}},
+    ],
+)
+def test_structurally_malformed_json_input_fails_open(payload: object) -> None:
+    """Well-formed JSON with the wrong hook shape must not wedge the caller."""
+    result = subprocess.run(
+        [sys.executable, str(HOOK)],
+        input=json.dumps(payload),
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    assert result.returncode == 0
+    assert "Traceback" not in result.stderr
+
+
 def test_block_explains_itself() -> None:
     """The agent only recovers if stderr names the alternative."""
     result = subprocess.run(

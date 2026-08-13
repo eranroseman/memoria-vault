@@ -167,7 +167,7 @@ The disposition is journal provenance; it does not edit the marker or assert
 that the claim is true. It is bound to content: the event records a digest
 of the record's ordered items, and verification honors the disposition only
 while the current items match. Editing the items voids the disposition (the
-journal keeps it; it is simply inert) and the record re-routes to review.
+journal keeps it; it becomes inert) and the record re-routes to review.
 A disposition can clear `evidence-incomplete` and `review-required`; it can
 never clear a permanent block.
 

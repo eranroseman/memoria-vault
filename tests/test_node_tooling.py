@@ -25,6 +25,31 @@ OBSIDIAN_PACKAGE = ROOT / "packages" / "memoria-obsidian" / "package.json"
 OBSIDIAN_LOCK = ROOT / "packages" / "memoria-obsidian" / "package-lock.json"
 VERIFY_WORKFLOW = ROOT / ".github" / "workflows" / "verify.yml"
 DEPENDABOT = ROOT / ".github" / "dependabot.yml"
+VSCODE_SETTINGS = ROOT / ".vscode" / "settings.json"
+VSCODE_TASKS = ROOT / ".vscode" / "tasks.json"
+
+OXFMT_EDITOR_LANGUAGE_IDS = (
+    "javascript",
+    "javascriptreact",
+    "typescript",
+    "typescriptreact",
+    "json",
+    "jsonc",
+    "json5",
+    "yaml",
+    "toml",
+    "css",
+    "scss",
+    "less",
+    "postcss",
+    "wxss",
+    "graphql",
+    "handlebars",
+    "html",
+    "vue",
+    "svelte",
+    "mjml",
+)
 
 
 def _pins(package: str) -> list[str]:
@@ -126,6 +151,10 @@ def test_oxc_editor_tools_match_the_pinned_hook_versions():
     package = json.loads(OBSIDIAN_PACKAGE.read_text(encoding="utf-8"))
     lock = json.loads(OBSIDIAN_LOCK.read_text(encoding="utf-8"))
     config = yaml.safe_load(PRECOMMIT.read_text(encoding="utf-8"))
+    settings = json.loads(VSCODE_SETTINGS.read_text(encoding="utf-8"))
+    dependabot = yaml.safe_load(DEPENDABOT.read_text(encoding="utf-8"))
+    oxfmt_config = json.loads((ROOT / ".oxfmtrc.json").read_text(encoding="utf-8"))
+    oxfmt = _hook("oxfmt")
     revs = {repo["repo"]: repo["rev"] for repo in config["repos"] if repo["repo"] != "local"}
 
     for tool in ("oxlint", "oxfmt"):
@@ -138,10 +167,57 @@ def test_oxc_editor_tools_match_the_pinned_hook_versions():
             "the pre-commit hook; the editor and the gate would disagree"
         )
 
+    assert oxfmt["types_or"] == ["file"]
+    assert "pass_filenames" not in oxfmt
+    assert oxfmt["files"] == (
+        r"\.(?:js|mjs|cjs|jsx|ts|mts|cts|tsx|json|jsonc|json5|yaml|yml|toml|"
+        r"css|scss|less|pcss|postcss|wxss|graphql|gql|graphqls|html|htm|hta|xhtml|"
+        r"component\.html|vue|svelte|hbs|handlebars|mjml)$"
+    )
+    assert oxfmt["additional_dependencies"] == ["oxfmt@0.63.0", "svelte@5.56.8"]
+    assert package["devDependencies"]["svelte"] == "5.56.8"
+    assert lock["packages"][""]["devDependencies"]["svelte"] == "5.56.8"
+    assert oxfmt_config["svelte"] is True
+    assert oxfmt_config["ignorePatterns"] == [
+        "test-vault/**",
+        ".kilo/**",
+        "**/*.md",
+        "**/*.markdown",
+        "**/*.mdx",
+    ]
+    assert settings["[markdown]"]["editor.formatOnSave"] is False
+    for language_id in OXFMT_EDITOR_LANGUAGE_IDS:
+        assert settings[f"[{language_id}]"] == {
+            "editor.defaultFormatter": "oxc.oxc-vscode",
+            "editor.formatOnSave": True,
+        }
+
+    npm_update = next(
+        update for update in dependabot["updates"] if update["package-ecosystem"] == "npm"
+    )
+    svelte_ignore = next(
+        ignored for ignored in npm_update["ignore"] if ignored["dependency-name"] == "svelte"
+    )
+    assert svelte_ignore["update-types"] == [
+        "version-update:semver-major",
+        "version-update:semver-minor",
+        "version-update:semver-patch",
+    ]
+
     # The extension is what reads those node_modules; recommending it is the
     # only thing that makes the pin above serve anyone.
     extensions = json.loads((ROOT / ".vscode" / "extensions.json").read_text(encoding="utf-8"))
     assert "oxc.oxc-vscode" in extensions["recommendations"]
+
+
+def test_vale_current_file_task_passes_filename_as_one_process_argument():
+    """A tracked filename must never become shell source in the editor task."""
+    tasks = json.loads(VSCODE_TASKS.read_text(encoding="utf-8"))["tasks"]
+    task = next(task for task in tasks if task["label"] == "vale: lint the current file")
+
+    assert task["type"] == "process"
+    assert task["command"] == "pre-commit"
+    assert task["args"] == ["run", "vale", "--hook-stage", "manual", "--files", "${file}"]
 
 
 def test_precommit_hooks_use_pinned_tool_environments():
@@ -158,6 +234,7 @@ def test_precommit_hooks_use_pinned_tool_environments():
         "https://github.com/pre-commit/pre-commit-hooks",
         "https://github.com/gitleaks/gitleaks",
         "https://github.com/astral-sh/ruff-pre-commit",
+        "https://github.com/pre-commit/mirrors-mypy",
         "https://github.com/adrienverge/yamllint",
         "https://github.com/shellcheck-py/shellcheck-py",
         "https://github.com/oxc-project/mirrors-oxlint",
@@ -192,6 +269,76 @@ def test_precommit_hooks_use_pinned_tool_environments():
         f"ruff is {ruff_version} in requirements-dev.txt but {ruff_rev} in the "
         "pre-commit hook; the editor and the gate would disagree"
     )
+
+    # mypy is the second tool pinned twice, and for the same reason as ruff:
+    # `mypy-type-checker.importStrategy` is `fromEnvironment`, so a skewed
+    # editor copy reports type errors the gate does not, and misses ones it does.
+    mypy_pins = _pins("mypy")
+    assert len(mypy_pins) == 1, f"expected exactly one mypy pin, got {mypy_pins}"
+    mypy_version = mypy_pins[0].strip().removeprefix("mypy==")
+    mypy_rev = pinned_repos["https://github.com/pre-commit/mirrors-mypy"]
+    assert mypy_rev.removeprefix("v") == mypy_version, (
+        f"mypy is {mypy_version} in requirements-dev.txt but {mypy_rev} in the "
+        "pre-commit hook; the editor and the gate would disagree"
+    )
+
+
+def test_mypy_gate_is_source_scoped_and_pinned_for_offline_manual_checks():
+    """The manual gate owns one fully pinned, package-wide MyPy invocation."""
+    mypy = _hook("mypy")
+    assert mypy["stages"] == ["manual"]
+    assert mypy["pass_filenames"] is False
+    # mirrors-mypy ships global --ignore-missing-imports and
+    # --scripts-are-modules defaults. An explicit empty list clears both, so
+    # only the narrow pyproject overrides may suppress missing imports.
+    assert mypy["args"] == []
+    assert mypy["additional_dependencies"] == [
+        "types-PyYAML==6.0.12.20260724",
+        "pydantic-ai-slim[openai]==2.28.0",
+    ]
+
+    config = tomllib.loads(PYPROJECT.read_text(encoding="utf-8"))["tool"]["mypy"]
+    assert config["files"] == ["src/memoria_vault"]
+    assert config["python_version"] == "3.12"
+    assert config["warn_redundant_casts"] is True
+    assert config["warn_unused_ignores"] is True
+    assert config["warn_unused_configs"] is True
+    assert config["no_implicit_optional"] is True
+    assert "check_untyped_defs" not in config
+    assert "strict_equality" not in config
+    assert config["overrides"] == [{"module": ["fitz", "mcp.*"], "ignore_missing_imports": True}]
+
+
+def test_mypy_editor_environment_uses_the_gate_yaml_stubs():
+    """Keep fromEnvironment editor checks on the gate's exact YAML stubs."""
+    gate_stub_pins = [
+        dependency
+        for dependency in _hook("mypy")["additional_dependencies"]
+        if dependency.startswith("types-PyYAML==")
+    ]
+    assert len(gate_stub_pins) == 1
+    assert _pins("types-PyYAML") == gate_stub_pins
+
+
+def test_python_editor_applies_ruff_import_and_fix_actions_on_save():
+    """Keep saved Python aligned with the pinned Ruff and MyPy gates."""
+    raw_settings = VSCODE_SETTINGS.read_text(encoding="utf-8")
+    settings = json.loads(re.sub(r"^\s*//.*$", "", raw_settings, flags=re.MULTILINE))
+
+    python_settings = settings["[python]"]
+    assert python_settings["editor.defaultFormatter"] == "charliermarsh.ruff"
+    assert python_settings["editor.formatOnSave"] is True
+    code_actions = python_settings["editor.codeActionsOnSave"]
+    assert code_actions["source.organizeImports.ruff"] == "explicit"
+    assert code_actions["source.fixAll.ruff"] == "explicit"
+
+    # The extension uses requirements-dev's pinned MyPy; Pylance remains useful
+    # for language features, but its unpinned type checker must not disagree.
+    assert settings["mypy-type-checker.importStrategy"] == "fromEnvironment"
+    assert settings["python.analysis.typeCheckingMode"] == "off"
+
+    extensions = json.loads((ROOT / ".vscode" / "extensions.json").read_text(encoding="utf-8"))
+    assert "ms-python.mypy-type-checker" in extensions["recommendations"]
 
 
 def test_coverage_audit_tool_is_pinned_for_contributors():

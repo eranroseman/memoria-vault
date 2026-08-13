@@ -121,6 +121,12 @@ craft is out of scope here; the rules below are the Memoria-specific ones.
   anchor.
 - **Spelling:** American English (`-ize`/`-or`); `cspell` is the gate. Add a real
   unknown term to `project-words.txt` (lowercase, sorted) — never inline-suppress.
+- **Terminology:** `.vale.ini` holds the usage rulings Vale enforces over
+  published docs prose. Run them from the editor with the "vale: lint the
+  current file" task (Ctrl+Shift+P → "Tasks: Run Task"), or from a shell with
+  `pre-commit run vale --hook-stage manual --all-files`. Both use the pinned
+  hook binary; do not install a separate Vale, which would lint with a version
+  the gate does not use.
 - **Diagrams:** the site renders mermaid client-side, and `mermaid-parse` gates
   fence syntax against the version `docs/_config.yml` pins — so what needs
   saying here is what a parser cannot see. A diagram earns its place only where

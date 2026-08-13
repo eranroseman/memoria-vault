@@ -17,7 +17,7 @@ rationale](../rationale/surfaces/README.md).
 
 Three surfaces, one envelope: the **editor** is where judgment happens — the
 researcher reads, writes, and decides in plain files; the **plugin** is an
-ambient layer — status, attention prompts, and one-click requests — that enqueues
+ambient layer — status, attention prompts, and single-action requests — that enqueues
 through the engine but never writes on its own; the **agent** converses and
 proposes through the same operation envelope with its true actor. The PI alone
 disposes attention and curation decisions. A fourth, invisible role (the
@@ -28,7 +28,7 @@ Every surface goes through the same queue; none is a second authority.
 flowchart TD
     subgraph surfaces ["Three surfaces"]
         editor["Editor<br/>where judgment happens:<br/>the researcher reads, writes,<br/>and decides in plain files"]
-        plugin["Plugin<br/>an ambient layer:<br/>status, attention prompts,<br/>one-click requests"]
+        plugin["Plugin<br/>an ambient layer:<br/>status, attention prompts,<br/>single-action requests"]
         agent["Agent<br/>converses and proposes<br/>with its true actor"]
     end
 

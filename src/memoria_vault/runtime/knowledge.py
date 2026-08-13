@@ -264,7 +264,7 @@ def emit_note_candidates(
         require_policy_path(policy, note_rel)
         row_work_id = _draft_work_id(str(row.get("work_id") or ""))
         work_ref = f"catalog/sources/{row_work_id}" if row_work_id else digest_source_ref
-        frontmatter = {
+        frontmatter: dict[str, Any] = {
             "type": "note",
             "title": safe_title,
             "work_id": work_ref,
@@ -1103,7 +1103,7 @@ def _catalog_source_terms(source: dict[str, Any]) -> list[str]:
     memoria = csl.get("memoria")
     if not isinstance(memoria, dict):
         memoria = {}
-    out = []
+    out: list[str] = []
     for field in ("tags", "topics", "research_area"):
         value = memoria.get(field)
         if isinstance(value, list):
@@ -1670,7 +1670,7 @@ def _tag_candidates(vault: Path) -> list[dict[str, Any]]:
                 continue
             counts[phrase] += 1
             refs[phrase].add(rel)
-    rows = [
+    rows: list[dict[str, Any]] = [
         {"phrase": phrase, "count": count, "refs": sorted(refs[phrase])}
         for phrase, count in counts.items()
         if count >= _TAG_CANDIDATE_MIN_COUNT
@@ -1799,7 +1799,7 @@ def _coverage_round_robin(candidates: list[dict[str, Any]], limit: int) -> list[
             str(row["candidate_work_id"]),
         ),
     )
-    selected = []
+    selected: list[dict[str, Any]] = []
     used_sources: set[str] = set()
     while remaining and len(selected) < limit:
         index = next(
@@ -2401,7 +2401,7 @@ def propose_project_slice(
     project = _checked_frontmatter(vault, project_rel, "project")
     retrieval_query = _project_slice_query(vault, project_rel, project, query)
     notes = _checked_notes_by_path(vault)
-    members = []
+    members: list[dict[str, Any]] = []
     skipped = []
     for hit in search_checked_index(
         vault, retrieval_query, k=max(limit * 4, limit), context=context
@@ -2718,7 +2718,7 @@ def _verify_project_draft_snapshot(
     rows_by_id = {str(row["id"]): row for row in state.evidence_sets(vault)}
     draft_occurrence_ids = {
         marker.evidence_id
-        for marker, _is_direct in state._evidence_marker_occurrences_from_markdown(draft["content"])
+        for marker, _is_direct in state.evidence_marker_occurrences_from_markdown(draft["content"])
     }
     findings = [
         {
@@ -2739,7 +2739,7 @@ def _verify_project_draft_snapshot(
     disposed = _disposed_evidence_digests(vault)
     for row in draft["evidence_sets"]:
         stored_block_hash = row.get("block_text_sha256")
-        current_block_hash = state._block_text_sha256_from_text(
+        current_block_hash = state.block_text_sha256_from_text(
             draft["content"],
             row["block_ref"],
         )
@@ -3096,12 +3096,12 @@ def _append_project_export_paper_plan(lines: list[str], paper_plan: object) -> N
         if value:
             lines.append(f"- {label}: {value}")
     for key, label in (("claim_evidence_map", "Claim evidence"), ("figure_plan", "Figure plan")):
-        value = paper_plan.get(key)
-        if isinstance(value, dict) and value:
+        plan_value = paper_plan.get(key)
+        if isinstance(plan_value, dict) and plan_value:
             rendered = "; ".join(
                 f"{neutralize_untrusted_markdown_fragment(str(claim))}: "
                 f"{neutralize_untrusted_markdown_fragment(str(evidence))}"
-                for claim, evidence in sorted(value.items())
+                for claim, evidence in sorted(plan_value.items())
             )
             lines.append(f"- {label}: {rendered}")
     lines.append("")

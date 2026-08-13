@@ -275,7 +275,7 @@ def _tension_pairs(
         )
         if not crosses:
             continue
-        pair = tuple(sorted((source, target)))
+        pair = (source, target) if source <= target else (target, source)
         pairs[pair] = {
             "pair": list(pair),
             "titles": [titles[pair[0]], titles[pair[1]]],
@@ -324,7 +324,7 @@ def _vetted_project_slice_ids(
 
 # Project path resolution was a byte-identical copy of `graph_sql`'s. The other
 # de-duplicated aliases went with the links closure they wrapped (R2 task G).
-_vetted_project_rel = graph_sql._project_rel
+_vetted_project_rel = graph_sql.project_rel_path
 
 
 def _payload_titles(payload: dict[str, Any]) -> dict[str, str]:

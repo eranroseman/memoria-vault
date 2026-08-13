@@ -345,7 +345,7 @@ def test_escaped_markdown_bracket_remains_a_direct_visible_claim() -> None:
     assert [marker.evidence_id for marker in state.evidence_markers_from_markdown(content)] == [
         _EVIDENCE_ID
     ]
-    assert state._block_text_sha256_from_text(content, _BLOCK_REF) is not None
+    assert state.block_text_sha256_from_text(content, _BLOCK_REF) is not None
 
 
 def test_inline_tex_with_an_escaped_closer_remains_a_direct_visible_claim() -> None:
@@ -354,7 +354,7 @@ def test_inline_tex_with_an_escaped_closer_remains_a_direct_visible_claim() -> N
     assert [marker.evidence_id for marker in state.evidence_markers_from_markdown(content)] == [
         _EVIDENCE_ID
     ]
-    assert state._block_text_sha256_from_text(content, _BLOCK_REF) is not None
+    assert state.block_text_sha256_from_text(content, _BLOCK_REF) is not None
 
 
 @pytest.mark.parametrize(
@@ -372,21 +372,21 @@ def test_unsupported_tilde_fence_headers_leave_evidence_direct(opening: str) -> 
     assert [marker.evidence_id for marker in state.evidence_markers_from_markdown(content)] == [
         _EVIDENCE_ID
     ]
-    assert state._block_text_sha256_from_text(content, _BLOCK_REF) is not None
+    assert state.block_text_sha256_from_text(content, _BLOCK_REF) is not None
 
 
 def test_valid_raw_tilde_fence_keeps_evidence_nonbinding() -> None:
     content = f"~~~ {{=html}}\nHidden claim. ^blk-11111111 {_MARKER}\n~~~\n"
 
     assert state.evidence_markers_from_markdown(content) == []
-    assert state._block_text_sha256_from_text(content, _BLOCK_REF) is None
+    assert state.block_text_sha256_from_text(content, _BLOCK_REF) is None
 
 
 def test_display_tex_math_closer_with_an_extra_backslash_cannot_mint_a_binding() -> None:
     content = f"\\[\nHidden claim. ^blk-11111111 {_MARKER}\n\\\\]\n"
 
     assert state.evidence_markers_from_markdown(content) == []
-    assert state._block_text_sha256_from_text(content, _BLOCK_REF) is None
+    assert state.block_text_sha256_from_text(content, _BLOCK_REF) is None
 
 
 @pytest.mark.parametrize(
@@ -440,7 +440,7 @@ def test_deep_initial_yaml_mapping_fails_closed_without_recursing() -> None:
     content = f"---\n{frontmatter}---\nVisible claim. ^blk-11111111 {_MARKER}\n"
 
     assert state.evidence_markers_from_markdown(content) == []
-    assert state._block_text_sha256_from_text(content, _BLOCK_REF) is None
+    assert state.block_text_sha256_from_text(content, _BLOCK_REF) is None
 
 
 def test_top_level_control_after_a_closed_container_remains_bindable(tmp_path: Path) -> None:

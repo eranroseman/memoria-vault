@@ -145,6 +145,51 @@ def test_memoria_obsidian_committed_release_artifact_is_current() -> None:
     assert result.returncode == 0, result.stdout + result.stderr
 
 
+_OXFMT_FORMAT_PROBE = """
+import { readFile } from "node:fs/promises";
+import { format } from "oxfmt";
+
+const [filename, sourcePath, configPath] = process.argv.slice(1);
+const options = JSON.parse(await readFile(configPath, "utf8"));
+delete options.$schema;
+delete options.ignorePatterns;
+const result = await format(filename, await readFile(sourcePath, "utf8"), options);
+if (result.errors.length) {
+  throw new Error(result.errors.map(({ message }) => message).join("\\n"));
+}
+process.stdout.write(result.code);
+"""
+
+
+def _format_with_adapter_oxfmt(filename: str, source: Path) -> str:
+    result = subprocess.run(
+        [
+            "node",
+            "--input-type=module",
+            "-e",
+            _OXFMT_FORMAT_PROBE,
+            filename,
+            str(source),
+            str(ROOT / ".oxfmtrc.json"),
+        ],
+        cwd=PLUGIN,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    return result.stdout
+
+
+def test_memoria_obsidian_seeded_release_artifacts_are_oxfmt_canonical() -> None:
+    assert _format_with_adapter_oxfmt("main.js", SEED_PLUGIN / "main.js") == (
+        SEED_PLUGIN / "main.js"
+    ).read_text(encoding="utf-8")
+    assert _format_with_adapter_oxfmt("styles.css", PLUGIN / "styles.css") == (
+        SEED_PLUGIN / "styles.css"
+    ).read_text(encoding="utf-8")
+
+
 def test_memoria_obsidian_seeded_release_artifact_loads_without_sibling_modules(
     tmp_path: Path,
 ) -> None:

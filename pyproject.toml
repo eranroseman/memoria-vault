@@ -10,11 +10,7 @@ readme = "README.md"
 requires-python = ">=3.12"
 license = { file = "LICENSE" }
 authors = [{ name = "Eran Roseman" }]
-dependencies = [
-  "pydantic-ai-slim[openai]>=2.0",
-  "PyMuPDF>=1.24,<2",
-  "PyYAML>=6.0",
-]
+dependencies = ["pydantic-ai-slim[openai]>=2.0", "PyMuPDF>=1.24,<2", "PyYAML>=6.0"]
 
 [project.optional-dependencies]
 mcp = ["mcp>=2,<3"]
@@ -26,7 +22,7 @@ memoria = "memoria_vault.cli:main"
 [tool.setuptools.packages.find]
 where = ["src"]
 include = ["memoria_vault*"]
-namespaces = false  # Guard: makes implicit namespace package drops loud instead of silent
+namespaces = false # Guard: makes implicit namespace package drops loud instead of silent
 
 [tool.setuptools.package-data]
 memoria_vault = ["runtime/*.sql"]
@@ -63,10 +59,7 @@ testpaths = ["tests"]
 # deliberately NOT here: with both the root and `scripts` on the path, one file
 # imports as two distinct modules (`scripts.test_vault.e2e_smoke` and
 # `test_vault.e2e_smoke`), each with its own state.
-pythonpath = [
-  ".",
-  "src",
-]
+pythonpath = [".", "src"]
 markers = [
   "static: formatting, lint, schema, docs refs, spell, design history, workflow safety",
   "unit: deterministic Python behavior with no runtime fixture",
@@ -115,38 +108,120 @@ docstring-code-format = true
 #   RET  flake8-return -- unnecessary else-after-return and friends
 #   N    pep8-naming -- casing the formatter cannot see, enabled while already clean
 #
-# Deliberately OFF: E1/E2/E3, W291/293, E501, COM, ISC, Q -- the formatter owns
-# layout (COM/ISC actively conflict with it). T20 (print is intentional in CLI),
-# LOG/G (no logging), PTH (pathlib everywhere except the atomic-replace and chmod
-# paths in backup/rendezvous/secrets/vaultio, where the os call is the clearer
-# primitive), ANN/D (docstring presence is a judgement call, not a lint gate — see AGENTS.md §Python style),
-# SIM/PERF/FURB (opinionated terseness-over-clarity refactors).
+# Deliberately OFF: E1/E2/E3, E501, COM, ISC, Q -- the formatter owns layout
+# (COM/ISC actively conflict with it). T20 (print is intentional in CLI), LOG/G
+# (no logging), PTH (explicit filesystem primitives and two intentional Path('.')
+# uses in structural-impact logic and a backup test are clearer at their sites),
+# ANN/D (docstring presence is a judgement call, not a lint gate -- see AGENTS.md
+# §Python style), SIM/PERF/FURB
+# (opinionated terseness-over-clarity refactors).
+#
+# Measured and rejected 2026-08, with the finding count that decided it. These
+# are the families a diagnostic `--select ALL` sweep surfaces; command-line
+# `--select ALL` overrides configured ignores, so it is not an enablement list.
+# The counts are here so the next reader does not have to repeat the sweep:
+#   TRY003 880 -- exception-message style.
+#   EM101/EM102 446 + 439 = 885 (combined with TRY003: 1,765) -- exception-message
+#                  style.
+#   PLC0415 417 -- import-outside-top-level. Lazy imports are deliberate (for
+#                  example, import fcntl inside scripts/verify's lock helper).
+#   PLR2004 502 -- magic-value comparison; noise in a test suite this size.
+#   CPY001 290 -- copyright headers. No.
+#   INP001 179 -- implicit namespace package. The `namespaces = false` guard in
+#                 [tool.setuptools.packages.find] covers the real risk.
+#   TC003 145 -- typing-only imports; a micro-optimisation under
+#                `from __future__ import annotations`.
+#   ARG001 108 in src/scripts (190 overall) -- unused arguments, mostly
+#                callback/interface conformance. Needs a read per site, not a
+#                blanket enable.
+#   TRY004 59 in src/scripts (63 overall) -- raising ValueError where TypeError
+#                belongs. A real defect class at real volume; worth its own pass,
+#                not a drive-by enable.
+#   Complexity thresholds -- PLR0913 116, C901 60, PLR0912/PLR0915 31/31,
+#                PLR0911 27, PLR0917 18. Threshold opinions, not defects.
+#   FBT 65 across three rules (32 + 4 + 29) -- boolean-trap is a real design
+#                smell, but that volume for a style position buys a bikeshed.
 select = [
-  "F", "E4", "E7", "E9", "W", "B", "I", "UP", "C4", "PIE", "RUF",
-  "A", "PT", "DTZ", "FLY", "BLE", "S", "RET", "N",
+  "F",
+  "E4",
+  "E7",
+  "E9",
+  "W",
+  "B",
+  "I",
+  "UP",
+  "C4",
+  "PIE",
+  "RUF",
+  "A",
+  "PT",
+  "DTZ",
+  "FLY",
+  "BLE",
+  "S",
+  "RET",
+  "N",
+  # Zero findings on this tree when admitted (2026-08), the same test that
+  # earned N its place. Each guards a failure this repo can produce:
+  "T10", # flake8-debugger -- a stray breakpoint()/pdb.set_trace() from an agent session
+  "PLE", # pylint's error tier -- bad str.strip args, misplaced bare raise, invalid % format
+  "PGH", # blanket `# noqa` / `# type: ignore` (RUF100 catches only the *unused* form)
+  "TID", # relative imports creeping into a flat package
+  "EXE", # shebang/executable-bit drift on the scripts the gate invokes by path
+  # Small and real -- 36 sites at admission (2026-08), each a defect class rather
+  # than a style position:
+  "SLF", # private-member access -- 19 in src/scripts; tests exempted below
+  "ERA", # commented-out code -- src was already clean
+  "PLW1508", # os.environ.get with a non-string default
+  "PLW1510", # subprocess.run without check= -- a silently ignored failure
+  "PLW2901", # loop variable overwritten inside its own body
 ]
 ignore = [
-  "E731",    # lambda-to-name -- idiomatic for concise test helpers.
-  "PT018",   # composite assert -- splitting `assert a and b` is cosmetic churn.
+  "E731", # lambda-to-name -- idiomatic for concise test helpers.
+  "PT018", # composite assert -- splitting `assert a and b` is cosmetic churn.
   # PT011/PT017 assume the pytest.raises idiom, but this suite deliberately uses a
   # pytest-independent try/except/else style so tests run under both pytest and the
   # standalone CheckHarness (most test files do not import pytest).
-  "PT011",   # pytest.raises without match=.
-  "PT017",   # assertion on the exception inside an except block.
+  "PT011", # pytest.raises without match=.
+  "PT017", # assertion on the exception inside an except block.
   # The bandit (S) subrules below are threat-model misfits for a local,
   # single-user CLI tool (no untrusted remote input). The high-value S rules
   # (deserialization, eval/exec, SQL/yaml/xml injection) stay enabled.
-  "S603",    # subprocess call -- args are statically constructed, not untrusted.
-  "S607",    # partial executable path -- we call git/npx/ollama via PATH on purpose.
-  "S310",    # urlopen -- URLs are built from fixed HTTPS API bases, not user input.
-  "S311",    # non-crypto random -- used only for sampling/jitter, never for secrets.
-  "DTZ011",  # date.today() -- local-date semantics are intended for a single-user vault.
+  "S603", # subprocess call -- args are statically constructed, not untrusted.
+  "S607", # partial executable path -- we call git/npx/ollama via PATH on purpose.
+  "S310", # urlopen -- URLs are built from fixed HTTPS API bases, not user input.
+  "S311", # non-crypto random -- policy exemption for non-cryptographic randomness.
+  "DTZ011", # date.today() -- local-date semantics are intended for a single-user vault.
 ]
 
 [tool.ruff.lint.per-file-ignores]
-# Tests legitimately use assert and run trusted subprocesses; bandit there is noise.
+# Tests legitimately use assert, run trusted subprocesses, and reach into internals;
+# bandit is intentional white-box-test noise. At admission, 291 SLF001 test
+# accesses were measured; 259 remain after production seam promotions and are
+# intentional white-box-test access.
 # E402: test helpers do sys.path manipulation before imports.
-"tests/**" = ["S", "E402"]
+"tests/**" = ["S", "E402", "SLF001"]
 # The e2e smoke harness uses assert as its assertion mechanism, like the tests.
 "scripts/test_vault/e2e_smoke.py" = ["S101"]
 "scripts/**" = ["E402"]
+
+[tool.mypy]
+# Scope is source only. Tests deliberately reach into internals and scripts are
+# glue; widening either deserves its own measurement rather than an incidental
+# annotation burden.
+files = ["src/memoria_vault"]
+python_version = "3.12"
+
+# The tree was 99% fully annotated at admission. The measured 133-error middle
+# branch supports these checks now, while check_untyped_defs and strict_equality
+# remain deferred until their own follow-up landing.
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_unused_configs = true
+no_implicit_optional = true
+
+[[tool.mypy.overrides]]
+# PyMuPDF exposes `fitz` without usable typing; `mcp` is an optional untyped
+# integration. Both are honest dependency boundaries, not global escapes.
+module = ["fitz", "mcp.*"]
+ignore_missing_imports = true

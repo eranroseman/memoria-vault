@@ -32,7 +32,7 @@ can list links faster.
 Hubs live under `hubs/`, a review-gated Concept home: a machine write
 there degrades to a proposal ([Document types and epistemic roles](../../knowledge/document-types.md), [Wikilink and link conventions](../../../reference/data-model/wikilink-and-link-conventions.md)). That follows from what a hub is for. The curation *is* the hub: framing, membership, and "why these belong together" annotations. A generated list that looks curated is worse than no hub because it asks the reader to trust organization no one performed ([Common pitfalls](../../knowledge/common-pitfalls.md)).
 
-So the engine stops at the threshold of judgment. A gap-analysis operation may
+The engine therefore stops at the threshold of judgment. A gap-analysis operation may
 propose that a topic needs a hub, but only as a **bare member list plus
 threshold evidence** in staging ([alpha.15 four-type knowledge model](https://github.com/eranroseman/memoria-vault/blob/main/design-history/15-alpha.15.md)).
 The human writes the framing, curates membership, and names gaps.

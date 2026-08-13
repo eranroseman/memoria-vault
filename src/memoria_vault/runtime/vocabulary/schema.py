@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Loader and validator for the canonical type schemas.
 
 `.memoria/schemas/` is the single source for the vault's document-type vocabulary

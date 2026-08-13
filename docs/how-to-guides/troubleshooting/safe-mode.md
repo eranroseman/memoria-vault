@@ -8,8 +8,7 @@ nav_order: 1
 # Safe mode
 
 Use safe mode when optional UI adapters, scheduled jobs, or provider-backed
-steps are unavailable. The rule is simple: use the standalone `memoria` CLI and
-Git directly.
+steps are unavailable. Use the standalone `memoria` CLI and Git directly.
 
 ## Steps
 

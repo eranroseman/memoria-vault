@@ -57,7 +57,7 @@ memoria workspace scan --workspace .
 
 ## Related
 
-- Search backend: [Search](../../reference/pipelines-and-io/search.md)
+- Search implementation: [Search](../../reference/pipelines-and-io/search.md)
 - Inspect a topic neighborhood: [Explore a topic neighborhood](explore-a-topic-neighborhood.md)
 - Command reference: [CLI](../../reference/commands-and-transports/cli.md)
 - Rebuild the search index: [Rebuild the search index](../operate/rebuild-the-search-index.md)
