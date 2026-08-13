@@ -101,6 +101,7 @@ class Gate:
     shard: str = "lint"
     markers: str | None = None
     mutates_vault: bool = False
+    manual_lint: bool = False
 
 
 def _pytest_cmd(markers: str) -> list[str]:
@@ -139,13 +140,21 @@ def _pytest_cmd(markers: str) -> list[str]:
     ]
 
 
+FULL_LINT_COMMAND = ["pre-commit", "run", "--hook-stage", "manual", "--all-files"]
+DOCS_LINT_HOOKS = ("vale", "markdownlint-structural", "mermaid-parse", "cspell")
+DOCS_LINT_COMMANDS = tuple(
+    ["pre-commit", "run", hook, "--hook-stage", "manual", "--all-files"]
+    for hook in DOCS_LINT_HOOKS
+)
+
+
 # Source of truth for what "verified" means; tests/test_verify_script.py mirrors
 # this roster. Lint runs the manual-stage pre-commit hooks (ruff, ruff-format,
 # yamllint, shellcheck, cspell, markdownlint); the commit-stage hooks
 # (gitleaks, no-commit-to-branch) are pinned out of the manual stage so this
 # never trips no-commit-to-branch on the post-merge main run.
 GATES: list[Gate] = [
-    Gate(["pre-commit", "run", "--hook-stage", "manual", "--all-files"]),
+    Gate(FULL_LINT_COMMAND, manual_lint=True),
     Gate(["python3", "scripts/checks/schema_doc_drift.py"]),
     Gate(["python3", "scripts/checks/removed_surface_gate.py"]),
     Gate(["python3", "scripts/checks/checked_terminology_gate.py"]),
@@ -222,6 +231,9 @@ def _gates_for_run(docs_only: bool, shard: str | None = None) -> list[list[str]]
         return [gate.cmd for gate in selected]
     reduced: list[list[str]] = []
     for gate in selected:
+        if gate.manual_lint:
+            reduced.extend(list(command) for command in DOCS_LINT_COMMANDS)
+            continue
         if not gate.docs:
             continue
         if gate.markers is None:

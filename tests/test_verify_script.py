@@ -208,8 +208,9 @@ def test_docs_only_scope_narrows_the_roster() -> None:
     # Full scope is the unchanged roster.
     assert full == [" ".join(gate.cmd) for gate in namespace["GATES"]]
 
-    # Docs scope keeps lint + every product gate.
-    assert docs[0] == "pre-commit run --hook-stage manual --all-files"
+    # Docs scope replaces full lint with its first prose hook + every product gate.
+    assert docs[0] == "pre-commit run vale --hook-stage manual --all-files"
+    assert full[0] == "pre-commit run --hook-stage manual --all-files"
     for gate in (
         "python3 scripts/checks/schema_doc_drift.py",
         "python3 scripts/checks/removed_surface_gate.py",
@@ -233,6 +234,21 @@ def test_docs_only_scope_narrows_the_roster() -> None:
 
     # a docs-only diff provably cannot change packaging, so the wheel gate is skipped
     assert not any("wheel_gate" in d for d in docs)
+
+
+def test_docs_only_lint_runs_exactly_the_prose_hook_roster() -> None:
+    namespace = _verify_namespace()
+
+    assert namespace["DOCS_LINT_HOOKS"] == (
+        "vale", "markdownlint-structural", "mermaid-parse", "cspell",
+    )
+    commands = namespace["_gates_for_run"](True, "lint")
+    assert commands[:4] == [
+        ["pre-commit", "run", hook, "--hook-stage", "manual", "--all-files"]
+        for hook in namespace["DOCS_LINT_HOOKS"]
+    ]
+    text = "\n".join(" ".join(command) for command in commands)
+    assert not any(tool in text for tool in ("ruff", "mypy", "yamllint", "shellcheck", "oxlint", "oxfmt"))
 
 
 def test_gate_entries_run_under_docs_scope_unless_opted_out() -> None:
