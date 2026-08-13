@@ -279,15 +279,7 @@ def test_parallel_terminates_and_reaps_active_children_when_interrupted(
     assert streams and all(stream.closed for stream in streams)
 
 
-@pytest.mark.skipif(os.name != "posix", reason="POSIX process-group behavior")
-def test_parallel_exception_terminates_a_shard_grandchild(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
-    namespace = _verify_namespace()
-    globals_ = namespace["_run_parallel"].__globals__
-    real_spawn = namespace["_spawn_shard"]
-    ready = tmp_path / "grandchild-ready"
-    terminated = tmp_path / "grandchild-terminated"
+def _process_tree_command(ready: Path, terminated: Path, *, wrapper_exits: bool) -> list[str]:
     grandchild_code = """
 import os
 import signal
@@ -313,24 +305,42 @@ from pathlib import Path
 subprocess.Popen([sys.executable, "-c", sys.argv[3], sys.argv[1], sys.argv[2]])
 while not Path(sys.argv[1]).exists():
     time.sleep(0.01)
-while True:
-    time.sleep(1)
+if sys.argv[4] == "stay":
+    while True:
+        time.sleep(1)
 """
-    command = [
+    return [
         sys.executable,
         "-c",
         shard_code,
         str(ready),
         str(terminated),
         grandchild_code,
+        "exit" if wrapper_exits else "stay",
     ]
+
+
+def _wait_for_path(path: Path, timeout: float) -> bool:
+    deadline = time.monotonic() + timeout
+    while not path.exists() and time.monotonic() < deadline:
+        time.sleep(0.01)
+    return path.exists()
+
+
+@pytest.mark.skipif(os.name != "posix", reason="POSIX process-group behavior")
+def test_parallel_exception_terminates_a_shard_grandchild(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    namespace = _verify_namespace()
+    globals_ = namespace["_run_parallel"].__globals__
+    real_spawn = namespace["_spawn_shard"]
+    ready = tmp_path / "grandchild-ready"
+    terminated = tmp_path / "grandchild-terminated"
+    command = _process_tree_command(ready, terminated, wrapper_exits=False)
 
     def spawn(shard: str, workers: int, path: Path):
         if shard == "runtime":
-            deadline = time.monotonic() + 5
-            while not ready.exists() and time.monotonic() < deadline:
-                time.sleep(0.01)
-            if not ready.exists():
+            if not _wait_for_path(ready, 5):
                 pytest.fail("grandchild did not start")
             raise RuntimeError("launch failed")
         return real_spawn(shard, workers, path)
@@ -344,9 +354,49 @@ while True:
         with pytest.raises(RuntimeError, match="launch failed"):
             namespace["_run_parallel"]()
 
-        deadline = time.monotonic() + 2
-        while not terminated.exists() and time.monotonic() < deadline:
-            time.sleep(0.01)
+        _wait_for_path(terminated, 2)
+        assert terminated.read_text(encoding="utf-8") == "terminated"
+    finally:
+        if ready.exists() and not terminated.exists():
+            try:
+                os.kill(int(ready.read_text(encoding="utf-8")), signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+
+
+@pytest.mark.skipif(os.name != "posix", reason="POSIX process-group behavior")
+def test_parallel_exception_terminates_a_grandchild_after_its_wrapper_exits(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    namespace = _verify_namespace()
+    globals_ = namespace["_run_parallel"].__globals__
+    real_spawn = namespace["_spawn_shard"]
+    ready = tmp_path / "grandchild-ready"
+    terminated = tmp_path / "grandchild-terminated"
+    command = _process_tree_command(ready, terminated, wrapper_exits=True)
+    wrapper = None
+
+    def spawn(shard: str, workers: int, path: Path):
+        nonlocal wrapper
+        if shard == "runtime":
+            if not _wait_for_path(ready, 5):
+                pytest.fail("grandchild did not start")
+            assert wrapper is not None
+            assert wrapper[0].wait(timeout=5) == 0
+            raise RuntimeError("launch failed")
+        wrapper = real_spawn(shard, workers, path)
+        return wrapper
+
+    monkeypatch.setitem(globals_, "run", lambda command: 0)
+    monkeypatch.setitem(globals_, "_parallel_limits", lambda: (3, 1))
+    monkeypatch.setitem(globals_, "_shard_command", lambda shard: command)
+    monkeypatch.setitem(globals_, "_spawn_shard", spawn)
+
+    try:
+        with pytest.raises(RuntimeError, match="launch failed"):
+            namespace["_run_parallel"]()
+
+        _wait_for_path(terminated, 2)
         assert terminated.read_text(encoding="utf-8") == "terminated"
     finally:
         if ready.exists() and not terminated.exists():

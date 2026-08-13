@@ -439,6 +439,7 @@ def _run_parallel() -> int:
                     int | None,
                 ]
             ] = []
+            batch_completed = False
             try:
                 for shard in batch:
                     log_path = log_directory / f"{shard}.log"
@@ -462,10 +463,12 @@ def _run_parallel() -> int:
                     log = log_path.read_text(encoding="utf-8")
                     print(log, end="" if log.endswith("\n") else "\n")
                     failed = failed or code != 0
+                batch_completed = True
             finally:
-                for process, _stream in active:
-                    if process.poll() is None:
-                        _terminate_shard(process)
+                if not batch_completed:
+                    for process, _stream in active:
+                        if os.name == "posix" or process.poll() is None:
+                            _terminate_shard(process)
                 for process, stream in active:
                     if process.poll() is None:
                         process.wait()
