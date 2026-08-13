@@ -130,6 +130,30 @@ def test_ci_runs_every_shard() -> None:
     assert "needs.shards.result" in aggregate["steps"][0]["run"]
 
 
+def test_ci_provisions_verification_dependencies_in_their_owner_shards() -> None:
+    """CI must not install a shard's isolated tooling in its siblings."""
+    workflow = yaml.safe_load(VERIFY_WORKFLOW.read_text(encoding="utf-8"))
+    steps = workflow["jobs"]["shards"]["steps"]
+
+    precommit_cache = next(step for step in steps if step.get("name") == "Cache pre-commit environments")
+    gc = next(
+        step
+        for step in steps
+        if step.get("name") == "Drop hook environments no longer referenced by the config"
+    )
+    pssa_cache = next(step for step in steps if step.get("name") == "Cache PSScriptAnalyzer module")
+    bubblewrap = next(
+        step for step in steps if step.get("name") == "Enable the code-execution sandbox (bubblewrap)"
+    )
+    python = next(step for step in steps if step.get("uses", "").startswith("actions/setup-python@"))
+
+    assert precommit_cache["if"] == "matrix.shard == 'lint'"
+    assert gc["if"] == "matrix.shard == 'lint'"
+    assert pssa_cache["if"] == "matrix.shard == 'lint' && needs.scope.outputs.ps1 != 'false'"
+    assert bubblewrap["if"] == "matrix.shard == 'runtime'"
+    assert python["with"]["cache-dependency-path"] == "requirements-dev.txt\npyproject.toml"
+
+
 def test_docs_only_runs_the_narrowed_tests_in_exactly_one_shard() -> None:
     """Otherwise the same `static` set runs once per shard, for no added coverage."""
     namespace = _verify_namespace()

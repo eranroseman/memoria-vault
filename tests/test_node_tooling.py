@@ -114,8 +114,7 @@ def test_obsidian_adapter_build_dependency_is_pinned_and_provisioned_in_ci():
     )
 
     # The gate runs in the `shards` matrix job; `verify` is the fan-in that owns
-    # the required-check name. Every shard installs the adapter build dependency,
-    # because the roster it runs is decided at run time.
+    # the required-check name. Only the contract shard checks the adapter.
     steps = workflow["jobs"]["shards"]["steps"]
     install_index = next(
         index
@@ -128,7 +127,16 @@ def test_obsidian_adapter_build_dependency_is_pinned_and_provisioned_in_ci():
         if step.get("run", "").startswith("python scripts/verify")
     )
     assert steps[install_index]["name"] == "Install Obsidian adapter build dependency"
+    assert steps[install_index]["if"] == "matrix.shard == 'contract'"
     assert install_index < verify_index
+
+    node = next(step for step in steps if step.get("uses", "").startswith("actions/setup-node@"))
+    assert node["if"] == "matrix.shard == 'lint' || matrix.shard == 'contract'"
+
+    npm_cache = next(step for step in steps if step.get("name") == "Cache Obsidian npm downloads")
+    assert npm_cache["if"] == "matrix.shard == 'contract'"
+    assert npm_cache["with"]["path"] == "~/.npm"
+    assert "packages/memoria-obsidian/package-lock.json" in npm_cache["with"]["key"]
 
     npm_updates = [
         update for update in dependabot["updates"] if update["package-ecosystem"] == "npm"
