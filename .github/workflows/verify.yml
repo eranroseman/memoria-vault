@@ -96,7 +96,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
-          files="$(gh pr view "$PR_NUMBER" --json files --jq '.files[].path' || true)"
+          if ! files="$(gh api --paginate "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}/files?per_page=100" --jq '.[].filename')"; then
+            files=""
+          fi
           printf 'changed files:\n%s\n' "$files"
           # Safe defaults: if the diff can't be read, run everything (full verify).
           ps1=true

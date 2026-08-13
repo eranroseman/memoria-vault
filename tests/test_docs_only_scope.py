@@ -7,15 +7,16 @@ documentation, which drops the wheel gate, the offline smoke, `memoria
 workspace_seed/), and every test that reads them is `contract` — so
 misclassifying them skips exactly the checks that would catch a break.
 
-This extracts the classifier from the workflow and runs it, rather than
-asserting on the regex text: a test that only greps for a pattern passes on a
-pattern that is present and wrong.
+This runs the workflow's classifier, rather than asserting on the regex text:
+a test that only greps for a pattern passes on a pattern that is present and
+wrong.
 """
 
 from __future__ import annotations
 
-import re
+import os
 import subprocess
+from pathlib import Path
 
 import pytest
 import yaml
@@ -35,26 +36,55 @@ def _scope_script() -> str:
     return step["run"]
 
 
-def _classify(paths: list[str]) -> bool:
-    """Run the workflow's own classifier over `paths`, return its docs_only verdict."""
-    body = _scope_script()
-    # Drop the two lines that reach GitHub; feed the file list in directly.
-    body = re.sub(r"^\s*files=.*$", 'files="$FILES"', body, count=1, flags=re.M)
-    body = re.sub(r"^\s*printf .changed files.*$", "", body, count=1, flags=re.M)
-    body = re.sub(r'^\s*echo "\w+=.*>> "\$GITHUB_OUTPUT"\s*$', "", body, flags=re.M)
-    # Keep the workflow's progress echo. The appended verdict below is the final
-    # line, so preceding human-readable output does not affect the parsed result.
+def _classify(
+    paths: list[str],
+    tmp_path: Path,
+    *,
+    fail_after_output: bool = False,
+    pr_view_paths: list[str] | None = None,
+) -> dict[str, str]:
+    """Run the unmodified workflow body with a local fake GitHub CLI."""
+    fake_gh = tmp_path / "gh"
+    args = tmp_path / "gh-args"
+    output = tmp_path / "github-output"
+    fake_gh.write_text(
+        """#!/bin/sh
+printf '%s\\n' \"$@\" > \"$FAKE_GH_ARGS\"
+if [ \"$1\" = api ]; then
+  printf '%s\\n' \"$FAKE_GH_API_FILES\"
+else
+  printf '%s\\n' \"$FAKE_GH_PR_FILES\"
+fi
+if [ \"$1\" = api ] && [ \"$FAKE_GH_FAIL_AFTER_OUTPUT\" = true ]; then
+  exit 1
+fi
+""",
+        encoding="utf-8",
+    )
+    fake_gh.chmod(0o755)
+    env = os.environ | {
+        "FAKE_GH_API_FILES": "\n".join(paths),
+        "FAKE_GH_ARGS": str(args),
+        "FAKE_GH_FAIL_AFTER_OUTPUT": str(fail_after_output).lower(),
+        "FAKE_GH_PR_FILES": "\n".join(pr_view_paths if pr_view_paths is not None else paths),
+        "GH_TOKEN": "test-token",
+        "GITHUB_OUTPUT": str(output),
+        "GITHUB_REPOSITORY": "owner/repository",
+        "PATH": f"{tmp_path}:{os.environ['PATH']}",
+        "PR_NUMBER": "123",
+    }
     result = subprocess.run(
-        ["bash", "-c", body + '\nprintf "%s" "$docs_only"'],
-        env={"FILES": "\n".join(paths), "PATH": "/usr/bin:/bin"},
+        ["bash", "-c", _scope_script()],
+        env=env,
         text=True,
         capture_output=True,
         check=True,
     )
-    # Last line only: the appended verdict follows all workflow output.
-    lines = result.stdout.strip().splitlines()
-    assert lines, f"classifier produced no verdict; stderr: {result.stderr}"
-    return lines[-1].strip() == "true"
+    assert args.exists(), f"workflow did not invoke gh; stderr: {result.stderr}"
+    assert output.exists(), f"workflow did not write scope outputs; stdout: {result.stdout}"
+    return dict(
+        line.split("=", maxsplit=1) for line in output.read_text(encoding="utf-8").splitlines()
+    )
 
 
 @pytest.mark.parametrize(
@@ -78,8 +108,35 @@ def _classify(paths: list[str]) -> bool:
         ([], False, "cannot read changed-file list"),
     ],
 )
-def test_classifier_verdicts(paths: list[str], expected: bool, why: str):
-    assert _classify(paths) is expected, f"{paths}: expected docs_only={expected} because {why}"
+def test_classifier_verdicts(paths: list[str], expected: bool, why: str, tmp_path: Path) -> None:
+    result = _classify(paths, tmp_path)
+    assert (result["docs_only"] == "true") is expected, (
+        f"{paths}: expected docs_only={expected} because {why}"
+    )
+
+
+def test_scope_reads_every_paginated_pr_file(tmp_path: Path) -> None:
+    """A source or PowerShell file after the first 100 must widen the scope."""
+    documentation = [f"docs/page-{index}.md" for index in range(100)]
+    all_paths = [*documentation, "src/memoria_vault/cli.py", "scripts/setup.ps1"]
+
+    result = _classify(all_paths, tmp_path, pr_view_paths=documentation)
+
+    assert result == {"ps1": "true", "docs_only": "false"}
+    assert (tmp_path / "gh-args").read_text(encoding="utf-8").splitlines() == [
+        "api",
+        "--paginate",
+        "repos/owner/repository/pulls/123/files?per_page=100",
+        "--jq",
+        ".[].filename",
+    ]
+
+
+def test_scope_uses_safe_defaults_when_paginated_retrieval_fails(tmp_path: Path) -> None:
+    """Partial API output must never narrow CI validation."""
+    result = _classify(["docs/page.md"], tmp_path, fail_after_output=True)
+
+    assert result == {"ps1": "true", "docs_only": "false"}
 
 
 def test_runtime_markdown_actually_exists_under_src():
