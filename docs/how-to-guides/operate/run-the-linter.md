@@ -39,7 +39,7 @@ On Windows, replace `./.memoria/.venv/bin/python` with
 | CRITICAL | Vault integrity at risk | Fix immediately — the verdict rolls to FAIL. Only an installed optional policy hook pauses review-gated adapter writes. |
 | HIGH | Silent or active breakage | Fix this session |
 | MEDIUM | Real drift, will compound | Address in the weekly review |
-| LOW | Cosmetic or recoverable | Defer or accept |
+| LOW | Cosmetic or low-cost to recover | Defer or accept |
 
 The verdict band rolls up to PASS, REVIEW, or FAIL.
 

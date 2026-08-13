@@ -66,7 +66,7 @@ memoria work update --workspace <workspace> <work-id> --research-area <term>
 memoria work update --workspace <workspace> <work-id> --methodology <term>
 ```
 
-No classification-attention lifecycle needs to finish or be cleared.
+No classification-attention lifecycle exists to wait for or clear.
 
 ## Related
 
