@@ -8,6 +8,8 @@ import json
 import re
 import threading
 import uuid
+from collections.abc import Iterator
+from contextlib import contextmanager
 from http import HTTPStatus
 from pathlib import Path
 from types import SimpleNamespace
@@ -924,7 +926,7 @@ def test_http_server_handler_enforces_bearer_auth_and_body_size(workspace: Path)
 
 
 def test_http_server_logs_only_sanitized_attention_poll(
-    workspace: Path, capsys: pytest.CaptureFixture[str]
+    workspace: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Only admitted summary polls produce a line with no request-supplied data."""
     bearer_secret = "bearer-secret"
@@ -963,6 +965,18 @@ def test_http_server_logs_only_sanitized_attention_poll(
                 "X-Private": header_secret,
             },
         )
+        handler_finished = threading.Event()
+        original_authenticated_request = server.authenticated_request
+
+        @contextmanager
+        def authenticated_request() -> Iterator[bool]:
+            try:
+                with original_authenticated_request() as admitted:
+                    yield admitted
+            finally:
+                handler_finished.set()
+
+        monkeypatch.setattr(server, "authenticated_request", authenticated_request)
         poll = _http_request(
             host,
             port,
@@ -975,6 +989,7 @@ def test_http_server_logs_only_sanitized_attention_poll(
             },
             body=body_secret,
         )
+        assert handler_finished.wait(timeout=1)
         assert server.reserve_idle_shutdown(idle_exit_seconds=0)
         stopping = _http_request(
             host,
