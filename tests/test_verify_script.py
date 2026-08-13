@@ -103,17 +103,31 @@ def test_ci_runs_every_shard() -> None:
     namespace = _verify_namespace()
     workflow = yaml.safe_load(VERIFY_WORKFLOW.read_text(encoding="utf-8"))
 
-    matrix = workflow["jobs"]["shards"]["strategy"]["matrix"]["shard"]
-    assert sorted(matrix) == sorted(namespace["SHARDS"]), (
-        "verify.yml's matrix and SHARDS disagree; CI would skip a shard silently"
-    )
+    scope = workflow["jobs"]["scope"]
+    assert scope["outputs"] == {
+        "matrix": "${{ steps.scope.outputs.matrix }}",
+        "ps1": "${{ steps.scope.outputs.ps1 }}",
+        "docs_only": "${{ steps.scope.outputs.docs_only }}",
+    }
+    scope_script = next(step for step in scope["steps"] if step.get("id") == "scope")["run"]
+    for default in (
+        "matrix='{\"shard\":[\"lint\",\"contract\",\"runtime\",\"sweep\"]}'",
+        "ps1=true",
+        "docs_only=false",
+    ):
+        assert scope_script.index(default) < scope_script.index("gh api")
+
+    shards = workflow["jobs"]["shards"]
+    assert shards["needs"] == "scope"
+    assert shards["strategy"]["matrix"] == "${{ fromJSON(needs.scope.outputs.matrix) }}"
 
     # A matrix job named `verify` would publish `verify (lint)`, `verify (contract)`,
     # ... and the `verify` check `main` requires would vanish, blocking every PR.
     aggregate = workflow["jobs"]["verify"]
-    assert aggregate["needs"] == "shards", (
-        "the job named `verify` must be the fan-in over `shards`; it is the required check"
-    )
+    assert aggregate["needs"] == ["scope", "shards"]
+    assert aggregate["if"] == "always()"
+    assert "needs.scope.result" in aggregate["steps"][0]["run"]
+    assert "needs.shards.result" in aggregate["steps"][0]["run"]
 
 
 def test_docs_only_runs_the_narrowed_tests_in_exactly_one_shard() -> None:

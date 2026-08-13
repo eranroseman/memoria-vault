@@ -26,6 +26,71 @@ permissions:
   pull-requests: read # the change-scope step reads a PR's changed files
 
 jobs:
+  scope:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.scope.outputs.matrix }}
+      ps1: ${{ steps.scope.outputs.ps1 }}
+      docs_only: ${{ steps.scope.outputs.docs_only }}
+    steps:
+      - name: Detect change scope
+        id: scope
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_CHANGED_FILES: ${{ github.event.pull_request.changed_files }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          # Safe defaults: if the diff can't be read, run everything (full verify).
+          matrix='{"shard":["lint","contract","runtime","sweep"]}'
+          ps1=true
+          docs_only=false
+          paths='[]'
+          if [ "$GITHUB_EVENT_NAME" = pull_request ] && response="$(gh api --paginate --slurp "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}/files?per_page=100")" \
+            && records="$(jq -ce 'if type == "array" and all(.[]; type == "array") then [.[][]] else error("invalid response") end' <<< "$response")" \
+            && paths="$(jq -ce '
+              if all(.[];
+                type == "object"
+                and (.filename | type == "string" and length > 0 and test("^[^\\r\\n]+$"))
+                and ((has("previous_filename") | not)
+                  or (.previous_filename | type == "string" and length > 0 and test("^[^\\r\\n]+$")))
+              ) then
+                [.[] | (.filename, (.previous_filename? // empty)) | select(length > 0)]
+              else
+                error("invalid file record")
+              end
+            ' <<< "$records")"; then
+            record_count="$(jq -r 'length' <<< "$records")"
+            path_count="$(jq -r 'length' <<< "$paths")"
+          else
+            record_count=0
+            path_count=0
+            paths='[]'
+          fi
+          if [[ "$PR_CHANGED_FILES" =~ ^[0-9]+$ ]] \
+            && [ "$record_count" = "$PR_CHANGED_FILES" ] \
+            && [ "$record_count" -gt 0 ] \
+            && [ "$record_count" -lt 3000 ] \
+            && [ "$path_count" -gt 0 ]; then
+            if ! jq -e 'any(.[]; endswith(".ps1"))' <<< "$paths" >/dev/null; then
+              ps1=false
+            fi
+            # A file is documentation when it is under design-history/ or is
+            # Markdown that is NOT shipped as package data. Rename origins count
+            # too, because they are part of the change being validated.
+            if jq -e '
+              all(.[];
+                startswith("design-history/")
+                or (endswith(".md") and (startswith("src/") | not))
+              )
+            ' <<< "$paths" >/dev/null; then
+              matrix='{"shard":["lint","sweep"]}'
+              docs_only=true
+            fi
+          fi
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+          echo "ps1=$ps1" >> "$GITHUB_OUTPUT"
+          echo "docs_only=$docs_only" >> "$GITHUB_OUTPUT"
+
   # One leg per `SHARDS` entry in scripts/verify. The union of the shards is the
   # full roster and tests/test_verify_script.py asserts it, so a sharded CI run
   # verifies exactly what a bare local `python scripts/verify` verifies.
@@ -38,10 +103,10 @@ jobs:
   # fail-fast is off so one red shard does not cancel the others and hide a
   # second, unrelated failure behind it.
   shards:
+    needs: scope
     strategy:
       fail-fast: false
-      matrix:
-        shard: [lint, contract, runtime, sweep]
+      matrix: ${{ fromJSON(needs.scope.outputs.matrix) }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -89,65 +154,6 @@ jobs:
           else:
               print(f'bwrap: unavailable — {availability.reason}')
           "
-      - name: Detect change scope
-        id: scope
-        if: github.event_name == 'pull_request'
-        env:
-          GH_TOKEN: ${{ github.token }}
-          PR_CHANGED_FILES: ${{ github.event.pull_request.changed_files }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-        run: |
-          # Safe defaults: if the diff can't be read, run everything (full verify).
-          ps1=true
-          docs_only=false
-          paths='[]'
-          if response="$(gh api --paginate --slurp "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}/files?per_page=100")" \
-            && records="$(jq -ce 'if type == "array" and all(.[]; type == "array") then [.[][]] else error("invalid response") end' <<< "$response")" \
-            && paths="$(jq -ce '
-              if all(.[];
-                type == "object"
-                and (.filename | type == "string" and length > 0)
-                and ((.previous_filename? // "") | type == "string")
-              ) then
-                [.[] | (.filename, (.previous_filename? // empty)) | select(length > 0)]
-              else
-                error("invalid file record")
-              end
-            ' <<< "$records")"; then
-            record_count="$(jq -r 'length' <<< "$records")"
-            path_count="$(jq -r 'length' <<< "$paths")"
-          else
-            record_count=0
-            path_count=0
-            paths='[]'
-          fi
-          if [[ "$PR_CHANGED_FILES" =~ ^[0-9]+$ ]] \
-            && [ "$record_count" = "$PR_CHANGED_FILES" ] \
-            && [ "$record_count" -gt 0 ] \
-            && [ "$record_count" -lt 3000 ] \
-            && [ "$path_count" -gt 0 ]; then
-            jq -e 'any(.[]; endswith(".ps1"))' <<< "$paths" >/dev/null || ps1=false
-            # A file is documentation when it is under design-history/ or is
-            # Markdown that is NOT shipped as package data. Tracked *.md files
-            # under src/ (capabilities/operations/*.md, workspace_seed/) are
-            # program content: the tests that validate them are `contract`,
-            # which the docs-only narrowing drops, so a PR editing only those
-            # files would skip every check that reads them. Rename origins count
-            # too, because they are part of the change being validated.
-            jq -e '
-              all(.[];
-                startswith("design-history/")
-                or (endswith(".md") and (startswith("src/") | not))
-              )
-            ' <<< "$paths" >/dev/null && docs_only=true
-          fi
-          echo "ps1=$ps1" >> "$GITHUB_OUTPUT"
-          echo "docs_only=$docs_only" >> "$GITHUB_OUTPUT"
-          scope="$(jq -c \
-            --argjson ps1 "$ps1" \
-            --argjson docs_only "$docs_only" \
-            '{paths: ., ps1: $ps1, docs_only: $docs_only}' <<< "$paths")"
-          printf 'scope -> %s\n' "$scope"
       # Keyed per workflow. gitleaks.yml caches the same path from the same
       # config file, but installs exactly one hook environment; this job installs
       # all of them. On a shared key the 18s gitleaks job always won the race,
@@ -162,11 +168,10 @@ jobs:
           key: ${{ runner.os }}-pre-commit-verify-${{ hashFiles('.pre-commit-config.yaml') }}
           restore-keys: |
             ${{ runner.os }}-pre-commit-verify-
-      # Only bother with PSScriptAnalyzer when a .ps1 changed (empty scope output
-      # on the push:main run means "run it" — full validation of the merged state).
+      # Skip PSScriptAnalyzer only when the scope job confirmed no .ps1 change.
       - name: Cache PSScriptAnalyzer module
         id: pssa-cache
-        if: steps.scope.outputs.ps1 != 'false'
+        if: needs.scope.outputs.ps1 != 'false'
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.local/share/powershell/Modules/PSScriptAnalyzer
@@ -174,7 +179,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-psscriptanalyzer-v1-
       - name: Install PSScriptAnalyzer
-        if: steps.scope.outputs.ps1 != 'false' && steps.pssa-cache.outputs.cache-hit != 'true'
+        if: needs.scope.outputs.ps1 != 'false' && steps.pssa-cache.outputs.cache-hit != 'true'
         shell: pwsh
         run: Install-Module PSScriptAnalyzer -Force -Scope CurrentUser
       # scripts/verify defaults xdist to half the cores so two local worktrees can
@@ -190,7 +195,7 @@ jobs:
           echo "xdist workers -> $(nproc)"
       - name: Run verify
         env:
-          VERIFY_DOCS_ONLY: ${{ steps.scope.outputs.docs_only == 'true' && '1' || '0' }}
+          VERIFY_DOCS_ONLY: ${{ needs.scope.outputs.docs_only == 'true' && '1' || '0' }}
           MEMORIA_REQUIRE_SANDBOX: "1"
           PYTEST_XDIST_AUTO_NUM_WORKERS: ${{ steps.cpu.outputs.workers }}
           SHARD: ${{ matrix.shard }}
@@ -212,17 +217,16 @@ jobs:
   # than leaving the required check pending forever; the result comparison then
   # fails on anything that is not a clean success.
   verify:
-    needs: shards
+    needs: [scope, shards]
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
       - name: Require every shard to have succeeded
-        env:
-          RESULT: ${{ needs.shards.result }}
         run: |
-          echo "shards result -> $RESULT"
-          if [ "$RESULT" != "success" ]; then
-            echo "::error::verify shards did not all succeed ($RESULT)"
+          echo "scope result -> ${{ needs.scope.result }}"
+          echo "shards result -> ${{ needs.shards.result }}"
+          if [ "${{ needs.scope.result }}" != "success" ] || [ "${{ needs.shards.result }}" != "success" ]; then
+            echo "::error::verify scope or shards did not succeed (scope=${{ needs.scope.result }}, shards=${{ needs.shards.result }})"
             exit 1
           fi
