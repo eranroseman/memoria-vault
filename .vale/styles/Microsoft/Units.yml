@@ -6,10 +6,10 @@ ignorecase: true
 raw:
   - '\b(?:one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|million|billion)\s'
 tokens:
-  - '(?:centi|milli)?meters'
-  - '(?:kilo)?grams'
-  - '(?:kilo)?meters'
-  - '(?:mega)?pixels'
+  - "(?:centi|milli)?meters"
+  - "(?:kilo)?grams"
+  - "(?:kilo)?meters"
+  - "(?:mega)?pixels"
   - cm
   - inches
   - lb

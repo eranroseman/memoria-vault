@@ -9,12 +9,12 @@ action:
 # also lists (combat, fight, guard, ward) are omitted here: without that context
 # they'd fire on ordinary prose.
 swap:
-  '(?:cyber ?)?kill chain': cyberattack chain
-  'defense-in-depth approach': multilayered approach
-  'external attack surface': external exposure
-  'first line of defense': protection
-  'frontline analysts': security analysts
-  'locked down': secured
+  "(?:cyber ?)?kill chain": cyberattack chain
+  "defense-in-depth approach": multilayered approach
+  "external attack surface": external exposure
+  "first line of defense": protection
+  "frontline analysts": security analysts
+  "locked down": secured
   adversaries: threat actors
   adversary: threat actor
   attackers: cyberattackers

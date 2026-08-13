@@ -116,24 +116,20 @@ repos:
   # its output still moves between releases, so .github/dependabot.yml holds
   # this rev until 1.0 rather than reformatting the tree every month.
   #
-  # Both hooks stop at the authored JS. The seeded plugin under
-  # src/memoria_vault/product/workspace_seed/.obsidian/ is a generated esbuild
-  # bundle that `npm run check --prefix packages/memoria-obsidian` compares
-  # byte-for-byte against a fresh build: reformatting it fails that check, and
-  # linting a bundler's output reports on code nobody wrote.
-  #
-  # Scope is directories only, as with ruff and shellcheck above -- what counts
-  # as JS is the hooks' own `types_or: [javascript, jsx, ts, tsx]`, which is
-  # also what keeps oxfmt away from Markdown, YAML, JSON and CSS. Its CLI
-  # formats all of those, and over docs/ it rewrites the contents of fenced code
-  # blocks, so a ```json sample of real CLI output silently stops matching what
-  # the program prints. Never give these hooks `pass_filenames: false` or a bare
-  # path argument.
+  # Oxfmt owns every supported non-Markdown suffix listed below. The suffix
+  # regex keeps unsupported files away from the CLI, and Markdown remains out
+  # because formatting it would rewrite fenced samples of real CLI output. The
+  # adapter build canonicalizes generated plugin artifacts before byte-parity
+  # checks, so generated JavaScript and CSS stay inside formatter ownership.
+  # Keep the default filename passing behavior; never add `pass_filenames:
+  # false` or a bare path argument.
   - repo: https://github.com/oxc-project/mirrors-oxfmt
     rev: v0.63.0
     hooks:
       - id: oxfmt
-        files: ^(packages/memoria-obsidian|scripts/checks)/
+        types_or: [file]
+        files: '\.(?:js|mjs|cjs|jsx|ts|mts|cts|tsx|json|jsonc|json5|yaml|yml|toml|css|scss|less|pcss|postcss|wxss|graphql|gql|graphqls|html|htm|hta|xhtml|component\.html|vue|svelte|hbs|handlebars|mjml)$'
+        additional_dependencies: [oxfmt@0.63.0, svelte@5.56.8]
         stages: [pre-commit, manual]
 
   - repo: https://github.com/errata-ai/vale

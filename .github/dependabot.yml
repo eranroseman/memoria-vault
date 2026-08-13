@@ -46,7 +46,7 @@ updates:
   #   npm ci --prefix packages/memoria-obsidian
   #   npm run build --prefix packages/memoria-obsidian
   #   MEMORIA_FLOOR_UPDATE_GOLDENS=1 python -m pytest tests/test_floor_sweep_operations.py -q
-  # and commit the rebuilt `main.js` with the 38 goldens that carry its digest.
+  # and commit the rebuilt `main.js` with the 39 goldens that carry its digest.
   - package-ecosystem: npm
     directory: "/packages/memoria-obsidian"
     schedule:
@@ -61,10 +61,16 @@ updates:
     # pre-commit hooks below run the same two versions. tests/test_node_tooling.py
     # fails when the two pins disagree, so this freeze must mirror the one in the
     # pre-commit ecosystem exactly or the monthly npm bump takes that test red.
+    # Svelte supplies Oxfmt's Svelte parser, so its exact runtime pin participates
+    # in formatter output and must move only with the hook and editor policy.
     ignore:
       - dependency-name: oxfmt
+        update-types: ["version-update:semver-minor", "version-update:semver-patch"]
+      - dependency-name: svelte
         update-types:
-          ["version-update:semver-minor", "version-update:semver-patch"]
+          - version-update:semver-major
+          - version-update:semver-minor
+          - version-update:semver-patch
 
   - package-ecosystem: pre-commit
     directory: /
@@ -84,5 +90,4 @@ updates:
     # own bump PRs use (#1355).
     ignore:
       - dependency-name: https://github.com/oxc-project/mirrors-oxfmt
-        update-types:
-          ["version-update:semver-minor", "version-update:semver-patch"]
+        update-types: ["version-update:semver-minor", "version-update:semver-patch"]

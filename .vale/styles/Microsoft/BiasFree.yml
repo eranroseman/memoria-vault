@@ -7,8 +7,8 @@ action:
   name: replace
 # Culturally sensitive terms; see GenderBias.yml for gendered terms.
 swap:
-  '(?:demilitarized zone|DMZ)': perimeter network
-  'master/slave': master/subordinate
-  'sanity check': quick check
-  'spirit animal': role model
+  "(?:demilitarized zone|DMZ)": perimeter network
+  "master/slave": master/subordinate
+  "sanity check": quick check
+  "spirit animal": role model
   hangs: stops responding

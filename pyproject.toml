@@ -10,11 +10,7 @@ readme = "README.md"
 requires-python = ">=3.12"
 license = { file = "LICENSE" }
 authors = [{ name = "Eran Roseman" }]
-dependencies = [
-  "pydantic-ai-slim[openai]>=2.0",
-  "PyMuPDF>=1.24,<2",
-  "PyYAML>=6.0",
-]
+dependencies = ["pydantic-ai-slim[openai]>=2.0", "PyMuPDF>=1.24,<2", "PyYAML>=6.0"]
 
 [project.optional-dependencies]
 mcp = ["mcp>=2,<3"]
@@ -26,7 +22,7 @@ memoria = "memoria_vault.cli:main"
 [tool.setuptools.packages.find]
 where = ["src"]
 include = ["memoria_vault*"]
-namespaces = false  # Guard: makes implicit namespace package drops loud instead of silent
+namespaces = false # Guard: makes implicit namespace package drops loud instead of silent
 
 [tool.setuptools.package-data]
 memoria_vault = ["runtime/*.sql"]
@@ -63,10 +59,7 @@ testpaths = ["tests"]
 # deliberately NOT here: with both the root and `scripts` on the path, one file
 # imports as two distinct modules (`scripts.test_vault.e2e_smoke` and
 # `test_vault.e2e_smoke`), each with its own state.
-pythonpath = [
-  ".",
-  "src",
-]
+pythonpath = [".", "src"]
 markers = [
   "static: formatting, lint, schema, docs refs, spell, design history, workflow safety",
   "unit: deterministic Python behavior with no runtime fixture",
@@ -149,39 +142,56 @@ docstring-code-format = true
 #   FBT 65 across three rules (32 + 4 + 29) -- boolean-trap is a real design
 #                smell, but that volume for a style position buys a bikeshed.
 select = [
-  "F", "E4", "E7", "E9", "W", "B", "I", "UP", "C4", "PIE", "RUF",
-  "A", "PT", "DTZ", "FLY", "BLE", "S", "RET", "N",
+  "F",
+  "E4",
+  "E7",
+  "E9",
+  "W",
+  "B",
+  "I",
+  "UP",
+  "C4",
+  "PIE",
+  "RUF",
+  "A",
+  "PT",
+  "DTZ",
+  "FLY",
+  "BLE",
+  "S",
+  "RET",
+  "N",
   # Zero findings on this tree when admitted (2026-08), the same test that
   # earned N its place. Each guards a failure this repo can produce:
-  "T10",   # flake8-debugger -- a stray breakpoint()/pdb.set_trace() from an agent session
-  "PLE",   # pylint's error tier -- bad str.strip args, misplaced bare raise, invalid % format
-  "PGH",   # blanket `# noqa` / `# type: ignore` (RUF100 catches only the *unused* form)
-  "TID",   # relative imports creeping into a flat package
-  "EXE",   # shebang/executable-bit drift on the scripts the gate invokes by path
+  "T10", # flake8-debugger -- a stray breakpoint()/pdb.set_trace() from an agent session
+  "PLE", # pylint's error tier -- bad str.strip args, misplaced bare raise, invalid % format
+  "PGH", # blanket `# noqa` / `# type: ignore` (RUF100 catches only the *unused* form)
+  "TID", # relative imports creeping into a flat package
+  "EXE", # shebang/executable-bit drift on the scripts the gate invokes by path
   # Small and real -- 36 sites at admission (2026-08), each a defect class rather
   # than a style position:
-  "SLF",       # private-member access -- 19 in src/scripts; tests exempted below
-  "ERA",       # commented-out code -- src was already clean
-  "PLW1508",   # os.environ.get with a non-string default
-  "PLW1510",   # subprocess.run without check= -- a silently ignored failure
-  "PLW2901",   # loop variable overwritten inside its own body
+  "SLF", # private-member access -- 19 in src/scripts; tests exempted below
+  "ERA", # commented-out code -- src was already clean
+  "PLW1508", # os.environ.get with a non-string default
+  "PLW1510", # subprocess.run without check= -- a silently ignored failure
+  "PLW2901", # loop variable overwritten inside its own body
 ]
 ignore = [
-  "E731",    # lambda-to-name -- idiomatic for concise test helpers.
-  "PT018",   # composite assert -- splitting `assert a and b` is cosmetic churn.
+  "E731", # lambda-to-name -- idiomatic for concise test helpers.
+  "PT018", # composite assert -- splitting `assert a and b` is cosmetic churn.
   # PT011/PT017 assume the pytest.raises idiom, but this suite deliberately uses a
   # pytest-independent try/except/else style so tests run under both pytest and the
   # standalone CheckHarness (most test files do not import pytest).
-  "PT011",   # pytest.raises without match=.
-  "PT017",   # assertion on the exception inside an except block.
+  "PT011", # pytest.raises without match=.
+  "PT017", # assertion on the exception inside an except block.
   # The bandit (S) subrules below are threat-model misfits for a local,
   # single-user CLI tool (no untrusted remote input). The high-value S rules
   # (deserialization, eval/exec, SQL/yaml/xml injection) stay enabled.
-  "S603",    # subprocess call -- args are statically constructed, not untrusted.
-  "S607",    # partial executable path -- we call git/npx/ollama via PATH on purpose.
-  "S310",    # urlopen -- URLs are built from fixed HTTPS API bases, not user input.
-  "S311",    # non-crypto random -- policy exemption for non-cryptographic randomness.
-  "DTZ011",  # date.today() -- local-date semantics are intended for a single-user vault.
+  "S603", # subprocess call -- args are statically constructed, not untrusted.
+  "S607", # partial executable path -- we call git/npx/ollama via PATH on purpose.
+  "S310", # urlopen -- URLs are built from fixed HTTPS API bases, not user input.
+  "S311", # non-crypto random -- policy exemption for non-cryptographic randomness.
+  "DTZ011", # date.today() -- local-date semantics are intended for a single-user vault.
 ]
 
 [tool.ruff.lint.per-file-ignores]

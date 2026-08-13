@@ -1,20 +1,5 @@
 {
   "$schema": "./packages/memoria-obsidian/node_modules/oxfmt/configuration_schema.json",
-  "ignorePatterns": [
-    "src/memoria_vault/product/workspace_seed/**",
-    "packages/memoria-obsidian/styles.css",
-    "test-vault/**",
-    ".kilo/**",
-    "**/*.md",
-    "**/*.json",
-    "**/*.jsonc",
-    "**/*.yml",
-    "**/*.yaml",
-    "**/*.toml",
-    "**/*.css",
-    "**/*.scss",
-    "**/*.less",
-    "**/*.graphql",
-    "**/*.mdx"
-  ]
+  "svelte": true,
+  "ignorePatterns": ["test-vault/**", ".kilo/**", "**/*.md", "**/*.markdown", "**/*.mdx"]
 }

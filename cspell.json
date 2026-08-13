@@ -9,12 +9,8 @@
       "addWords": true
     }
   ],
-  "dictionaries": [
-    "project-words"
-  ],
-  "files": [
-    "**/*.md"
-  ],
+  "dictionaries": ["project-words"],
+  "files": ["**/*.md"],
   "ignorePaths": [
     "docs/reference/evidence-and-integrations/bibliography.md",
     "docs/superpowers/**",
@@ -27,8 +23,5 @@
     "**/package-lock.json",
     "project-words.txt"
   ],
-  "words": [
-    "Docstrings",
-    "pydocstyle"
-  ]
+  "words": ["Docstrings", "pydocstyle"]
 }

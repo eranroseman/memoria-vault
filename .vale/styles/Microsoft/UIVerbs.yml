@@ -5,5 +5,5 @@ level: warning
 ignorecase: true
 # 'right-click' and 'double-click' are explicitly allowed by the guide.
 tokens:
-  - '(?<!right-)(?<!double-)click(?:s|ed|ing)?(?: on)?'
-  - 'swipe(?:s|d|ing)?'
+  - "(?<!right-)(?<!double-)click(?:s|ed|ing)?(?: on)?"
+  - "swipe(?:s|d|ing)?"

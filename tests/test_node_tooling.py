@@ -27,6 +27,29 @@ VERIFY_WORKFLOW = ROOT / ".github" / "workflows" / "verify.yml"
 DEPENDABOT = ROOT / ".github" / "dependabot.yml"
 VSCODE_SETTINGS = ROOT / ".vscode" / "settings.json"
 
+OXFMT_EDITOR_LANGUAGE_IDS = (
+    "javascript",
+    "javascriptreact",
+    "typescript",
+    "typescriptreact",
+    "json",
+    "jsonc",
+    "json5",
+    "yaml",
+    "toml",
+    "css",
+    "scss",
+    "less",
+    "postcss",
+    "wxss",
+    "graphql",
+    "handlebars",
+    "html",
+    "vue",
+    "svelte",
+    "mjml",
+)
+
 
 def _pins(package: str) -> list[str]:
     """The requirements-dev lines pinning `package` to an exact version.
@@ -127,6 +150,10 @@ def test_oxc_editor_tools_match_the_pinned_hook_versions():
     package = json.loads(OBSIDIAN_PACKAGE.read_text(encoding="utf-8"))
     lock = json.loads(OBSIDIAN_LOCK.read_text(encoding="utf-8"))
     config = yaml.safe_load(PRECOMMIT.read_text(encoding="utf-8"))
+    settings = json.loads(VSCODE_SETTINGS.read_text(encoding="utf-8"))
+    dependabot = yaml.safe_load(DEPENDABOT.read_text(encoding="utf-8"))
+    oxfmt_config = json.loads((ROOT / ".oxfmtrc.json").read_text(encoding="utf-8"))
+    oxfmt = _hook("oxfmt")
     revs = {repo["repo"]: repo["rev"] for repo in config["repos"] if repo["repo"] != "local"}
 
     for tool in ("oxlint", "oxfmt"):
@@ -138,6 +165,42 @@ def test_oxc_editor_tools_match_the_pinned_hook_versions():
             f"{tool} is {pinned} in packages/memoria-obsidian but {hook_rev} in "
             "the pre-commit hook; the editor and the gate would disagree"
         )
+
+    assert oxfmt["types_or"] == ["file"]
+    assert oxfmt["files"] == (
+        r"\.(?:js|mjs|cjs|jsx|ts|mts|cts|tsx|json|jsonc|json5|yaml|yml|toml|"
+        r"css|scss|less|pcss|postcss|wxss|graphql|gql|graphqls|html|htm|hta|xhtml|"
+        r"component\.html|vue|svelte|hbs|handlebars|mjml)$"
+    )
+    assert oxfmt["additional_dependencies"] == ["oxfmt@0.63.0", "svelte@5.56.8"]
+    assert package["devDependencies"]["svelte"] == "5.56.8"
+    assert lock["packages"][""]["devDependencies"]["svelte"] == "5.56.8"
+    assert oxfmt_config["svelte"] is True
+    assert oxfmt_config["ignorePatterns"] == [
+        "test-vault/**",
+        ".kilo/**",
+        "**/*.md",
+        "**/*.markdown",
+        "**/*.mdx",
+    ]
+    assert settings["[markdown]"]["editor.formatOnSave"] is False
+    for language_id in OXFMT_EDITOR_LANGUAGE_IDS:
+        assert settings[f"[{language_id}]"] == {
+            "editor.defaultFormatter": "oxc.oxc-vscode",
+            "editor.formatOnSave": True,
+        }
+
+    npm_update = next(
+        update for update in dependabot["updates"] if update["package-ecosystem"] == "npm"
+    )
+    svelte_ignore = next(
+        ignored for ignored in npm_update["ignore"] if ignored["dependency-name"] == "svelte"
+    )
+    assert svelte_ignore["update-types"] == [
+        "version-update:semver-major",
+        "version-update:semver-minor",
+        "version-update:semver-patch",
+    ]
 
     # The extension is what reads those node_modules; recommending it is the
     # only thing that makes the pin above serve anyone.

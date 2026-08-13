@@ -54,8 +54,8 @@ KNOWN_EXTENSIONS: dict[str, str] = {
     ".json": "check_json",
     ".md": "cspell",
     # Claimed by no linter, on purpose. The reason is the value.
-    ".toml": "unclaimed: pyproject.toml and mise.toml are parsed by their consumers",
-    ".css": "unclaimed: 2 files, one a generated bundle; three CSS files is not a mechanism",
+    ".toml": "unclaimed: no syntax linter; parsed by consumers and formatted by Oxfmt",
+    ".css": "unclaimed: no syntax linter; formatted by Oxfmt",
     ".scss": "unclaimed: 1 Jekyll theme override",
     ".base": "unclaimed: Obsidian Bases config, shipped as package data",
     ".sql": "unclaimed: runtime package data, exercised by the migration tests",
@@ -77,8 +77,8 @@ KNOWN_EXTENSIONS: dict[str, str] = {
 # An entry here is a decision on the record, not an oversight.
 UNCLAIMED: dict[str, str] = {
     "src/memoria_vault/product/workspace_seed/.obsidian/plugins/memoria-obsidian/main.js": (
-        "generated esbuild bundle; `npm run check --prefix packages/memoria-obsidian` "
-        "compares it byte-for-byte against a fresh build, so formatting it fails that check"
+        "generated esbuild bundle; exempt from Oxlint, while the adapter build canonicalizes "
+        "it with Oxfmt before the byte-for-byte package check"
     ),
     "docs/reference/evidence-and-integrations/bibliography.md": (
         "cited-source metadata with proper names and titles"
@@ -207,12 +207,52 @@ HOOK_FOR_OWNER = {
     "cspell": "cspell",
 }
 
+OXFMT_NON_MARKDOWN_SUFFIXES = (
+    ".component.html",
+    ".graphqls",
+    ".handlebars",
+    ".postcss",
+    ".jsonc",
+    ".json5",
+    ".yaml",
+    ".yml",
+    ".toml",
+    ".scss",
+    ".less",
+    ".pcss",
+    ".wxss",
+    ".graphql",
+    ".html",
+    ".xhtml",
+    ".svelte",
+    ".mjs",
+    ".cjs",
+    ".jsx",
+    ".mts",
+    ".cts",
+    ".tsx",
+    ".json",
+    ".css",
+    ".gql",
+    ".htm",
+    ".hta",
+    ".vue",
+    ".hbs",
+    ".mjml",
+    ".js",
+    ".ts",
+)
+
 NATIVE_OWNERS = {"check_json", "psscriptanalyzer"}
 KNOWN_OWNERS = set(HOOK_FOR_OWNER) | NATIVE_OWNERS
 POLICY_MAPS = {
     "KNOWN_EXTENSIONS": KNOWN_EXTENSIONS,
     "EXTENSIONLESS": EXTENSIONLESS,
 }
+
+
+def _is_oxfmt_supported(path: str) -> bool:
+    return path.endswith(OXFMT_NON_MARKDOWN_SUFFIXES)
 
 
 def _policy_error(policy: str) -> str | None:
@@ -338,6 +378,18 @@ def test_claimed_files_fall_inside_their_owner_scope(owner: str):
         "Either widen the hook scope in .pre-commit-config.yaml or add the file to "
         "UNCLAIMED with the reason it is exempt."
     )
+
+
+def test_oxfmt_covers_every_tracked_supported_non_markdown_file():
+    oxfmt = _hook("oxfmt")
+    assert oxfmt["types_or"] == ["file"]
+    paths = [path for path in _tracked() if _is_oxfmt_supported(path)]
+    escaped = sorted(path for path in paths if not _claims("oxfmt", path))
+    assert escaped == [], escaped
+    markdown = [
+        path for path in _tracked() if path.endswith((".md", ".markdown", ".mdx"))
+    ]
+    assert [path for path in markdown if _claims("oxfmt", path)] == []
 
 
 def _ruff_claimed_python_paths() -> list[str]:
