@@ -32,7 +32,7 @@ repos:
         stages: [pre-commit]
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.16.2
+    rev: v0.16.5
     hooks:
       # Directory scope only: the hooks' own `types_or: [python, pyi, jupyter]`
       # decides what is Python. Spelling `\.py$` here re-encoded that and got it
@@ -57,7 +57,7 @@ repos:
   # meaningful offline. Without the runtime package and YAML stubs, third-party
   # imports collapse to Any and a green check would prove too little.
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v2.3.0
+    rev: v2.3.1
     hooks:
       - id: mypy
         pass_filenames: false
@@ -66,8 +66,8 @@ repos:
         # overrides may suppress missing imports.
         args: []
         additional_dependencies:
-          - types-PyYAML==6.0.12.20260724
-          - pydantic-ai-slim[openai]==2.28.0
+          - types-PyYAML==6.0.12.20260815
+          - pydantic-ai-slim[openai]==2.36.0
         stages: [manual]
 
   - repo: https://github.com/adrienverge/yamllint
@@ -104,7 +104,7 @@ repos:
   # duplicate object key, both print and pass. Without the flag the hook is
   # green on every input it will ever see.
   - repo: https://github.com/oxc-project/mirrors-oxlint
-    rev: v1.78.0
+    rev: v1.80.0
     hooks:
       - id: oxlint
         args: [--deny-warnings]
@@ -124,16 +124,16 @@ repos:
   # Keep the default filename passing behavior; never add `pass_filenames:
   # false` or a bare path argument.
   - repo: https://github.com/oxc-project/mirrors-oxfmt
-    rev: v0.63.0
+    rev: v0.65.0
     hooks:
       - id: oxfmt
         types_or: [file]
         files: '\.(?:js|mjs|cjs|jsx|ts|mts|cts|tsx|json|jsonc|json5|yaml|yml|toml|css|scss|less|pcss|postcss|wxss|graphql|gql|graphqls|html|htm|hta|xhtml|component\.html|vue|svelte|hbs|handlebars|mjml)$'
-        additional_dependencies: [oxfmt@0.63.0, svelte@5.56.8]
+        additional_dependencies: [oxfmt@0.65.0, svelte@5.57.0]
         stages: [pre-commit, manual]
 
   - repo: https://github.com/errata-ai/vale
-    rev: v3.17.1
+    rev: v3.19.0
     hooks:
       # Terminology rulings over published docs prose (.vale.ini + the Memoria
       # vocabulary). Spelling stays with cspell; Vale owns term/casing rulings.
