@@ -139,3 +139,38 @@ Filing an issue or closing one? `docs/agents/issue-tracker.md` carries the
 intake search and the rejection record.
 
 `CLAUDE.md` is a loader (`@AGENTS.md`) with no content of its own.
+
+## Agent skills
+
+### Git
+
+Open a pull request and squash-merge after review; fetch before claiming
+something is absent from the remote.
+
+### Issue tracker
+
+Issues are tracked in this repository's GitHub Issues. See
+`docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Five canonical roles, plus exactly one category role (`bug` or `enhancement`)
+per triaged issue. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+This is a single-context repository. See `docs/agents/domain.md`.
+
+### Design discipline
+
+Eliminate the problem > add a mechanism > add a rule; prose is the last resort.
+
+Climb from the top and stop at the first rung that holds. A rule nobody can enforce is the weakest thing you can ship, and it goes stale silently. When prose really is the last resort, **say which higher rungs you tried and why they were unavailable** — an unexplained rule is indistinguishable from a lazy one, and the next reader cannot tell whether to re-attempt the climb.
+
+### Task reports
+
+The SDD skill never commits its `.superpowers/sdd/` reports, and its Finish step
+deletes the workspace — a report is not a durable home. Reports name a
+destination per Concern at write time; a plan's workspace closes only after
+every Concern's disposition has landed in that home — an issue, a spec entry, or
+a recorded decline.
